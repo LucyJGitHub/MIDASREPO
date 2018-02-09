@@ -7,19 +7,21 @@
 /*                                                                   */
 /*       HFC0140  -  REPORTING GROUPS MAINTENANCE                    */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. 046075             DATE 20OCT92              */
-/*       PREV AMEND NO. S01379             DATE 15SEP92              */
+/*       Prev Amend No. 046075             Date 20Oct92              */
+/*                      S01379             Date 15Sep92              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       046075 - DLTOVR missing which causes files created by       */
 /*                HFC0142 to have incorrect member names             */
 /*       S01379 - New program for HAF.                               */
@@ -33,7 +35,7 @@
              PGM
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&PONAM) TYPE(*CHAR) LEN(10)
              DCL        VAR(&PREV) TYPE(*CHAR) LEN(1)
@@ -136,5 +138,5 @@ STRPGM:
  ENDPGM:     CHGJOB     SWS(00000000)
              DLTOVR     FILE(*ALL)
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

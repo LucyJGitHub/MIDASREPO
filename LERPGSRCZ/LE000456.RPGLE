@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas LE PDCL process - Loans account keys')           *
@@ -18,10 +18,11 @@
       *                                                               *
       *  Called By: LEC000456 (COB) - PDCL Generation for Loans       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD048557           Date 27Nov17               *
-      *  Prev Amend No. MD046080           Date 21Sep17               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD048557           Date 27Nov17               *
+      *                 MD046080           Date 21Sep17               *      
       *                 CGL165             Date 17Feb15               *
       *                 CLE164             Date 18Aug14               *
       *                 MD023378           Date 25Apr14               *
@@ -51,8 +52,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD048557 - Failing COB Component - LEC000471A                *
-      *  MD046080 - Gap between CLE031 and CLE134                     *
+      *  MD046080 - Gap between CLE031 and CLE134                     *      
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
       *           (Recompile)                                         *

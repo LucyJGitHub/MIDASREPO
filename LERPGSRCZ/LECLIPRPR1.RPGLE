@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2005')
+     H COPYRIGHT('(c) Finastra International Limited 2005')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas LE Customer Loans BoE Input')                    *
@@ -13,14 +13,16 @@
       *               on customer loans entered via RPR for           *
       *               BoE Customer Loans.                             *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. MD034876           Date 01Jul15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD034876           Date 01Jul15               *
       * Midas Plus 1.4 Base ------------------------------------------*
-      *  Prev Amend No. LLN022  *CREATE    Date 24Jan05               *
+      *                 LLN022  *CREATE    Date 24Jan05               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD034876 - BOE Upgrade to FBM2.1 Compatibility Amendments    *
       *  LLN022 - Upgrade BoE to MidasPlus                            *
       *                                                               *
@@ -38,7 +40,7 @@
      F***LELOAN#0* CF   E             WORKSTN                                               MD034876
      FLELOANDF  CF   E             WORKSTN                                                  MD034876
      F                                     INFSR(*PSSR)
-
+ 
       *****************************************************************
       /EJECT
       *
@@ -52,44 +54,44 @@
       *  and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
-
+ 
       **--------------------------------------------------------------------------------------------
       *  The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
-
+ 
       **--------------------------------------------------------------------------------------------
       *  The following /COPY line includes all the defined fields in the
       *  Program Status Data Structures.  They have meaningful
       *  names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
-
+ 
       **--------------------------------------------------------------------------------------------
       *  The following /COPY line includes the definitions for error and
       *  warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
-
+ 
       *  +--------------------------------------+
       *  ¦ End of automatically included D-specs¦
       *  ¦ =====================================¦
       *  +--------------------------------------+
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       *  +--------------------------------------+
       *  ¦ Manually included D-specs            ¦
       *  ¦ =========================            ¦
       *  +--------------------------------------+
-
+ 
       *  +--------------------------------------+
       *  ¦ Named constants                      ¦
       *  ¦ ===============                      ¦
       *  +--------------------------------------+
-
+ 
       *  +--------------------------------------+
       *  ¦ Arrays and Data Structures           ¦
       *  ¦ ==========================           ¦
@@ -97,11 +99,11 @@
       *
       ** Add 1 onto elements in array for each field on window
      D @EI             S              1    DIM(50)
-
+ 
       *
      D SPARE2          S            256A
       *
-
+ 
       *
       ** Copyright array
      D A@CPY           DS
@@ -128,12 +130,12 @@
       *
       **  Error indicators (OK#S)
      D OKFLAGS       E DS                  EXTNAME(LEECLIPX0)
-
+ 
       *  +--------------------------------------+
       *  ¦ Declared variables                   ¦
       *  ¦ ==================                   ¦
       *  +--------------------------------------+
-
+ 
       ** Action Code
      D ACTN            S              1A
      D W0RTN           S              7A
@@ -143,29 +145,29 @@
      D WProcess        S              1
      D TITLE           S              7A
      D TEXT            S            132A
-
+ 
       ** Standards Input Parameters
      D SROW            S              3  0
      D SCOL            S              3  0
-
+ 
       ** Standards Output Parameters
      D @INKC           S              1
      D @INKL           S              1
-
+ 
      D Idx             S              3P 0 INZ(0)
      D WIdx            S              3P 0 INZ(0)
-
+ 
      D PRtCd           S              7A
       ** Front Office ID
      D PL1AFRT         S             20A
       ** Timestamp
      D PL1TMST         S             26Z
-
+ 
       *  +--------------------------------------+
       *  ¦ End of D-specs                       ¦
       *  ¦ ==============                       ¦
       *  +--------------------------------------+
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -295,7 +297,7 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
-
+ 
       ** Entry Parameters
      C     *ENTRY        PLIST
      C                   PARM                    ACTN
@@ -329,7 +331,7 @@
       ** Initialize program name
       *
      C                   MOVEL     'LECLIPRPR1'  L#PGM
-
+ 
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -577,4 +579,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

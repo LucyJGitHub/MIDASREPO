@@ -7,11 +7,12 @@
 /*                                                                  */
 /*       LEC0903 - RECREATE LOANS TRANSACTIONS INDEX FILE           */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. AR322731            Date 01Aug12             */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR322731           Date 01Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
-/*       Prev Amend No. 260524              Date 29May09             */
+/*                      260524             Date 29May09              */
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
@@ -22,6 +23,7 @@
 /*                      S01179              DATE  14/09/88          */
 /*                                                                  */
 /********************************************************************/
+/*       MD046248 - Finastra Rebranding                              */
 /*       AR322731 - LEC0212A and APISERVER locks LTRIX               */
 /*                  file (Child:AR322732)                            */
 /*       260524 - Error 'Loan Number already exist.' on Loan         */
@@ -36,7 +38,7 @@
 /*********************************************************************/
              PGM
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
              DCL        VAR(&FLSIZ) TYPE(*DEC) LEN(5)
@@ -59,5 +61,5 @@
              CLRPFM     FILE(LEADINPD)                                /*CLE106*/
              CLRPFM     FILE(LEADINQD)                                                    /*260524*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

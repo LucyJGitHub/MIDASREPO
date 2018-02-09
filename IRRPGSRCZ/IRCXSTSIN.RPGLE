@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas IR Cross ccy extra settlements prompt screen')   *
@@ -9,10 +9,11 @@
       *                                                               *
       *  IRCXSTSIN - Cross Currency Extra Settlements Prompt Screen   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD029954           Date 25Nov14               *
-      *  Prev Amend No. MD029216           Date 07Aug14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD029954           Date 25Nov14               *
+      *                 MD029216           Date 07Aug14               *
       *                 MD027784           Date 26Jun14               *
       *                 CDL094             Date 11Jun14               *
       *                 CSD095             Date 08Apr14               *
@@ -37,6 +38,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD029954 - F3 Function Key error in Deals Enquiry            *
       *  MD029216 - Navigation Issues on Deals Enquiry for CIRS       *
       *             Transactions                                      *
@@ -975,4 +977,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

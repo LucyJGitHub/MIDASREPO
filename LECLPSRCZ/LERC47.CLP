@@ -7,20 +7,22 @@
 /*                                                                   */
 /*       LERC47  - Profitability report by business group (COB)      */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. BH3518             DATE 28SEP92              */
-/*       PREV AMEND NO.                    DATE ddmmmyy              */
+/*       PREV AMEND NO. BH3518             DATE 28SEP92              */
+/*                                         DATE ddmmmyy              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BH3518  -  Make report run monthly, and on request          */
 /*                                                                   */
 /*********************************************************************/
@@ -37,7 +39,7 @@
      DCL VAR(&USAC) TYPE(*CHAR) LEN(2)
      DCL VAR(&WSID) TYPE(*CHAR) LEN(10)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /* Read LERSTS Data Area to get Processing Date for Report  */
@@ -52,6 +54,6 @@
              CALL       PGM(LER470) PARM(&PDAT &RTYP &USAC &WSID)
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 ENDPGM

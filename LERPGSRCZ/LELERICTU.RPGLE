@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas LE Rollover instructions control update')        *
@@ -24,10 +24,11 @@
       *              (Roll Instr are only sent from Loan Manager      *
       *               if authorised; validation need to be done here) *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. AR702532           Date 13Jan15               *
-      *  Prev Amend No. MD028338           Date 25Nov14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR702532           Date 13Jan15               *
+      *                 MD028338           Date 25Nov14               *
       *                 CDL094             Date 11Jun14               *
       *                 CSD095             Date 08Apr14               *
       *                 CLE134             Date 01Aug12               *
@@ -64,6 +65,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR702532 - After rejection, there is no WIP record but RSTS  *
       *             is still 'R'. Pass reject action parameter to     *
       *             skip validation during rejection to prevent the   *
@@ -2653,4 +2655,4 @@
      C                   ENDSR
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2002
+(c) Finastra International Limited 2002

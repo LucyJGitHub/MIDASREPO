@@ -7,20 +7,22 @@
 /*                                                                   */
 /*       LEC0455 - Loan Increases and Repayments Currency Conversion */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
 /*       Phase:  Close of Business                                   */
 /*                                                                   */
-/*       Last Amend No. AR750558           Date 27Apr11              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR750558           Date 27Apr11              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
-/*       Prev Amend No. CLE014  *CREATE    Date 20Mar01              */
+/*                      CLE014  *CREATE    Date 20Mar01              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       AR750558 - Do not delete XLOAMSDK and XLOAMSZ1 as they are  */
 /*                  being used on other components (Child: AR750559) */
 /*       CLE014 - Customer Driven Lending Enhancements               */
@@ -38,7 +40,7 @@
              DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(7)
              DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(7)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /** Set off Switches **/
@@ -123,6 +125,6 @@
              ENDDO
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

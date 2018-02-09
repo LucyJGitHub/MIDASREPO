@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas LE Commitmnt/Fcty & Loan Extrct for Agg.Fcty')   *
@@ -10,11 +10,12 @@
       *  RPGLE/LE000065 - Commitment/Facility & Loan Details Extract  *
       *                   for Aggregated Facilities                   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CLE148             Date 23Jul12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE148             Date 23Jul12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Prev Amend No. BUG27091           Date 04Mar10               *
+      *                 BUG27091           Date 04Mar10               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
@@ -25,6 +26,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE148 - Alpha Loan Reference (Recompile)                    *
       *  BUG27091 - LEC08 Seq. 10001 and 10002 DBerr at 013 ;         *
       *             applied GEMS Fix 259583                           *
@@ -569,4 +571,4 @@
      C                   ENDSR
      C****************************************************************
 ** WCPY@
-(c) Misys International Banking Systems Ltd. 2004
+(c) Finastra International Limited 2004

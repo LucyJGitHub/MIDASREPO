@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*S*D****RPGBASEMOD****************************************************                     MD026120
 /*STD *  RPGSQLMOD                                                    *                     MD026120
@@ -14,10 +14,11 @@
       *             the database. As it does so, it validates the     *
       *             action code and facility reference                *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD026120           Date 13May14               *
-      *  Prev Amend No. MD024398           Date 11May14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD026120           Date 13May14               *
+      *                 MD024398           Date 11May14               *
       *                 MD000091           Date 09May13               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
@@ -65,6 +66,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD026120 - Additional deps for GLC0720/740                   *
       *  MD024398 - API Performance Optimisation                      *
       *  MD000091 - Event Codes Substitution                          *
@@ -2301,4 +2303,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2002
+(c) Finastra International Limited 2002

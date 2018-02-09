@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas IR Cross ccy IRS database update')               *
@@ -9,10 +9,11 @@
       *                                                               *
       *  IRCIRSUPD - Cross Currency IRS Database Update               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
-      *  Prev Amend No. MD036601           Date 29Aug16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 MD036601           Date 29Aug16               *
       *                 AR743357           Date 22Apr15               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
@@ -115,6 +116,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  MD036601 - DLC0606B failed in RU production dd 10.11.2015    *
       *             Reset URFIN / TRFIN whenever fix date is less than*
@@ -6278,7 +6280,7 @@
      C                   ENDSR
      C****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 ** CTDATA XOT - XML Opening Tags for the Compliance Engine.                                   CSD015
 <Receipt Our Nostro>                                                                          CSD015
 <Receipt Inter. Bank>                                                                         CSD015

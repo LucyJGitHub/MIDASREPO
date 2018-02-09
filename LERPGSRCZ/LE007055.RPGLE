@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+     H COPYRIGHT('(c) Finastra International Limited 2012')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas LE PDCL RE/MR not generated report')             *
@@ -13,12 +13,14 @@
       *           events that will not be generated because the block *
       *           all debit ind is Y.                                 *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. AR700107 *CREATE   Date 01Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR700107 *CREATE   Date 01Aug12               *
       *                                                               *
       *-------------------------------------------------------------- *
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR700107 - List PDCLs MR/RE events that will not be generated*
       *             because the block all debit indicator is Y.       *
       *             (Child: AR700108)                                 *
@@ -413,4 +415,4 @@
      C/EJECT
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2012
+(c) Finastra International Limited 2012

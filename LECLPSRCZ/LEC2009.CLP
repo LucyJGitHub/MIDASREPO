@@ -7,22 +7,24 @@
 /*                                                                   */
 /*       LEC2009 - Loan Manager Interface Monitor                    */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2002           */
+/*       (c) Finastra International Limited 2002                     */
 /*                                                                   */
 /*       Function:  To call the Loan Manager Interface Monitor pgm   */
 /*                                                                   */
 /*       Calls:     LE2009                                           */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4.01.02 --------------------------------------------*/
-/*       Last Amend No. 203561  *CREATE    Date 17Jun02              */
-/*       Prev Amend No. Xnnnnn             Date ddmmmyy              */
+/*       Prev Amend No. 203561  *CREATE    Date 17Jun02              */
+/*                      XNNNNN             Date DDMmmYY              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       203561 - Enable greater user control over the Loan Manager  */
 /*                Interface. Also, build in more handshaking between */
 /*                the two products and allow for better control of   */
@@ -35,7 +37,7 @@
              DCL        VAR(&DBER) TYPE(*CHAR) LEN(50)
              DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2002')
  
 /** Global Monitor Message:                                       */
@@ -81,6 +83,6 @@
 /* Normal termination                                            */
  END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas IR: Validate Rate Change Frequency')             *
@@ -13,7 +13,7 @@
       *             If it is valid, the return indicator contains     *
       *             'Error', else it is blank.                        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *    This source is centrally supported and must ONLY be        *
       *    amended by Core Development Personnel                      *
@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
-      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CIR018             Date 06Aug14               *
       *                 CDL094             Date 11Jun14               *
@@ -45,6 +46,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
@@ -65,7 +67,7 @@
       *           use as APIs.                                        *
       *                                                               *
       *****************************************************************
- 
+
       ** Logical file built over DEALSDG                                                      CIR007
      FDEALS     IF   E           K DISK                                                       CIR007
      F                                     INCLUDE(DEALSDGF)                                  CIR007
@@ -87,33 +89,33 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
@@ -123,29 +125,29 @@
                                                                                              CIR018
      D DSFDY         E DS                  EXTNAME(DSFDY)                                    CIR018
       ** External data structure for access programs (short)                                 CIR018
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       * rate change date
      D SUNICD          S              6A
- 
+
       * rate change frequency
      D SUICFR          S              1A
- 
+
       * interest rate calendars.
      D CIR001          S              1A
- 
+
       *  Error message code 1 received as a parameter
      D Msgid1          S                   LIKE(#MsgID)
- 
+
       ** OVERNIGHT INDEX SWAPS                                                                CIR007
      DCIR007           S              1A                                                      CIR007
                                                                                               CIR007
@@ -174,14 +176,14 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
      C                   RESET                   ErrorFound
      C                   RESET                   Msgid1
      C                   MOVE      *OFF          *IN49
@@ -192,7 +194,7 @@
      C                   ELSE                                                                 CAP055
      C                   EVAL      WDealCACF = 'N'                                            CAP055
      C                   ENDIF                                                                CAP055
- 
+
       ** Validate Our Rate Change Frequency.
                                                                                               CIR007
       ** If the Action Code is 'A', CIR007 is on and Deal Type is 'RS',                       CIR007
@@ -234,7 +236,7 @@
      C                   ENDIF                                                                CIR007
                                                                                               CIR007
      C                   ENDIF                                                                CIR007
- 
+
      C     SUICFR        IFNE      *BLANK
      C     ErrorFound    ANDNE     'Y'                                                        CIR007
      C     SUNICD        IFEQ      *BLANKS
@@ -322,11 +324,11 @@
      C     SUICFR        andne     'Y'                                                        CIR018
      C     SUICFR        andne     'D'                                                        CIR018
      C     CIR018        andeq     'Y'                                                        CIR018
- 
+
       **  If switchable feature is ON, 'Z' must be a valid
       **    rate change frequency
       **  But for Caps/Collars/Floors, 'Z' is invalid.                                        CAP055
- 
+
      C     CIR001        IFEQ      'Y'
      C     SUICFR        ANDNE     'Z'
      C     CIR001        ORNE      'Y'
@@ -345,12 +347,12 @@
      C                   ENDIF                                                                CIR007
      C                   END
      C                   END
- 
+
      C                   IF        ErrorFound = 'Y'
      C                   EVAL      RetCodeIn = 'Error'
      C                   ENDIF
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -362,9 +364,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
       * For interest rate caps, collars and floors pass a parameter for CIR001
       * which is NOT 'Y'.
      C     *entry        PLIST
@@ -402,15 +404,15 @@
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

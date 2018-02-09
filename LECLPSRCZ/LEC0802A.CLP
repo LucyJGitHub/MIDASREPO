@@ -7,11 +7,12 @@
 /*                                                                  */
 /*       LEC0802A - LENDING PORTFOLIO BY CUSTOMER REPORT BY BK BRCH */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. CLE134             Date 01Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CLE134             Date 01Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
-/*       Prev Amend No. CCB016             Date 25Oct07             */
+/*                      CCB016             Date 25Oct07              */
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
@@ -28,6 +29,7 @@
 /*                      BHF154              DATE  07AUG90           */
 /********************************************************************/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CLE134 - Past Due Call Loan Processing (Recompile)         */
 /*       CCB016 - CoB performance enhancement                       */
 /*       240012 - Produce a dump if there's a problem before the    */
@@ -51,7 +53,7 @@
 /*********************************************************************/
              PGM PARM(&RSEQ &RLEV &RENT)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&RSEQ) TYPE(*CHAR) LEN(5)
              DCL        VAR(&RLEV) TYPE(*CHAR) LEN(1)
@@ -232,5 +234,5 @@ SKIP:                                                                 /*S01473*/
              MONMSG     MSGID(CPF0000)                                /*BHF798*/
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 ENDPGM:      ENDPGM

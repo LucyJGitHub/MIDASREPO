@@ -10,12 +10,14 @@
       *                                                               *
       *  Function:  Update LEHISTPD and LEHIDTPD files                *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. CLE137   *Create   Date 06Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE137  *CREATE    Date 06Aug12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE137 - LE Monthly History processing                       *
       *                                                               *
       *****************************************************************
@@ -147,4 +149,4 @@
       /EJECT
       *****************************************************************
 ** CPY@ - Object copyright
-(c) Misys International Banking Systems Ltd. 2012
+(c) Finastra International Limited 2012

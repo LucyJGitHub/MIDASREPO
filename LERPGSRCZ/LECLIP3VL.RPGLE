@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas LE Customer Loans screen 3 validations')         *
@@ -9,10 +9,11 @@
       *                                                               *
       *  LECLIP3VL -  Customer Loans screen 3 validations             *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE141             Date 08Feb16               *
-      *  Prev Amend No. AR882700           Date 07Jun13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE141             Date 08Feb16               *
+      *                 AR882700           Date 07Jun13               *
       *                 AR804863           Date 10Dec12               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
@@ -63,6 +64,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE141 - Currency and Location Business Day Convention for   *
       *           Lending Transactions (Recompile)                    *
       *  AR882700 - LEC06A on MESSAGEWAIT on A1 TEST SYSTEM. Insert   *
@@ -325,7 +327,7 @@
       *
      D ClilFilFmt    E DS                  EXTNAME(CLOANCL) PREFIX(@@)
       * (Current) Loans record CL in file Format
-
+ 
       *
      D OKFlagsDS     E DS                  EXTNAME(LEECLI3PD)
       ***  Flags to indicate whether transaction fields are valid
@@ -577,7 +579,7 @@
       ** +----------------------------------------------------------------+
       *
       /COPY WNCPYSRC,LECLIP3V03
-
+ 
       ** Check whether user is a web browser user, if so overwrite              CAP084
      C                   CALL      'SFC000026'                                  CAP084
      C                   PARM      *BLANKS       USER             10            CAP084
@@ -3027,4 +3029,4 @@ E004 C                   ENDIF
       *****************************************************************
       /EJECT
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2002
+(c) Finastra International Limited 2002

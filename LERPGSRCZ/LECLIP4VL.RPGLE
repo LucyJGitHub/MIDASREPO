@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas LE Customer Loans screen 4 validations')         *
@@ -9,10 +9,11 @@
       *                                                               *
       *  LECLIP4VL -  Customer Loans screen 4 validations             *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE141             Date 08Feb16               *
-      *  Prev Amend No. AR567846           Date 01Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE141             Date 08Feb16               *
+      *                 AR567846           Date 01Aug12               *
       *                 AR317161           Date 01Aug12               *
       *                 263840             Date 01Aug12               *
       *                 264080             Date 01Aug12               *
@@ -45,6 +46,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE141 - Currency and Location Business Day Convention for   *
       *           Lending Transactions (Recompile)                    *
       *  AR567846 - Cann't change repayment date- Basel 2 reporting   *
@@ -218,7 +220,7 @@
       *
      D ClilFilFmt    E DS                  EXTNAME(CLOANCL) PREFIX(@@)
       * (Current) Loans record CL in file Format
-
+ 
       *
      D OKFlagsDS     E DS                  EXTNAME(LEECLI4PD)
      D OKFlagsDS6    E DS                  EXTNAME(LEECLI6PD)                                 CLE134
@@ -1542,4 +1544,4 @@
       *****************************************************************
       /EJECT
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2002
+(c) Finastra International Limited 2002

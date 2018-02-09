@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas LE Send Facility Update Event')
@@ -14,20 +14,22 @@
       *             facility customer number, facility type, facility *
       *             sequence number and COB Indicator.                *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. 253161             Date 31Jul08               *
+      *  Prev Amend No. 253161             Date 31Jul08               *
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD027             Date 09Dec05               *
       *                 CLE042             Date 06Sep05               *
       *                 CLE041             Date 11Oct04               *
       *                 CLE025  *CREATE    Date 20Oct03               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  253161 - Branch missing from paramater list                  *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CLE042 - Extended Loan Sub Type (Recompile)                  *

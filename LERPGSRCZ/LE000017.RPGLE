@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas LE Initialisation program for CAS009(CLOAN)')    *
@@ -10,10 +10,11 @@
       *  RPGLE/LE000017 - Lending Transactions Initialisation         *
       *                   for CAS009.                                 *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CLE154             Date 06Aug12               *
-      *  Prev Amend No. CLE141             Date 08Feb16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE154             Date 06Aug12               *
+      *                 CLE141             Date 08Feb16               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 CRE073             Date 06Dec10               *
@@ -32,6 +33,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE154 - Loan Repayment Schedule Enhancement (Recompile)     *
       *  CLE141 - Currency and Location Business Day Convention       *
       *           (Recompile)                                         *
@@ -71,19 +73,19 @@
       *  *INZSR     - Initial First Cycle processing                  *
       *                                                               *
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
-
+ 
      FCLOAN     UF   E           K DISK    INFSR(*PSSR)
       ** Loans File
      F                                     IGNORE(CLOANHHF)
      F                                     IGNORE(CLOANCKF)
      F                                     IGNORE(CLOANZ1F)
      F                                     COMMIT
-
+ 
      FLECFLSPD  UF A E           K DISK    INFSR(*PSSR)                                       232348
       ** Midas LE Cash Flows Using All-in-Rate                                                232348
                                                                                               232348
@@ -93,16 +95,16 @@
                                                                                               232348
      FSDLOANL3  IF   E           K DISK    INFSR(*PSSR)
       ** Loan Type/subtype file
-
+ 
      FLEFEEDL1  IF   E           K DISK    INFSR(*PSSR)
       ** Fees File
-
+ 
      FSDFEEL0   IF   E           K DISK    INFSR(*PSSR)
       ** Fee Codes File
-
+ 
      FLEFHSTL0  IF   E           K DISK    INFSR(*PSSR)
       ** Fee history file
-
+ 
      FLE000017AUO    E             PRINTER
       ** Lending Transactions Initialisation Audit Report
       *****************************************************************
@@ -112,30 +114,30 @@
       ** ¦ D-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
-
+ 
      D CPY@            S             80    DIM(1) CTDATA PERRCD(1)
       ** Array containing Copyright statement
-
+ 
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** Short Data Structure for Access programs
-
+ 
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for Bank Details
-
+ 
       ** External data structure for the Hedging ICD                                          232348
      D SDHEDG        E DS                  EXTNAME(SDHEDGPD)                                  232348
                                                                                               232348
      D LDA           E DS           256    EXTNAME(LDA)
       ** Local data area for database error details
-
+ 
      D PSDS           SDS
       ** Program Status Data Structure
-
+ 
      D  ##PGM            *PROC
      D  JOB                  244    253
      D  WSID                 244    246
      D  USER                 254    263
-
+ 
       ** Work fields
      D WFACL           S              5S 0
      D WFCOD           S              2A
@@ -156,7 +158,7 @@
       * MAIN - Main Processing                                        *
       *                                                               *
       *****************************************************************
-
+ 
      C     *LOVAL        SETLL     CLOAN
      C                   DOU       %EOF(CLOAN)
      C                   READ      CLOAN
@@ -170,16 +172,16 @@
      C                   READ      CLOAN                                                      232348
      C                   ITER                                                                 232348
      C                   ENDIF                                                                232348
-
+ 
       ** Process live transaction details.
-
+ 
      C                   IF        NOT %EOF(CLOAN) AND
      C                             RECI = 'D'
-
+ 
      C                   EVAL      WCOUNTF = WCOUNTF + 1
-
+ 
       ** Check Loan Type/Subtype, proccess if amortised indicator is 'Y'
-
+ 
      C     KyLoan        CHAIN     SDLOANL3
      C                   IF        %FOUND(SDLOANL3)
      C                   EXSR      SRDfltFlds
@@ -215,90 +217,90 @@
      C     KyHist2       READE     LEHISTL4                                                   232348
      C                   ENDDO                                                                232348
      C                   ENDIF
-
+ 
      C                   ENDIF
-
+ 
      C                   ENDDO
-
+ 
      C                   EVAL      *INLR = *ON
-
+ 
       ** Write File Controls Report.
-
+ 
      C                   EXSR      SRAudit
-
+ 
       *****************************************************************
       * SRDfltFlds - Subroutine that default fields                   *
       *****************************************************************
      C     SRDfltFlds    BEGSR
-
+ 
       ** Initialise key fields
-
+ 
      C                   EVAL      TFDP = TOTI
      C                   EVAL      TFDPA = TOTI
      C                   EVAL      TFAM = TOTI
      C                   EVAL      TFAC = TOTI
      C                   EVAL      TFOF = TOTI
      C                   EVAL      DSAM = TOTI
-
+ 
      C     KyFee         CHAIN     LEFEEDL1                           01
      C                   DOW       *IN01 = *OFF
-
+ 
       ** Total Fees/Discount/Premium
-
+ 
      C                   EVAL      TFDP  = TFDP + FEFAMT
-
+ 
      C                   SELECT
-
+ 
       ** Total Amortising Fee Adjustment to Yield
-
+ 
      C                   WHEN      FEPYON = 'S'
      C                   EVAL      TFAM  = TFAM + FEFAMT
-
+ 
       ** Total Accruing Fee Adjustment to Yield
-
+ 
      C                   WHEN      FEPYON = 'E'
      C                   EVAL      TFAC  = TFAC + FEFAMT
-
+ 
       ** Total One off Fee Adjustment to Yield
-
+ 
      C                   WHEN      FEPYON = ' '
      C                   EVAL      TFOF  = TFOF + FEFAMT
-
+ 
      C                   ENDSL
-
+ 
       ** Check if Fee code is defined as having an
       ** Adjustment to Yield as 'Y'
-
+ 
      C                   MOVE      FEFCOD        WFCOD
      C     WFCOD         CHAIN     SDFEEL0
      C                   IF        %FOUND(SDFEEL0) AND
      C                             AUADJY = 'Y'
-
+ 
       ** Total Fees/Discount/Premium Adjustmnet to Yield
-
+ 
      C                   EVAL      TFDPA = TFDPA + FEFAMT
      C                   ENDIF
-
+ 
      C     KyFee         READE     LEFEEDL1                               01
      C                   ENDDO
-
+ 
       ** Access Fee History file
-
+ 
      C     LNRF          CHAIN     LEFHSTL0                           01
      C                   DOW       *IN01 = *OFF
-
+ 
       ** Total Fees/Discount/Premium
-
+ 
      C                   EVAL      TFDP  = TFDP + FEFAMT
      C     LNRF          READE     LEFHSTL0                               01
      C                   ENDDO
-
+ 
      C                   UPDATE    CLOANCLF
-
+ 
       ** Increment counter only if fields are initialised with values
-
+ 
      C                   EVAL      WCOUNTCL = WCOUNTCL + 1
-
+ 
      C                   ENDSR
       *****************************************************************                       232348
       /EJECT                                                                                  232348
@@ -466,18 +468,18 @@
       * SRAudit - Subroutine to Write Audit Report                    *
       *****************************************************************
      C     SRAudit       BEGSR
-
+ 
       ** Write File Control Report Heading
-
+ 
      C                   WRITE     HEADAU
-
+ 
      C                   IF        WCOUNTF <> 0
      C                   WRITE     CONTROL
-
+ 
      C                   ELSE
      C                   WRITE     NODTLS
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -485,11 +487,11 @@
       * *INZSR - Subroutine for Initial First Cycle processing        *
       *****************************************************************
      C     *INZSR        BEGSR
-
+ 
      C                   MOVEA     CPY@          BIS@
-
+ 
       **  Set up Local Data Area (LDA)
-
+ 
      C     *DTAARA       DEFINE                  LDA
      C     *LOCK         IN        LDA
      C                   MOVE      *BLANKS       DBFILE
@@ -498,16 +500,16 @@
      C                   MOVEL     'LE000017'    DBPGM
      C                   Z-ADD     0             DBASE
      C                   OUT       LDA
-
+ 
       ** Access Bank details
-
+ 
      C                   CALL      'AOBANKR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*FIRST '     @OPTN
      C     SDBANK        PARM      SDBANK        DSFDY
-
+ 
       ** If not found, database error
-
+ 
      C                   IF        @RTCD <>  *BLANK
      C     *LOCK         IN        LDA
      C                   MOVEL     'SDBANKPD'    DBFILE
@@ -517,7 +519,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
-
+ 
       ** Access Object for Hedge ICD                                                          232348
      C                   CALL      'AOHEDGR0'                                                 232348
      C                   PARM      *BLANKS       @RTCD                                        232348
@@ -536,16 +538,16 @@
      C                   Z-ADD     *ZERO         WCOUNTF
      C                   Z-ADD     *ZERO         WCOUNTCL
      C                   Z-ADD     *ZERO         WFACL
-
+ 
       ** Key List for Fees File
-
+ 
      C     KyFee         KLIST
      C                   KFLD                    CNUM
      C                   KFLD                    WFACL
      C                   KFLD                    LNRF
-
+ 
       ** Key List for Loan types/subtypes file
-
+ 
      C     KyLoan        KLIST
      C                   KFLD                    LTYP
      C                   KFLD                    SUTP
@@ -563,7 +565,7 @@
      C                   KFLD                    BRCA                                         232348
      C                   KFLD                    CNUM                                         232348
      C                   KFLD                    LNRF                                         232348
-
+ 
      C                   ENDSR
       *****************************************************************                       232348
       /EJECT                                                                                  232348
@@ -585,27 +587,27 @@
       * *PSSR - Program exception error routine                       *
       *****************************************************************
      C     *PSSR         BEGSR
-
+ 
      C                   IF        WDUMP = *BLANKS
      C                   EVAL      WDUMP = 'Y'
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   DUMP
-
+ 
       ** Write File Control Report Heading
-
+ 
      C                   WRITE     HEADAU
-
+ 
       ** Write Database error
-
+ 
      C                   WRITE     DBERROR
-
+ 
      C                   RETURN
-
+ 
      C                   ENDIF
-
+ 
      C                   ENDSR
       ****************************************************************
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2004
+(c) Finastra International Limited 2004

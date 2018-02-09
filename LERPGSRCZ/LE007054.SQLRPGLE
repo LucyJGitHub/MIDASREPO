@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+     H COPYRIGHT('(c) Finastra International Limited 2012')
       *****************************************************************
 /*S*D****RPGBASEBND****************************************************                     CLE075BI
 /*STD *  RPGSQLBND                                                    *                     CLE075BI
@@ -18,7 +18,7 @@
       *                                                               *
       *  Called By: LE0370, LE0390, LE0440                            *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c) Finastra International Limited 2012                      *
       *                                                               *
       *  Last Amend No. CLE075BI           Date 06Aug12               *
       *  Prev Amend No. AR1063739          Date 03Dec12               *
@@ -26,6 +26,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE075BI - COB Restructure - LE COB Optimisation Phase 1     *
       *  AR1063739 - SettlementAccount09 Issues                       *
       *  AR700107 - Prevent generation of RE/MR events for PDCLs that *
@@ -48,16 +49,16 @@
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
       ** +--------------------------------------+
- 
+
       ** The following /COPY line includes (among others) the LDA layout
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
@@ -65,48 +66,48 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Nostro details
- 
+
      D SDNOST        E DS                  EXTNAME(SDNOSTPD)
      D QQACCD2       E                     EXTFLD(QQACCD)
      D  NostCount                          LIKE(RCSQ.Nost)                                  CLE075BI
- 
+
      D GLACNT        E DS                  EXTNAME(ACCNTAB)
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
      D SDTRAD        E DS                  EXTNAME(SDTRADPD)
      D QQACCD1       E                     EXTFLD(QQACCD)
- 
+
      D                 DS
      D OSACDS                  1     18
      D OSACCN                  1      6
      D OSACAC                  7     16
      D OSACAS                 17     18
- 
+
      D DSFDY         E DS
      D DSSDY         E DS
- 
+
      D SVAL            S             20    DIM(5) CTDATA PERRCD(1)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D pReturnCode     S              7
      D WPARM           S             20A   INZ('LoanCustOriginPurch')
- 
+
       ** Account
      D wBrca           S              3
      D wCNum           S              6
@@ -115,7 +116,7 @@
      D wACSq           S              2  0
      D wACodA          S             10
      D wACSqA          S              2
- 
+
       ** Entry Parms
      D IECCY           S              3
      D ILCNUM          S              6
@@ -125,7 +126,7 @@
      D IOlno           S              6
      D IOSBr           S              3
      D OBLCD           S              1
- 
+
       ** AOACCTR0 Parms
      D PRtCd           S              7
      D POptn           S              7
@@ -135,7 +136,7 @@
      D PACod           S             10
      D PASeq           S              2
      D PBrch           S              3
- 
+
       ** AONOSTR0 Parms
      D***Wnostro         S              2                                                   CLE075BI
      D WRetcd          S              7
@@ -147,10 +148,10 @@
      D @Brca           S              3
      D @Cssn           S             10
      D @Pnoi           S              1
- 
+
       ** AOBRCHR1 Parms
      D Branch          S              3
- 
+
       ** AOSVALR0 Parms
      D P@OP01          S             20
      D P@VL01          S            200
@@ -172,7 +173,7 @@
      D P@VL09          S            200
      D P@OP10          S             20
      D P@VL10          S            200
- 
+
      D SVALK1          S             20
      D SVAL1           S            200
      D SVALK2          S             20
@@ -193,16 +194,16 @@
      D SVAL9           S            200
      D SVALK0          S             20
      D SVAL10          S            200
- 
+
      D WRetn           S             10  0
- 
+
      D WRK01           S              1
- 
+
      D PPCUST          S              1
- 
+
      D CLE033          S              1
      D SET09           S              1
- 
+
       ** +--------------------------------------+                                           CLE075BI
       ** ¦ Cache Work Variables and Storage     ¦                                           CLE075BI
       ** ¦ ================================     ¦                                           CLE075BI
@@ -267,7 +268,7 @@
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       ** +--- Start of Main processing -------------------------------+
       ** ¦                                                            ¦
@@ -275,106 +276,106 @@
       ** ¦ is executed at program activation.                         ¦
       ** ¦                                                            ¦
       ** +------------------------------------------------------------+
- 
+
       ** Receives input parameters
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    IECCY
      C                   PARM                    ILCNUM
- 
+
      C                   PARM                    ISccy
      C                   PARM                    IOSAC
      C                   PARM                    ISetp
      C                   PARM                    IOlno
      C                   PARM                    IOSBr
- 
+
      C                   PARM                    OBLCD
- 
+
       ** Set Account fields depending on settlement type
- 
+
      C                   IF        P@VL05 = 'Y'                                             CLE075BI
      C                   EXSR      SRRtvAcc
      C                   ENDIF                                                              CLE075BI
- 
+
      C**********         EVAL      *INLR = *ON                                              CLE075BI
- 
+
      C                   RETURN
- 
+
       *****************************************************************
      C/EJECT
       *****************************************************************
       * SRRtvAcc - Derive account depending on the value of           *
       *            Settlement type                                    *
       *****************************************************************
- 
+
      C     SRRtvACc      BEGSR
- 
+
      C                   MOVE      IOSBR         wBrca
- 
+
      C                   MOVE      IOSBR         Branch
      C**********         EXSR      SRGetBrca                                                CLE075BI
- 
+
       ** Settlement type 03
- 
+
      C                   SELECT
      C     ISetp         WHENEQ    03
      C                   EXSR      SRGetBrca                                                CLE075BI
      C                   EXSR      SRAcc03
- 
+
      C     ISetp         WHENEQ    05
      C                   EXSR      SRAcc05
- 
+
       ** Settlement type 04
- 
+
      C     Isetp         WHENEQ    04
      C                   MOVE      BLACCD        wAcod
      C                   EXSR      SRAcc04
- 
+
       ** Nostro Settlement type
- 
+
      C     Isetp         WHENEQ    01
      C     Isetp         OREQ      02
      C     Isetp         OREQ      07
      C     ISetp         OREQ      08
      C     ISetp         OREQ      12
      C                   EXSR      SRAccNs
- 
+
       ** Suspense a/c settlement type
- 
+
      C     ISetp         WHENEQ    00
      C     ISetp         OREQ      06
      C                   MOVE      BKACCD        wAcod
      C                   EXSR      SRAcc04
- 
+
       ** Retail
- 
+
      C     ISetp         WHENEQ    14
      C                   EXSR      SRAccRE
- 
+
       ** Settlement type 09
- 
+
      C     ISetp         WHENEQ    09
      C                   EXSR      SRAcc09
- 
+
      C                   ENDSL
- 
+
       ** Retrieve account details
- 
+
      C                   EXSR      SRRetACcD
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       * SRRetAccd - Retrieve account details                          *
       *****************************************************************
- 
+
      C     SRRetAccd     BEGSR
- 
+
      C                   MOVE      Wacod         Wacoda
      C                   MOVE      Wacsq         Wacsqa
- 
+
      C                   IF        ISetP <> 14                                              CLE075BI
      C                   CALL      'AOACCTR0'
      C                   PARM      *BLANKS       PRtCd
@@ -387,41 +388,41 @@
      C                   PARM      Wbrca         PBrch
      C     GLACNT        PARM      GLACNT        DSSDY
      C                   ENDIF                                                              CLE075BI
- 
+
       ** Check RETB if PDCLBlockDebit is Y
- 
+
      C**********         IF        P@VL05 = 'Y'                                             CLE075BI
      C                   TESTB     '2'           RETB                     80
      C                   IF        *IN80 = *ON
      C                   EVAL      OBLCD  = 'Y'
      C                   ENDIF
      C**********         ENDIF                                                              CLE075BI
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
      C/EJECT
       *****************************************************************
       * SRAcc03 - Settlement type 03                                  *
       *****************************************************************
- 
+
      C     SRAcc03       BEGSR
- 
+
      C                   MOVE      A8BICN        wCnum
      C                   MOVE      IECCY         wCcy
      C                   MOVE      01            wAcsq
      C                   MOVE      BLACCD        wAcod
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
      C/EJECT
       *****************************************************************
       * SRAcc04 - Settlement type 04, 00 and 06                       *
       *****************************************************************
- 
+
      C     SRAcc04       BEGSR
- 
+
      C     PPCUST        IFEQ      'O'
      C                   MOVE      IOlno         wCnum
      C                   ELSE
@@ -429,33 +430,33 @@
      C                   ENDIF
      C                   MOVE      IECCY         wCcy
      C                   MOVE      01            wAcsq
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
      C/EJECT
       *****************************************************************
       * SRAcc05 - Settlement type 05                                  *
       *****************************************************************
- 
+
      C     SRAcc05       BEGSR
- 
+
      C                   MOVE      IOSAC         OSACDS
      C                   MOVE      IECCY         wCcy
      C                   MOVE      OSACCN        wCnum
      C                   MOVE      OSACAC        wAcod
      C                   MOVE      OSACAS        wAcsq
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
      C/EJECT
       *****************************************************************
       * SRAccNs - settlement type 01, 02, 07, 08, 12 (Nostro)         *
       *****************************************************************
- 
+
      C     SRAccNs       BEGSR
- 
+
      C                   EVAL      NSNum = IOSAC                                            CLE075BI
      C                   EVAL      NSCcy = IECCY                                            CLE075BI
      C                   EXSR      CHKNOST                                                  CLE075BI
@@ -476,9 +477,9 @@
      C**********         PARM                    @Cssn                                      CLE075BI
      C**********         PARM                    @Pnoi                                      CLE075BI
      C*****SDNOST        PARM                    DSFDY                                      CLE075BI
- 
+
       ** DBERR 001
- 
+
      C     WRetCd        IFNE      *BLANKS
      C                   MOVEL     'AONOSTR0'    DBFILE
      C                   Z-ADD     001           DBASE
@@ -486,9 +487,9 @@
      C**********         MOVE      Wnostro       DBKEY                                      CLE075BI
      C                   EVAL      DBKEY = IECCY + IOSAC                                    CLE075BI
      C                   EXSR      *PSSR
- 
+
       ** Set nostro account
- 
+
      C                   ELSE
      C                   MOVE      A7CUST        WCnum
      C                   MOVE      IECCY         WCCY
@@ -496,17 +497,17 @@
      C                   MOVE      A7ACSN        WAcsq
      C                   MOVE      A7ACSN        WBrca
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
      C/EJECT
       *****************************************************************
       * SRAccRE - Settlement type 14 (Retail)                         *
       *****************************************************************
- 
+
      C     SRAccRE       BEGSR
- 
+
      C                   MOVEL     IOSAC         WRetn
      C     WRetn         CHAIN     ACNUM
      C                   IF        %FOUND
@@ -516,17 +517,17 @@
      C                   MOVE      CCY           WCcy
      C                   MOVE      CNUM          WCnum
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
      C/EJECT
       *****************************************************************
       * SRAcc09 - Settlement type 09                                  *
       *****************************************************************
- 
+
      C     SRAcc09       BEGSR
- 
+
      C                   MOVEL     P@VL01        WCnum
      C                   MOVEL     P@VL02        WAcod
      C                   MOVEL     IECCY         WCCY
@@ -534,17 +535,17 @@
      C     SET09         IFEQ      'T'
      C                   MOVEL     ISCCY         WCCY
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
      C/EJECT
       *****************************************************************
       * SRGetBrca - Retrieve Branch Details                           *
       *****************************************************************
- 
+
      C     SRGetBrca     BEGSR
- 
+
      C     Branch        IFNE      *BLANKS
      C                   EVAL      SrcBranch = Branch                                       CLE075BI
      C                   EXSR      CHKBRCH                                                  CLE075BI
@@ -556,29 +557,29 @@
      C                   PARM                    Branch
      C     SDBRCH        PARM                    DSSDY
      C                   ENDIF
- 
+
      C                   ENDIF                                                              CLE075BI
      C                   ENDSR
- 
+
       *****************************************************************
      C/EJECT
       *****************************************************************
       * Initialisation subroutine                                     *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C                   EVAL      dbPgm = PSProcPgm
- 
+
       ** Access General Ledger details
- 
+
      C                   CALL      'AOGELRR1'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*FIRST '     @OPTN
      C     SDGELR        PARM      SDGELR        DSSDY
- 
+
       ** DBERR 002
- 
+
      C     @RTCD         IFNE      *BLANKS
      C     *LOCK         IN        LDA
      C                   MOVEL     'SDGELRPD'    DBFILE
@@ -587,16 +588,16 @@
      C                   EXSR      *PSSR
      C                   OUT       LDA
      C                   ENDIF
- 
+
       ** Retrieve trading data
- 
+
      C                   CALL      'AOTRADR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*FIRST '     @OPTN
      C     SDTRAD        PARM      SDTRAD        DSFDY
- 
+
       ** DBERR 003
- 
+
      C     @RTCD         IFNE      *BLANKS
      C     *LOCK         IN        LDA
      C                   MOVE      '*FIRST'      DBKEY
@@ -605,21 +606,21 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Check for presence of feature CLE033
- 
+
      C                   MOVE      'N'           CLE033
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CLE033'      @SARD
- 
+
      C                   IF        @RTCD = *BLANKS
      C                   EVAL      CLE033 = 'Y'
      C                   ELSE
      C                   EVAL      CLE033 = 'N'
      C                   ENDIF
- 
+
      C                   IF        CLE033 = 'Y'                                            AR1063739
      C                   CALL      'AOSVALR0'
      C                   PARM      *BLANKS       wRETCD
@@ -643,7 +644,7 @@
      C                   PARM      *BLANKS       P@VL09
      C                   PARM      *BLANKS       P@OP10
      C                   PARM      *BLANKS       P@VL10
- 
+
      C     WRetcd        IFNE      *BLANKS
      C     *LOCK         IN        LDA
      C                   MOVEL     'LE007054'    DBPGM
@@ -653,19 +654,19 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Save value of Settlement09Postings in a one character field
- 
+
      C                   MOVEL     P@VL04        SET09
      C                   ENDIF                                                             AR1063739
- 
+
       ** Check System Value: Use Original Borrower or Purchased From?
       ** Set up parameter so access object checks LoanCustOriginPurch
- 
+
      C                   MOVEL     WPARM         SVALK1
- 
+
       ** Call Access object:
- 
+
      C                   CALL      'AOSVALR0'
      C                   PARM                    WRetcd
      C                   PARM                    SVALK1
@@ -688,15 +689,15 @@
      C                   PARM                    SVAL9
      C                   PARM                    SVALK0
      C                   PARM                    SVAL10
- 
+
       ** If the system value is not found then default value to 'P'
- 
+
      C     WRetcd        IFNE      '        '
      C                   MOVE      'P'           PPCUST
      C                   ELSE
- 
+
       ** Isolate the first character of SVAL1 which = 'P' or 'O'.
- 
+
      C                   MOVEL     SVAL1         WRK01
      C     WRK01         IFEQ      'O'
      C                   MOVE      'O'           PPCUST
@@ -739,7 +740,7 @@
      C                   ENDIF                                                              CLE075BI
       *
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************                     CLE075BI
@@ -914,7 +915,7 @@
       *****************************************************************
      C/COPY ZACPYSRC,PSSR_ILEB
       *****************************************************************
- 
+
 **  CPY@
 (c) Misys International Banking Systems Ltd. 2012
 **   SVAL  -  SYSTEM VALUES ARRAY

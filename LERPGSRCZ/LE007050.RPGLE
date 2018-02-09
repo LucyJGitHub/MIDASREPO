@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
+     H COPYRIGHT('(c) Finastra International Limited 2011')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas LE Update trailers files')                       *
@@ -17,13 +17,15 @@
       *                                                               *
       *  Called By: LEC0604N                                          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. 263800             Date 01Aug12               *
-      *  Prev Amend No. CLE134  *CREATE    Date 01Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. 263800             Date 01Aug12               *
+      *                 CLE134  *CREATE    Date 01Aug12               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  263800 - Update MATLNZX too.                                 *
       *  CLE134 - Past Due Call Loans process                         *
       *                                                               *

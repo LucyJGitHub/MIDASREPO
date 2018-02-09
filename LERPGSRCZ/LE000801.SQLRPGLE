@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas LE Retrieve Repayment/Category Code Priority')
@@ -10,28 +10,30 @@
       *  LE000801 - Midas LE Retrieve Repayment/Category Code         *
       *             Priority                                          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. CLE164 *CREATE     Date 18Aug14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE164 *CREATE     Date 18Aug14               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
       *                                                               *
       *****************************************************************
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in
       ** the Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** +--------------------------------------+
       ** ¦ Program Prototypes                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D Main            PR                  EXTPGM('LE000801')
      D pReturnCode                    7A
      D pCategoryCode                  5A
@@ -44,7 +46,7 @@
      D pRepPriority                   8S 0
      D pCatPriority                   8S 0
      D pOvrdftflg                     1A
- 
+
      D Main            PI
      D pReturnCode                    7A
      D pCategoryCode                  5A
@@ -57,7 +59,7 @@
      D pRepPriority                   8S 0
      D pCatPriority                   8S 0
      D pOvrdftflg                     1A
- 
+
      D ACCESS_SVAL     PR                  EXTPGM('AOSVALR0')
      D pRetCode                       7A
      D pOP01                         20A
@@ -80,7 +82,7 @@
      D pVL09                        200A
      D pOP10                         20A
      D pVL10                        200A
- 
+
      D RET_REPAYMENT   PR                  EXTPGM('LE000802')
      D pReturnCode                    7A
      D pCategoryCode                  5A
@@ -92,13 +94,13 @@
      D pFeeSequence                   2S 0
      D pRepPriority                   8S 0
      D pOvrdftflg                     1A
- 
+
       **---------------------------------------------------------------
       ** +--------------------------------------+
       ** ¦ Variable declaration                 ¦
       ** ¦ ====================                 ¦
       ** +--------------------------------------+
- 
+
       ** AOSVALR0 Parameters
      D pRetCode        S              7A
      D pOP01           S             20A
@@ -121,18 +123,18 @@
      D pVL09           S            200A
      D pOP10           S             20A
      D pVL10           S            200A
- 
+
       /free
- 
+
        // Start of Main processing
        //   Initial processing is performed automatically:
        //   *INZSR is executed at program activation.
- 
+
                   Exsr RetrieveRepaymentPriority;
- 
+
                   *Inlr = *On;
                   Return;
- 
+
        //*************************************************************
        /EJECT
        //*************************************************************
@@ -144,9 +146,9 @@
        // Calls: None                                                *
        //                                                            *
        //*************************************************************
- 
+
        BegSr RetrieveRepaymentPriority;
- 
+
                    CallP RET_REPAYMENT(
                                          pReturnCode
                                        : pCategoryCode
@@ -159,7 +161,7 @@
                                        : pRepPriority
                                        : pOvrdftflg
                                          );
- 
+
                    pOP01 = 'PDPCAT_' + %Trim(pCategoryCode);
                    CallP ACCESS_SVAL(
                                        pRetCode
@@ -184,7 +186,7 @@
                                      : pOP10
                                      : pVL10
                                        );
- 
+
                    If pRetCode <> *Blanks;
                       DbFile = 'SDSVALPD';
                       Dbase  = 2;
@@ -192,7 +194,7 @@
                       DbPgm  = 'LE000801';
                       Exsr *Pssr;
                    Endif;
- 
+
                    If pVL01 <> *Blanks;
                       Monitor;
                          pCatPriority   = %Int(pVL01);
@@ -210,9 +212,9 @@
                       DbPgm  = 'LE000801';
                       Exsr *Pssr;
                    Endif;
- 
+
        Endsr;
- 
+
        //*************************************************************
        /EJECT
        //*************************************************************
@@ -224,10 +226,10 @@
        //  Calls: None                                               *
        //                                                            *
        //*************************************************************
- 
+
        Begsr *Inzsr;
        Endsr;
- 
+
        //*************************************************************
        /EJECT
        //*************************************************************
@@ -237,7 +239,7 @@
        //   Called By: Main Processing                               *
        //                                                            *
        //*************************************************************
- 
+
        Begsr *Pssr;
                   pReturnCode = '*ERROR';
                   *Inu7 = *ON;
@@ -246,5 +248,5 @@
                   *Inlr = *ON;
                   Return;
        Endsr;
- 
+
       /end-free

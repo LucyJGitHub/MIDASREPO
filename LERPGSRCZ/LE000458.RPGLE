@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+     H COPYRIGHT('(c) Finastra International Limited 2012')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas LE PDCL process: retrieve set a/c priority')     *
@@ -18,10 +18,11 @@
       *  Called By: LE0450, LER130 and LER135                         *
       *                                                               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. CLE164               Date 18Aug14             *
-      *  Prev Amend No. AR1097202            Date 28Mar13             *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE164             Date 18Aug14               *
+      *                 AR1097202          Date 28Mar13               *
       *                 AR1063739            Date 03Dec12             *
       *                 AR741212             Date 14Oct12             *
       *                 AR402543             Date 01Aug12             *
@@ -30,6 +31,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
       *  AR1097202 - LEC000479 00001 failed                           *
       *  AR1063739 - SettlementAccount09 Issues                       *
@@ -682,7 +684,7 @@
  
       *****************************************************************
 **  CPY@
-(c) MIsys International Banking Systems Ltd. 2012
+(c) Finastra International Limited 2012
 **   SVAL  -  SYSTEM VALUES ARRAY
 Settlement09Customer
 Settlement09AccCode

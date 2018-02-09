@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas LE Facility amendment validation')               *
@@ -9,10 +9,11 @@
       *                                                               *
       *  LEFAMDVAL -  Facility Amendment Validation                   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002'           *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD024398           Date 11May14               *
-      *  Prev Amend No. AR693564           Date 08Oct12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD024398           Date 11May14               *
+      *                 AR693564           Date 08Oct12               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 CSC054             Date 23Feb12               *
@@ -37,6 +38,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD024398 - API Performance Optimisation                      *
       *  AR693564 - API: LEFAMD duplicate amend sequence record in    *
       *             LEVFAMDPD. Duplicate SeqNo use when updater       *
@@ -1376,4 +1378,4 @@
       /COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2002
+(c) Finastra International Limited 2002

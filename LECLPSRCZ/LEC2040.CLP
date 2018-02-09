@@ -7,12 +7,13 @@
 /*                                                                   */
 /*       LEC2040 - Loan Amendments Maintenance                       */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2002           */
+/*       (c) Finastra International Limited 2002                     */
 /*                                                                   */
-/*       Last Amend No. AR400813           Date 01Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR400813           Date 01Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Prev Amend No. 256407A            Date 01Oct08              */
+/*                      256407A            Date 01Oct08              */
 /*                      256800             Date 24Sep08              */
 /*                      256407             Date 04Sep08              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -23,6 +24,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       AR400813 - Error in settlement when processing LELAPI tran- */
 /*                  sactions due to discrepancy in parameter length. */
 /*                  Change length of PINPP to 1059 to get the correct*/
@@ -75,7 +77,7 @@
              DCLF       FILE(APHEADPD)                                                    /*256407*/
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2002')
  
 /* Global monitor message */
@@ -183,7 +185,7 @@
  
  ENDPGM:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 /*/COPY WNCPYSRC,LEC2040END                                          */
  

@@ -7,10 +7,11 @@
 /*                                                                   */
 /*     LEC0402  - INPUT CYCLE TERMINATION PAY/RECEIVE PROCESSING     */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD040628           Date 07Sep16              */
-/*       Prev Amend No. MD021155           Date 19Jul13              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD040628           Date 07Sep16              */
+/*                      MD021155           Date 19Jul13              */
 /*                      CLE134             Date 01Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -34,6 +35,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD040628 - If error occurs, return to calling program       */
 /*                  with correct job switches.                       */
 /*       MD021155 - COB Restructure Phase 1 Remnants                 */
@@ -65,7 +67,7 @@
              PGM
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
              DCL        VAR(&RSEQ) TYPE(*CHAR) LEN(5) VALUE('     ')
@@ -699,5 +701,5 @@ END:                                                                  /*E40242*/
 /*********** MONMSG     MSGID(CPF0000 RPG0000 MCH0000) ***************/
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

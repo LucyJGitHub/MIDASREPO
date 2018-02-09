@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas LE CLE025 Aggregated Facility Initialisation')   *
@@ -10,14 +10,15 @@
       *  RPGLE/LE000049 - CLE025 Aggregated Facility Initialisation   *
       *                   Programe                                    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD027             Date 09Dec05               *
       *                 BUG9487            Date 03Dec05               *
       *                 BUG7190            Date 07Jun05               *
       *                 BUG6111            Date 28Feb05               *
@@ -25,6 +26,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  BUG9487 - Wrong RCTP for LEAGFZPD.                           *
@@ -362,4 +364,4 @@
      C                   ENDSR
      C****************************************************************
 ** WCPY@
-(c) Misys International Banking Systems Ltd. 2004
+(c) Finastra International Limited 2004

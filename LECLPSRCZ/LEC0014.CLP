@@ -7,17 +7,19 @@
 /*                                                                   */
 /*       LEC0014 - Initialisation Program for CPAM and INTR Fields.  */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2002           */
+/*       (c) Finastra International Limited 2002                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. 208836 *CREATE     Date 17Sep02              */
-/*       Prev Amend No. Xnnnnn             Date ddmmmyy              */
+/*       Prev Amend No. 208836 *CREATE     Date 17Sep02              */
+/*                      Xnnnnn             Date ddmmmyy              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       208836 - Fields CPAM and INTR in HISTSHM are not            */
 /*                initialised when switchable feature CLE003 is      */
 /*                switched on                                        */
@@ -26,7 +28,7 @@
              PGM        PARM(&RETCD &MODE)
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2002')
              DCL        VAR(&RETCD) TYPE(*CHAR) LEN(7)
              DCL        VAR(&MODE) TYPE(*CHAR) LEN(1)
@@ -87,7 +89,7 @@
              MONMSG     MSGID(CPF0000 MCH0000)
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 /** End program */
  

@@ -7,11 +7,12 @@
 /*                                                                   */
 /*       LERC465 - Merge all profitability report/enq files          */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
 /*                                                                   */
-/*       Last Amend No. AR1089839          Date 19Feb13              */
-/*       Prev Amend No. CLE075AL           Date 06Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR1089839          Date 19Feb13              */
+/*                      CLE075AL           Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -23,6 +24,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       AR1089839 - COBOP and 2.1 source clashes                    */
 /*       CLE075AL - COB Restructure - LE COB Optimisation Phase 1    */
 /*       MOF60  - Customer Lending R10 enhancements                  */
@@ -32,7 +34,7 @@
 PGM
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
      SNDPGMMSG  MSG('Merge Profitability Report/Enquiry files') +
@@ -57,6 +59,6 @@ PGM
   /**ENDDO**                                                         */                 /*CLE075AL*/
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 ENDPGM

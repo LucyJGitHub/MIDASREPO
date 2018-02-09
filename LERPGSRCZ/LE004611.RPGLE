@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2006')
+     H COPYRIGHT('(c) Finastra International Limited 2006')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas LE Effective Interest Rate Update')              *
@@ -16,11 +16,12 @@
       *                                                               *
       *  Component of: LEC004611                                      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *  (c) Finastra International Limited 2006                      *
       *                                                               *
       *                                                               *
-      *  Last Amend No. CLE134             Date 01Aug12               *
-      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
       *                 AR784436           Date 22Jun11               *
       *                 AR782803           Date 03Jun11               *
       *                 AR747507           Date 24May11               *
@@ -45,6 +46,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  CLE148 - Alpha Loan Reference                                *
       *  AR784436 - Wrong amortised F/D/P to date and amortised cost  *
@@ -2443,7 +2445,7 @@
  
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2006
+(c) Finastra International Limited 2006
 ** ##OX1
 OVRDBF FILE(ZAEIRPL0) TOFILE(LEEIRPL0) SEQONLY(*YES 500)
 OVRDBF FILE(ZAEIRFL0) TOFILE(LEEIRFL0) SEQONLY(*YES 500)

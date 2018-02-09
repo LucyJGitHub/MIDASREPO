@@ -12,13 +12,15 @@
       *             the old driver LF/LEHISSL0 to a member in the     *
       *             new driver PF/LEHISUPD.                           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD024318           Date 13Jan14               *
-      *  Prev Amend No. CLE137   *CREATE   Date 06Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD024318           Date 13Jan14               *
+      *                 CLE137  *CREATE    Date 06Aug12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD024318 - COB Component LEC1001 00001 ends in error         *
       *  CLE137 - LE Monthly History processing                       *
       *                                                               *
@@ -269,4 +271,4 @@
       /EJECT
       *****************************************************************
 ** CPY@ - Object copyright
-(c) Misys International Banking Systems Ltd. 2012
+(c) Finastra International Limited 2012

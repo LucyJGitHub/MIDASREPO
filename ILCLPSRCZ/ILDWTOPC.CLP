@@ -7,18 +7,20 @@
 /*                                                                   */
 /*       ILDWTOPC - Create PC document wioth IBLC 2002 items         */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2005           */
+/*       (c) Finastra International Limited 2005                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CER001             Date 25Apr05              */
-/*       Prev Amend No. 200880             Date 05Dec01              */
+/*       Prev Amend No. CER001             Date 25Apr05              */
+/*                      200880             Date 05Dec01              */
 /*                      ULX043             Date 11Oct01              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CER001 - LUX Upgrade to MidasPlus                           */
 /*       200880 - ULX043 - Narrative too long                        */
 /*       ULX043 - IBLC 2002 Reporting                                */
@@ -28,7 +30,7 @@
              PGM        PARM(&RETCOD &BCLN &FLR )
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2005')
  
 /***  Declare variables.  ***/
@@ -81,8 +83,8 @@
              CHGVAR     VAR(&RETCOD) VALUE('1')
              DMPCLPGM
  
- ENDPGM:     CHGVAR     VAR(&CPYFLD) VALUE('(c) Misys International +
-                          Banking  Systems Ltd. 2005')
+ ENDPGM:     CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International +
+                          Limited 2005')
              MONMSG     MSGID(CPF0000)
              DLTOVR     FILE(ILDATAPD)
              MONMSG     MSGID(CPF0000)

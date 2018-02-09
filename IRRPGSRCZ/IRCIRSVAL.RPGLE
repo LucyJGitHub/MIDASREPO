@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas IR Cross ccy IRS field valdation controller')    *
@@ -14,10 +14,11 @@
       *            The sequence of validation is based on subroutine  *
       *            VALD08 in Midas program DL1603.                    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD033488           Date 12Mar15               *
-      *  Prev Amend No. CIR018             Date 11Aug14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD033488           Date 12Mar15               *
+      *                 CIR018             Date 11Aug14               *
       *                 MD026686           Date 08May14               *
       *                 CIR017             Date 10Apr14               *
       *                 245692             Date 11Dec13               *
@@ -93,6 +94,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD033488 - Allow negative rates. Remove last parameter of    *
       *             program IRVSTERMRT to match entry parameter.      *
       *  CIR018 - Daily Rate Change Frequency on SIRS                 *
@@ -4624,4 +4626,4 @@
       /EJECT
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

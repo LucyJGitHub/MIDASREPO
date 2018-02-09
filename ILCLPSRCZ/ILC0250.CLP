@@ -7,18 +7,20 @@
 /*                                                                   */
 /*       CLP/ILC0250  - Routing keys duplication selection           */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2005           */
+/*       (c) Finastra International Limited 2005                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CER001             Date 25Apr05              */
-/*       Prev Amend No. TLIFIX             Date 14Jun02              */
+/*       Prev Amend No. CER001             Date 25Apr05              */
+/*                      TLIFIX             Date 14Jun02              */
 /*                      ULX043             Date 27Jun01              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CER001 - LUX Upgrade to MidasPlus                           */
 /*       TLIFIX - Dtaara BLSTAT is not used anymore.                 */
 /*       ULX043 - IBLC 2002 Reporting                                */
@@ -27,7 +29,7 @@
              PGM
  
              DCL        VAR(&ACTCPY) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2005')
  
 /***  Declare Data for display at selection screen.  ***/
@@ -328,7 +330,7 @@
  
              GOTO       SCREEN
  
- ENDPGM:     CHGVAR     VAR(&ACTCPY) VALUE('(c) Misys International +
-                            Banking Systems Ltd. 2005')
+ ENDPGM:     CHGVAR     VAR(&ACTCPY) VALUE('(c) Finastra International +
+                            Limited 2005')
  
              ENDPGM

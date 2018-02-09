@@ -7,10 +7,11 @@
 /*                                                                   */
 /*       LEC02 - INPUT CYCLE PROCESSING                              */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. AR1097513          Date 27Mar13              */
-/*       Prev Amend No. CUP005             Date 21Sep10              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR1097513          Date 27Mar13              */
+/*                      CUP005             Date 21Sep10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /*                      CSW208             Date 15Apr08              */
@@ -45,6 +46,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       AR1097513 - Menu of transaction input under customer        */
 /*                   lending is not showing.                         */
 /*       CUP005 - Change processing of temporary files for IASP.     */
@@ -99,7 +101,7 @@
 /************PGM        PARM(&PARM)                                     BHF217*/
              PGM        PARM(&PARM &RSEQ &RLEV &RENT)                 /*BHF217*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
              DCL        VAR(&RSEQ) TYPE(*CHAR) LEN(5)                 /*BHF217*/
@@ -606,5 +608,5 @@ ERROR:          IF         COND(%SWITCH(XXXXXX01)) THEN(DO)
              SNDPGMMSG  MSG(&MSG) TOPGMQ(*EXT)
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 ENDPGM:      ENDPGM

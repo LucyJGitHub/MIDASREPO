@@ -7,23 +7,25 @@
 /*                                                                   */
 /*       LEC0021 - Initialisation Program for Margin File            */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2002           */
+/*       (c) Finastra International Limited 2002                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CAS005  *CREATE    Date 16Dec02              */
+/*       Prev Amend No. CAS005  *CREATE    Date 16Dec02              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CAS005 - Enhancements to CAS001, CAS002 and CAS004          */
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&RTCD &PMODE)
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2002')
              DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)
              DCL        VAR(&PMODE) TYPE(*CHAR) LEN(1)
@@ -74,5 +76,5 @@
  
  END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

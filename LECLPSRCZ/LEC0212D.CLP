@@ -7,8 +7,9 @@
 /*                                                                  */
 /*       LEC0212D-RESTART CONFIRMATIONS                             */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -16,14 +17,15 @@
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.03 ---------------------------------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Last Amend No. CPK009             Date 09Aug99              */
-/*     Prev Amend No. 124684              DATE 06JAN98              */
+/*       Prev Amend No. CPK009             Date 09Aug99              */
+/*                      124684             Date 06Jan98              */
 /*                    S01408              DATE 14MAY96              */
 /*                    S01117              DATE 08FEB90              */
 /*                    S01194              DATE 11DEC89              */
 /*                    S01179              DATE 11SEP88               */
 /*                                                                  */
 /********************************************************************/
+/*       MD046248 - Finastra Rebranding                              */
 /*       CPK009 - Packaging for DBA3 release. STRCMTCTL values set   */
 /*                to CMTSCOPE(*JOB).                                 */
 /*       124684 - If the confirmations job ends abnormally and does  */
@@ -43,7 +45,7 @@
 /**/
              PGM
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&MSG) TYPE(*CHAR) LEN(50)
 /*           DCL        VAR(&MEM) TYPE(*CHAR) LEN(44)              */ /*S01194*/
@@ -120,5 +122,5 @@ ENDPGM:      ENDCMTCTL
              DLCOBJ     OBJ((LECONF *DTAARA *EXCL))                   /*124684*/
              MONMSG     MSGID(CPF0000)                                /*124684*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

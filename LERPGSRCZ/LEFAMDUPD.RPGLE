@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*OVR *  OVRDBF FILE(LEFCAMXX) TOFILE(LEFCAML6) SHARE(*NO)            *
 /*OVR *  OVRDBF FILE(LEFEEDXX) TOFILE(LEFEEDL1) SHARE(*NO)            *
@@ -11,10 +11,11 @@
       *                                                               *
       *  LEFAMDUPD -  Facility Amendment Update                       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD024398           Date 11May14               *
-      *  Prev Amend No. MD025467           Date 08May14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD024398           Date 11May14               *
+      *                 MD025467           Date 08May14               *
       *                 MD024342B          Date 08May14               *
       *                 MD024342           Date 08May14               *
       *                 CLE134             Date 01Aug12               *
@@ -54,6 +55,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD024398 - API Performance Optimisation                      *
       *  MD025467 - API locking issues Redesign Approach              *
       *  MD024342B - API issue. Trailer file allocation problem.      *
@@ -2045,7 +2047,7 @@
      C                   ENDSR                                                                CAP084
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2002
+(c) Finastra International Limited 2002
 ** XOT - OPEN TAGS for XML                                                                  BUG4555
 <Customer>                                                                                  BUG4555
 ** XCT - CLOSE TAGS for XML                                                                 BUG4555

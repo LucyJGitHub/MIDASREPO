@@ -7,17 +7,19 @@
 /*                                                                  */
 /*       LEC0601Y - LOANS/PARTICIPATIONS INPUT TODAY                */
 /*                                                                  */
-/*       (c) COPYRIGHT Misys Banking Systems 2006                   */
+/*       (c) COPYRIGHT Finastra International Limited 2006          */
 /*                                                                  */
-/*       Last Amend No. CLE134             Date 01Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CLE134             Date 01Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CLE045 *Create     Date  10Feb06            */
+/*                      CLE045 *C *CREATE  Date 10Feb06              */
 /* Midas Plus 1.2 ---------------- Base ----------------------------*/
 /*                                                                  */
 /********************************************************************/
+/*       MD046248 - Finastra Rebranding                              */
 /*       CLE134 - Past Due Call Loan Processing (Recompile)         */
 /*       CLE045 - Make List of Today's Facilities report            */
 /*                Availabale in I/C. Midas Plus upgrade             */
@@ -28,7 +30,7 @@
              DCL        VAR(&RLEV) TYPE(*CHAR) LEN(1)
              DCL        VAR(&RENT) TYPE(*CHAR) LEN(3)
              DCL        VAR(&BISCPY) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          COPYRIGHT Misys Banking Systems 2006')
+                          COPYRIGHT Finastra International Limited 2006')
 /**/
              DCL        VAR(&MSG) TYPE(*CHAR) LEN(132) +
                           VALUE('LOANS/PARTICIPATIONS INPUT +
@@ -42,6 +44,6 @@
 /**/
              DLTOVR     FILE(*ALL)
 /**/
-             CHGVAR     VAR(&BISCPY) VALUE('(c) Copyright Misys +
-                          Banking Systems 2006')
+             CHGVAR     VAR(&BISCPY) VALUE('(c) Copyright Finastra +
+                          International Limited 2006')
              ENDPGM

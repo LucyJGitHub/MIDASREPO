@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas LE Rollover Interest Rate Fixing in COB')        *
@@ -16,10 +16,11 @@
       *                                                               *
       *  Component of: LEC2460 - Rollover Rate Fixing  Fixing Prompt  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 260183             Date 29Oct15               *
-      *  Prev Amend No. CLE141             Date 01Mar16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. 260183             Date 29Oct15               *
+      *                 CLE141             Date 01Mar16               *
       *                 CLE141             Date 08Feb16               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
@@ -49,6 +50,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  260183 - LEC2460 failed because LF/LELOANL2 can't find       *
       *           matured loans that has RATF='Y'. Amend sources such *
       *           that these loans are also retrieved using a new LF. *
@@ -121,15 +123,15 @@
       *    RESET for subsequent passes.                               *
       *                                                               *
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
-
+ 
       ** Live Loan details
      FLELOANL0  UF   E           K DISK    INFSR(*PSSR) PREFIX(L0)
-
+ 
       ** Live Rollover details
      FLELOANL2  IF   E           K DISK    INFSR(*PSSR) PREFIX(L2)
       *                                                                                       260183
@@ -137,18 +139,18 @@
      F                                     RENAME(CLOANCKF: LELOANF)                          260183
       ** Loans to be reactivated Rollover details                                             260183
       *                                                                                       260183
-
+ 
      FLE2460AU  O    E             PRINTER INFSR(*PSSR) USROPN
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ D-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
-
+ 
      D LDA           E DS           256    EXTNAME(LDA)
       *
       ** Local data area for database error details
@@ -161,30 +163,30 @@
       **                                    181 1830DBASE
       **                                    184 193 DBMOD
       **                                    194 203 DBPROC
-
+ 
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
-
+ 
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
-
+ 
       ** DS for Access Objects - short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
-
+ 
       ** DS for Access Objects - long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
-
+ 
       ** Externally described DS for Bank details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
-
+ 
       ** Externally described DS for Base Rate details
      D SDBSRT        E DS                  EXTNAME(SDBSRTPD)
       *
@@ -219,12 +221,12 @@
      D  L0L8PR                                                                                CLE141
      D  L0L9PR                                                                                CLE141
      D  L0L0PR                                                                                CLE141
-
+ 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
-
+ 
      D WRUN            S              1
      D WWorkBase       S              2S 0
      D WWorkCcy        S              3
@@ -234,14 +236,14 @@
      D WSpreadInd      S              1
      D WSpread         S             11P 7
      D CLE141          S              1                                                       CLE141
-
+ 
       ** Parameter definition
      D PRtnCde         S              7
      D POption         S              7
      D PCYCD           S              3
      D PBase           S              2
      D PSard           S              6                                                       CLE141
-
+ 
       ** Parameter definition of standard modules
      D PZInpDay        S              5P 0
      D PZDaysFwd       S              2P 0
@@ -251,7 +253,7 @@
      D PZCurr          S             30                                                       CLE141
      D PZLocn          S             30                                                       CLE141
      D PZMode          S              1                                                       CLE141
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -262,11 +264,11 @@
       ** ¦ is executed at program activation.                         ¦
       ** ¦                                                            ¦
       ** +------------------------------------------------------------+
-
+ 
       *****************************************************************
       * MAIN PROCEDURE                                                *
       *****************************************************************
-
+ 
       *
       ** Do Initial reading on the primary file
       *
@@ -304,7 +306,7 @@
       *
      C                   EVAL      *INLR = *ON
      C                   RETURN
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************

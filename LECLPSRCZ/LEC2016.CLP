@@ -7,14 +7,15 @@
 /*                                                                  */
 /*  LEC2016 - Lending PC Front-End Drip Feed Control Program        */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*  Last Amend No. CCB020            Date 06Aug12                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CCB020             Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*  Prev Amend No. CLE035            Date  22Sep03                  */
+/*                      CLE035             Date 22Sep03              */
 /*                 BUG7286           Date  23May05                  */
 /*                 CSC020            Date  31Mar04                  */
 /*                 CLE034            Date  31May03                  */
@@ -43,6 +44,7 @@
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*  CCB020 - COB Restructure - Secondary COB Infrastructure         */
 /*  CLE035 - Lending Enhancements for Nordea Phase 1 Priority 2:    */
 /*           Income Splits                                          */
@@ -92,7 +94,7 @@
              DCL        VAR(&MPHAS) TYPE(*CHAR) LEN(4)                                    /*CCB020*/
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2003')
              DCL        &STRRCV  TYPE(*CHAR)  LEN(10)                                     /*CSC020*/
              DCL        VAR(&STRSEQ) TYPE(*DEC) LEN(10 0)                                /*BUG7286*/
@@ -314,6 +316,6 @@
              ENDDO                                                                        /*216709*/
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*XBI *  OVRDBF FILE(LOAMD) TOFILE(LOAMS) SHARE(*NO)                  *
 /*STD *  RPGBASEMOD                                                   *
@@ -13,11 +13,12 @@
       *  Function:  This is the update function for the Repayment     *
       *             Schedule                                          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
       *                                                               *
-      *  Last Amend No. AR943686           Date 23Sep16               *
-      *  Prev Amend No. MD040830           Date 14Sep16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR943686           Date 23Sep16               *
+      *                 MD040830           Date 14Sep16               *
       *                 CLE154             Date 02Aug12               *
       *                 MD025467           Date 08May14               *
       *                 MD024342B          Date 08May14               *
@@ -79,6 +80,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR943686 - CLE031: System generating wrong projected move-   *
       *             ment. Populate value of SCCY to convert amount    *
       *             to account currency. (Child: AR943687)            *
@@ -4777,7 +4779,7 @@ B001 C     RPCHTP        IFEQ      'I'
      O                                           44 ' '                                     AR322732
      O                                           45 ' '                                     AR322732
 ** CPY@  **      Copyright statement
-(c) Misys International Banking Systems Ltd. 2002
+(c) Finastra International Limited 2002
 **  POWR -- USED IN CURRENCY CONVERSION(FACILITY)
 0000001
 0000010

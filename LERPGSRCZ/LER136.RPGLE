@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(C) Copyright Misys International Banking Systems')
+     H COPYRIGHT('(C) Copyright Finastra International Limited')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas LE Fee history sequence and RECI update')        *
@@ -16,10 +16,11 @@
       *  Called By: LER135 - Midas LE Fee accruals, update and A/C    *
       *                      key generation.                          *
       *                                                               *
-      *  (C) Copyright Misys International Banking Systems Ltd. 2007  *
+      *  (C) Copyright Finastra International Limited 2007            *
       *                                                               *
-      *  Last Amend No. MD043383           Date 30Mar17               *
-      *  Prev Amend No. AR632102B          Date 21Dec12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD043383           Date 30Mar17               *
+      *                 AR632102B          Date 21Dec12               *
       *                 AR632103B          Date 21Dec12               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
@@ -29,6 +30,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD043383 - Only the fee maturity event should have a record  *
       *             ID equal to 'M' for proper display in the enquiry.*
       *  AR632102B - For matured fees, there are still records in PF/ *
@@ -125,4 +127,4 @@
       /EJECT
       *****************************************************************
 **  CPY@
-(C) Misys International Banking Systems Ltd. 2007
+(C) Finastra International Limited 2007

@@ -1,6 +1,6 @@
      H DEBUG
      H DFTACTGRP(*NO)
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas LE PDCL Sett Acct Available Balance Report')
@@ -10,16 +10,18 @@
       *                                                               *
       *  LE000496 - Midas LE PDCL Sett Acct Available Balance Report  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD038713           Date 07May16               *
-      *  Last Amend No. MD037496           Date 11Feb16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD038713           Date 07May16               *
+      *                 MD037496           Date 11Feb16               *
       *                 MD038473           Date 02Jun16               *
       *                 MD036207           Date 02Jun16               *
       *                 CLE164 *CREATE     Date 18Aug14               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD038713 - Incorrect Values for Payment Date and Original    *
       *             Transaction Start Date                            *
       *  MD037496 - LE000496 Failed during COB due to variable        *

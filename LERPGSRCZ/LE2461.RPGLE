@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas LE Start Interest rate fixing in COB')           *
@@ -16,10 +16,11 @@
       *                                                               *
       *  Component of: LEC2460 - Rollover Rate Fixing  Fixing Prompt  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CLE141             Date 08Feb16               *
-      *  Prev Amend No. MD031736           Date 02Mar15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE141             Date 08Feb16               *
+      *                 MD031736           Date 02Mar15               *
       *                 AR988331           Date 03Dec12               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
@@ -37,6 +38,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE141 - Currency and Location Business Day Convention       *
       *           for LE Transactions                                 *
       *  MD031736 - Use rate fixing days on loan for rate fixing at   *
@@ -84,24 +86,24 @@
       *    RESET for subsequent passes.                               *
       *                                                               *
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
-
+ 
       ** Live Loan details
      FLELOANL0  UF   E           K DISK    INFSR(*PSSR) PREFIX(L0)
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ D-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
-
+ 
      D SValk2          S             20A   INZ('UseRateFixingDayatSt')                      MD031736
      D LDA           E DS           256    EXTNAME(LDA)
       *
@@ -115,41 +117,41 @@
       **                                    181 1830DBASE
       **                                    184 193 DBMOD
       **                                    194 203 DBPROC
-
+ 
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
-
+ 
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
-
+ 
       ** DS for Access Objects - short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
-
+ 
       ** DS for Access Objects - long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
-
+ 
       ** Externally described DS for Bank details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
-
+ 
       ** Externally described DS for Base Rate details
      D SDBSRT        E DS                  EXTNAME(SDBSRTPD)
       *
       ** Externally described DS for Historic Base rate
      D SDBSHS        E DS                  EXTNAME(SDBSHSPD)
-
+ 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
-
+ 
      D WRUN            S              1
      D WBaseRate       S             11P 7
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CLE141
@@ -183,7 +185,7 @@
      D  WParm2                 6     10                                                     AR988331
      D  WParm3                11     15                                                     AR988331
      D  WParm4                16     20                                                     AR988331
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -194,11 +196,11 @@
       ** ¦ is executed at program activation.                         ¦
       ** ¦                                                            ¦
       ** +------------------------------------------------------------+
-
+ 
       *****************************************************************
       * MAIN PROCEDURE                                                *
       *****************************************************************
-
+ 
       *                                                                                     AR988331
       ** If Rate Fixing on Start/Value Date is to be done, check if the                     AR988331
       ** new value of the Base Rate Code will be used on Start Date.                        AR988331

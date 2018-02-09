@@ -7,19 +7,21 @@
 /*                                                                   */
 /*       LERC15  - Outstanding fees report                           */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. 079434             DATE 21MAR96              */
-/*       PREV AMEND NO. MOF60              DATE 23MAR92              */
+/*       Prev Amend No. 079434             Date 21Mar96              */
+/*                      MOF60              Date 23Mar92              */
 /*                                                                   */
 /*********************************************************************/
+/*       MD046248 - Finastra Rebranding                              */
 /*       079434 - Object lock caused GLC86 to fail.                  */
 /*       MOF60  - Customer Lending R10 enhancements                  */
 /*                                                                   */
@@ -28,7 +30,7 @@
 PGM
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
      SNDPGMMSG  MSG('Outstanding Fees Report') TOMSGQ(MRUNQ)
@@ -47,6 +49,6 @@ PGM
      ENDDO
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 ENDPGM

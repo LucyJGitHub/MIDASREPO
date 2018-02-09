@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2016')
+     H COPYRIGHT('(c) Finastra International Limited 2016')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas LE Rollover Instructions Input')                 *
@@ -12,12 +12,14 @@
       *  Function:  This program will check if there is               *
       *             a Rollover fix advice required.                   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2016            *
+      *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. AR925993  *CREATE  Date 13Jul16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR925993 *CREATE   Date 13Jul16               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR925993 - Rollover rate fixing does not produce confirmation*
       *             advice. Before submitting job LEC3165 program     *
       *             will check if there is need to produce rollover   *
@@ -25,38 +27,38 @@
       *           - Applied for MD039397.                             *
       *                                                               *
       *****************************************************************
-
+ 
      FCLOANCL   IF   E           K DISK    INFSR(*PSSR)
-
+ 
      D @RUN            S              1
      D CTR             S              1  0
-
+ 
       ** +----------------------------------------------------------------+
       ** ¦                                                                ¦
       ** ¦ Start of Main processing.                                      ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
-
+ 
      C     *ENTRY        PLIST
-
+ 
       ** Output Parameters
-
+ 
      C                   PARM                    CTR
       *
      C                   EVAL      CTR = 0
-
+ 
      C                   READ      CLOANCL                                99
      C     *IN99         DOWEQ     '0'
      C     CTR           ANDEQ     0
      C                   IF        RFAR = 'Y'
      C                   EVAL      CTR = CTR + 1
      C                   ENDIF
-
+ 
      C                   READ      CLOANCL                                99
      C                   ENDDO
-
+ 
      C                   EVAL      *INLR = *ON
-
+ 
       *****************************************************************
       *                                                               *
       * *PSSR  - Program exception error routine                      *

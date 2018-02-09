@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+     H COPYRIGHT('(c) Finastra International Limited 2012')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas LE PDCL Conversion - File to Screen Fmt')        *
@@ -12,15 +12,17 @@
       *  Function:  This module converts the fields of the Past Due   *
       *             Call Loan Details from file to screen format      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. AR401133           Date 01Aug12               *
-      *  Prev Amend No. 264044             Date 01Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR401133           Date 01Aug12               *
+      *                 264044             Date 01Aug12               *
       *                 263289             Date 01Aug12               *
       *                 CLE134  *CREATE    Date 01Aug12               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR401133- PDCL returned incorrect value for DDFAMT           *
       *            (Child: AR401134)                                  *
       *  264044 - CLE134 Test PDCL SOAP API                           *
@@ -807,4 +809,4 @@
       /EJECT
       ****************************************************************
 **  CPY@
-(c) MIsys International Banking Systems Ltd. 2012
+(c) Finastra International Limited 2012

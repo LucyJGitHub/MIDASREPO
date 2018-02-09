@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2005')
+     H COPYRIGHT('(c) Finastra International Limited 2005')
       *****************************************************************
 /*STDz*  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas LE Facility Participant screen-field convert')   *
@@ -10,19 +10,21 @@
       *  LEFCIPPRT -  Facility Participant Details Screen-Database    *
       *               Field Conversion                                *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. CLE064             Date 06Dec10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE064             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. BUG10540           Date 14Feb06               *
+      *                 BUG10540           Date 14Feb06               *
       *                 CLE042             Date 06Sep05               *
       *                 CLE106             Date 01Aug04               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE064 - Enhancement of Lending Frequencies (Recompile)      *
       *  BUG10540 - Add new assignment indicator. (Recompile)         *
       *  CLE042 - Extended Loan Sub Type (Recompile)                  *
@@ -439,4 +441,4 @@
       ********************************************************************
       /EJECT
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2005
+(c) Finastra International Limited 2005

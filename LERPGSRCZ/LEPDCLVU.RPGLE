@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
+     H COPYRIGHT('(c) Finastra International Limited 2011')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas LE PDCL Conversion - Validate & Update')         *
@@ -21,16 +21,18 @@
       *            the call to the message handler will take place    *
       *            in this module                                     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD020270           Date 25Jun13               *
-      *  Prev Amend No. AR1078092          Date 20Jan13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD020270           Date 25Jun13               *
+      *                 AR1078092          Date 20Jan13               *
       *                 AR1021983          Date 01Aug12               *
       *                 264044             Date 01Aug12               *
       *                 CLE134  *CREATE    Date 01Aug12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD020270 - PDCL generation went to Repair Queue to BASEL II  *
       *             validation-encountered in EOM validation          *
       *  AR1078092 - Event Code of 45021706 (settlement account is    *
@@ -718,4 +720,4 @@
       /EJECT
       *****************************************************************
 **  CPY@
-(c) MIsys International Banking Systems Ltd. 2011
+(c) Finastra International Limited 2011

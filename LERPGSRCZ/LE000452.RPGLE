@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas LE Transaction Log File sent to MQ Report')      *
@@ -9,10 +9,11 @@
       *                                                               *
       *  LE000452 - Midas LE Transaction Log File sent to MQ Report   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD045071           Date 06Apr17               *
-      *  Prev Amend No. MD025590           Date 19Aug14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD045071           Date 06Apr17               *
+      *                 MD025590           Date 19Aug14               *
       *                 MD023181           Date 22Apr14               *
       *                 MD022465           Date 24Sep13               *
       *                 MD021423E          Date 12Sep13               *
@@ -24,6 +25,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD045071 - Receiver value too small to hold result.          *
       *  MD025590 - Make sure that only processed record is on        *
       *             LE000452P1.                                       *
@@ -487,4 +489,4 @@
      C                   ENDSR
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2013
+(c) Finastra International Limited 2013

@@ -6,14 +6,15 @@
 /*                                                                   */
 /*       LEC2220B - Fee Adjustment Input                             */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CUP005             Date 21Sep10              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CUP005             Date 21Sep10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CLE038             Date 11May04              */
+/*                      CLE038             Date 11May04              */
 /*                      219608             Date 16Jul03              */
 /*                      CLE034             Date 05May03              */
 /* Midas Release 4.01 -----------------------------------------------*/
@@ -24,6 +25,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CUP005 - Change processing of temporary files for IASP      */
 /*                QTEMP is replaced by zzXPLIB.                      */
 /*       CLE038 - Lending Enhancement for Nordea: Allocation by Amt  */
@@ -38,7 +40,7 @@
              PGM        PARM(&PMODE)
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
              DCL        VAR(&PMODE) TYPE(*CHAR) LEN(1)
@@ -267,5 +269,5 @@
 /* End of program processing */
 /**/
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

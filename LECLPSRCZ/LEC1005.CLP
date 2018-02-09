@@ -7,8 +7,9 @@
 /*                                                                  */
 /*       LEC1005 - GUARANTEES/SECURITY/REVIEW REPORT                */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -16,14 +17,15 @@
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.02 ---------------------------------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. 116180              DATE 18MAY98            */
-/*       PREV AMEND NO. S01408              DATE 25MAY95            */
+/*       Prev Amend No. 116180             Date 18May98              */
+/*                      S01408             Date 25May95              */
 /*                      S01189              DATE 09FEB90            */
 /*                      S01194              DATE 09FEB90            */
 /*                      S01179              DATE 14/09/88           */
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       116180 - Allow report to be on request rather than monthly.*/
 /*                This program has been changed only to run the     */
 /*                extract LE0960 and update the GTEES file. A new   */
@@ -44,7 +46,7 @@
 /************PGM                                                  */  /*S01189*/
              PGM        PARM(&CNAM &CSEQ)                             /*S01189*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
              DCL        VAR(&MSG) TYPE(*CHAR) LEN(132) +
@@ -169,5 +171,5 @@
              ENDDO
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 ENDPGM:      ENDPGM

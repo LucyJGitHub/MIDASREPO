@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+     H COPYRIGHT('(c) Finastra International Limited 2012')
       *****************************************************************
 /*S*D****RPGBASEMOD****************************************************                    AR1022006
 /*STD *  RPGSQLMOD                                                    *                    AR1022006
@@ -14,10 +14,11 @@
       *           repayment schedule for Past Due Call Loans.         *
       *                                                               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD046080           Date 17Sep17               *
-      *  Prev Amend No. CLE164             Date 18Aug14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD046080           Date 17Sep17               *
+      *                 CLE164             Date 18Aug14               *
       *                 AR989420           Date 17Jun13               *
       *                 AR815697           Date 06Jun13               *
       *                 AR786878           Date 05Jun13               *
@@ -35,6 +36,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD046080 - Gap between CLE031 (Settlement to different       *
       *             currency) and CLE134 (PDCL processing)            *
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
@@ -78,26 +80,26 @@
       *****************************************************************
      FACCNTL1   IF   E           K DISK    INFSR(*PSSR) PREFIX(ac)
       ** Midas GL Account details - retail key
- 
+
      F***LEACCNL5  IF   E           K DISK    INFSR(*PSSR)                                    CLE164
      F**********                           PREFIX(r_)                                         CLE164
       ***Midas*LE*Repayment*Priority***********************************                       CLE164
- 
+
      F***LEPDCRPD  IF   E           K DISK    INFSR(*PSSR)                                 AR1022006
      F**********                           PREFIX(k_)                                      AR1022006
       ** Midas LE Customer Loans
- 
+
      FLEACCTL1  IF A E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(p_)
      F                                     COMMIT
       ** Midas LE Repayment Priority
- 
+
      FLEPDUEL1  IF   E           K DISK    INFSR(*PSSR)
       ** Midas LE Past Due & Original Loan Link
- 
+
      FLEPDUFL1  IF   E           K DISK    INFSR(*PSSR)
       ** Midas LE Past Due & Original Loan Link
- 
+
      FLEREMRPD  IF   E           K DISK    INFSR(*PSSR)                                     AR786878
      F                                     PREFIX(M_)                                       AR786878
       ** Midas LE Repayment Priority - Temporary File                                       AR786878
@@ -123,41 +125,41 @@
      F                                     IGNORE(CLOANCKF)                                   CLE164
      F                                     IGNORE(CLOANZ1F)                                   CLE164
      D/EJECT
- 
+
       ** Key Fields
      D DSINTDUE        S             15  0 INZ
      D DSRPYAMT        S             15  0 INZ
      D WKTPRAM         S             15  0 INZ                                              AR786878
      D WKTINTA         S             15  0 INZ                                              AR786878
- 
+
      D KACACNO         S                   INZ LIKE(ACACNO)
- 
+
       ** Passed Parameters
- 
+
       ** Overlays
      D                 DS
- 
+
       ** External Definitions
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
      D/COPY ZACPYSRC,PROCPARMS
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** Short data structure for access objects
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** Long data structure for access objects
- 
+
      D SDNOST        E DS                  EXTNAME(SDNOSTPD)
      D QQACCD2       E                     EXTFLD(QQACCD)
       ** Nostro details
      D LoanFileFmt   E DS                  EXTNAME(CLOANCL)                                AR1022006
      D                                     PREFIX(k_)                                      AR1022006
      D SDCURR        E DS                  EXTNAME(SDCURRPD)                                MD046080
- 
+
       ** Additional Field Definitions
      D WSKIP           S              1
      D PDCLT           S              1
@@ -212,7 +214,7 @@
      D WWWAMT          S             15P 0                                                  MD046080
      D ORWAMT          S             15P 0                                                  MD046080
      D CLE031          S              1                                                     MD046080
- 
+
      C/EJECT
       ** +--- Start of Main processing -----------------------------------+
       ** |                                                                |
@@ -220,14 +222,14 @@
       ** | executed at program activation.                                |
       ** |                                                                |
       ** +----------------------------------------------------------------+
- 
+
       ** Retrieve & Process Past Due Call Loan Details
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      '*MSG    '    @RTCD
      C                   PARM      '*FIRST  '    @OPTN
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
      C                   IF        @RTCD <> *BLANK
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SDBANKPD'
@@ -277,12 +279,12 @@
      C**********         IF        NOT %FOUND(LEACCNL5)                                       CLE164
      C                   EXSR      ACCN
      C**********         ENDIF                                                                CLE164
- 
+
      C     K_LNRF        CHAIN(E)  LEACCTL1
      C                   IF        NOT %FOUND(LEACCTL1)
      C                   EXSR      WRITE
      C                   ENDIF
- 
+
      C                   ENDIF
      C**********         READ(E)   LEPDCRPD                                                AR1022006
                                                                                            AR1022006
@@ -294,11 +296,11 @@
      C/EXEC SQL                                                                            AR1022006
      C+ CLOSE LOANCursor                                                                   AR1022006
      C/END-EXEC                                                                            AR1022006
- 
+
       ** Terminate Program
- 
+
      C                   EVAL      *INLR = *ON
- 
+
      C                   RETURN
       *****************************************************************
       /EJECT
@@ -306,19 +308,19 @@
       *  PDCL -  Check Whether Loan Should be Processed               *
       *****************************************************************
      C     PDCL          BEGSR
- 
+
       ** Initialisation
- 
+
      C                   MOVE      'N'           WSKIP
- 
+
       ** If input today & created in the COB, set flag to skip record
- 
+
      C**********         IF        K_ORED = BJRDNB                                            CLE164
      C                   MOVEL     K_LTYP        PDCLT
      C
      C                   IF        PDCLT <> 'Z'
      C     K_LNRF        CHAIN(E)  LEPDUEL1
- 
+
      C                   IF        %FOUND(LEPDUEL1) AND
      C                             YPCBIC = 'C'
      C                             AND K_ORED = BJRDNB                                        CLE164
@@ -332,9 +334,9 @@
      C                   MOVE      'Y'           WSKIP
      C                   ENDIF
      C                   ENDIF
- 
+
      C**********         ENDIF                                                                CLE164
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -342,9 +344,9 @@
       *  ACCN - Settlement account                                    *
       *****************************************************************
      C     ACCN          BEGSR
- 
+
       ** Set Settlement Account from Payable
- 
+
      C                   IF        K_PTYP = 66 OR
      C                             K_PTYP = 72
      C                   SELECT
@@ -354,7 +356,7 @@
      C                   EVAL      KNONB = %SUBST(K_PONS:01:02)
      C                   EVAL      KCNUM = *BLANKS
      C                   CALL      'AONOSTR0'    P@NOSTR0
- 
+
      C                   IF        @RTCD = *BLANKS
      C                   EVAL      R_RPCNUM = A7CUST
      C                   EVAL      R_RPACOD = %DEC(A7ACCD:10:0)
@@ -362,7 +364,7 @@
      C                   EVAL      R_RPBRCA = A7BRCD
      C                   EVAL      R_RPACCY = K_CCY
      C                   ENDIF
- 
+
      C                   WHEN      K_PSTM = 05
      C                   EVAL      R_RPCNUM = %SUBST(K_PONS:01:06)
      C                   EVAL      R_RPACOD = %DEC(%SUBST(K_PONS:07:10):10:0)
@@ -370,11 +372,11 @@
      C**********         EVAL      R_RPBRCA = k_OMDB                                          262862
      C                   EVAL      R_RPBRCA = K_OSDB                                          262862
      C                   EVAL      R_RPACCY = K_CCY
- 
+
      C                   WHEN      K_PSTM = 14
      C                   EVAL      KACACNO = %DEC(K_PONS:10:0)
      C     KACCNTL1      CHAIN(E)  ACCNTL1
- 
+
      C                   IF        %FOUND(ACCNTL1)
      C                   EVAL      R_RPCNUM = ACCNUM
      C                   EVAL      R_RPACOD = ACACOD
@@ -383,9 +385,9 @@
      C                   EVAL      R_RPACCY = ACCCY
      C                   ENDIF
      C                   ENDSL
- 
+
       ** Set Settlement Account from Receivable
- 
+
      C                   ELSE
      C                   IF        K_PTYP = 61 OR
      C                             K_PTYP = 62 OR
@@ -399,7 +401,7 @@
      C                   EVAL      KNONB = %SUBST(K_RONS:01:02)
      C                   EVAL      KCNUM = *BLANKS
      C                   CALL      'AONOSTR0'    P@NOSTR0
- 
+
      C                   IF        @RTCD = *BLANKS
      C                   EVAL      R_RPCNUM = A7CUST
      C                   EVAL      R_RPACOD = %DEC(A7ACCD:10:0)
@@ -408,7 +410,7 @@
      C**********         EVAL      R_RPACCY = A7BRCD                                          CLE164
      C                   EVAL      R_RPACCY = K_CCY                                           CLE164
      C                   ENDIF
- 
+
      C                   WHEN      K_RSTM = 05
      C                   EVAL      R_RPCNUM = %SUBST(K_RONS:01:06)
      C                   EVAL      R_RPACOD = %DEC(%SUBST
@@ -418,11 +420,11 @@
      C**********         EVAL      R_RPBRCA = k_OSDB                                          262862
      C                   EVAL      R_RPBRCA = K_OMDB                                          262862
      C                   EVAL      R_RPACCY = K_CCY
- 
+
      C                   WHEN      K_RSTM = 14
      C                   EVAL      KACACNO = %DEC(K_RONS:10:0)
      C     KACCNTL1      CHAIN(E)  ACCNTL1
- 
+
      C                   IF        %FOUND(ACCNTL1)
      C                   EVAL      R_RPCNUM = ACCNUM
      C                   EVAL      R_RPACOD = ACACOD
@@ -433,7 +435,7 @@
      C                   ENDSL
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -441,9 +443,9 @@
       *  WRITE - Output to LEACCTPD                                   *
       *****************************************************************
      C     WRITE         BEGSR
- 
+
       ** Calculate interest
- 
+
      C**********         EVAL      DSINTDUE = 0                                             AR815697
      C**********         EXSR      INTOUT                                            263605 AR815697
      C**********         EVAL      DSRPYAMT = 0                                             AR815697
@@ -483,9 +485,9 @@
      C                   EXSR      INTOUT                                                   AR815697
      C                   EVAL      DSRpyAmt = 0                                             AR815697
      C                   EVAL      DSIntDue = WrkOutInt                                     AR815697
- 
+
       ** Output to LEACCTPD
- 
+
      C                   EVAL      P_SERECI = R_RPRECI
      C**********         EVAL      P_SEPCKO = R_RPPCKO                                        CLE164
      C                   EVAL      P_SEBRCA = R_RPBRCA
@@ -544,9 +546,9 @@
       ** Retrieve Date values for LEACCTPD                                                    CLE164
                                                                                               CLE164
      C                   EXSR      SRRETDAT                                                   CLE164
- 
+
       ** Assign a lower priority to Interest Repayment                                      AR217562
- 
+
      C                   IF        DSINTDUE <> 0                                            AR217562
      C**********         EVAL      P_SETAMT = DSINTDUE                             AR217562 MD046080
      C                   EVAL      WINAMT = DSINTDUE                                        MD046080
@@ -599,9 +601,9 @@
                                                                                             AR217562
      C                   ENDIF                                                              AR217562
                                                                                             AR217562
- 
+
       ** Output LEACCTPD with CPAM if different than zero                                   AR217562
- 
+
      C                   IF        K_CPAM <> 0                                              AR217562
      C**********         EVAL      P_SETAMT = K_CPAM                               AR217562 MD046080
      C**********         EVAL      P_SEPRAM = K_CPAM                               AR217562 MD046080
@@ -610,10 +612,10 @@
      C                   EVAL      P_SETAMT = WOUTAMT                                       MD046080
      C                   EVAL      P_SEPRAM = WOUTAMT                                       MD046080
      C                   EVAL      P_SEINTA = 0                                             AR217562
- 
+
       ** PDCL*with*type 'Z' have priority 200                                               AR217562
       ***PDCL*with*type*'Z'*have*priority*300**************************              AR217562 CLE164
- 
+
      C                   IF        P_SELTY1 = 'Z'
      C**********         EVAL      p_SEPCKM = 200                                           AR217562
      C**********         EVAL      p_SEPCKT = 200                                    263074 AR217562
@@ -621,10 +623,10 @@
      C**********         EVAL      P_SEPCKT = 300                                    AR217562 CLE164
      C                   EVAL      P_SECATC = 'ZPRIN'                                         CLE164
      C                   ENDIF
- 
+
       ***PDCL*with*type*'Y'*have*priority*300**************************                     AR217562
       ***PDCL*with*type*'Y'*have*priority*350**************************              AR217562 CLE164
- 
+
      C                   IF        P_SELTY1 = 'Y'
      C**********         EVAL      p_SEPCKM = 300                                           AR217562
      C**********         EVAL      p_SEPCKT = 300                                    263074 AR217562
@@ -632,10 +634,10 @@
      C**********         EVAL      P_SEPCKT = 350                                    AR217562 CLE164
      C                   EVAL      P_SECATC = 'YPRIN'                                         CLE164
      C                   ENDIF
- 
+
       ** PDCL*with*type*'X' have priority 300                                               AR217562
       ***PDCL*with*type*'X'*have*priority*390**************************              AR217562 CLE164
- 
+
      C                   IF        P_SELTY1 = 'X'
      C**********         EVAL      p_SEPCKM = 400                                           AR217562
      C**********         EVAL      p_SEPCKT = 400                                    263074 AR217562
@@ -648,7 +650,7 @@
       ** Category Code Default Repayment Priority                                             CLE164
                                                                                               CLE164
      C                   EXSR      SRRETRPKY                                                  CLE164
- 
+
      C                   EVAL      P_SEPAMT = P_SETAMT                                        CLE164
      C**********         IF        P_SETAMT <> 0                                            AR806881
      C                   IF        P_SETAMT > 0                                             AR806881
@@ -656,7 +658,7 @@
      C                   WRITE     LEACCTD0
      C                   ENDIF
      C                   ENDIF                                                              AR217562
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -922,18 +924,18 @@
       *  @DEFN - Definition Rountine                                  *
       *****************************************************************
      C     @DEFN         BEGSR
- 
+
       ** Key Lists
- 
+
      C     KLEACT        KLIST
      C                   KFLD                    K_BRCA
      C                   KFLD                    K_LNRF
- 
+
      C     KACCNTL1      KLIST
      C                   KFLD                    KACACNO
- 
+
       ** Parameter List
- 
+
      C     P@NOSTR0      PLIST
      C                   PARM      '*MSG   '     @RTCD
      C                   PARM      '*KEY   '     @OPTN
@@ -946,7 +948,7 @@
      C                   PARM                    KEYG
      C                   PARM                    KEYH
      C     SDNOST        PARM      SDNOST        DSFDY
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -1038,4 +1040,4 @@
      C/COPY ZACPYSRC,PSSR_ILEB
      C/EJECT
 **  CPY@
-(c) MIsys International Banking Systems Ltd. 2012
+(c) Finastra International Limited 2012

@@ -7,23 +7,25 @@
 /*                                                                   */
 /*       LBC0520 - Portfolio Lending Groups Audit List               */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. S01498             DATE 07JUL94              */
-/*       PREV AMEND NO. 35723              DATE 27JAN93              */
+/*       Prev Amend No. S01498             Date 07Jul94              */
+/*                      35723              Date 27Jan93              */
 /*                      S01189             DATE 11AUG92              */
 /*                      S01355             DATE 10JUL92              */
 /*                      R00300             DATE 28AUG90              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       S01498 - Portfolio Management Upgrade to Release 10.        */
 /*                Copyright Statement and Standard Header Box.       */
 /*                Creation Parameters; Message Files.                */
@@ -46,7 +48,7 @@
              PGM
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /*********** DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)                /*S01498*/
 /*********** DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5)                  /*S01498*/
@@ -122,5 +124,5 @@
 /*<<S01189<<*/
 ABNOR:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

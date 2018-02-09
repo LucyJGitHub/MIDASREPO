@@ -7,18 +7,20 @@
 /*                                                                   */
 /*       LEC002511 - Loan amendments menu control                    */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2002           */
+/*       (c) Finastra International Limited 2002                     */
 /*                                                                   */
-/*       Last Amend No. CLE134             Date 01Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CLE134             Date 01Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CRE020             Date 20Jan04              */
+/*                      CRE020             Date 20Jan04              */
 /*                      CAP075  *CREATE    Date 12Aug02              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CLE134 - Past Due Call Loan Processing (Recompile)          */
 /*       CRE020 - Midas Plus Online Printing of Advices (GE7)        */
 /*       CAP075 - Lending API enhancements - loan amendments         */
@@ -45,7 +47,7 @@
              DCL        VAR(&PCMD) TYPE(*CHAR) LEN(50)                                    /*CRE020*/
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2002')
  
 /* Monitor for error messages not trapped in the rest of the */
@@ -139,5 +141,5 @@ END:
              MONMSG     MSGID(CPF0000 MCH0000)
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

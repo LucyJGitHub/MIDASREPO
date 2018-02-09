@@ -7,10 +7,11 @@
 /*                                                                   */
 /*       LEC2210 - Fees Maintenance                                  */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2002           */
+/*       (c) Finastra International Limited 2002                     */
 /*                                                                   */
-/*       Last Amend No. AR314017           Date 01Aug12              */
-/*       Prev Amend No. CLE134             Date 01Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR314017           Date 01Aug12              */
+/*                      CLE134             Date 01Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /*                      257686             Date 13Nov08              */
@@ -25,6 +26,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       AR314017 - PONS/RONS warning if changed with LEACCNPD       */
 /*                  records (Child:AR314018)                         */
 /*       CLE134 - Past Due Call Loan Processing                      */
@@ -79,7 +81,7 @@
              DCLF       FILE(APHEADPD)                                                    /*256407*/
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2002')
  
 /* Global monitor message */
@@ -198,7 +200,7 @@
  
  ENDPGM:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 /*/COPY WNCPYSRC,LEC2210END                                          */
  

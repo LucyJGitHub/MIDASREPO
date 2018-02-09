@@ -7,10 +7,11 @@
 /*                                                                  */
 /*     LEC0609R -  EVENTS FILE CREATION FOR ER                      */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2005           */
+/*       (c) Finastra International Limited 2005                    */
 /*                                                                  */
-/*       Last Amend No. MD021605           Date 22Aug13              */
-/*       Prev Amend No. CLE134             Date 01Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD021605           Date 22Aug13              */
+/*                      CLE134             Date 01Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -23,6 +24,7 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*     MD021605 - Add a parameter for LE0480.                       */
 /*     CLE134 - Past Due Call Loan Processing (Recompile)           */
 /*       CER001 - LUX Upgrade to MidasPlus                           */

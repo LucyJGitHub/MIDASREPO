@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas LE Collateralised Lending DataFile Triggers')    *
@@ -13,10 +13,11 @@
       *  (phase(s)) when a Standing Data file or Transaction file     *
       *             has been written to, deleted, or amended.         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
-      *  Prev Amend No. CLE141             Date 08Feb16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CLE141             Date 08Feb16               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -59,6 +60,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CLE141 - Currency and Location Business Day Convention       *
       *           (Recompile)                                         *
@@ -111,14 +113,14 @@
       *  CLE025 - Credit Lines                                        *
       *                                                               *
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
      FFCLTYL3   IF   E           K DISK                                                      BUG3644
      FDLDEALL5  IF   E           K DISK    PREFIX(L5_)                                        CLE040
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -126,7 +128,7 @@
       ** ¦ D-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
-
+ 
      D LDA           E DS           256    EXTNAME(LDA)
       ** Local data area for database error details
       ** *LOCK IN LDA immediately before and OUT LDA immediately
@@ -136,30 +138,30 @@
       **       Defines:                     142 170 DBKEY
       **                                    171 180 DBPGM
       **                                    181 1830DBASE
-
+ 
       ** Data Area giving Installation Control Details
      D RUNDAT        E DS                  EXTNAME(RUNDAT)
-
+ 
       ** Data Area for Standing Data Details
      D SDSTAT        E DS                  EXTNAME(SDSTAT)
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
-
+ 
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
-
+ 
       ** First entry parameter
      D PARM1           DS
       ** Physical file name
@@ -180,11 +182,11 @@
      D  ALen                  69     72B 0
       ** Images
      D  EntryData            117  10117A
-
+ 
       ** Second entry parameter
      D PARM2           DS
      D  Leng                   1      4B 0
-
+ 
       ** Before images
      D BSDPLINPD     E DS                  EXTNAME(SDPLINPD) PREFIX(B2)
      D BSDCURRPD     E DS                  EXTNAME(SDCURRPD) PREFIX(B3)
@@ -208,7 +210,7 @@
      D BDEALSDB      E DS                  EXTNAME(DEALSDB) PREFIX(B21)                       CLE040
      D BDEALSDC      E DS                  EXTNAME(DEALSDC) PREFIX(B22)                       CLE040
      D BDEALSDG      E DS                  EXTNAME(DEALSDG) PREFIX(B23)                       CLE040
-
+ 
       ** After images
      D ASDPLINPD     E DS                  EXTNAME(SDPLINPD) PREFIX(A2)
      D ASDCURRPD     E DS                  EXTNAME(SDCURRPD) PREFIX(A3)
@@ -232,12 +234,12 @@
      D ADEALSDB      E DS                  EXTNAME(DEALSDB) PREFIX(A21)                       CLE040
      D ADEALSDC      E DS                  EXTNAME(DEALSDC) PREFIX(A22)                       CLE040
      D ADEALSDG      E DS                  EXTNAME(DEALSDG) PREFIX(A23)                       CLE040
-
+ 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
-
+ 
      D ConstHead1      C                   CONST('<?xml version="1.0" encoding')
      D ConstHead2      C                   CONST('="UTF-8"?><calcManagerEvent ')
      D ConstHead3      C                   CONST('xmlns="http://www.misys.com/')
@@ -248,7 +250,7 @@
      D ConstDet2       C                   CONST('</paramName><paramValue>')
      D ConstDet3       C                   CONST('</paramValue></eventParam>')
      D ConstFoot       C                   CONST('</calcManagerEvent>')
-
+ 
      D AfterImg        S           4000A
      D BeforeImg       S           4000A
      D Buffer          S           6000A
@@ -310,7 +312,7 @@
      D WZoned5         S              5S 0
      D WZoned15        S             15S 0
      D WLength         S              4S 0                                                   BUG3644
-
+ 
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -318,24 +320,24 @@
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
-
+ 
       ** Retrieve before/after image from PARM1 using length and offset
-
+ 
      C     BOff          ADD       1             OffSet
      C     BLen          SUBST     PARM1:OffSet  BeforeImg
-
+ 
      C     AOff          ADD       1             OffSet
      C     ALen          SUBST     PARM1:OffSet  AfterImg
-
+ 
       ** Call the appropriate subroutine, based on the physical file
-
+ 
      C                   SELECT
      C                   WHEN      PFlName = 'SDPLINPD'
      C                   EXSR      SrSDPLINPD
@@ -382,31 +384,31 @@
      C                   WHEN      PFlName = 'DEALSDG'                                        CLE040
      C                   EXSR      SrDEALSDG                                                  CLE040
      C                   ENDSL
-
+ 
       ** Send buffer to the data queue
-
+ 
      C                   IF        Buffer <> *BLANKS
      C                   EVAL      DtqLib = LIBR + 'DPLIB'
      C                   EXSR      SrSendDtaQ
-
+ 
      C                   ENDIF
-
+ 
       ** Terminate Program
-
+ 
      C                   EVAL      *INLR = *ON
      C                   RETURN
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
       *  SrSDPLINPD - Processing for SDPLINPD                         *
       *****************************************************************
      C     SrSDPLINPD    BEGSR
-
+ 
      C                   EXSR      SrReset
      C                   EVAL      BSDPLINPD = BeforeImg
      C                   EVAL      ASDPLINPD = AfterImg
-
+ 
      C                   IF        TrgEvent = '3' AND
      C                             NOT (B2PDRECI = 'D' AND
      C                                  A2PDRECI = '*')
@@ -420,13 +422,13 @@
      C                   EVAL      WFldChg3 = 'Y'
      C                   ENDIF
      C                   ENDIF
-
+ 
      C                   IF        (TrgEvent = '3' AND
      C                              B2PDRECI = 'D' AND
      C                              A2PDRECI = '*') OR
      C                             WFldChg1 = 'Y' OR WFldChg2 = 'Y' OR
      C                             WFldChg3 = 'Y'
-
+ 
      C                   EVAL      WEvntTyp = 'MN_INSTRUMENT_TYPE'
      C                   EXSR      SrHeader
      C                   EVAL      WParamName = 'PDINNR'
@@ -437,7 +439,7 @@
      C                   ENDIF
      C                   EXSR      SrDetail
      C                   EVAL      WDtl1 = WDetail
-
+ 
      C                   IF        WFldChg1 = 'Y'
      C                   EVAL      WParamName = 'PDWEIG'
      C                   EVAL      WParamValue = *BLANKS
@@ -445,27 +447,27 @@
      C                   EXSR      SrDetail
      C                   EVAL      WDtl2 = WDetail
      C                   ENDIF
-
+ 
      C                   IF        WFldChg2 = 'Y'
      C                   EVAL      WParamName = 'PDMARG'
      C                   EVAL      WParamValue = A2PDMARG
      C                   EXSR      SrDetail
      C                   EVAL      WDtl3 = WDetail
      C                   ENDIF
-
+ 
      C                   IF        WFldChg3 = 'Y'
      C                   EVAL      WParamName = 'PDINOF'
      C                   EVAL      WParamValue = A2PDINOF
      C                   EXSR      SrDetail
      C                   EVAL      WDtl4 = WDetail
      C                   ENDIF
-
+ 
      C                   EVAL      Buffer = %TRIM(WHeader) + %TRIM(WDtl1)
      C                                      + %TRIM(WDtl2) + %TRIM(WDtl3)
      C                                      + %TRIM(WDtl4) + ConstFoot
-
+ 
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -473,20 +475,20 @@
       *  SrSDCURRPD - Processing for SDCURRPD                         *
       *****************************************************************
      C     SrSDCURRPD    BEGSR
-
+ 
      C                   EXSR      SrReset
      C                   EVAL      BSDCURRPD = BeforeImg
      C                   EVAL      ASDCURRPD = AfterImg
-
+ 
      C                   IF        TrgEvent = '3'
      C                   IF        B3A6POWC <> A3A6POWC
      C                   EVAL      WFldChg1 = 'Y'
      C                   ENDIF
      C                   ENDIF
-
+ 
      C                   IF        TrgEvent = '2' OR
      C                             WFldChg1 = 'Y'
-
+ 
      C                   EVAL      WEvntTyp = 'MN_CURRENCY'
      C                   EXSR      SrHeader
      C                   EVAL      WParamName = 'A6CYCD'
@@ -497,7 +499,7 @@
      C                   ENDIF
      C                   EXSR      SrDetail
      C                   EVAL      WDtl1 = WDetail
-
+ 
      C                   IF        WFldChg1 = 'Y'
      C                   EVAL      WParamName = 'A6POWC'
      C                   EVAL      WParamValue = *BLANKS
@@ -505,12 +507,12 @@
      C                   EXSR      SrDetail
      C                   EVAL      WDtl2 = WDetail
      C                   ENDIF
-
+ 
      C                   EVAL      Buffer = %TRIM(WHeader) + %TRIM(WDtl1)
      C                                      + %TRIM(WDtl2) + ConstFoot
-
+ 
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -518,20 +520,20 @@
       *  SrSDCTRYPD - Processing for SDCTRYPD                         *
       *****************************************************************
      C     SrSDCTRYPD    BEGSR
-
+ 
      C                   EXSR      SrReset
      C                   EVAL      BSDCTRYPD = BeforeImg
      C                   EVAL      ASDCTRYPD = AfterImg
-
+ 
      C                   IF        TrgEvent = '3'
      C                   IF        B4A4CTWC <> A4A4CTWC
      C                   EVAL      WFldChg1 = 'Y'
      C                   ENDIF
      C                   ENDIF
-
+ 
      C                   IF        TrgEvent = '2' OR
      C                             WFldChg1 = 'Y'
-
+ 
      C                   EVAL      WEvntTyp = 'MN_COUNTRY'
      C                   EXSR      SrHeader
      C                   EVAL      WParamName = 'A4CNCD'
@@ -542,7 +544,7 @@
      C*                  ENDIF
      C                   EXSR      SrDetail
      C                   EVAL      WDtl1 = WDetail
-
+ 
      C                   IF        WFldChg1 = 'Y'
      C                   EVAL      WParamName = 'A4CTWC'
      C                   EVAL      WParamValue = *BLANKS
@@ -550,12 +552,12 @@
      C                   EXSR      SrDetail
      C                   EVAL      WDtl2 = WDetail
      C                   ENDIF
-
+ 
      C                   EVAL      Buffer = %TRIM(WHeader) + %TRIM(WDtl1)
      C                                      + %TRIM(WDtl2) + ConstFoot
-
+ 
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -563,20 +565,20 @@
       *  SrSDACODPD - Processing for SDACODPD                         *
       *****************************************************************
      C     SrSDACODPD    BEGSR
-
+ 
      C                   EXSR      SrReset
      C                   EVAL      BSDACODPD = BeforeImg
      C                   EVAL      ASDACODPD = AfterImg
-
+ 
      C                   IF        TrgEvent = '3'
      C                   IF        B5A5INNR <> A5A5INNR
      C                   EVAL      WFldChg1 = 'Y'
      C                   ENDIF
      C                   ENDIF
-
+ 
      C                   IF        TrgEvent = '2' OR
      C                             WFldChg1 = 'Y'
-
+ 
      C                   EVAL      WEvntTyp = 'MN_ACCOUNT_CODE'
      C                   EXSR      SrHeader
      C                   EVAL      WParamName = 'A5ACCD'
@@ -587,19 +589,19 @@
      C                   ENDIF
      C                   EXSR      SrDetail
      C                   EVAL      WDtl1 = WDetail
-
+ 
      C                   IF        WFldChg1 = 'Y'
      C                   EVAL      WParamName = 'A5INNR'
      C                   EVAL      WParamValue = A5A5INNR
      C                   EXSR      SrDetail
      C                   EVAL      WDtl2 = WDetail
      C                   ENDIF
-
+ 
      C                   EVAL      Buffer = %TRIM(WHeader) + %TRIM(WDtl1)
      C                                      + %TRIM(WDtl2) + ConstFoot
-
+ 
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -607,20 +609,20 @@
       *  SrFDDTSTPD - Processing for FDDTSTPD                         *
       *****************************************************************
      C     SrFDDTSTPD    BEGSR
-
+ 
      C                   EXSR      SrReset
      C                   EVAL      BFDDTSTPD = BeforeImg
      C                   EVAL      AFDDTSTPD = AfterImg
-
+ 
      C                   IF        TrgEvent = '3'
      C                   IF        B6INNR <> A6INNR
      C                   EVAL      WFldChg1 = 'Y'
      C                   ENDIF
      C                   ENDIF
-
+ 
      C                   IF        TrgEvent = '2' OR
      C                             WFldChg1 = 'Y'
-
+ 
      C                   EVAL      WEvntTyp = 'MN_DEALTYPE_SUBTYPE'
      C                   EXSR      SrHeader
      C                   EVAL      WParamName = 'DTPE11'
@@ -639,20 +641,20 @@
      C                   ENDIF
      C                   EXSR      SrDetail
      C                   EVAL      WDtl2 = WDetail
-
+ 
      C                   IF        WFldChg1 = 'Y'
      C                   EVAL      WParamName = 'INNR'
      C                   EVAL      WParamValue = A6INNR
      C                   EXSR      SrDetail
      C                   EVAL      WDtl3 = WDetail
      C                   ENDIF
-
+ 
      C                   EVAL      Buffer = %TRIM(WHeader) + %TRIM(WDtl1)
      C                                      + %TRIM(WDtl2) + %TRIM(WDtl3)
      C                                      + ConstFoot
-
+ 
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -660,11 +662,11 @@
       *  SrSDCOTPPD - Processing for SDCOTPPD                         *
       *****************************************************************
      C     SrSDCOTPPD    BEGSR
-
+ 
      C                   EXSR      SrReset
      C                   EVAL      BSDCOTPPD = BeforeImg
      C                   EVAL      ASDCOTPPD = AfterImg
-
+ 
      C                   IF        TrgEvent = '3' AND
      C                             NOT (B7CTRECI = 'D' AND
      C                                  A7CTRECI = 'R')
@@ -672,12 +674,12 @@
      C                   EVAL      WFldChg1 = 'Y'
      C                   ENDIF
      C                   ENDIF
-
+ 
      C                   IF        (TrgEvent = '3' AND
      C                              B7CTRECI = 'D' AND
      C                              A7CTRECI = 'R') OR
      C                             WFldChg1 = 'Y'
-
+ 
      C                   EVAL      WEvntTyp = 'MN_COLLATERAL_TYPE'
      C                   EXSR      SrHeader
      C                   EVAL      WParamName = 'CTCOLT'
@@ -688,19 +690,19 @@
      C                   ENDIF
      C                   EXSR      SrDetail
      C                   EVAL      WDtl1 = WDetail
-
+ 
      C                   IF        WFldChg1 = 'Y'
      C                   EVAL      WParamName = 'CTRVLM'
      C                   EVAL      WParamValue = A7CTRVLM
      C                   EXSR      SrDetail
      C                   EVAL      WDtl2 = WDetail
      C                   ENDIF
-
+ 
      C                   EVAL      Buffer = %TRIM(WHeader) + %TRIM(WDtl1)
      C                                      + %TRIM(WDtl2) + ConstFoot
-
+ 
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -708,11 +710,11 @@
       *  SrSDCUSTPD - Processing for SDCUSTPD                         *
       *****************************************************************
      C     SrSDCUSTPD    BEGSR
-
+ 
      C                   EXSR      SrReset
      C                   EVAL      BSDCUSTPD = BeforeImg
      C                   EVAL      ASDCUSTPD = AfterImg
-
+ 
      C                   IF        TrgEvent = '3' AND
      C                             NOT (B8BBDTDL = *ZERO AND
      C                                  A8BBDTDL > *ZERO)
@@ -723,12 +725,12 @@
      C                   EVAL      WFldChg2 = 'Y'
      C                   ENDIF
      C                   ENDIF
-
+ 
      C                   IF        (TrgEvent = '3' AND
      C                              B8BBDTDL = *ZERO AND
      C                              A8BBDTDL > *ZERO) OR
      C                             WFldChg1 = 'Y' OR WFldChg2 = 'Y'
-
+ 
      C                   EVAL      WEvntTyp = 'MN_CUSTOMER'
      C                   EXSR      SrHeader
      C                   EVAL      WParamName = 'BBCUST'
@@ -739,27 +741,27 @@
      C                   ENDIF
      C                   EXSR      SrDetail
      C                   EVAL      WDtl1 = WDetail
-
+ 
      C                   IF        WFldChg1 = 'Y'
      C                   EVAL      WParamName = 'BBCOLC'
      C                   EVAL      WParamValue = A8BBCOLC
      C                   EXSR      SrDetail
      C                   EVAL      WDtl2 = WDetail
      C                   ENDIF
-
+ 
      C                   IF        WFldChg2 = 'Y'
      C                   EVAL      WParamName = 'BBINOF'
      C                   EVAL      WParamValue = A8BBINOF
      C                   EXSR      SrDetail
      C                   EVAL      WDtl3 = WDetail
      C                   ENDIF
-
+ 
      C                   EVAL      Buffer = %TRIM(WHeader) + %TRIM(WDtl1)
      C                                      + %TRIM(WDtl2) + %TRIM(WDtl3)
      C                                      + ConstFoot
-
+ 
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -767,20 +769,20 @@
       *  SrSDMASTPD - Processing for SDMASTPD                         *
       *****************************************************************
      C     SrSDMASTPD    BEGSR
-
+ 
      C                   EXSR      SrReset
      C                   EVAL      BSDMASTPD = BeforeImg
      C                   EVAL      ASDMASTPD = AfterImg
-
+ 
      C                   IF        TrgEvent = '3'
      C                   IF        B9MSPERC <> A9MSPERC
      C                   EVAL      WFldChg1 = 'Y'
      C                   ENDIF
      C                   ENDIF
-
+ 
      C                   IF        TrgEvent = '2' OR
      C                             WFldChg1 = 'Y'
-
+ 
      C                   EVAL      WEvntTyp = 'MN_FX_MARGIN_TYPE'
      C                   EXSR      SrHeader
      C                   EVAL      WParamName = 'MSTYPE'
@@ -799,7 +801,7 @@
      C                   ENDIF
      C                   EXSR      SrDetail
      C                   EVAL      WDtl2 = WDetail
-
+ 
      C                   IF        WFldChg1 = 'Y'
      C                   EVAL      WParamName = 'MSPERC'
      C                   EVAL      WParamValue = *BLANKS
@@ -807,13 +809,13 @@
      C                   EXSR      SrDetail
      C                   EVAL      WDtl3 = WDetail
      C                   ENDIF
-
+ 
      C                   EVAL      Buffer = %TRIM(WHeader) + %TRIM(WDtl1)
      C                                      + %TRIM(WDtl2) + %TRIM(WDtl3)
      C                                      + ConstFoot
-
+ 
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -823,22 +825,22 @@
       *****************************************************************
      C*****SrT_CLCWO     BEGSR                                                               BUG3644
      C     SrSDCUWOPD    BEGSR                                                               BUG3644
-
+ 
      C                   EXSR      SrReset
      C**********         EVAL      BT_CLCWO = BeforeImg                                      BUG3644
      C**********         EVAL      AT_CLCWO = AfterImg                                       BUG3644
      C                   EVAL      BSDCUWOPD = BeforeImg                                     BUG3644
      C                   EVAL      ASDCUWOPD = AfterImg                                      BUG3644
-
+ 
      C                   IF        TrgEvent = '3'
      C                   IF        B11WOWEIG <> A11WOWEIG
      C                   EVAL      WFldChg1 = 'Y'
      C                   ENDIF
      C                   ENDIF
-
+ 
      C                   IF        TrgEvent = '2' OR
      C                             WFldChg1 = 'Y'
-
+ 
      C                   EVAL      WEvntTyp = 'MN_CUSTOMER_WEIGHTING_OVERRIDES'
      C                   EXSR      SrHeader
      C                   EVAL      WParamName = 'WOCNUM'
@@ -882,7 +884,7 @@
      C                   ENDIF
      C                   EXSR      SrDetail
      C                   EVAL      WDtl5 = WDetail
-
+ 
      C                   IF        WFldChg1 = 'Y'
      C                   EVAL      WParamName = 'WOWEIG'
      C                   EVAL      WParamValue = *BLANKS
@@ -890,14 +892,14 @@
      C                   EXSR      SrDetail
      C                   EVAL      WDtl6 = WDetail
      C                   ENDIF
-
+ 
      C                   EVAL      Buffer = %TRIM(WHeader) + %TRIM(WDtl1)
      C                                      + %TRIM(WDtl2) + %TRIM(WDtl3)
      C                                      + %TRIM(WDtl4) + %TRIM(WDtl5)
      C                                      + %TRIM(WDtl6) + ConstFoot
-
+ 
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -905,11 +907,11 @@
       *  SrGLCOLLPD - Processing for GLCOLLPD                         *
       *****************************************************************
      C     SrGLCOLLPD    BEGSR
-
+ 
      C                   EXSR      SrReset
      C                   EVAL      BGLCOLLPD = BeforeImg
      C                   EVAL      AGLCOLLPD = AfterImg
-
+ 
      C                   IF        TrgEvent = '3' AND
      C                             NOT (B12CDRECI = 'D' AND
      C                                  A12CDRECI = 'R' AND
@@ -1037,7 +1039,7 @@
      C                   EVAL      WBeforeAfter = 'B'
      C                   ENDIF
      C                   ENDIF
-
+ 
      C                   IF        TrgEvent = '1' OR
      C                             (TrgEvent = '3' AND
      C                              B12CDRECI = 'D' AND
@@ -1064,7 +1066,7 @@
      C                             WFldChg35 = 'Y' OR WFldChg36 = 'Y' OR                    BUG11673
      C                             WFldChg37 = 'Y'                                          BUG11673
      C**********                   WFldChg35 = 'Y' OR WFldChg36 = 'Y'                       BUG11673
-
+ 
      C                   EVAL      WEvntTyp = 'MN_COLLATERAL_REGISTER'
      C                   EXSR      SrHeader
      C                   EVAL      WParamName = 'CDCREF'
@@ -1075,7 +1077,7 @@
      C                   ENDIF
      C                   EXSR      SrDetail
      C                   EVAL      WDtl1 = WDetail
-
+ 
      C                   IF        WBeforeAfter = 'B'
      C                   EVAL      CNUM = B12CDFCUS                                          BUG3644
      C                   EVAL      FACT = B12CDFTYP                                          BUG3644
@@ -1102,15 +1104,15 @@
      C                   EXSR      SrDetail                                                  BUG3644
      C                   EVAL      WDtl5 = WDetail                                           BUG3644
      C                   ENDIF
-
+ 
      C                   EVAL      Buffer = %TRIM(WHeader) + %TRIM(WDtl1)
      C                                      + %TRIM(WDtl2) + %TRIM(WDtl3)
      C**********                            + %TRIM(WDtl4) + ConstFoot                       BUG3644
      C                                      + %TRIM(WDtl4) + %TRIM(WDtl5)                    BUG3644
      C                                      + ConstFoot                                      BUG3644
-
+ 
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1118,11 +1120,11 @@
       *  SrGLCOLAPD - Processing for GLCOLAPD                         *
       *****************************************************************
      C     SrGLCOLAPD    BEGSR
-
+ 
      C                   EXSR      SrReset
      C                   EVAL      BGLCOLAPD = BeforeImg
      C                   EVAL      AGLCOLAPD = AfterImg
-
+ 
      C                   IF        TrgEvent = '3' AND
      C                             NOT (B13CACHTP <> 'D' AND
      C                                  A13CACHTP = 'D')
@@ -1153,14 +1155,14 @@
      C                   EVAL      WBeforeAfter = 'B'
      C                   ENDIF
      C                   ENDIF
-
+ 
      C                   IF        TrgEvent = '1' OR
      C                             TrgEvent = '2' OR
      C                             TrgEvent = '3' AND
      C                             (B13CACHTP <> 'D' AND
      C                              A13CACHTP = 'D') OR
      C                             WBeforeAfter = 'B'
-
+ 
      C                   EVAL      WEvntTyp = 'MN_COLLATERAL_ALLOCATION'
      C                   EXSR      SrHeader
      C                   EVAL      WParamName = 'CACREF'
@@ -1171,7 +1173,7 @@
      C                   ENDIF
      C                   EXSR      SrDetail
      C                   EVAL      WDtl1 = WDetail
-
+ 
      C                   IF        TrgEvent = '2' AND
      C**********                   B13CAFCUS <> 0  AND                                        CSD027
      C                             B13CAFCUS <> *BLANKS AND                                   CSD027
@@ -1202,7 +1204,7 @@
      C                   EXSR      SrDetail                                                  BUG3644
      C                   EVAL      WDtl5 = WDetail                                           BUG3644
      C                   ENDIF
-
+ 
      C                   IF        TrgEvent = '3' AND
      C                             (B13CACHTP <> 'D' AND
      C                              A13CACHTP = 'D') OR
@@ -1228,15 +1230,15 @@
      C                   EXSR      SrDetail                                                  BUG3644
      C                   EVAL      WDtl5 = WDetail                                           BUG3644
      C                   ENDIF
-
+ 
      C                   EVAL      Buffer = %TRIM(WHeader) + %TRIM(WDtl1)
      C                                      + %TRIM(WDtl2) + %TRIM(WDtl3)
      C**********                            + %TRIM(WDtl4) + ConstFoot                       BUG3644
      C                                      + %TRIM(WDtl4) + %TRIM(WDtl5)                    BUG3644
      C                                      + ConstFoot                                      BUG3644
-
+ 
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1244,20 +1246,20 @@
       *  SrLEFCLTQD - Processing for LEFCLTQD                         *
       *****************************************************************
      C     SrLEFCLTQD    BEGSR
-
+ 
      C                   EXSR      SrReset
      C                   EVAL      BLEFCLTQD = BeforeImg
      C                   EVAL      ALEFCLTQD = AfterImg
-
+ 
      C                   IF        TrgEvent = '3'
      C                   IF        B14FCXMST <> A14FCXMST
      C                   EVAL      WFldChg1 = 'Y'
      C                   ENDIF
      C                   ENDIF
-
+ 
      C                   IF        TrgEvent = '2' OR
      C                             WFldChg1 = 'Y'
-
+ 
      C                   EVAL      WEvntTyp = 'MN_FACILITY'
      C                   EXSR      SrHeader
      C                   EVAL      WParamName = 'FacCustNo'
@@ -1287,20 +1289,20 @@
      C                   ENDIF
      C                   EXSR      SrDetail
      C                   EVAL      WDtl3 = WDetail
-
+ 
      C                   IF        WFldChg1 = 'Y'
      C                   EVAL      WParamName = 'FCXMST'
      C                   EVAL      WParamValue = A14FCXMST
      C                   EXSR      SrDetail
      C                   EVAL      WDtl4 = WDetail
      C                   ENDIF
-
+ 
      C                   EVAL      Buffer = %TRIM(WHeader) + %TRIM(WDtl1)
      C                                      + %TRIM(WDtl2) + %TRIM(WDtl3)
      C                                      + %TRIM(WDtl4) + ConstFoot
-
+ 
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1308,11 +1310,11 @@
       *  SrACCNTAB - Processing for ACCNTAB                           *
       *****************************************************************
      C     SrACCNTAB     BEGSR
-
+ 
      C                   EXSR      SrReset
      C                   EVAL      BACCNTAB = BeforeImg
      C                   EVAL      AACCNTAB = AfterImg
-
+ 
      C                   IF        TrgEvent = '3'
      C                   IF        B15FCCU <> A15FCCU OR
      C                             B15FACT <> A15FACT OR
@@ -1355,17 +1357,17 @@
      C                   EVAL      WBeforeAfter = 'B'
      C                   ENDIF
      C                   ENDIF
-
+ 
      C                   IF        TrgEvent = '1' AND
      C**********                   (A15FCCU <> *ZERO OR                                       CSD027
      C                             (A15FCCU <> *BLANKS OR                                     CSD027
      C                              A15FACT <> *ZERO OR
      C                              A15FCNO <> *ZERO) OR
      C                             WBeforeAfter <> *BLANKS
-
+ 
      C                   EVAL      WEvntTyp = 'MN_ACCOUNT'
      C                   EXSR      SrHeader
-
+ 
      C                   IF        TrgEvent = '1' OR
      C                             WBeforeAfter = 'A' OR
      C                             WBeforeAfter = 'C'
@@ -1394,7 +1396,7 @@
      C                   EXSR      SrDetail                                                  BUG3644
      C                   EVAL      WDtl4 = WDetail                                           BUG3644
      C                   ENDIF
-
+ 
      C                   IF        WBeforeAfter = 'B'
      C                   EVAL      CNUM = B15FCCU                                            BUG3644
      C                   EVAL      FACT = B15FACT                                            BUG3644
@@ -1421,16 +1423,16 @@
      C                   EXSR      SrDetail                                                  BUG3644
      C                   EVAL      WDtl4 = WDetail                                           BUG3644
      C                   ENDIF
-
+ 
      C                   EVAL      Buffer = %TRIM(WHeader) + %TRIM(WDtl1)
      C                                      + %TRIM(WDtl2) + %TRIM(WDtl3)
      C**********                            + ConstFoot                                      BUG3644
      C                                      + %TRIM(WDtl4) + ConstFoot                       BUG3644
-
+ 
      C                   EVAL      DtqLib = LIBR + 'DPLIB'
      C                   EXSR      SrSendDtaQ
      C                   EVAL      Buffer = *Blanks
-
+ 
      C                   IF        WBeforeAfter = 'C'
      C                   EVAL      CNUM = B15FCCU                                            BUG3644
      C                   EVAL      FACT = B15FACT                                            BUG3644
@@ -1463,9 +1465,9 @@
      C**********                            + ConstFoot                                      BUG3644
      C                                      + %TRIM(WDtl4) + ConstFoot                       BUG3644
      C                   ENDIF
-
+ 
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1473,11 +1475,11 @@
       *  SrDLDLDCQD - Processing for DLDLDCQD                         *
       *****************************************************************
      C     SrDLDLDCQD    BEGSR
-
+ 
      C                   EXSR      SrReset
      C                   EVAL      BDLDLDCQD = BeforeImg
      C                   EVAL      ADLDLDCQD = AfterImg
-
+ 
      C**********         IF        TrgEvent = '3'                                             CLE040
      C                   IF        TrgEvent = '3' AND                                         CLE040
      C                             (B16F1FCCU <> A16F1FCCU OR                                 CLE040
@@ -1507,7 +1509,7 @@
      C                   EVAL      WBeforeAfter = 'C'
      C                   ENDIF
      C                   ENDIF
-
+ 
      C                   IF        TrgEvent = '1' AND
      C**********                   (A16F1FCCU <> *ZERO OR                                     CSD027
      C                             (A16F1FCCU <> *BLANKS OR                                   CSD027
@@ -1521,10 +1523,10 @@
      C**********                   TrgEvent = '3'                                             CLE040
      C                             TrgEvent = '3' AND                                         CLE040
      C                             WBeforeAfter <> *BLANKS                                    CLE040
-
+ 
      C                   EVAL      WEvntTyp = 'MN_MM_LOAN'
      C                   EXSR      SrHeader
-
+ 
      C                   IF        TrgEvent = '1' OR
      C                             TrgEvent = '3' AND WBeforeAfter = 'A' OR
      C                             TrgEvent = '3' AND WBeforeAfter = 'C'
@@ -1553,7 +1555,7 @@
      C                   EXSR      SrDetail                                                  BUG3644
      C                   EVAL      WDtl4 = WDetail                                           BUG3644
      C                   ENDIF
-
+ 
      C                   IF        TrgEvent = '2' OR
      C                             TrgEvent = '3' AND WBeforeAfter = 'B'
      C                   EVAL      CNUM = B16F1FCCU                                          BUG3644
@@ -1581,16 +1583,16 @@
      C                   EXSR      SrDetail                                                  BUG3644
      C                   EVAL      WDtl4 = WDetail                                           BUG3644
      C                   ENDIF
-
+ 
      C                   EVAL      Buffer = %TRIM(WHeader) + %TRIM(WDtl1)
      C                                      + %TRIM(WDtl2) + %TRIM(WDtl3)
      C**********                            + ConstFoot                                      BUG3644
      C                                      + %TRIM(WDtl4) + ConstFoot                       BUG3644
-
+ 
      C                   EVAL      DtqLib = LIBR + 'DPLIB'
      C                   EXSR      SrSendDtaQ
      C                   EVAL      Buffer = *Blanks
-
+ 
      C                   IF        WBeforeAfter = 'C'
      C                   EVAL      CNUM = B16F1FCCU                                          BUG3644
      C                   EVAL      FACT = B16F1FACT                                          BUG3644
@@ -1623,9 +1625,9 @@
      C**********                            + ConstFoot                                      BUG3644
      C                                      + %TRIM(WDtl4) + ConstFoot                       BUG3644
      C                   ENDIF
-
+ 
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1633,11 +1635,11 @@
       *  SrDLDLDBQD - Processing for DLDLDBQD                         *
       *****************************************************************
      C     SrDLDLDBQD    BEGSR
-
+ 
      C                   EXSR      SrReset
      C                   EVAL      BDLDLDBQD = BeforeImg
      C                   EVAL      ADLDLDBQD = AfterImg
-
+ 
      C**********         IF        TrgEvent = '3'                                             CLE040
      C                   IF        TrgEvent = '3' AND                                         CLE040
      C                             (B17F1FCCU <> A17F1FCCU OR                                 CLE040
@@ -1667,7 +1669,7 @@
      C                   EVAL      WBeforeAfter = 'C'
      C                   ENDIF
      C                   ENDIF
-
+ 
      C                   IF        TrgEvent = '1' AND
      C**********                   (A17F1FCCU <> *ZERO OR                                     CSD027
      C                             (A17F1FCCU <> *BLANKS OR                                   CSD027
@@ -1681,10 +1683,10 @@
      C**********                   TrgEvent = '3'                                             CLE040
      C                             TrgEvent = '3' AND                                         CLE040
      C                             WBeforeAfter <> *BLANKS                                    CLE040
-
+ 
      C                   EVAL      WEvntTyp = 'MN_FX_DEAL'
      C                   EXSR      SrHeader
-
+ 
      C                   IF        TrgEvent = '1' OR
      C                             TrgEvent = '3' AND WBeforeAfter = 'A' OR
      C                             TrgEvent = '3' AND WBeforeAfter = 'C'
@@ -1713,7 +1715,7 @@
      C                   EXSR      SrDetail                                                  BUG3644
      C                   EVAL      WDtl4 = WDetail                                           BUG3644
      C                   ENDIF
-
+ 
      C                   IF        TrgEvent = '2' OR
      C                             TrgEvent = '3' AND WBeforeAfter = 'B'
      C                   EVAL      CNUM = B17F1FCCU                                          BUG3644
@@ -1741,16 +1743,16 @@
      C                   EXSR      SrDetail                                                  BUG3644
      C                   EVAL      WDtl4 = WDetail                                           BUG3644
      C                   ENDIF
-
+ 
      C                   EVAL      Buffer = %TRIM(WHeader) + %TRIM(WDtl1)
      C                                      + %TRIM(WDtl2) + %TRIM(WDtl3)
      C**********                            + ConstFoot                                      BUG3644
      C                                      + %TRIM(WDtl4) + ConstFoot                       BUG3644
-
+ 
      C                   EVAL      DtqLib = LIBR + 'DPLIB'
      C                   EXSR      SrSendDtaQ
      C                   EVAL      Buffer = *Blanks
-
+ 
      C                   IF        WBeforeAfter = 'C'
      C                   EVAL      CNUM = B17F1FCCU                                          BUG3644
      C                   EVAL      FACT = B17F1FACT                                          BUG3644
@@ -1783,9 +1785,9 @@
      C**********                            + ConstFoot                                      BUG3644
      C                                      + %TRIM(WDtl4) + ConstFoot                       BUG3644
      C                   ENDIF
-
+ 
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1793,11 +1795,11 @@
       *  SrDLDLDGQD - Processing for DLDLDGQD                         *
       *****************************************************************
      C     SrDLDLDGQD    BEGSR
-
+ 
      C                   EXSR      SrReset
      C                   EVAL      BDLDLDGQD = BeforeImg
      C                   EVAL      ADLDLDGQD = AfterImg
-
+ 
      C**********         IF        TrgEvent = '3'                                             CLE040
      C                   IF        TrgEvent = '3' AND                                         CLE040
      C                             (B18F1FCCU <> A18F1FCCU OR                                 CLE040
@@ -1827,7 +1829,7 @@
      C                   EVAL      WBeforeAfter = 'C'
      C                   ENDIF
      C                   ENDIF
-
+ 
      C                   IF        TrgEvent = '1' AND
      C**********                   (A18F1FCCU <> *ZERO OR                                     CSD027
      C                             (A18F1FCCU <> *BLANKS OR                                   CSD027
@@ -1841,10 +1843,10 @@
      C**********                   TrgEvent = '3'                                             CLE040
      C                             TrgEvent = '3' AND                                         CLE040
      C                             WBeforeAfter <> *BLANKS                                    CLE040
-
+ 
      C                   EVAL      WEvntTyp = 'MN_FRAIRS_CFCO'
      C                   EXSR      SrHeader
-
+ 
      C                   IF        TrgEvent = '1' OR
      C                             TrgEvent = '3' AND WBeforeAfter = 'A' OR
      C                             TrgEvent = '3' AND WBeforeAfter = 'C'
@@ -1873,7 +1875,7 @@
      C                   EXSR      SrDetail                                                  BUG3644
      C                   EVAL      WDtl4 = WDetail                                           BUG3644
      C                   ENDIF
-
+ 
      C                   IF        TrgEvent = '2' OR
      C                             TrgEvent = '3' AND WBeforeAfter = 'B'
      C                   EVAL      CNUM = B18F1FCCU                                          BUG3644
@@ -1901,16 +1903,16 @@
      C                   EXSR      SrDetail                                                  BUG3644
      C                   EVAL      WDtl4 = WDetail                                           BUG3644
      C                   ENDIF
-
+ 
      C                   EVAL      Buffer = %TRIM(WHeader) + %TRIM(WDtl1)
      C                                      + %TRIM(WDtl2) + %TRIM(WDtl3)
      C**********                            + ConstFoot                                      BUG3644
      C                                      + %TRIM(WDtl4) + ConstFoot                       BUG3644
-
+ 
      C                   EVAL      DtqLib = LIBR + 'DPLIB'
      C                   EXSR      SrSendDtaQ
      C                   EVAL      Buffer = *Blanks
-
+ 
      C                   IF        WBeforeAfter = 'C'
      C                   EVAL      CNUM = B18F1FCCU                                          BUG3644
      C                   EVAL      FACT = B18F1FACT                                          BUG3644
@@ -1943,9 +1945,9 @@
      C**********                            + ConstFoot                                      BUG3644
      C                                      + %TRIM(WDtl4) + ConstFoot                       BUG3644
      C                   ENDIF
-
+ 
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1953,11 +1955,11 @@
       *  SrSECTYD - Processing for SECTYD                             *
       *****************************************************************
      C     SrSECTYD      BEGSR
-
+ 
      C                   EXSR      SrReset
      C                   EVAL      BSECTYD = BeforeImg
      C                   EVAL      ASECTYD = AfterImg
-
+ 
      C                   IF        TrgEvent = '3' AND
      C                             NOT (B19RECI = 'D' AND
      C                                  A19RECI = 'C')
@@ -1968,12 +1970,12 @@
      C                   EVAL      WFldChg2 = 'Y'
      C                   ENDIF
      C                   ENDIF
-
+ 
      C                   IF        (TrgEvent = '3' AND
      C                              B19RECI = 'D' AND
      C                              A19RECI = 'C') OR
      C                             WFldChg1 = 'Y' OR WFldChg2 = 'Y'
-
+ 
      C                   EVAL      WEvntTyp = 'MN_SECURITY'
      C                   EXSR      SrHeader
      C                   EVAL      WParamName = 'SESN'
@@ -1984,7 +1986,7 @@
      C                   ENDIF
      C                   EXSR      SrDetail
      C                   EVAL      WDtl1 = WDetail
-
+ 
      C                   IF        WFldChg1 = 'Y'
      C                   EVAL      WParamName = 'WEIC'
      C                   EVAL      WParamValue = *BLANKS
@@ -1992,20 +1994,20 @@
      C                   EXSR      SrDetail
      C                   EVAL      WDtl2 = WDetail
      C                   ENDIF
-
+ 
      C                   IF        WFldChg2 = 'Y'
      C                   EVAL      WParamName = 'SCOR'
      C                   EVAL      WParamValue = A19SCOR
      C                   EXSR      SrDetail
      C                   EVAL      WDtl3 = WDetail
      C                   ENDIF
-
+ 
      C                   EVAL      Buffer = %TRIM(WHeader) + %TRIM(WDtl1)
      C                                      + %TRIM(WDtl2) + %TRIM(WDtl3)
      C                                      + ConstFoot
-
+ 
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2013,11 +2015,11 @@
       *  SrCLOANCL - Processing for CLOANCL                           *
       *****************************************************************
      C     SrCLOANCL     BEGSR
-
+ 
      C                   EXSR      SrReset
      C                   EVAL      BCLOANCL = BeforeImg
      C                   EVAL      ACLOANCL = AfterImg
-
+ 
      C                   IF        TrgEvent = '3'
      C                   IF        B20FCUS <> A20FCUS OR
      C                             B20FTYP <> A20FTYP OR
@@ -2047,17 +2049,17 @@
      C                   EVAL      WBeforeAfter = 'B'
      C                   ENDIF
      C                   ENDIF
-
+ 
      C                   IF        TrgEvent = '1' AND
      C**********                   (A20FCUS <> *ZERO OR                                       CSD027
      C                             (A20FCUS <> *BLANKS OR                                     CSD027
      C                              A20FTYP <> *ZERO OR
      C                              A20FSEQ <> *ZERO) OR
      C                             WBeforeAfter <> *BLANKS
-
+ 
      C                   EVAL      WEvntTyp = 'MN_CUSTOMER_LOAN'
      C                   EXSR      SrHeader
-
+ 
      C                   IF        TrgEvent = '1' OR
      C                             WBeforeAfter = 'A'
      C                   EVAL      CNUM = A20FCUS                                            BUG3644
@@ -2085,7 +2087,7 @@
      C                   EXSR      SrDetail                                                  BUG3644
      C                   EVAL      WDtl4 = WDetail                                           BUG3644
      C                   ENDIF
-
+ 
      C                   IF        WBeforeAfter = 'B'
      C                   EVAL      CNUM = B20FCUS                                            BUG3644
      C                   EVAL      FACT = B20FTYP                                            BUG3644
@@ -2112,14 +2114,14 @@
      C                   EXSR      SrDetail                                                  BUG3644
      C                   EVAL      WDtl4 = WDetail                                           BUG3644
      C                   ENDIF
-
+ 
      C                   EVAL      Buffer = %TRIM(WHeader) + %TRIM(WDtl1)
      C                                      + %TRIM(WDtl2) + %TRIM(WDtl3)
      C**********                            + ConstFoot                                      BUG3644
      C                                      + %TRIM(WDtl4) + ConstFoot                       BUG3644
-
+ 
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************                       CLE040
       /EJECT                                                                                  CLE040
@@ -2232,12 +2234,12 @@
       *  SrHeader - Header Processing                                 *
       *****************************************************************
      C     SrHeader      BEGSR
-
+ 
      C                   EVAL      WHeader = ConstHead1 + ConstHead2 +
      C                                       ConstHead3 + ConstHead4 +
      C                                       ConstHead5 + %TRIM(WEvntTyp)
      C                                       + ConstHead6
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2245,11 +2247,11 @@
       *  SrDetail - Detail Processing                                 *
       *****************************************************************
      C     SrDetail      BEGSR
-
+ 
      C                   EVAL      WDetail = ConstDet1 + %TRIM(WParamName)
      C                                       + ConstDet2 + %TRIM(WParamValue)
      C                                       + ConstDet3
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2257,7 +2259,7 @@
       *  SrReset - Initialise variables                               *
       *****************************************************************
      C     SrReset       BEGSR
-
+ 
      C                   EVAL      WBeforeAfter = *BLANKS
      C                   EVAL      WDtl1 = *BLANKS
      C                   EVAL      WDtl2 = *BLANKS
@@ -2307,7 +2309,7 @@
      C                   EVAL      WParamValue = *BLANKS
      C                   EVAL      Buffer = *BLANKS
      C                   EVAL      KDlNo  = *BLANKS                                           CLE040
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2320,7 +2322,7 @@
       ** Result field would contain the position relative to the left                        BUG3644
                                                                                              BUG3644
      C     ' '           CHECKR    BUFFER        WLength                                     BUG3644
-
+ 
      C                   CALL      'QSNDDTAQ'                           7070
      C                   PARM      'CLECALCMGR'  DtqNam
      C                   PARM                    DtqLib
@@ -2328,7 +2330,7 @@
      C**********         PARM      600           DtqLen                              BUG3824 BUG3644
      C*******************PARM      6000          DtqLen                                      BUG3824
      C                   PARM                    Buffer
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2346,21 +2348,21 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
-
+ 
      C     *ENTRY        PLIST
      C                   PARM                    PARM1
      C                   PARM                    PARM2
-
+ 
       ** Read in data areas
-
+ 
      C     *DTAARA       DEFINE                  RUNDAT
      C     *DTAARA       DEFINE                  LDA
      C     *DTAARA       DEFINE                  SDSTAT
      C                   IN        RUNDAT
      C                   IN        SDSTAT
-
+ 
       ** Set Date Format Indicator *IN98 on if date format is MMDDYY
-
+ 
      C                   IF        AGDFF = 'M'
      C                   EVAL      *IN98 = *ON
      C                   ENDIF
@@ -2371,7 +2373,7 @@
      C                   KFLD                    FCNO                                        BUG3644
                                                                                               CLE040
      C     *LIKE         DEFINE    L5_F1DLNO     KDlNo                                        CLE040
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2379,17 +2381,17 @@
       * *PSSR  - Program exception error routine                      *
       *****************************************************************
      C     *PSSR         BEGSR
-
+ 
      C                   IF        WRun = *BLANKS
      C                   EVAL      WRun = 'Y'
      C                   DUMP
      C                   CALL      'DBERRCTL'
      C                   ENDIF
-
+ 
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
-
+ 
      C                   ENDSR
       *****************************************************************

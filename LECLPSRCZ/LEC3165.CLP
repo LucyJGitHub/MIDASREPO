@@ -7,15 +7,16 @@
 /*                                                                   */
 /*       LEC3165  - Rollover Rate Fixing Advices Control             */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CLE134             Date 01Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CLE134             Date 01Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4.01 -----------------------------------------------*/
-/*       Prev Amend No. 205448             Date 02May02              */
+/*                      205448             Date 02May02              */
 /*                      CCG015             Date 09Aug01              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /*                      193083             Date 11Jul01              */
@@ -24,6 +25,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CLE134 - Past Due Call Loan Processing (Recompile)          */
 /*       205448 - UDC module must be on for Correspondence Manager   */
 /*       CCG015 - Correspondence Manager Phase 1                     */
@@ -51,7 +53,7 @@
              DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)
              DCL        VAR(&ACTION) TYPE(*CHAR) LEN(8)                                   /*CCG015*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /* Global monitor message */
@@ -191,6 +193,6 @@
              ENDDO
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

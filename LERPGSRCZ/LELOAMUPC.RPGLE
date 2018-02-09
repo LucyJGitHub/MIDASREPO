@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas LE Loan amendments dbase update controller')     *
@@ -9,10 +9,11 @@
       *                                                               *
       *  LELOAMUPC - LE Loan Amendment controller                     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. AR1054921          Date 10Jun13               *
-      *  Prev Amend No. AR868380           Date 10Jun13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR1054921          Date 10Jun13               *
+      *                 AR868380           Date 10Jun13               *
       *                 CLE148             Date 23Jul12               *
       *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -31,6 +32,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR1054921 - Corrected the error handling introduced by       *
       *             AR868380. (Child: AR1054924)                      *
       *  AR868380 - APISERVER on LCKW status. Return *RECLCK to       *
@@ -650,4 +652,4 @@
       /EJECT
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2002
+(c) Finastra International Limited 2002

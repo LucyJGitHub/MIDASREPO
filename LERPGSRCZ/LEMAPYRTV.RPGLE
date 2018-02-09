@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas LE Manual repayment input - retrieve')           *
@@ -14,10 +14,11 @@
       *             action code, the loan reference and the sequence  *
       *             and Customer Loans, Expected Date/Sequence        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD034264           Date 05May15               *
-      *  Prev Amend No. CLE164             Date 18Aug14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD034264           Date 05May15               *
+      *                 CLE164             Date 18Aug14               *
       *                 CDL094             Date 01Sep14               *
       *                 MD024398           Date 11May14               *
       *                 MD000091           Date 10May13               *
@@ -72,6 +73,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD034264 - Unable to reject transaction due to wrong sequence*
       *           - number. Remove unnecessary CHAIN.                 *
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
@@ -2746,4 +2748,4 @@ jim  C     *LIKE         DEFINE    DDESEQ        SVESEQ
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2002
+(c) Finastra International Limited 2002

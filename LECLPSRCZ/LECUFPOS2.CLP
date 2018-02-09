@@ -13,16 +13,18 @@
 /*       This CLP retrieve the position of the first window field    */
 /*       in order to split message between Core data and Extra data  */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2002           */
+/*       (c) Finastra International Limited 2002                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CER001             Date 25Apr05              */
-/*       Prev Amend No. ULX612             Date 11Jan02              */
+/*       Prev Amend No. CER001             Date 25Apr05              */
+/*                      ULX612             Date 11Jan02              */
 /*                                                                   */
 /*********************************************************************/
+/*       MD046248 - Finastra Rebranding                              */
 /*       CER001 - LUX Upgrade to MidasPlus                           */
 /*       ULX612 - LE Loans & Part Purch API for Lux                 */
 /*********************************************************************/
@@ -34,7 +36,7 @@
              PGM        PARM(&FPOS1 &PLIB)
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2002')
  
              DCL        VAR(&FPOS1) TYPE(*DEC) LEN(5)
@@ -54,6 +56,6 @@ ERROR:
  
  ENDPGM:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

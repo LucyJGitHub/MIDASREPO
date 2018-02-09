@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas LE Retrieve Repayment Priority')
@@ -9,28 +9,30 @@
       *                                                               *
       *  LE000802 - Midas LE Retrieve Repayment Priority              *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. CLE164 *CREATE     Date 18Aug14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE164 *CREATE     Date 18Aug14               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
       *                                                               *
       *****************************************************************
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in
       ** the Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** +--------------------------------------+
       ** ¦ Program Prototypes                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D Main            PR                  EXTPGM('LE000802')
      D pReturnCode                    7A
      D pCategoryCode                  5A
@@ -42,7 +44,7 @@
      D pFeeSequence                   2S 0
      D pRepPriority                   8S 0
      D pOvrdftflg                     1A
- 
+
      D Main            PI
      D pReturnCode                    7A
      D pCategoryCode                  5A
@@ -54,7 +56,7 @@
      D pFeeSequence                   2S 0
      D pRepPriority                   8S 0
      D pOvrdftflg                     1A
- 
+
      D ACCESS_FILE     PR                  EXTPGM('LE000506')
      D  pRetCode                      7A
      D  pAction                       8A
@@ -69,7 +71,7 @@
      D  pFTPDPGrpID                   3A
      D  pFCPDPGrpID                   3A
      D  pCategory                     5A
- 
+
      D ACCESS_LOAN     PR                  EXTPGM('AOLOANR1')
      D  pRTCD                         7A
      D  pOPTN                         7A
@@ -77,13 +79,13 @@
      D  pSUTP                         2A
      D  pCLAS                         2A
      D  pDSSDY                      800A
- 
+
      D ACCESS_FACT     PR                  EXTPGM('AOFACTR0')
      D  pRTCD                         7A
      D  pOPTN                         7A
      D  pFACT                         3A
      D  pDSSDY                      800A
- 
+
      D ACCESS_FEE      PR                  EXTPGM('AOFEER0')
      D  pRTCD                         7A
      D  pOPTN                         7A
@@ -103,7 +105,7 @@
      D DSSDLOAN      E DS                  EXTNAME(SDLOANPD)
      D DSSDFACT      E DS                  EXTNAME(SDFACTPD)
      D DSSDFEE       E DS                  EXTNAME(SDFEEPD)
- 
+
       ** +--------------------------------------+
       ** ¦ Variable declaration                 ¦
       ** ¦ ====================                 ¦
@@ -113,7 +115,7 @@
      D QUO             C                   CONST('''')
      D OrigLoan        S              6A
      D LTYPPref        S              1A
- 
+
      D  pRetCode       S              7A
      D  pAction        S              8A
      D  pLoanRef       S              6A
@@ -133,18 +135,18 @@
      D  pFEE           S              2A
      D  pDSSDY         S            800A
      D  wREPR          S              8S 0
- 
+
       /free
- 
+
        // Start of Main processing
        //   Initial processing is performed automatically:
        //   *INZSR is executed at program activation.
- 
+
                   Exsr RetrieveRepaymentPriority;
- 
+
                   *Inlr = *On;
                   Return;
- 
+
        //*************************************************************
        /EJECT
        //*************************************************************
@@ -156,11 +158,11 @@
        // Calls: None                                                *
        //                                                            *
        //*************************************************************
- 
+
        BegSr RetrieveRepaymentPriority;
- 
+
                    Select;
- 
+
                       When pFile = 'CLOANZTD';
                          SQLStr = 'select * from CLOANZTD ' +
                                   'where ' +
@@ -180,21 +182,21 @@
                                   QUO +
                                   ' And ' +
                                   'FXFACL = ' + %EditC(pFacility:'X') +
- 
+
                                   ' And ' +
                                   'FXFSEQ = ' + %EditC(pFeeSequence:
                                                 'X') +
                                   ' And ' +
                                   'FXCATE = ' + QUO + pCategoryCode +
                                   QUO;
- 
+
                    EndSl;
- 
+
                       Exec Sql Prepare P1 from :SQLStr;
                       Exec Sql Declare P1 cursor for P1;
                       Exec Sql Prepare P2 from :SQLStr;
                       Exec Sql Declare P2 cursor for P2;
- 
+
                    If pFile = 'CLOANZTD';
                       Exec Sql Open P1;
                       Exec Sql Fetch P1 into :DSLoans;
@@ -202,7 +204,7 @@
                       Exec Sql Open P2;
                       Exec Sql Fetch P2 into :DSFees;
                    Endif;
- 
+
                    if Sqlcod <> 0 and SqlCod <> 100;
                       If pFile = 'CLOANZTD';
                          DbFile = 'CLOANZTD';
@@ -242,7 +244,7 @@
                          Endif;
                       Endif;
                    Endif;
- 
+
                    If pFile = 'CLOANZTD';
                       exec sql
                       select * into :DSLoans from CLOANZTD
@@ -264,7 +266,7 @@
                       wREPR = FXREPR;
                       pRepPriority = FXREPR;
                    EndIf;
- 
+
                    If wREPR = 0;
                       pAction = '*DELETE';
                       If pFile = 'CLOANZTD';
@@ -275,7 +277,7 @@
                          pFeeSeqn = pFeeSequence;
                       Endif;
                       Exsr SRAccessFile;
- 
+
                       pAction = '*INSERT';
                       pCategory = pCategoryCode;
                       If pFile = 'CLOANZTD';
@@ -288,7 +290,7 @@
                       Exsr SRPGPGroupID;
                       Exsr SRAccessFile;
                    EndIf;
- 
+
                    If pFile = 'CLOANZTD';
                       exec sql
                       select * into :DSLoans from CLOANZTD
@@ -310,15 +312,15 @@
                       wREPR = FXREPR;
                       pRepPriority = FXREPR;
                    EndIf;
- 
+
                    If pFile = 'CLOANZTD';
                       Exec Sql Close P1;
                    Else;
                       Exec Sql Close P2;
                    Endif;
- 
+
        Endsr;
- 
+
        //*************************************************************
        /EJECT
        //*************************************************************
@@ -330,7 +332,7 @@
        // Calls: ACCESS_FILE                                         *
        //                                                            *
        //*************************************************************
- 
+
        Begsr SRAccessFile;
                    CallP ACCESS_FILE (  pRetCode
                                       : pAction
@@ -347,7 +349,7 @@
                                       : pCategory
                                         );
        Endsr;
- 
+
        //*************************************************************
        /EJECT
        //*************************************************************
@@ -359,11 +361,11 @@
        // Calls: AOLOANR0, AOFEER0, AOFACTR0                         *
        //                                                            *
        //*************************************************************
- 
+
        Begsr SRPGPGroupID;
                    pRTCD = ' ';
                    pOPTN = '*KEY';
- 
+
                    If pFile = 'CLOANZTD';
                       exec sql
                       select * into :DSCLIP from CLOANCL
@@ -376,7 +378,7 @@
                                          : LN_CLAS
                                          : pDSSDY
                                            );
- 
+
                       LTYPPref = %Subst(LN_LTYP:1:1);
                       If LTYPPref = 'X' or LTYPPref = 'Y' or
                          LTYPPref = 'Z';
@@ -397,7 +399,7 @@
                       Endif;
                       DSSDLOAN = pDSSDY;
                       pOvrdftflg = AYOVRD;
- 
+
                       pFACT = %EditC(LN_FTYP:'X');
                       CallP ACCESS_FACT (  pRTCD
                                          : pOPTN
@@ -408,7 +410,7 @@
                       pLSPDPGrpID = AYPGID;
                       pFTPDPGrpID = AMPGID;
                       pFCPDPGrpID = '***';
- 
+
                    Else;
                       pFEE = %EditC(pFeeSequence:'X');
                       CallP ACCESS_FEE (  pRTCD
@@ -431,7 +433,7 @@
                                             : pDSSDY
                                               );
                          DSSDLOAN = pDSSDY;
- 
+
                          pFACT = %EditC(LN_FTYP:'X');
                          CallP ACCESS_FACT (  pRTCD
                                             : pOPTN
@@ -456,7 +458,7 @@
                       EndIf;
                    EndIf;
        Endsr;
- 
+
        //*************************************************************
        /EJECT
        //*************************************************************
@@ -468,11 +470,11 @@
        // Calls: AOLOANR0, AOFEER0                                   *
        //                                                            *
        //*************************************************************
- 
+
        BegSR SRRetOvfl;
                    pRTCD = ' ';
                    pOPTN = '*KEY';
- 
+
                    If pFile = 'CLOANZTD';
                       exec sql
                       select * into :DSCLIP from CLOANCL
@@ -485,7 +487,7 @@
                                          : LN_CLAS
                                          : pDSSDY
                                            );
- 
+
                       LTYPPref = %Subst(LN_LTYP:1:1);
                       If LTYPPref = 'X' or LTYPPref = 'Y' or
                          LTYPPref = 'Z';
@@ -516,9 +518,9 @@
                       DSSDFEE = pDSSDY;
                       pOvrdftflg = AUOVRA;
                    Endif;
- 
+
        Endsr;
- 
+
        //*************************************************************
        /EJECT
        //*************************************************************
@@ -530,10 +532,10 @@
        // Calls: None                                                *
        //                                                            *
        //*************************************************************
- 
+
        Begsr *Inzsr;
        Endsr;
- 
+
        //*************************************************************
        /EJECT
        //*************************************************************
@@ -543,7 +545,7 @@
        //   Called By: Main Processing                               *
        //                                                            *
        //*************************************************************
- 
+
        Begsr *Pssr;
                   pReturnCode = '*ERROR';
                   *Inu7 = *ON;
@@ -552,5 +554,5 @@
                   *Inlr = *ON;
                   Return;
        Endsr;
- 
+
       /end-free

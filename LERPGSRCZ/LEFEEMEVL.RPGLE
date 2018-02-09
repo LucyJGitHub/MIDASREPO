@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas LE Fee input Extra validation for settlement')   *
@@ -9,10 +9,11 @@
       *                                                               *
       *  LEFEEMEVL -  Customer Fee Extra validations for settlement   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD039016           Date 26May16               *
-      *  Prev Amend No. CLE141A            Date 28Apr16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD039016           Date 26May16               *
+      *                 CLE141A            Date 28Apr16               *
       *                 MD038457           Date 28Apr16               *
       *                 CLE141             Date 08Feb16               *
       *                 CLE134             Date 01Aug12               *
@@ -33,6 +34,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD039016 - Different event codes for BDC validation in       *
       *             various Lending APIs                              *
       *  CLE141A - CLE141 Change Control 1                            *
@@ -87,10 +89,10 @@
       **    RunBefore  1A (for the PSSR)
       *
      D/COPY ZACPYSRC,STD_D_SPEC
-
+ 
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
-
+ 
       *
       ** Program Status Data Structure
       ** =============================
@@ -132,7 +134,7 @@
       *
      D XArrayMax       C                   CONST(40)
       ***  The maximum size of the appended error arrays
-
+ 
       *
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
@@ -160,7 +162,7 @@
      D Kpd_LNRF        S                   INZ LIKE(pd_LNRF)                                  CLE141
      D Kpd_RECI        S                   INZ LIKE(pd_RECI)                                  CLE141
      D WFSTTL          S                   INZ LIKE(FLRSTM)                                   CLE141
-
+ 
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ***  External DS for bank details
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
@@ -177,10 +179,10 @@
       *
      D CrFeFilFmt    E DS                  EXTNAME(LEFEED)
       ***  Current Fee in File Format
-
+ 
      D NwFeScnFmt    E DS                  EXTNAME(LEFEEMPD)
       ***  New Fee in Screen Format
-
+ 
      D ValidFeem     E DS                  EXTNAME(LEVFEEMPD)
      D QQOURS1       E                     EXTFLD(QQOURS)                                     CGL029
       ***  New Fee in file format
@@ -190,24 +192,24 @@
      D  VFPay                377    921                                                       CGL029
      D  VFRecEx             1076   1093                                                       CGL029
      D  VFPayEx             1094   1111                                                       CGL029
-
+ 
      D F_REC         E DS                  EXTNAME(SDESFRPD)
       * File Receive instructions
      D***FLREC**                1     69                                                      CGL029
      D  FLREC                  1     75                                                       CGL029
-
+ 
      D F_PAY         E DS                  EXTNAME(SDESFPPD)
       * File Payment instructions
      D***FLPAY**                1    559                                                      CGL029
      D  FLPAY                  1    565                                                       CGL029
-
+ 
      D F_FRI         E DS                  EXTNAME(SDESFFPD)
       * File Fra/irs instructions
-
+ 
       *
      D OKFee         E DS                  EXTNAME(LEEFEEMPD)
       ***  Error indicators Screen
-
+ 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -215,14 +217,14 @@
       *
      D RespMode        S              1A
       ** Response Mode, received as a parameter from the common header
-
+ 
      D Idx             S              3P 0
       ** Index for arrays of error message ids etc
-
+ 
       *
      D WId             S              3P 0
       ***  Index for arrays of of warning message ids etc
-
+ 
      D CLE141          S              1A                                                      CLE141
      D CurLocArr       S              3    DIM(20)                                            CLE141
      D CurLocDS        S             60                                                      CLE141A
@@ -246,7 +248,7 @@
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
       /COPY WNCPYSRC,LEFEEMEV02
-
+ 
       *****************************************************************
       /EJECT
       ** +--- Start of Main processing -----------------------------------+
@@ -256,13 +258,13 @@
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
       *
-
+ 
       /COPY WNCPYSRC,LEFEEMVE03
-
+ 
       *
       ***  Extra Validation after Extended Settlement
       *    ==========================================
-
+ 
       *
       ***  Reset variables updated by each module
       *
@@ -296,7 +298,7 @@
      C                   EVAL      CurLocArr(19) = PD_L9PI                                   CLE141A
      C                   EVAL      CurLocArr(20) = PD_L0PI                                   CLE141A
      C                   MOVEA     CURLOCARR     CURLOCDS                                    CLE141A
-
+ 
      C                   ENDIF                                                               CLE141A
      C                   ENDIF                                                               CLE141A
       *
@@ -311,17 +313,17 @@
      C                   MOVE      FLPSCY        WSCCY
      C                   ENDIF
      C                   ENDIF
-
+ 
       ** use the receipt settlement method from sceen on                                      CLE141
       ** checking if the date should be validated based on business day convention            CLE141
-
+ 
      C     VFPTFI        IFEQ      *blanks                                                    CLE141
      C                   EVAl      WFSTTL = FLRSTM                                            CLE141
      C                   ELSE                                                                 CLE141
      C                   EVAl      WFSTTL = FLPSTM                                            CLE141
      C                   ENDIF                                                                CLE141
      C                   Eval      DDEPON = VFPYON                                            CLE141
-
+ 
       *
       ** If settlement is start date and method is either 01 07 or 08,
       ** then check date for a holiday in both local and fee ccy.
@@ -330,11 +332,11 @@
      C     DDEPON        IFEQ      'S'
      C     DDEPON        OREQ      ' '
      C                   Z-ADD     VFPSTD        ZDAYNO
-
+ 
      C*****FESTTL        IFEQ      01                                                         CLE141
      C*****FESTTL        OREQ      07                                                         CLE141
      C*****FESTTL        OREQ      08                                                         CLE141
-
+ 
      C     WFSTTL        IFEQ      01                                                         CLE141
      C     WFSTTL        OREQ      07                                                         CLE141
      C     WFSTTL        OREQ      08                                                         CLE141
@@ -350,15 +352,15 @@
      C                   MOVE      VFFCCY        ZCCY              3                         CLE141A
      C                   ENDIF
      C                   MOVE      '*BLANKS'     ZLOC              3
-
+ 
      C*****CLE141        IFEQ      'Y'                                                CLE141 CLE141A
      C*****VFLOAN        ANDNE     *blanks                                            CLE141 CLE141A
-
+ 
      C**********         CALLB     'LEVBDYLE'                                         CLE141 CLE141A
      C**********         PARM      *BLANKS       RetCode                              CLE141 CLE141A
      C**********         PARM                    CurLocArr                            CLE141 CLE141A
      C**********         PARM                    ZDAYNO                               CLE141 CLE141A
-
+ 
      C*****RetCode       IFEQ      'HOLIDAY'                                          CLE141 CLE141A
      C**********         EVAL      WMsgIDXAr = '5048508'                             CLE141 MD038457
      C**********         EVAL      DDEPSDOK = 'W'                                     CLE141 CLE141A
@@ -366,9 +368,9 @@
      C**********         EVAL      WMsgIDXAr(WId) = '5048508'                       MD038457 CLE141A
      C**********         EVAL      WFldNmXAr(WId) = 'DDEPSD'                          CLE141 CLE141A
      C**********         ENDIF                                                        CLE141 CLE141A
-
+ 
      C**********         ELSE                                                         CLE141 CLE141A
-
+ 
      C                   CALLB     'ZCHKH'
      C                   PARM                    ZDAYNO
      C                   PARM                    ZCCY              3
@@ -396,7 +398,7 @@
       ** Local Ccy check
       *
      C                   MOVE      BJLCCY        ZCCY
-
+ 
      C                   CALLB     'ZCHKH'
      C                   PARM                    ZDAYNO            5 0
      C                   PARM                    ZCCY
@@ -441,11 +443,11 @@
      C     DDEPEDOK      OREQ      'W'                                                      MD038457
      C     DDEPON        IFEQ      'E'
      C                   Z-ADD     VFPEND        ZDAYNO
-
+ 
      C*****FESTTL        IFEQ      01                                                         CLE141
      C*****FESTTL        OREQ      07                                                         CLE141
      C*****FESTTL        OREQ      08                                                         CLE141
-
+ 
      C     WFSTTL        IFEQ      01                                                         CLE141
      C     WFSTTL        OREQ      07                                                         CLE141
      C     WFSTTL        OREQ      08                                                         CLE141
@@ -457,15 +459,15 @@
      C**********         MOVE      DDECUR        ZCCY                                        CLE141A
      C                   MOVE      VFFCCY        ZCCY                                        CLE141A
      C                   ENDIF
-
+ 
      C*****CLE141        IFEQ      'Y'                                                CLE141 CLE141A
      C*****VFLOAN        ANDNE     *blanks                                            CLE141 CLE141A
-
+ 
      C**********         CALLB     'LEVBDYLE'                                         CLE141 CLE141A
      C**********         PARM      *BLANKS       RetCode                              CLE141 CLE141A
      C**********         PARM                    CurLocArr                            CLE141 CLE141A
      C**********         PARM                    ZDAYNO                               CLE141 CLE141A
-
+ 
      C*****RetCode       IFEQ      'HOLIDAY'                                          CLE141 CLE141A
      C**********         EVAL      WMsgIDXAr = '5048508'                             CLE141 MD038457
      C**********         EVAL      DDEPSDOK = 'W'                                    CLE141 MD038457
@@ -474,9 +476,9 @@
      C**********         EVAL      WMsgIDXAr(WId) = '5048508'                       MD038457 CLE141A
      C**********         EVAL      WFldNmXAr(WId) = 'DDEPED'                          CLE141 CLE141A
      C**********         ENDIF                                                        CLE141 CLE141A
-
+ 
      C**********         ELSE                                                         CLE141 CLE141A
-
+ 
      C                   CALLB     'ZCHKH'
      C                   PARM                    ZDAYNO
      C                   PARM                    ZCCY
@@ -551,26 +553,26 @@
      C     DDNPYDOK      IFEQ      'Y'
      C     DDEPON        IFEQ      'N'
      C                   Z-ADD     VFNPYD        ZDAYNO
-
+ 
      C*****FESTTL        IFEQ      01                                                         CLE141
      C*****FESTTL        OREQ      07                                                         CLE141
      C*****FESTTL        OREQ      08                                                         CLE141
-
+ 
      C     WFSTTL        IFEQ      01                                                         CLE141
      C     WFSTTL        OREQ      07                                                         CLE141
      C     WFSTTL        OREQ      08                                                         CLE141
       *
      C**********         MOVE      DDECUR        ZCCY              3                         CLE141A
      C                   MOVE      VFFCCY        ZCCY                                        CLE141A
-
+ 
      C*****CLE141        IFEQ      'Y'                                                CLE141 CLE141A
      C*****VFLOAN        ANDNE     *blanks                                            CLE141 CLE141A
-
+ 
      C**********         CALLB     'LEVBDYLE'                                         CLE141 CLE141A
      C**********         PARM      *BLANKS       RetCode                              CLE141 CLE141A
      C**********         PARM                    CurLocArr                            CLE141 CLE141A
      C**********         PARM                    ZDAYNO                               CLE141 CLE141A
-
+ 
      C*****RetCode       IFEQ      'HOLIDAY'                                          CLE141 CLE141A
      C**********         EVAL      WMsgIDXAr = '5048508'                             CLE141 MD038457
      C**********         EVAL      DDEPSDOK = 'W'                                    CLE141 MD038457
@@ -579,9 +581,9 @@
      C**********         EVAL      WMsgIDXAr(WId) = '5048508'                       MD038457 CLE141A
      C**********         EVAL      WFldNmXAr(WId) = 'DDNPYD'                          CLE141 CLE141A
      C**********         ENDIF                                                        CLE141 CLE141A
-
+ 
      C**********         ELSE                                                         CLE141 CLE141A
-
+ 
      C                   CALLB     'ZCHKH'
      C                   PARM                    ZDAYNO
      C                   PARM                    ZCCY
@@ -762,7 +764,7 @@
       *
       *  FRA/IRS instructions
      C                   PARM                    F_FRI
-
+ 
       *
       ***  Field OK flags (DS) from/to caller
      C                   PARM                    OKFee
@@ -782,7 +784,7 @@
       *
       ***  Array index (3P0) from/to caller
      C                   PARM                    WId
-
+ 
       ***  Move program name into *LDA field.
       *
      C     *LOCK         IN        LDA
@@ -866,7 +868,7 @@ E004 C                   ENDIF
      C                   ELSE                                                                 CLE141
      C                   MOVEL     'N'           CLE141                                       CLE141
      C                   ENDIF                                                                CLE141
-
+ 
      C*****CLE141        IFEQ      'Y'                                                CLE141 CLE141A
      C*****VFLOAN        ANDNE     *blanks                                            CLE141 CLE141A
      C**********         Eval      Kpd_RECI = 'D'                                     CLE141 CLE141A
@@ -894,7 +896,7 @@ E004 C                   ENDIF
      C**********         EVAL      CurLocArr(18) = PD_L8PI                            CLE141 CLE141A
      C**********         EVAL      CurLocArr(19) = PD_L9PI                            CLE141 CLE141A
      C**********         EVAL      CurLocArr(20) = PD_L0PI                            CLE141 CLE141A
-
+ 
      C**********         ENDIF                                                        CLE141 CLE141A
      C**********         ENDIF                                                        CLE141 CLE141A
       *
@@ -908,7 +910,7 @@ E004 C                   ENDIF
      C     KCLOANL4      KLIST                                                                CLE141
      C                   KFLD                    Kpd_RECI                                     CLE141
      C                   KFLD                    Kpd_LNRF                                     CLE141
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -917,4 +919,4 @@ E004 C                   ENDIF
       *****************************************************************
       /EJECT
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2002
+(c) Finastra International Limited 2002

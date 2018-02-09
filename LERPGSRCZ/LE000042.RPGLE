@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+     H COPYRIGHT('(c) Finastra International Limited 2012')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas LE Available Balance Retrieval')                 *
@@ -14,16 +14,18 @@
       *                                                               *
       *  Called By: LEC000475 - Pre-check Auto-settlements            *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD049078           Date 12Jan18               *
-      *  Prev Amend No. MD034451C          Date 02Mar16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD049078           Date 12Jan18               *
+      *                 MD034451C          Date 02Mar16               *
       *                 MD030959           Date 17Jun15               *
       *                 CLE164             Date 18Aug14               *
       *                 AR1021979 *CREATE  Date 01Aug12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD049078 - Wrong postings of MR and RE of PDCL loan          *
       *  MD034451C - Recompiled due to changed PF/HELDIHB.            *
       *  MD030959 - Recompiled due to changed PF/HELDIHC.             *

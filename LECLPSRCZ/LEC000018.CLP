@@ -7,18 +7,20 @@
 /*                                                                   */
 /*       LEC000018 - Lending Initialisation program for CAS009       */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2005           */
+/*       (c) Finastra International Limited 2005                     */
 /*                                                                   */
-/*       Last Amend No. CLE134             Date 01Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CLE134             Date 01Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CAS011             Date 04May04              */
+/*                      CAS011             Date 04May04              */
 /*                      231566  *CREATE    Date 12Jan05              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CLE134 - Past Due Call Loan Processing (Recompile)          */
 /*       CAS011 - EIR/AC Accounting Upgrade to MP1. Apply 231566.    */
 /*       231566 - Initialise Amortised Cost Accounting Indicator for */
@@ -30,7 +32,7 @@
              DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)
              DCL        VAR(&PMODE) TYPE(*CHAR) LEN(1)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2005')
  
 /** Global monitor message */
@@ -79,5 +81,5 @@
  
  END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

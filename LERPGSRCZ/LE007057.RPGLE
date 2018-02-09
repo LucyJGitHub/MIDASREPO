@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas LE Manual utilisation - PDCL rerun')             *
@@ -20,12 +20,14 @@
       *                                                               *
       *  Called By: LEC0609A - Midas LE Events File Creation          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. AR1042505 *CREATE  Date 19Mar13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR1042505 *CREATE  Date 19Mar13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR1042505 - MFU is not included on rebuild of fclty exposure.*
       *              Create a new function to update FCLTYFN for MFU  *
       *              events. This will be called on rerun of Lending  *

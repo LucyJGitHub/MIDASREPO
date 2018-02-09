@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+     H COPYRIGHT('(c) Finastra International Limited 2012')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas LE Calculate Next Loan Number')                  *
@@ -12,16 +12,18 @@
       *  Function : This program receives an alpha loan number and    *
       *             calculates the next higher loan number            *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. AR1021136          Date 24Apr13               *
-      *  Prev Amend No. AR1077185B         Date 18Jan13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR1021136          Date 24Apr13               *
+      *                 AR1077185          Date 18Jan13               *
       *                 AR1077185          Date 11Jan13               *
       *                 AR1070602A         Date 23Dec12               *
       *                 CLE148  *CREATE    Date 23Jul12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR1021136 - CLE148: Loan with reference '000000' can be      *
       *              created. Recalculate for next loan reference if  *
       *              NextLoan is '000000'. (Child: AR1021140)         *

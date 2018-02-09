@@ -7,10 +7,11 @@
 /*                                                                  */
 /*     LEC0604  -  HISTORY PROCESSING                               */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD046161           Date 09Aug17              */
-/*       Prev Amend No. AR786878           Date 05Jun13              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD046161           Date 09Aug17              */
+/*                      AR786878           Date 05Jun13              */
 /*                      CCB022B            Date 06Aug12              */
 /*                      AR1080820          Date 26Jan13              */
 /*                      AR544186           Date 01Aug12              */
@@ -45,6 +46,7 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD046161 - Database error on COB component LEC60A.         */
 /*       AR786878 - New processing for manual repayment and         */
 /*                  repayment schedule for PDCL's. (Child:AR786879) */
@@ -96,7 +98,7 @@
 /**********  PGM        PARM(&CNAM &CSEQ)                                          /*S01189 CLE134*/
              PGM        PARM(&CNAM &CSEQ &RERUN)                                          /*CLE134*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
              DCL        VAR(&MSG) TYPE(*CHAR) LEN(132) +
@@ -548,5 +550,5 @@
              ENDDO
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 ENDPGM:      ENDPGM

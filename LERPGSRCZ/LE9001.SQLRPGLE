@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2007')
+     H COPYRIGHT('(c) Finastra International Limited 2007')
       *****************************************************************
 /*STD *  RPGSQLMOD                                                    *
 /*EXI *  TEXT('Midas CL Update Cancel Flag for CL files')
@@ -12,7 +12,7 @@
       *  Function:  This program updates the cancel flag on           *
       *             T_MLRSVEXT and T_CLRSVEXT from 'N' to 'Y'.        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2007            *
+      *  (c) Finastra International Limited 2007                      *
       *                                                               *
       *  Called By: LEC0451                                           *
       *                                                               *
@@ -22,6 +22,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  247012 - Update the cancel flag on two Collateralised        *
       *           Lending files.                                      *
       *                                                               *

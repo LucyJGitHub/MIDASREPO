@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*OVR *  OVRDBF FILE(LEMQHELD) TOFILE(LEMQLGLA) SHARE(*NO)            *
 /*STD *  RPGBASEBND                                                   *
@@ -10,15 +10,17 @@
       *                                                               *
       *  LE000502 - Midas LE Resend XML Transactions in Held Status   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD022807E          Date 17Oct13               *
-      *  Prev Amend No. MD022807           Date 10Oct13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD022807E          Date 17Oct13               *
+      *                 MD022807           Date 10Oct13               *
       *                 MD021423E          Date 12Sep13               *
       *                 MD020534 *CREATE   Date 23May13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD022807E - Default PSTM and PONS to '00' and blanks         *
       *  MD022807  - Update currency and other loans details based    *
       *              on the value of the new PDCL created             *

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas IR Single ccy IRS convert file to scrn fmt')     *
@@ -14,10 +14,11 @@
       *             Single Currency Interest Swap Deal                *
       *             from their format as on file to a screen format.  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD030847           Date 25Nov14               *
-      *  Prev Amend No. CIR017             Date 10Apr14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD030847           Date 25Nov14               *
+      *                 CIR017             Date 10Apr14               *
       *                 245692             Date 11Dec13               *
       *                 AR1097219          Date 05Apr13               *
       *                 CER059             Date 19Jul10               *
@@ -71,6 +72,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD030847 - STEINR set to blank due to incorrect base rate    *
       *             reference.                                        *
       *  CIR017 - SIRS Business Day Conventions for both Legs         *
@@ -1668,7 +1670,7 @@
       /COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 ** TEXT FOR DEAL STATUS
 DELETED
 MATURED

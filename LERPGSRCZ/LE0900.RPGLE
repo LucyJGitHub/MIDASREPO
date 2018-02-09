@@ -10,10 +10,11 @@
 0005 F*                                                               *
 0006 F*  LE0900  -  PROCESS MATURED LOANS HISTORY                     *
 0007 F*                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
 0009 F*                                                               *
-      *  Last Amend No. CLE154             Date 07Aug12               *
-      *  Prev Amend No. MD024133           Date 30Apr14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE154             Date 07Aug12               *
+      *                 MD024133           Date 30Apr14               *
       *                 MD023534           Date 30Apr14               *
       *                 MD023031           Date 22Apr14               *
       *                 MD024318           Date 13Jan14               *
@@ -72,6 +73,7 @@
 0009 F*                                                               *
 0009 F*---------------------------------------------------------------*
 0009 F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE154 - Loan Repayment Schedule Enhancement (Recompile)     *
       *  MD024133 - LEC06A failed due to FOOB in BoM CoB              *
       *  MD023534 - LEMAT is access with previous loan number avoiding*
@@ -2967,4 +2969,4 @@ JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
 312831303130313130313031
      X/COPY WNCPYSRC,LE0900X001
 ** CPY@   **      OBJECT COPYRIGHT
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

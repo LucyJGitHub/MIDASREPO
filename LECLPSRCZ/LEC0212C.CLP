@@ -7,14 +7,15 @@
 /*                                                                   */
 /*       LEC0212C-INPUT CYCLE CONFIRMATIONS REPRINT REQUEST          */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CLE134             Date 01Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CLE134             Date 01Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CLE044             Date 09Feb06              */
+/*                      CLE044             Date 09Feb06              */
 /* Midas Plus 1.2 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.03 ---------------------------------------------------*/
@@ -32,6 +33,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CLE134 - Past Due Call Loan Processing (Recompile)          */
 /*       CLE044 - Always run LE0130 regardless of S01465.            */
 /*                (Upgrade to Midas Plus 1.2)                        */
@@ -62,7 +64,7 @@
 /*********** PGM PARM(&RSEQ &RLEV &RENT)                      *E40940* *E41909*/
              PGM PARM(&RSEQ &RLEV &RENT &RPARM)                       /*E41909*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
              DCL        VAR(&RSEQ) TYPE(*CHAR) LEN(5)                 /*S01117*/
@@ -240,7 +242,7 @@ MIDPGM:      IF         COND(%SWITCH(XXXXX000)) THEN(DO)
 /**/
              ENDCMTCTL                                                /*LN0470*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /**/                                                                  /*124684*/
 ENDPGM:                                                               /*124684*/
              DLCOBJ     OBJ((LECONF *DTAARA *EXCL))                   /*124684*/

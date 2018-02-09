@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas IR Caps/Collars/Floors Database Update')         *
@@ -9,10 +9,11 @@
       *                                                               *
       *  IRCACFUPD - Caps/Collars/Floors Database Update              *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
-      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 01Sep14               *
       *                 MD029681           Date 12Aug14               *
@@ -73,6 +74,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
@@ -198,7 +200,7 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** DL IRS Principal Change Schedule File                                                CAP043
      F*DLPCSCL0**UF***E           K DISK    RENAME(DLPCSCD0:DLPCSCX0)                 CAP043  240240
      FDLPCSCL0  UF   E           K DISK    INFSR(*PSSR)                                       240240
@@ -211,12 +213,12 @@
      F                                     COMMIT
      F                                     INCLUDE(DEALSDGF)
      F                                     INCLUDE(DEALSDFF)
- 
+
       ** DL Sorted Deal Transaction Index
      FSDTIX     UF A E           K DISK
      F                                     COMMIT
      F                                     PREFIX(DX)
- 
+
       ** DL Principal Change Schedule                                                         CAP043
      F*DLPCSCPD**UF*A*E           K DISK                                              CAP043  240240
      FDLPCSCPD  UF A E           K DISK    INFSR(*PSSR)                                       240240
@@ -239,31 +241,31 @@
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
       ** +--------------------------------------+
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes (among others) the LDA layout
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
@@ -273,12 +275,12 @@
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       **  Externally described data structure for valid Caps/Collars/Floors
      D IRVCACF       E DS                  EXTNAME(IRVCACFPD)
      D  WVRPDet1              11    715
@@ -289,7 +291,7 @@
      D  WVRPDet2            1344   2126
      D  WVRtFxCcy           2097   2126
      D  WVRPDet3            2551   2602                                                       CDL028
- 
+
       ** Deals file - Caps/Collars/Floors
      D DEALS         E DS                  EXTNAME(DEALSDG)
      D  WFRPDet1              11    715
@@ -299,7 +301,7 @@
      D  WFRPPay3            1134   1343
      D  WFRPDet2            1344   2126
      D  WFRPDet3            2551   2602                                                       CDL028
- 
+
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)                                  CSD015
       ** External DS for Customer Details                                                     CSD015
                                                                                               CSD015
@@ -315,14 +317,14 @@
       ** Data structure for 2st parameter of SDCWLCHK                                         CSD015
                                                                                               CSD015
      D PString         DS         30000                                                       CSD015
- 
+
       ** Rename fields for Transaction No of Last Update Processing
      D ChkDealFmt    E DS                  EXTNAME(DEALSDG)
      D                                     PREFIX(CH)
- 
+
       ** Error indicators
      D IRECACF       E DS                  EXTNAME(IRECACFPD)
- 
+
       ** Time data structure for DTRIX
      D                 DS
      D  WXTime                 1      6  0
@@ -331,7 +333,7 @@
       ** Last processing date (82nd PRDT) UR/UP/TR/TP                                         CAP043
      D PLastPRDT       DS                                                                     CAP043
      D WLastPRDT               1     12P 0 DIM(4)                                             CAP043
- 
+
       ** Define external data-structures for before and after image
       ** of deal for on-line updates
      D Z#BSTS        E DS                  EXTNAME(Z#BST)
@@ -340,7 +342,7 @@
      D Z#XSTS        E DS                  EXTNAME(Z#XST)
      D Z#YSTS        E DS                  EXTNAME(Z#YST)
      D Z#ZSTS        E DS                  EXTNAME(Z#ZST)
- 
+
       ** Valid Prin Change def file                                                           CAP043
      D VldPrinChg    E DS                  EXTNAME(IRVPCSCPD) PREFIX(PV)                      CAP043
      D WPrinChgD              22    267P 0 DIM(82)                                            CAP043
@@ -372,64 +374,64 @@
                                                                                               CAP043
       ** External DS for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** External DS for General Ledger ICD
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
- 
+
       ** External DS for Retail Details
      D SDRETL        E DS                  EXTNAME(SDRETLPD)
      D  QQACCD1      E                     EXTFLD(QQACCD)                                     CGL029
- 
+
       ** External DS for FRA/IRS ICD data
      D SDFAIS        E DS                  EXTNAME(SDFAISPD)
- 
+
       ** External DS for Trading ICD Data
      D SDTRAD        E DS                  EXTNAME(SDTRADPD)
      D  QQACCD2      E                     EXTFLD(QQACCD)                                     CGL029
- 
+
       ** External DS for Currency Details
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** External DS for Book Details
      D SDBOOK        E DS                  EXTNAME(SDBOOKPD)
- 
+
       ** Module Details Data Structure                                                        CAP043
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)                                  CAP043
                                                                                               CAP043
       ** First DS for Access Programs, Short Data Structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Secod  DS for Access Programs, Long Date Structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** Next Available transaction number
      D MNATN         E DS                  EXTNAME(MNATN)
- 
+
       ** SD data area
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)
- 
+
       ** 24X7 status dataarea
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)
- 
+
       ** Midas API Message Header Format Definition
      D APHEAD        E DS                  EXTNAME(APHEADPD)
- 
+
       ** External DS for SAR Details
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
      D  WLCD         E                     EXTFLD(LCD)
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
      D OVRDLPCSC       C                   Const('OVRDBF DLPCSCRX DLPCSCPD +                  246966
      D                                     OVRSCOPE(*JOB)')                                   246966
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Watch List Description Compiled Time Array                                           CSD015
      DWLARR            S             35    DIM(26) CTDATA PERRCD(2)                           CSD015
                                                                                               CSD015
@@ -437,53 +439,53 @@
      D Wx              S              2P 0 INZ(*ZEROS)
      D Wc              S              2  0
      D Idx             S              3  0
- 
+
       ** Parameters for Access Objects
      D PRtCd           S              7A
      D POptn           S              7A
      D PSarD           S              6A
      D PFunc           S              8A                                                      CSD015
- 
+
       ** Parameters for ZARTVJOBA
      D PReturn         S              6A
      D PType           S              1A
- 
+
       ** Parameters for ZAMSGTOOPR
      D PMsgSndRtn      S             10A
      D PDBError        S            132A
      D PDummyMsgID     S                   LIKE(#MsgID)
      D PDummyMsgF      S             10A
- 
+
       ** Parameters for ZADLTRLRUD
      D PRetCodeIn      S              7A
      D WkAMNP          S             15  0
- 
+
       ** Parameters for DEWRTTRIG
      D PTrRef          S             20A
      D PTrCat          S              4A
- 
+
       ** Parameters for IRRTFXCNV
      D PZInDt          S              5  0
      D PZLoc           S              3
      D PZRfDt          S              5  0
      D PPRfDy          S              2  0
- 
+
      D WZWkFld         S              5  0
      D WZRfDy          S              5  0
- 
+
       ** Parameters for ZCHKH
      D PZDayNo         S              5  0
      D PZCcy           S              3A
      D PZind           S              1A
- 
+
       ** Parameters for DL1911
      D PTerm           S              1A
      D PDlNum          S              6  0
- 
+
       ** Parameters for DL2900
      D PDlNo           S              6A
      D PBeAf           S              1A
- 
+
       ** Parameters for IRCACFRTV
      D PRetCodeOut     S             10A
      D PMode           S              6A
@@ -496,7 +498,7 @@
      D P_Actn          S              1A                                                      CIR008
      D P_CSTS          S              1A                                                      CIR008
      D P_DSTS          S              1A                                                      CIR008
- 
+
      D Wrk_10          S             10A
      D WkActn          S              1A                                                      CIR008
      D WkAJCD          S              3A
@@ -509,7 +511,7 @@
      D WL1AMC          S              2A
      D WkBokC          S              2A
      D MidasDlNum      S              6A
- 
+
       ** Switchable features
      D CAP056          S              1A                                                      CAP056
      D CAP051          S              1A                                                     BUG6671
@@ -521,10 +523,10 @@
      D CSD015          S              1A                                                      CSD015
      D CCF001          S              1A   INZ('N')                                           CSD015
      D CDL028          S              1A                                                      CDL028
- 
+
      D PkDBRC          S              3A
      D PModeOfOp       S              6A                                                      CAP056
- 
+
       ** Fields used in 24x7 Processing
      D PTimestamp      S             26A
      D TRANSDTL        S           5800A
@@ -614,7 +616,7 @@
      D PSysVal10       S             20A                                                      CRE020
      D PCurSet10       S            200A                                                      CRE020
      D WSysVal01       S              1A                                                      CRE020
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -624,10 +626,10 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Exit if not insertion, amendment or reversal
       ** only when CIR008 is switched off                                                     CIR008
- 
+
      C                   IF        CIR008 = 'N'                                               CIR008
      C                   IF        RPCHTP <> 'I' AND RPCHTP <> 'A' AND
      C                             RPCHTP <> 'R'
@@ -647,7 +649,7 @@
       ** Save the action code                                                                 CIR008
                                                                                               CIR008
      C                   EVAL      WkActn = RPCHTP                                            CIR008
- 
+
       ** Check whether user is a web browser user, if so overwrite                           BUG1099
                                                                                              BUG1099
      C                   CALL      'SFC000026'                                               BUG1099
@@ -659,9 +661,9 @@
                                                                                              BUG1099
       ** Ensure transaction has not been updated by another workstation
       ** - if so, bypass updating and return to calling program
- 
+
      C                   EXSR      SRChkOthUpd
- 
+
      C                   IF        PRetCodeIn <> *BLANKS
      C                   GOTO      EXIT
      C                   ENDIF
@@ -678,53 +680,53 @@
      C                   EVAL      BQFIAU = WkFIAU                                            CAP056
      C                   EVAL      BQFIRA = WkFIRA                                            CAP056
      C                   ENDIF                                                                CAP056
- 
+
       ** Insert, Amend, or Reverse the deal
       ** or Authorise                                                                         CIR008
- 
+
      C     RPCHTP        CASEQ     'I'           SrInsert
      C     RPCHTP        CASEQ     'A'           SrAmend
      C     RPCHTP        CASEQ     'R'           SrDelete
      C     RPCHTP        CASEQ     'X'           SrAuthorise                                  CIR008
      C                   END
- 
+
       ** Write a DTRIX record
       ** when CIR008 is switched off or when reversing a deal                                 CIR008
       ** Or Authorisation/Re-authorisation flags are both 'N'                                 CIR008
                                                                                               CIR008
      C                   IF        RPCHTP <> *BLANKS                                          CIR008
       /COPY WNCPYSRC,IRCACFDC01
- 
+
      C                   EXSR      SrWrtDtx
       /COPY WNCPYSRC,IRCACFDC02
- 
+
       ** Update the DTRIX Header record
       /COPY WNCPYSRC,IRCACFDC03
- 
+
      C                   EXSR      SrUpdDtxHdr
       /COPY WNCPYSRC,IRCACFDC04
                                                                                               CIR008
      C                   ENDIF                                                                CIR008
- 
+
       ** Update the deals file trailer on inserts and reversals
- 
+
      C                   IF        RPCHTP = 'I' OR RPCHTP = 'R'
      C                   EXSR      SrUpdDlTrl
      C                   ENDIF
- 
+
       ** Update On-line Position files
- 
+
      C**********         IF        RPCHTP <> *BLANKS                                  CIR008 BUG4788
      C     WkActn        IFEQ      'I'                                                       BUG4788
      C     WkActn        OREQ      'A'                                                       BUG4788
      C     WkActn        OREQ      'R'                                                       BUG4788
      C                   EXSR      SrUpdOLPos
- 
+
       ** Call Summary Update program
- 
+
      C                   EXSR      SrUpdSumm
      C                   ENDIF                                                                CIR008
- 
+
       ** Handle the advice index of this transaction if CRE020 is enabled.                    CRE020
                                                                                               CRE020
      C                   IF        CRE020 = 'Y' AND                                           CRE020
@@ -734,12 +736,12 @@
                                                                                               CRE020
       ** If 24x7 Midas Availability is installed, write to the standard
       ** log file when support system is active
- 
+
      C                   IF        CSC011 = 'Y' AND
      C                             S1SUPP = LIBR
- 
+
       ** Setup Loans/Deposits support log
- 
+
      C                   CALLB     'IRCACFLOG'
      C                   PARM      *BLANKS       RetCodeOut
      C                   PARM                    WkActn                                       CIR008
@@ -749,11 +751,11 @@
      C                   PARM      *BLANK        FRIRScnFmt                                   CAP043
      C                   PARM      *BLANK        InfData                                      CAP043
      C                   PARM                    TRANSDTL
- 
+
       ** Write to support database log file
- 
+
      C                   IF        RetCodeOut = *BLANKS
- 
+
      C                   EVAL      APTGTTYPE = 'IRCACF'
      C                   EVAL      APFOTRANID = RPFRNT
      C                   EVAL      APFOASOCID = RPFRNT                                        CAP043
@@ -761,7 +763,7 @@
      C                   EVAL      APUSERID = PSUser
      C                   EVAL      APMIDUSR = PSUser
      C                   MOVEL     RPDLNO        PDealNo
- 
+
      C                   CALLB     'APLOGTRAN'
      C                   PARM      *BLANKS       RetCodeOut
      C                   PARM                    APHEAD
@@ -769,11 +771,11 @@
      C                   PARM      *BLANKS       PTimestamp
      C                   PARM                    PDealNo
      C                   PARM      *BLANKS       PADealNo
- 
+
      C                   ENDIF
- 
+
       ** If error occurred
- 
+
      C                   IF        RetCodeOut <> *BLANKS
      C                   EVAL      PRetCodeIn = '*ERROR'
      C                   ENDIF
@@ -805,78 +807,78 @@
      C                   EVAL      PRetCodeIn = '*ERROR'                                      CAP043
      C                   ENDIF                                                                CAP043
      C                   ENDIF                                                                CAP043
- 
+
      C                   ENDIF
- 
+
       ** Exit from program
- 
+
      C     EXIT          TAG
- 
+
      C                   RETURN
- 
+
       ****************************************************************
       /EJECT
       *****************************************************************
       * SRChkOthUpd - Check for Update by Another Workstation         *
       *****************************************************************
      C     SRChkOthUpd   BEGSR
- 
+
       ** Retrieve current deal details
- 
+
      C                   MOVE      RPDLNO        MidasDlNum
- 
+
       ** Determine whether program is running interactively or in batch
       ** ( 0 = batch   1 = interactive)
- 
+
      C                   CALLB     'ZARTVJOBA'
      C                   PARM                    PReturn
      C                   PARM                    PType
- 
+
       ** Allow access to transaction record by Front-Office ID when in Repair
       ** mode for inserts. Set  *RTV module  parameter PMode to *FRONT
       ** if the pgm is:  a) running in Interactive mode - PType = 1
       **                 b) action code is Insert - 'I'
       **                 c) Front-Office Id is NOT Blank
- 
+
      C                   IF        PType = '1' AND RPCHTP = 'I' AND
      C                             RPFRNT <> *BLANKS
- 
+
      C                   EVAL      PMode = '*FRONT'
- 
+
      C                   ELSE
- 
+
       ** Otherwise, if running in batch use Front-Office ID
       **           (if insert)
       **           else, use Midas Deal Number
- 
+
      C                   IF        PType = '0' AND RPCHTP = 'I'
      C                   EVAL      PMode = '*FRONT'
      C                   ELSE
      C                   EVAL      PMode = *BLANKS
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      PRetCodeOut = 'UPD'                                      AR958792
      C                   CALLB     'IRCACFRTV'
- 
+
       ** Inputs:
       ** Return code
       ** Mode = '*FRONT' or *BLANK
       ** Response mode
- 
+
      C**********         PARM      *BLANK        PRetCodeOut                                AR958792
      C                   PARM                    PRetCodeOut                                AR958792
      C                   PARM                    PMode
      C                   PARM      ' '           PRespMode
- 
+
       ** Action Code
       ** Front Office Transaction ID
       ** Front Office Associated Transaction Id
       ** (Midas) Deal Number
       ** (Midas) Swap/Option Deal Number
       ** Booking branch
- 
+
      C                   PARM                    RPCHTP
      C                   PARM      RPFRNT        PFrontId
      C                   PARM                    PFOAsId
@@ -884,13 +886,13 @@
      C                   PARM                    PDSDNo
      C                   PARM      RPBRCA        PDBrSn
      C                   PARM      RPDTYP        PDType
- 
+
       ** Single Branch Code from SDBANKPD
       ** Default Branch for ZMUSER
       ** Originating Branch/User Validation Required for SDGELRPD
       ** FRA/IRS Authorisation Required                                                       CIR008
       ** FRA/IRS Re-authorise Amended Deals                                                   CIR008
- 
+
      C                   PARM                    BJSBRC
      C                   PARM                    PkDBRC
      C                   PARM                    BKOBUV
@@ -900,53 +902,53 @@
       ** FRA/IRS Deals Authorisation                                                          CIR008
                                                                                               CIR008
      C                   PARM                    CIR008                                       CIR008
- 
+
       ** Outputs:
       ** (Current) deal in file format
       ** Action Code OK flag
       ** Deal Number OK flag
       ** Booking branch OK flag
- 
+
      C                   PARM                    ChkDealFmt
      C                   PARM      *BLANK        OKACCD
      C                   PARM      *BLANK        OKDLNO
      C                   PARM      *BLANK        OKBRCA
      C                   PARM                    OKDTYP
- 
+
       ** Error fields/message IDs/message data (arrays) from/to caller
       ** Array index (3P0) from/to caller
- 
+
      C                   PARM      *BLANK        FldNameArr
      C                   PARM      *BLANK        MsgIdArr
      C                   PARM      *BLANK        MsgDtaArr
      C                   PARM      *ZERO         Idx
- 
+
       ** Error if Transaction No. of Last Update (TNLU) not the same
       ** (Record has been changed by another workstation)
- 
+
       ** Processing varies according to mode program is running in.
       ** In interacive mode simply check whether the TNLU field
       ** has been updated since the original deal was fetched by this
       ** program.
       ** In batch (API input) check return parameters from Retrieve
       ** module for errors, and send message to system operator.
- 
+
       ** Interactive mode:
- 
+
      C                   IF        PType = '1'
- 
+
      C                   IF        CHTNLU <> RPTNLU
      C                   EVAL      PRetCodeIn = '*RECUPD'
      C                   ENDIF
- 
+
       ** Batch mode:
- 
+
      C                   ELSE
- 
+
      C                   IF        OKACCD = 'N' OR OKDLNO = 'N'
      C                   EVAL      PRetCodeIn = '*RECUPD'
      C                   EVAL      Wc = 1
- 
+
      C                   DOW        Wc <= ArrayMax AND FldNameArr(Wc) <> *BLANKS
      C                   CLEAR                   PDBError
      C                   EVAL      PDBerror = 'Update error: ' + PFrontId
@@ -955,14 +957,14 @@
      C                   PARM                    PDBError
      C                   PARM                    PDummyMsgID
      C                   PARM                    PDummyMsgF
- 
+
      C                   ADD       1             Wc
      C                   ENDDO
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       ****************************************************************
       /EJECT
@@ -970,10 +972,10 @@
       * SrInsert - Insert an IRS Record                              *
       ****************************************************************
      C     SrInsert      BEGSR
- 
+
       ** Set confirmation required indicator to be written to DTRIX
       ** when CIR008 is switched off or Auto authorisation is not 'Y'                         CIR008
- 
+
      C                   IF        CIR008 = 'N'  OR                                           CIR008
      C                             CIR008 = 'Y'  AND  BQFIAU <> 'Y'                           CIR008
      C                   EXSR      SrCnfIns
@@ -992,32 +994,32 @@
      C                   PARM      *BLANK        RPCHTP                                       CIR008
                                                                                               CIR008
      C                   ENDIF                                                                CIR008
- 
+
       ** Initialise deals
- 
+
      C                   EXSR      SrClrDeals
- 
+
       ** Initialise "before" status of deal for on-line updates
- 
+
      C                   EVAL      Z#BSTS = *BLANKS
- 
+
       ** Move fields from valid file to master file
       ** Record Id
- 
+
      C                   EVAL      RECI = 'D'
      C                   EVAL      DTYP = RPDTYP
- 
+
       ** Deal number & Record type
- 
+
      C                   EVAL      DLNO = RPDLNO
      C                   EVAL      RCDT = 'G'
- 
+
       ** Deal Record code
- 
+
      C                   EVAL      RCDC = 24
- 
+
       ** Deal Details
- 
+
      C                   EVAL      RPUSTRT = 0
      C                   EVAL      RPUBRTE = 0
      C                   EVAL      RPUIACD = RPVDAT
@@ -1064,74 +1066,74 @@
      C                             OR CAP051 = 'Y'                                           BUG6671
      C                   EVAL      FIAUTH = RPAUTH                                            CAP056
      C                   ENDIF                                                                CAP056
- 
+
       ** Receive Settlement Instructions
- 
+
      C                   EVAL      WFRPRecv = WVRPRecv
      C                   EVAL      RONS = RPRONS                                              CGL029
- 
+
       ** Payment Settlement Instructions
- 
+
      C                   EVAL      WFRPPay1 = WVRPPay1
      C                   EVAL      WFRPPay2 = WVRPPay2
      C                   EVAL      WFRPPay3 = WVRPPay3
      C                   EVAL      PONS = RPPONS                                              CGL029
- 
+
       ** 'OLD' Settlement Instructions
- 
+
      C                   EVAL      RSETM = RPRSTM
      C                   EVAL      URACC = RPRONS
- 
+
       ** Our Receiving Account = Customer Default Account, If method 04
- 
+
      C                   IF        RPRSTM = 04
      C                   MOVEL     RPCNUM        Wrk_10
      C                   MOVE      BMACCD        Wrk_10
      C                   EVAL      URACC = Wrk_10
      C                   MOVE      '01'          URACC
      C                   ENDIF
- 
+
      C                   EVAL      CPPBK = RPRCRN
      C                   EVAL      PSETM = RPPSTM
      C                   EVAL      UPACC = RPPONS
- 
+
       ** Our Payment Account = Customer Default Account, If method 04
- 
+
      C                   IF        RPPSTM = 04
      C                   MOVEL     RPCNUM        Wrk_10
      C                   MOVE      BMACCD        Wrk_10
      C                   EVAL      UPACC = Wrk_10
      C                   MOVE      '01'          UPACC
      C                   ENDIF
- 
+
      C                   EVAL      CPRBK = RPAWBN
      C                   EVAL      FACO = RPBENN
      C                   EVAL      SPI =  RPBTB1
                                                                                               CDL038
       ** Class                                                                                CDL038
      C                   EVAL      CLAS = RPCLAS                                              CDL038
- 
+
       ** Set up required fields on DEALSDG that were not set up on
       ** Valid File
- 
+
      C                   EXSR      SrSetReqFldI
- 
+
       ** Set Transaction No. of Last Update
- 
+
      C     *DTAARA       DEFINE                  MNATN
      C                   IN        MNATN
      C                   EVAL      TNLU = NATN
- 
+
       ** If CSC011 is installed, supply a Front Office ID for the
       ** transaction even if it originated from SIN module.
- 
+
      C                   IF        CSC011 = 'Y'
      C                   IF        FRNT = *BLANKS
      C                   MOVE      DLNO          WDealNo
      C                   EVAL      FRNT = 'MD' + WDealNo
      C                   ENDIF
      C                   ENDIF
- 
+
       ** If compliance watch is installed, and entry watch list checking                      CSD015
       ** is being applied, perform compliance watch processing                                CSD015
                                                                                               CSD015
@@ -1145,9 +1147,9 @@
      C                   ENDIF                                                                CSD015
                                                                                               CSD015
       ** Write Deal record on the master file
- 
+
      C                   WRITE     DEALSDGF
- 
+
      C                   IF        CAP043 = 'Y' AND CAP041 = 'Y' AND                          CAP043
      C                             PScreenInpt <> 'Y'                                         CAP043
      C                   EXSR      SRWritePC                                                  CAP043
@@ -1156,16 +1158,16 @@
       /COPY WNCPYSRC,IRCACFDC05
       ** Call PGM/DL2900 to set up deal activity for on-line updates
       ***only*if*the*deal*is*authorised.*Else*perform*in*SrAuthorise.*                CIR008 BUG4788
- 
+
      C**********         IF        RPCHTP <> *BLANKS                                  CIR008 BUG4788
      C                   EVAL      Z#ASTS = DEALS
      C                   MOVE      RPDLNO        PDlNo
- 
+
      C                   CALLB     'DL2900'
      C                   PARM      *BLANK        PRtCd
      C                   PARM                    PDlNo
      C                   PARM      'A'           PBeAf
- 
+
      C                   IF        PRtCd = '*ERROR'
      C                   EVAL      DBFILE = 'DL2900'
      C                   EVAL      DBASE = 1
@@ -1173,7 +1175,7 @@
      C                   EXSR      *PSSR
      C                   ENDIF
      C**********         ENDIF                                                        CIR008 BUG4788
- 
+
      C                   ENDSR
       ****************************************************************
       /EJECT
@@ -1181,7 +1183,7 @@
       * SrClrDeals - Initialise Deals                                *
       ****************************************************************
      C     SrClrDeals    BEGSR
- 
+
      C                   CLEAR                   DEALS
      C                   EVAL      DLNO = *ZEROS
      C                   EVAL      RCDC = *ZEROS
@@ -1319,7 +1321,7 @@
      C                   EVAL      FSTE1D = *ZEROS                                           BUG7535
      C                   EVAL      FSTE2B = *ZEROS                                           BUG7535
      C                   EVAL      FSTE2D = *ZEROS                                           BUG7535
- 
+
      C                   ENDSR
       ****************************************************************
       /EJECT
@@ -1327,13 +1329,13 @@
       * SrAmend - Amend an IRS Record                                *
       ****************************************************************
      C     SrAmend       BEGSR
- 
+
       ** Access deal via deal number
- 
+
      C     RPDLNO        CHAIN     DEALSDGF                           89
- 
+
       ** If not found, database error
- 
+
      C                   IF        *IN89 = *ON
      C                   MOVEL     RPDLNO        DBKEY
      C                   EVAL      DBFILE = 'DEALSDG '
@@ -1364,14 +1366,14 @@
      C                             OR CAP051 = 'Y'                                           BUG6671
      C                   EVAL      FIAUTH = RPAUTH                                            CAP056
      C                   ENDIF                                                                CAP056
- 
+
       ** Set up "before" status of deal for on-line updates
- 
+
      C                   EVAL      Z#BSTS = DEALS
      C                   MOVE      RPDLNO        PDlNo
- 
+
       ** Store "before" values for later comparison
- 
+
      C                   EVAL      WkUEINR = UEINR
      C                   EVAL      WkTEINR = TEINR
      C                   EVAL      WkUNICD = UNICD
@@ -1383,16 +1385,16 @@
      C                   EVAL      WUNIPD = UNIPD
      C                   EVAL      WTNIPD = TNIPD
      C                   EVAL      WL1AMC = L1AMCN
- 
+
       ** Determine activity for on-line updates
       ***only*if*the*deal*is*authorised.*Else*perform*in*SrAuthorise.*                CIR008 BUG4788
- 
+
      C**********         IF        RPCHTP <> *BLANKS                                  CIR008 BUG4788
      C                   CALLB     'DL2900'
      C                   PARM      *BLANK        PRtCd
      C                   PARM                    PDlNo
      C                   PARM      'B'           PBeAf
- 
+
      C                   IF        PRtCd = '*ERROR'
      C                   EVAL      DBFILE = 'DL2900'
      C                   EVAL      DBASE = 3
@@ -1400,96 +1402,96 @@
      C                   EXSR      *PSSR
      C                   ENDIF
      C**********         ENDIF                                                        CIR008 BUG4788
- 
+
       ** Set Confirmation bit on deal and confirmation required indicator
       ** is to be written to DTRIX
       ** when CIR008 is switched off or auto authorisation is not 'Y'                         CIR008
- 
+
      C**********         IF        CIR008 = 'N'  OR                                  CIR008 BUG6877N
      C**********                   CIR008 = 'Y'  AND BQFIRA <> 'Y'                   CIR008 BUG6877N
      C                   EXSR      SrCnfAmd
      C**********         ENDIF                                                       CIR008 BUG6877N
- 
+
       ** Deal details
- 
+
      C                   MOVE      WVRPDet1      WFRPDet1
      C                   MOVE      WVRPDet2      WFRPDet2
                                                                                               CDL028
      C                   IF        CDL028 = 'Y'                                               CDL028
      C                   MOVE      WVRPDet3      WFRPDet3                                     CDL028
      C                   ENDIF                                                                CDL028
- 
+
       ** Business Day Conventions details (OUR)
- 
+
      C                   IF        CIR005 = 'Y' AND RPUNIPD = WUIPBD AND
      C                             WL1AMC = 'A' AND RPAMC1 = WL1AMC
- 
+
      C                   EVAL      UNIPD = WUNIPD
      C                   ENDIF
- 
+
       ** Business Day Conventions details (THEIR)
- 
+
      C                   IF        CIR005 = 'Y' AND RPTNIPD = WTIPBD AND
      C                             WL1AMC = 'A' AND RPAMC1 = WL1AMC
- 
+
      C                   EVAL      TNIPD = WTNIPD
      C                   ENDIF
- 
+
       ** Receive settlement instructions
- 
+
      C                   EVAL      WFRPRecv = WVRPRecv
      C                   EVAL      RONS = RPRONS                                              CGL029
- 
+
       ** Payment settlement instructions
- 
+
      C                   EVAL      WFRPPay1 = WVRPPay1
      C                   EVAL      WFRPPay2 = WVRPPay2
      C                   EVAL      WFRPPay3 = WVRPPay3
      C                   EVAL      PONS = RPPONS                                              CGL029
- 
+
       ** 'OLD' settlement instructions
- 
+
      C                   EVAL      RSETM = RPRSTM
      C                   EVAL      URACC = RPRONS
- 
+
       ** Our receiving account = Customer default account, if method 04
- 
+
      C                   IF        RPRSTM = 04
      C                   MOVEL     RPCNUM        Wrk_10
      C                   MOVE      BMACCD        Wrk_10
      C                   MOVEL     Wrk_10        URACC
      C                   MOVE      '01'          URACC
      C                   ENDIF
- 
+
      C                   EVAL      CPPBK = RPRCRN
      C                   EVAL      PSETM = RPPSTM
      C                   EVAL      UPACC = RPPONS
- 
+
       ** Our payment account = Customer default account, if method 04
- 
+
      C                   IF        RPPSTM = 04
      C                   MOVEL     RPCNUM        Wrk_10
      C                   MOVE      BMACCD        Wrk_10
      C                   MOVEL     Wrk_10        UPACC
      C                   MOVE      '01'          UPACC
      C                   ENDIF
- 
+
      C                   EVAL      CPRBK = RPAWBN
      C                   EVAL      FACO = RPBENN
      C                   EVAL      SPI = RPBTB1
                                                                                               CDL038
       ** Class                                                                                CDL038
      C                   EVAL      CLAS = RPCLAS                                              CDL038
- 
+
       ** Set up required fields on DEALSDG that were not set up on valid file
- 
+
      C                   EXSR      SrSetReqFldA
- 
+
       ** Set Transaction No. of Last Update
- 
+
      C                   IN        MNATN
      C                   EVAL      TNLU = NATN
- 
+
       ** If compliance watch is installed, and entry watch list checking                      CSD015
       ** is being applied, perform compliance watch processing for amend mode                 CSD015
                                                                                               CSD015
@@ -1517,9 +1519,9 @@
      C                   ENDIF                                                                CSD015
                                                                                               CSD015
       ** Update Deal record on the master file
- 
+
      C                   UPDATE    DEALSDGF
- 
+
      C                   IF        CAP043 = 'Y' AND CAP041 = 'Y' AND                          CAP043
      C                             PScreenInpt <> 'Y'                                         CAP043
      C                   EXSR      SRClearPC                                                  CAP043
@@ -1529,16 +1531,16 @@
       /COPY WNCPYSRC,IRCACFDC06
       ** Call PGM/DL2900 to set up deal activity for on-line updates
       ***only*if*the*deal*is*authorised.*Else*perform*in*SrAuthorise.*                CIR008 BUG4788
- 
+
      C**********         IF        RPCHTP <> *BLANKS                                  CIR008 BUG4788
      C                   EVAL      Z#ASTS = DEALS
      C                   MOVE      RPDLNO        PDlNo
- 
+
      C                   CALLB     'DL2900'
      C                   PARM      *BLANK        PRtCd
      C                   PARM                    PDlNo
      C                   PARM      'A'           PBeAf
- 
+
      C                   IF        PRtCd = '*ERROR'
      C                   EVAL      DBFILE = 'DL2900'
      C                   EVAL      DBASE = 4
@@ -1546,7 +1548,7 @@
      C                   EXSR      *PSSR
      C                   ENDIF
      C**********         ENDIF                                                        CIR008 BUG4788
- 
+
      C                   ENDSR
                                                                                               CAP043
       ****************************************************************                        CAP043
@@ -1733,13 +1735,13 @@
       * SrDelete- Delete an IRS Record                               *
       ****************************************************************
      C     SrDelete      BEGSR
- 
+
       ** Access deal record
- 
+
      C     RPDLNO        CHAIN     DEALSDGF                           89
- 
+
       ** If not found, database error
- 
+
      C                   IF        *IN89 = *ON
      C                   MOVEL     RPDLNO        DBKEY
      C                   EVAL      DBFILE = 'DEALSDG '
@@ -1758,19 +1760,19 @@
      C                   PARM      *BLANK        FIDSTS                                       CIR008
      C                   PARM      *BLANK        RPCHTP                                       CIR008
      C                   ENDIF                                                                CIR008
- 
+
       ** Set up "before" status of deal for on-line updates
       ***only*if*the*deal*is*authorised.*Else*perform*in*SrAuthorise.*                CIR008 BUG4788
- 
+
      C**********         IF        RPCHTP <> *BLANKS                                  CIR008 BUG4788
      C                   EVAL      Z#BSTS = IRVCACF
      C                   MOVE      RPDLNO        PDlNo
- 
+
      C                   CALLB     'DL2900'
      C                   PARM      *BLANK        PRtCd
      C                   PARM                    PDlNo
      C                   PARM      'B'           PBeAf
- 
+
      C                   IF        PRtCd = '*ERROR'
      C                   EVAL      DBFILE = 'DL2900'
      C                   EVAL      DBASE = 6
@@ -1778,51 +1780,51 @@
      C                   EXSR      *PSSR
      C                   ENDIF
      C**********         ENDIF                                                        CIR008 BUG4788
- 
+
       ** Set confirmation bit on deal and confirmation required indicator
       ** to be written to DTRIX
- 
+
      C                   EXSR      SrCnfDel
- 
+
       ** Flag record id as 'REVERSED'
- 
+
      C                   EVAL      RECI = 'R'
- 
+
       ** Last change date & type
- 
+
      C                   EVAL      LCD = BJRDNB
      C**********         EVAL      CHTP = RPCHTP                                      CIR008 BUG4788
      C                   MOVE      'R'           CHTP                                        BUG4788
- 
+
       ** Set Transaction No. of Last Update
- 
+
      C                   IN        MNATN
      C                   EVAL      TNLU = NATN
- 
+
       ** Front office transaction ID
- 
+
      C                   EVAL      FRNT = RPFRNT
- 
+
      C                   UPDATE    DEALSDGF
                                                                                               CAP043
      C                   IF        CAP043 = 'Y' AND CAP041 = 'Y' AND                          CAP043
      C                             PScreenInpt <> 'Y'                                         CAP043
      C                   EXSR      SRClearPC                                                  CAP043
      C                   ENDIF                                                                CAP043
- 
+
       /COPY WNCPYSRC,IRCACFDC07
       ** Call PGM/DL2900 to set up deal activity for on-line updates
       ***only*if*the*deal*is*authorised.*Else*perform*in*SrAuthorise.*                CIR008 BUG4788
- 
+
      C**********         IF        RPCHTP <> *BLANKS                                  CIR008 BUG4788
      C                   EVAL      Z#ASTS = DEALS
      C                   MOVE      RPDLNO        PDlNo
- 
+
      C                   CALLB     'DL2900'
      C                   PARM      *BLANK        PRtCd
      C                   PARM                    PDlNo
      C                   PARM      'A'           PBeAf
- 
+
      C                   IF        PRtCd = '*ERROR'
      C                   EVAL      DBFILE = 'DL2900'
      C                   EVAL      DBASE = 7
@@ -1830,7 +1832,7 @@
      C                   EXSR      *PSSR
      C                   ENDIF
      C**********         ENDIF                                                        CIR008 BUG4788
- 
+
      C                   ENDSR
       *****************************************************************                       CIR008
       /EJECT                                                                                  CIR008
@@ -1926,173 +1928,173 @@
       *                not set up on Valid File - Insert Processing  *
       ****************************************************************
      C     SrSetReqFldI  BEGSR
- 
+
       ** Original Entry Date & Last Change Date
- 
+
      C                   EVAL      ORED = BJRDNB
      C                   EVAL      LCD = BJRDNB
- 
+
       ** Hedge Indicator
- 
+
      C                   EXSR      SrBookDet
      C                   EVAL      HEDIN = BDHGIN
- 
+
       ** Our/Their effective interest rate
- 
+
      C                   IF        RPUBRTT = *ZEROS
      C                   EVAL      UEINR = URTSP
      C                   ENDIF
- 
+
      C                   IF        RPTBRTT = *ZEROS
      C                   EVAL      TEINR = TRTSP
      C                   ENDIF
- 
+
       ** Our Floating Rate Fix Days
       ** (Defaulting done in IRVRTFXDAY)
- 
+
      C                   IF        RPUBRTT = *ZEROS
- 
+
      C                   EVAL      UINFD = *ZEROS
      C                   ELSE
- 
+
       ** Our interest fix date
- 
+
      C                   EVAL      PZInDt = VDAT
      C                   MOVE      UFRFD         WZRfDy
- 
+
       ** If 'currency for rate fix holiday' flag from FRA/IRS I.C.D.
       ** is 'F', 'L' or 'D', set currency code to 'sterling code',
       ** 'local currency code' or 'screen currency code' respectively
- 
+
      C                   IF        BQCRFH = 'F'
      C                   EVAL      PZCcy = BLCYCD
      C                   ENDIF
- 
+
      C                   IF        BQCRFH = 'L'
      C                   EVAL      PZCcy = BJLCCY
      C                   ENDIF
- 
+
      C                   IF        BQCRFH = 'D' OR  BQCRFH = ' '
      C                   EVAL      PZCcy = RPUCUCY
      C                   ENDIF
- 
+
      C                   EVAL      PZLoc = *BLANKS
- 
+
       ** Use Rate Fixing Currencies to get rate fixing date when CIR005
       ** is installed. Otherwise, use transaction ccy
- 
+
      C                   IF        CIR005 = 'Y' AND RPC1R1 <> *BLANKS
      C                   EVAL      PPRfDy = WZRfDy
- 
+
      C                   CALLB     'IRRTFXCNV'
      C                   PARM                    PZInDt
      C                   PARM                    PPRfDy
      C                   PARM                    PZLoc
      C                   PARM                    WVRtFxCcy
      C                   PARM                    PZRfDt
- 
+
      C                   ELSE
      C                   EXSR      SrDlBack
      C                   ENDIF
- 
+
       ** If deal forward-valued AND Short Term Rate NOT entered then
       ** the Next Interest Rate Fix Date must be that associated
       ** with the Value Date...
- 
+
      C                   IF        PZRfDt >= BJRDNB AND RPUEINR = *ZEROS
      C                   EVAL      UINFD = PZRfDt
- 
+
       **  ...else the Next Interest Rate Fix Date must be that
       **  associated with the Next Rate Change Date
- 
+
      C                   ELSE
- 
+
      C                   IF        RPUNICD <> *ZEROS
      C                   EVAL      PZInDt = UNICD
      C                   MOVE      UFRFD         WZRfDy
- 
+
       ** If 'currency for rate fix holiday' flag from FRA/IRS I.C.D.
       ** is 'F', 'L' or 'D', set currency code to 'sterling code',
       ** 'local currency code' or 'screen currency code' respectively
- 
+
      C                   IF        BQCRFH = 'F'
      C                   EVAL      PZCcy = BLCYCD
      C                   ENDIF
- 
+
      C                   IF        BQCRFH = 'L'
      C                   EVAL      PZCcy = BJLCCY
      C                   ENDIF
- 
+
      C                   IF        BQCRFH = 'D' OR BQCRFH = ' '
      C                   EVAL      PZCcy = RPUCUCY
      C                   ENDIF
- 
+
      C                   EVAL      PZLoc = *BLANKS
- 
+
       ** Use Rate Fixing Currencies to get rate fixing date when
       ** CIR005 is on. Otherwise, use transaction ccy.
- 
+
      C                   IF        CIR005 = 'Y' AND RPC1R1 <> *BLANKS
      C                   EVAL      PPRfDy = WZRfDy
- 
+
      C                   CALLB     'IRRTFXCNV'
      C                   PARM                    PZInDt
      C                   PARM                    PPRfDy
      C                   PARM                    PZLoc
      C                   PARM                    WVRtFxCcy
      C                   PARM                    PZRfDt
- 
+
      C                   ELSE
      C                   EXSR      SrDlBack
      C                   ENDIF
- 
+
      C                   EVAL      UINFD = PZRfDt
      C                   ELSE
      C                   EVAL      UINFD = *ZEROS
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Their Floating Rate Fix Days
       ** (Defaulting done in IRVRTFXDAY)
- 
+
       ** User pays Fixed Rate, Counterparty pays Floating Rate
- 
+
      C                   IF        RPTBRTT = *ZEROS
      C                   EVAL      TINFD = 0
      C                   ELSE
- 
+
       ** User pays Fixed Rate, Counterparty pays Floating Rate
- 
+
      C                   EVAL      PZInDt = VDAT
      C                   MOVE      TFRFD         WZRfDy
- 
+
       ** If 'currency for rate fix holiday' flag from FRA/IRS I.C.D.
       ** is 'F', 'L' or 'D', set currency code to 'sterling code',
       ** 'local currency code' or 'screen currency code' respectively
- 
+
      C                   IF        BQCRFH = 'F'
      C                   MOVE      BLCYCD        PZCcy
      C                   ENDIF
- 
+
      C                   IF        BQCRFH = 'L'
      C                   MOVE      BJLCCY        PZCcy
      C                   ENDIF
- 
+
      C                   IF        BQCRFH = 'D' OR BQCRFH = ' '
      C                   MOVE      RPUCUCY       PZCcy
      C                   ENDIF
- 
+
      C                   EVAL      PZLoc = *BLANKS
- 
+
       ** Use Rate Fixing Currencies to get rate fixing date when
       ** CIR005 is on. Otherwise, use transaction ccy.
- 
+
      C                   IF        CIR005 = 'Y' AND RPC1R1 <> *BLANKS
      C                   EVAL      PPRfDy = WZRfDy
- 
+
      C                   CALLB     'IRRTFXCNV'
      C                   PARM                    PZInDt
      C                   PARM                    PPRfDy
@@ -2102,46 +2104,46 @@
      C                   ELSE
      C                   EXSR      SrDlBack
      C                   ENDIF
- 
+
       ** If deal forward-valued AND Short Term Rate NOT entered then
       ** the Next Interest Rate Fix Date must be that associated
       ** with the Value Date...
- 
+
      C                   IF        PZRfDt >= BJRDNB AND RPTEINR = *ZEROS
      C                   EVAL      TINFD = PZRfDt
      C                   ELSE
- 
+
       ** ...else the Next Interest Rate Fix Date must be that
       ** associated with the Next Rate Change Date.
- 
+
      C                   IF        RPTNICD <> *ZEROS
      C                   EVAL      PZInDt = TNICD
      C                   MOVE      TFRFD         WZRfDy
- 
+
       ** If 'currency for rate fix holiday' flag from FRA/IRS I.C.D.
       ** is 'F', 'L' or 'D', set currency code to 'sterling code',
       ** 'local currency code' or 'screen currency code' respectively
- 
+
      C                   IF        BQCRFH = 'F'
      C                   EVAL      PZCcy = BLCYCD
      C                   ENDIF
- 
+
      C                   IF        BQCRFH = 'L'
      C                   EVAL      PZCcy = BJLCCY
      C                   ENDIF
- 
+
      C                   IF        BQCRFH = 'D' OR  BQCRFH = ' '
      C                   EVAL      PZCcy = RPUCUCY
      C                   ENDIF
- 
+
      C                   EVAL      PZLoc = *BLANKS
- 
+
       ** Use Rate Fixing Currencies to get rate fixing date when
       ** CIR005 is on. Otherwise, use transaction ccy.
- 
+
      C                   IF        CIR005 = 'Y' AND RPC1R1 <> *BLANKS
      C                   EVAL      PPRfDy = WZRfDy
- 
+
      C                   CALLB     'IRRTFXCNV'
      C                   PARM                    PZInDt
      C                   PARM                    PPRfDy
@@ -2151,18 +2153,18 @@
      C                   ELSE
      C                   EXSR      SrDlBack
      C                   ENDIF
- 
+
      C                   EVAL      TINFD = PZRfDt
      C                   ELSE
      C                   EVAL      TINFD = 0
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Start/Last Interest Payment Date
- 
+
      C                   IF        DTYP = 'RP' AND BYSL = 'B' OR
      C                             DTYP = 'RR' AND BYSL = 'B' OR
      C                             DTYP = 'RF' AND BYSL = 'S'
@@ -2170,85 +2172,85 @@
      C                   ELSE
      C                   EVAL      USLIP = VDAT
      C                   ENDIF
- 
+
       ** Interest Rate Change Base Date
- 
+
      C                   EVAL      UICBD = UNICD
      C                   EVAL      TICBD = TNICD
- 
+
       ** Interest Payment Base Date
- 
+
      C                   EVAL      UIPBD = UNIPD
      C                   EVAL      TIPBD = TNIPD
- 
+
       ** Base Currency Exchange Rate
       ** Default if not entered
- 
+
      C                   IF        RPUBCXR = *ZEROS
      C                   EXSR      SrDlCcyDet
      C                   EVAL      UBCXR = A6SPRT
      C                   EVAL      TBCXR = A6SPRT
      C                   ENDIF
- 
+
       ** Interest Accrual Control Date
- 
+
      C                   EVAL      UIACD = VDAT
      C                   EVAL      TIACD =  VDAT
- 
+
       ** Last Interest Payment/Change Date
- 
+
      C                   IF        RPUBRTT = *ZEROS
      C                   EVAL      ULPCD = 0
      C                   ELSE
      C                   EVAL      ULPCD = VDAT
      C                   ENDIF
- 
+
      C                   IF        RPTBRTT = *ZEROS
      C                   EVAL      TLPCD = 0
      C                   ELSE
      C                   EVAL      TLPCD = VDAT
      C                   ENDIF
- 
+
       ** Spread Indicators
- 
+
      C                   IF        RPUBRTT <> *ZEROS AND RPURTSP <> *ZEROS AND
      C                             RPUSPIN = *BLANKS
      C                   EVAL      USPIN = 'A'
      C                   ENDIF
- 
+
      C                   IF        RPTBRTT <> *ZEROS AND RPTRTSP <> *ZEROS AND
      C                             RPTSPIN = *BLANKS
      C                   EVAL      TSPIN = 'A'
      C                   ENDIF
- 
+
       ** Non-Static Indicators
- 
+
      C                   BITOFF    '01234567'    UDNSI
- 
+
      C                   IF        RPUEINR <> *ZEROS
      C                   BITON     '0'           UDNSI
      C                   ENDIF
- 
+
      C                   BITOFF    '01234567'    TDNSI
- 
+
      C                   IF        RPTEINR <> *ZEROS
      C                   BITON     '0'           TDNSI
      C                   ENDIF
- 
+
       ** Initialise bit settings
- 
+
      C                   BITOFF    '01234567'    ACEI
      C                   BITOFF    '01234567'    TLXI
      C                   BITOFF    '01234567'    CNFI
- 
+
       ** Machine Time
- 
+
      C                   TIME                    DDTM
- 
+
       ** Base Rate Code for Sequencing
- 
+
      C                   EVAL      BRSQ = *ZEROS
- 
+
       ** Start Date Current Average Period                                                   BUG7217
                                                                                              BUG7217
      C     CIR006        IFEQ      'Y'                                                       BUG7217
@@ -2264,309 +2266,309 @@
       *                not Set up on Valid File - Amend Processing   *
       ****************************************************************
      C     SrSetReqFldA  BEGSR
- 
+
       **  Our/Their effective interest rate
- 
+
      C                   IF        RPUBRTT = *ZERO
      C                   EVAL      UEINR = URTSP
      C                   ELSE
      C                   EVAL      UEINR = RPUEINR
      C                   ENDIF
- 
+
      C                   IF        RPTBRTT = *ZEROS
      C                   EVAL      TEINR = TRTSP
      C                   ELSE
      C                   EVAL      TEINR = RPTEINR
      C                   ENDIF
- 
+
       ** Our Floating Rate Fix Days (Defaulting done in IRVRTFXDAY)
- 
+
      C                   IF        RPUBRTT = *ZEROS
      C                   EVAL      UINFD = 0
      C                   ELSE
- 
+
       **  Our interest fix date
- 
+
      C                   EVAL      PZInDt = VDAT
      C                   MOVE      UFRFD         WZRfDy
- 
+
       ** If 'currency for rate fix holiday' flag from FRA/IRS I.C.D.
       ** is 'F', 'L' or 'D', set currency code to 'sterling code',
       ** 'local currency code' or 'screen currency code' respectively
- 
+
      C                   IF        BQCRFH = 'F'
      C                   EVAL      PZCcy = BLCYCD
      C                   ENDIF
- 
+
      C                   IF        BQCRFH = 'L'
      C                   EVAL      PZCcy = BJLCCY
      C                   ENDIF
- 
+
      C                   IF        BQCRFH = 'D' OR  BQCRFH = ' '
      C                   EVAL      PZCcy = RPUCUCY
      C                   ENDIF
- 
+
      C                   EVAL      PZLoc = *BLANKS
- 
+
       ** Use Rate Fixing Currencies to get rate fixing date when
       ** CIR005 is on. Otherwise, use transaction ccy.
- 
+
      C                   IF        CIR005 = 'Y' AND RPC1R1 <> *BLANKS
      C                   EVAL      PPRfDy = WZRfDy
- 
+
      C                   CALLB     'IRRTFXCNV'
      C                   PARM                    PZInDt
      C                   PARM                    PPRfDy
      C                   PARM                    PZLoc
      C                   PARM                    WVRtFxCcy
      C                   PARM                    PZRfDt
- 
+
      C                   ELSE
      C                   EXSR      SrDlBack
      C                   ENDIF
- 
+
       ** If deal forward-valued AND Short Term Rate NOT entered then
       ** the Next Interest Rate Fix Date must be that associated
       ** with the Value Date...
- 
+
      C                   IF        PZRfDt >= BJRDNB AND RPUEINR = *ZEROS
      C                   EVAL      UINFD = PZRfDt
- 
+
       ** ...else the Next Interest Rate Fix Date must be that
       **  associated with the Next Rate Change Date.
- 
+
      C                   ELSE
- 
+
      C                   IF        RPUNICD <> *ZEROS
      C                   EVAL      PZInDt = UNICD
      C                   MOVE      UFRFD         WZRfDy
- 
+
       ** If 'currency for rate fix holiday' flag from FRA/IRS I.C.D.
       ** is 'F', 'L' or 'D', set currency code to 'sterling code',
       ** 'local currency code' or 'screen currency code' respectively
- 
+
      C                   IF        BQCRFH = 'F'
      C                   EVAL      PZCcy = BLCYCD
      C                   ENDIF
- 
+
      C                   IF        BQCRFH = 'L'
      C                   EVAL      PZCcy = BJLCCY
      C                   ENDIF
- 
+
      C                   IF        BQCRFH = 'D' OR BQCRFH = ' '
      C                   EVAL      PZCcy = RPUCUCY
      C                   ENDIF
- 
+
      C                   EVAL      PZLoc = *BLANKS
- 
+
       ** Use Rate Fixing Currencies to get rate fixing date when
       ** CIR005 is on. Otherwise, use transaction ccy.
- 
+
      C                   IF        CIR005 = 'Y' AND RPC1R1 <> *BLANKS
      C                   EVAL      PPRfDy = WZRfDy
- 
+
      C                   CALLB     'IRRTFXCNV'
      C                   PARM                    PZInDt
      C                   PARM                    PPRfDy
      C                   PARM                    PZLoc
      C                   PARM                    WVRtFxCcy
      C                   PARM                    PZRfDt
- 
+
      C                   ELSE
      C                   EXSR      SrDlBack
      C                   ENDIF
- 
+
      C                   EVAL      UINFD = PZRfDt
      C                   ELSE
      C                   EVAL      UINFD = *ZEROS
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Their Floating Rate Fix Days (Defaulting done in IRVRTFXDAY)
- 
+
      C                   IF        RPTBRTT = *ZEROS
      C                   EVAL      TINFD = *ZERO
      C                   ELSE
- 
+
       ** User pays Fixed Rate, Counterparty pays Floating Rate
       ** Reset only, if Next Intr.Chg Date, or Rate Fix Days changed
- 
+
      C                   EVAL      PZInDt = VDAT
      C                   MOVE      TFRFD         WZRfDy
- 
+
       ** If 'currency for rate fix holiday' flag from FRA/IRS I.C.D.
       ** is 'F', 'L' or 'D', set currency code to 'sterling code',
       ** 'local currency code' or 'screen currency code' respectively
- 
+
      C                   IF        BQCRFH = 'F'
      C                   EVAL      PZCcy = BLCYCD
      C                   ENDIF
- 
+
      C                   IF        BQCRFH = 'L'
      C                   EVAL      PZCcy = BJLCCY
      C                   ENDIF
- 
+
      C                   IF        BQCRFH = 'D' OR  BQCRFH = ' '
      C                   EVAL      PZCcy = RPUCUCY
      C                   ENDIF
- 
+
      C                   EVAL      PZLoc = *BLANKS
- 
+
       ** Use Rate Fixing Currencies to get rate fixing date when
       ** CIR005 is on. Otherwise, use transaction ccy.
- 
+
      C                   IF        CIR005 = 'Y' AND RPC1R1 <> *BLANKS
      C                   EVAL      PPRfDy = WZRfDy
- 
+
      C                   CALLB     'IRRTFXCNV'
      C                   PARM                    PZInDt
      C                   PARM                    PPRfDy
      C                   PARM                    PZLoc
      C                   PARM                    WVRtFxCcy
      C                   PARM                    PZRfDt
- 
+
      C                   ELSE
      C                   EXSR      SrDlBack
      C                   ENDIF
- 
+
       ** If deal forward-valued AND Short Term Rate NOT entered then
       ** the Next Interest Rate Fix Date must be that associated
       ** with the Value Date...
- 
+
      C                   IF        PZRfDt >= BJRDNB AND RPTEINR = *ZEROS
      C                   EVAL      TINFD = PZRfDt
      C                   ELSE
- 
+
       ** ...else the Next Interest Rate Fix Date must be that
       ** associated with the Next Rate Change Date.
- 
+
      C                   IF        RPTNICD <> *ZEROS
      C                   EVAL      PZInDt = TNICD
      C                   MOVE      TFRFD         WZRfDy
- 
+
       ** If 'currency for rate fix holiday' flag from FRA/IRS I.C.D.
       ** is 'F', 'L' or 'D', set currency code to 'sterling code',
       ** 'local currency code' or 'screen currency code' respectively
- 
+
      C                   IF        BQCRFH = 'F'
      C                   EVAL      PZCcy = BLCYCD
      C                   ENDIF
- 
+
      C                   IF        BQCRFH = 'L'
      C                   EVAL      PZCcy = BJLCCY
      C                   ENDIF
- 
+
      C                   IF        BQCRFH = 'D' OR BQCRFH = ' '
      C                   EVAL      PZCcy = RPUCUCY
      C                   ENDIF
- 
+
      C                   EVAL      PZLoc = *BLANKS
- 
+
       ** Use Rate Fixing Currencies to get rate fixing date when
       ** CIR005 is on. Otherwise, use transaction ccy.
- 
+
      C                   IF        CIR005 = 'Y' AND RPC1R1 <> *BLANKS
      C                   EVAL      PPRfDy = WZRfDy
- 
+
      C                   CALLB     'IRRTFXCNV'
      C                   PARM                    PZInDt
      C                   PARM                    PPRfDy
      C                   PARM                    PZLoc
      C                   PARM                    WVRtFxCcy
      C                   PARM                    PZRfDt
- 
+
      C                   ELSE
      C                   EXSR      SrDlBack
      C                   ENDIF
- 
+
      C                   EVAL      TINFD = PZRfDt
      C                   ELSE
      C                   EVAL      TINFD = *ZEROS
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Interest Rate Change Base Date
- 
+
      C                   EVAL      UICBD = UNICD
      C                   EVAL      TICBD = TNICD
- 
+
       ** Interest Payment Base Date
- 
+
      C                   EVAL      UIPBD = UNIPD
      C                   EVAL      TIPBD = TNIPD
- 
+
       ** Business Day Conventions details (OUR)
- 
+
      C                   IF        CIR005 = 'Y' AND RPUNIPD = WUIPBD AND
      C                             WL1AMC = 'A' AND RPAMC1 = WL1AMC OR
      C                             CIR005 = 'Y' AND RPUNIPD = WUNIPD AND
      C                             WL1AMC <> 'A' AND RPAMC1 = WL1AMC
- 
+
      C                   EVAL      UIPBD = WUIPBD
      C                   ENDIF
- 
+
       ** Business Day Conventions details (THEIR)
- 
+
      C                   IF        CIR005 = 'Y' AND RPTNIPD = WTIPBD AND
      C                             WL1AMC = 'A' AND RPAMC1 = WL1AMC OR
      C                             CIR005 = 'Y' AND RPTNIPD = WTNIPD AND
      C                             WL1AMC <> 'A' AND RPAMC1 = WL1AMC
- 
+
      C                   EVAL      TIPBD = WTIPBD
      C                   ENDIF
- 
+
       ** Base Currency Exchange Rate
       ** Default if not entered
- 
+
      C                   IF        RPUBCXR = *ZEROS
      C                   EXSR      SrDlCcyDet
      C                   EVAL      UBCXR = A6SPRT
      C                   EVAL      TBCXR = A6SPRT
      C                   ENDIF
- 
+
       ** Spread Indicators
- 
+
      C                   IF        RPUBRTT <> *ZEROS AND RPURTSP <> *ZEROS AND
      C                             RPUSPIN = *BLANKS
      C                   EVAL      USPIN = 'A'
      C                   ENDIF
- 
+
      C                   IF        RPTBRTT <> *ZEROS AND RPTRTSP <> *ZEROS AND
      C                             RPTSPIN = *BLANKS
      C                   EVAL      TSPIN = 'A'
      C                   ENDIF
- 
+
       ** Non-Static Indicators:
       ** Our short term rate / initial rate set entered bits
- 
+
      C                   IF        RPUBRTT <> *ZEROS AND UEINR <> WkUEINR
      C                   BITON     '02'          UDNSI
      C                   ENDIF
- 
+
       ** Their short term rate / initial rate set entered bits
- 
+
      C                   IF        RPTBRTT <> *ZEROS AND TEINR <> WkTEINR
      C                   BITON     '02'          TDNSI
      C                   ENDIF
- 
+
       ** Last Change Date & Last Change Type
- 
+
      C                   EVAL      LCD = BJRDNB
- 
+
       ** Machine Time
- 
+
      C                   TIME                    DDTM
- 
+
       ** Base Rate Code for Sequencing
- 
+
      C                   EVAL      BRSQ = *ZEROS
- 
+
      C                   EVAL      RSTM = RSETM                                               220020
      C                   EVAL      RONS = URACC                                               220020
      C                   EVAL      RCRN = CPPBK                                               220020
@@ -2582,51 +2584,51 @@
       * SrDlBack - Calculate Rate Fix Date for FRA/IRS                *
       *****************************************************************
      C     SrDlBack      BEGSR
- 
+
       ** Input field PZLoc contains the relevant branch location
       ** Initialise Work Field
- 
+
       ** Perform the following processing until the work field is
       ** greater than or equal to the Rate Fix Days
- 
+
      C                   DOU       WZWkFld >= WZRfDy
- 
+
       ** If the Rate Fix Days are not equal to zero subtract 1
       ** from the Rate Fix Date
- 
+
      C                   IF        WZRfDy <> 0
      C                   SUB       1             PZRfDt
      C                   ENDIF
- 
+
       ** The following is repeated until the resultant date is
       ** proved to be a working day in the relevant currency and
       ** location.
       ** Uses ZCHKH to check Rate Fix Date for a holiday
- 
+
      C                   DOU       PZind = 'W'
- 
+
      C                   EVAL      PZDayNo = PZRfDt
- 
+
      C                   CALLB     'ZCHKH'
      C                   PARM                    PZDayNo
      C                   PARM                    PZCcy
      C                   PARM                    PZLoc
      C                   PARM                    PZind
- 
+
       ** If date is a holiday (PZind = 'H'), subtract 1 from rate fix date
- 
+
      C                   IF        PZind = 'H'
      C                   SUB       1             PZRfDt
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
       **  When a working day has been found, add 1 to the Work Field
- 
+
      C                   ADD       1             WZWkFld
- 
+
      C                   ENDDO
- 
+
      C                   ENDSR
       ****************************************************************
       /EJECT
@@ -2634,17 +2636,17 @@
       * SrCnfIns - Set Confirmation Indicator on Insertion           *
       ****************************************************************
      C     SrCnfIns      BEGSR
- 
+
      C                   EVAL      WkCNRQ = 'N'
- 
+
       ** Confirmation required if settlement instructions present or if
       ** 2-level input is not present
- 
+
      C                   IF        RPRSTM <> *ZERO OR RPPSTM <> *ZERO
      C                             OR BLL2II = 'N'
      C                   EVAL      WkCNRQ = 'Y'
      C                   ENDIF
- 
+
      C                   ENDSR
       ****************************************************************
       /EJECT
@@ -2652,47 +2654,47 @@
       * SrCnfAmd - Set Confirmation Indicator on Amendment           *
       ****************************************************************
      C     SrCnfAmd      BEGSR
- 
+
       ** If Settlement instructions were previously present
       ** or if 2-level input not present
       ** or if Original entry date not equal to run date
- 
+
      C                   IF        RSTM <> *ZERO OR PSTM <> *ZERO OR
      C                             BLL2II = 'N' OR ORED <> BJRDNB
- 
+
       ** If settlement instruction fields have changed
- 
+
      C                   IF        RSTM <> RPRSTM OR RONS <> RPRONS OR
      C                             RIBN <> RPRIBN OR PSTM <> RPPSTM OR
      C                             PONS <> RPPONS OR AWBN <> RPAWBN OR
      C                             BENN <> RPBENN OR BTB1 <> RPBTB1 OR
- 
+
       ** or if Def. Sender-Receiver info has changed
- 
+
      C                             DSR1 <> RPDSR1 OR DSR2 <> RPDSR2 OR
      C                             DSR3 <> RPDSR3 OR DSR4 <> RPDSR4 OR
      C                             DSR5 <> RPDSR5 OR DSR6 <> RPDSR6 OR
- 
+
       ** or if the ISDA fields have changed
- 
+
      C                             ISDA <> RPISDA OR AGTY <> RPAGTY OR
      C                             AGDT <> RPAGDT OR AGVC <> RPAGVC OR
      C                             AGVV <> RPAGVV
- 
+
       ** or if deal contract fields have changed
       ** Produce a confirmation now
- 
+
      C                   BITOFF    '0'           RPCNFI
      C                   EVAL      WkCNRQ = 'Y'
- 
+
       ** Set off maturity and interest indicators if past value date
- 
+
      C                   IF        ORED < BJRDNB AND VDAT < BJRDNB
      C                   BITOFF    '12'          RPCNFI
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Generate confirmation message should CIR008 is switched                              239742
       *  on and auto-authorisation is 'N'.                                                    239742
       *                                                                                       239742
@@ -2755,7 +2757,7 @@
      C     TEINR         ORNE      RPTEINR                                                  BUG6877N
      C                   BITOFF    '34'          RPTLXI                                     BUG6877N
      C                   ENDIF                                                              BUG6877N
- 
+
      C                   ENDSR
       ****************************************************************
       /EJECT
@@ -2765,16 +2767,16 @@
      C     SrCnfDel      BEGSR
                                                                                               CIR008
      C                   EVAL      WkCNRQ = 'N'                                               CIR008
- 
+
       ** Confirmation required if one produced previously
- 
+
      C                   TESTB     '7'           CNFI                     89
- 
+
      C                   IF        *IN89 = *ON
      C                   BITOFF    '0'           CNFI
      C                   EVAL      WkCNRQ = 'Y'
      C                   ENDIF
- 
+
      C                   ENDSR
       ****************************************************************
       /EJECT
@@ -2782,9 +2784,9 @@
       * SrWrtDtx - Write a DTRIX Record                              *
       ****************************************************************
      C     SrWrtDtx      BEGSR
- 
+
       ** Set fields on record to be written to DTRIXDD
- 
+
      C                   EVAL      DXRECI = 'D'
      C                   EVAL      DXRCDT = 'D'
      C                   EVAL      DXDLNO = RPDLNO
@@ -2805,12 +2807,12 @@
      C                   ELSE
      C                   EVAL      DXBRCA = RPBRCA
      C                   ENDIF
- 
+
      C                   IN        MNATN
      C                   EVAL      DXTNLU = NATN
- 
+
      C                   WRITE     DTRIXDF
- 
+
      C                   ENDSR
       ****************************************************************
       /EJECT
@@ -2818,28 +2820,28 @@
       * SrUpdDtxHdr - Update the DTRIX Header Record                 *
       ****************************************************************
      C     SrUpdDtxHdr   BEGSR
- 
+
       ** Access the header record
- 
+
      C                   EVAL      DXDLNO = *ZERO
- 
+
      C     DXDLNO        CHAIN     DTRIXHF                            89
- 
+
       ** If deal number is not found, datbase error
- 
+
      C                   IF        *IN89 = *ON
      C                   MOVEL     DXDLNO        DBKEY
      C                   EVAL      DBFILE = 'DTRIXHF '
      C                   EVAL      DBASE = 8
      C                   EXSR      SrErr
      C                   ENDIF
- 
+
       ** Add 1 to number of deal records (on DTRIXDD)
- 
+
      C                   ADD       1             DXNDLR
- 
+
      C                   UPDATE    DTRIXHF
- 
+
      C                   ENDSR
       ****************************************************************
       /EJECT
@@ -2847,31 +2849,31 @@
       * SrUpdDlTrl - Update Deals File Trailer                       *
       ****************************************************************
      C     SrUpdDlTrl    BEGSR
- 
+
      C                   MOVE      *BLANKS       EAPIC            10                        MD025244
       *                                                                                     MD025244
      C                   CALLB     'ZADLTRLRUD'
- 
+
       ** Return Code
       ** Change Type
       ** Amount
       ** Run Date
- 
+
      C                   PARM      *BLANKS       PRetCodeIn
      C                   PARM                    RPCHTP
      C                   PARM      RPUPAMT       WkAMNP
      C                   PARM                    BJRDNB
      C                   PARM                    EAPIC                                      MD025244
- 
+
       ** If return code is error, database file
- 
+
      C                   IF        PRetCodeIn = '*ERROR '
      C                   EVAL      DBKEY =  '999999'
      C                   EVAL      DBFILE = 'DEALSDF '
      C                   EVAL      DBASE = 9
      C                   EXSR      SrErr
      C                   ENDIF
- 
+
      C                   ENDSR
       ****************************************************************
       /EJECT
@@ -2879,7 +2881,7 @@
       * SrUpdOLPos - Update On Line Position Files                   *
       ****************************************************************
      C     SrUpdOLPos    BEGSR
- 
+
       * Make sure overrides exist                                                             246966
      C                   Eval      QCMD = OVRDLPCSC                                           246966
      C                   Call      'QCMDEXC'                                                  246966
@@ -2895,7 +2897,7 @@
      C                   PARM                    Z#XSTS
      C                   PARM                    Z#YSTS
      C                   PARM                    Z#ZSTS
- 
+
      C                   IF        PRtCd = '*ERROR'
      C**********         EVAL      DBFILE = 'AOOUSWU0'                                       BUG6373
      C                   EVAL      DBFILE = 'AOOUSWU1'                                       BUG6373
@@ -2903,9 +2905,9 @@
      C                   EVAL      DBKEY = *BLANK
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Data export for CCRM - Limits
- 
+
      C                   IF        CDE001 = 'Y'
      C                   MOVEL     RPDLNO        PTrRef
      C                   CALLB     'DEWRTTRIG'
@@ -2913,7 +2915,7 @@
      C                   PARM      'SWAP'        PTrCat
      C                   PARM      *BLANKS       T#RSRV           10                    CDE005
      C                   ENDIF
- 
+
      C                   ENDSR
       ****************************************************************
       /EJECT
@@ -2921,22 +2923,22 @@
       * SrUpdSumm - Summary Updates                                  *
       ****************************************************************
      C     SrUpdSumm     BEGSR
- 
+
       ** Setup Deal Number
- 
+
      C                   EVAL      PDlNum = RPDLNO
- 
+
      C                   CALL      'DL1911'
      C                   PARM                    PTerm
      C                   PARM                    PDlNum
      C**********         PARM                    RPCHTP                                      BUG4788
      C                   PARM                    WkActn                                      BUG4788
      C                   PARM                    RPUCUCY
- 
+
      C                   IF        PTerm = 'E'
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       ****************************************************************
       /EJECT
@@ -2944,24 +2946,24 @@
       * SrBookDet - Access Book Details                              *
       ****************************************************************
      C     SrBookDet     BEGSR
- 
+
       ** Access book record to pick up Hedge indicator
- 
+
      C                   CALLB     'AOBOOKR0'
      C                   PARM      '*MSG   '     PRtCd
      C                   PARM      '*KEY   '     POptn
      C                   PARM      RPBOKC        WkBokC
      C     SDBOOK        PARM      SDBOOK        DSFDY
- 
+
       ** If return code is not blank, database error
- 
+
      C                   IF        PRtCd <> *BLANK
      C                   EVAL      DBKEY = WkDSNB
      C                   EVAL      DBFILE = 'SDBOOKPD'
      C                   EVAL      DBASE = 11
      C                   EXSR      SrErr
      C                   ENDIF
- 
+
      C                   ENDSR
       ****************************************************************
       /EJECT
@@ -2969,24 +2971,24 @@
       * SrDlCcyDet - Access Deal Currency Details                    *
       ****************************************************************
      C     SrDlCcyDet    BEGSR
- 
+
       ** Access currency details using deal currency
- 
+
      C                   CALLB     'AOCURRR0'
      C                   PARM      '*MSG   '     PRtCd
      C                   PARM      '*KEY   '     POptn
      C                   PARM      RPUCUCY       WkAJCD
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
       ** If return code is not blank, database error
- 
+
      C                   IF        PRtCd <> *BLANKS
      C                   EVAL      DBKEY = WkAJCD
      C                   EVAL      DBFILE = 'SDCURRPD'
      C                   EVAL      DBASE = 12
      C                   EXSR      SrErr
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT                                                                                  CSD015
@@ -3446,43 +3448,43 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
       ** Program parameters
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    PRetCodeIn
      C                   PARM                    PModeOfOp                                    CAP056
      C                   PARM                    IRVCACF
      C                   PARM                    PScreenInpt                                  CAP043
- 
+
       ** Default Branch for ZMUSER
       ** Bank Details (SDBANKPD)
       ** General Ledger ICD (SDGELRPD)
       ** Trading ICD (SDTRADPD)
       ** Retail ICD (SDRETLPD)
       ** FRA/IRS ICD (SDFAISPD)
- 
+
      C                   PARM                    PkDBRC
      C                   PARM                    SDBANK
      C                   PARM                    SDGELR
      C                   PARM                    SDTRAD
      C                   PARM                    SDRETL
      C                   PARM                    SDFAIS
- 
+
       ** Business Day Convention
       ** Amortisation of Caps/Collars/Floors
       ** 24x7 Midas Availability
       ** CCRM Limits
       ** FRA/IRS Deals Authorisation                                                          CIR008
       ** Automatic Authorisation of Interface Deals                                           CAP056
- 
+
      C                   PARM                    CIR005
      C                   PARM                    CIR006
      C                   PARM                    CSC011
      C                   PARM                    CDE001
      C                   PARM                    CIR008                                       CIR008
      C                   PARM                    CAP056                                       CAP056
- 
+
      C     *LIKE         DEFINE    UEINR         WkUEINR
      C     *LIKE         DEFINE    TEINR         WkTEINR
      C     *LIKE         DEFINE    UNICD         WkUNICD
@@ -3526,15 +3528,15 @@
      C                   PARM      '*DBERR '     PRTCD                                        CAP043
      C                   PARM      '*FIRST '     POPTN                                        CAP043
      C     SDMMOD        PARM      SDMMOD        DSFDY                                        CAP043
- 
+
       ** Check if 24x7 Midas Availability is installed
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*VERIFY'     POPTN
      C                   PARM      'CSC011'      PSARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        PRTCD = *BLANKS
      C                   EVAL      CSC011 = 'Y'
      C                   IN        SC24X7
@@ -3600,7 +3602,7 @@
                                                                                               CAP043
                                                                                               CSD015
      C                   IN        SDSTAT                                                     CSD015
- 
+
       ** Check if Compliance Watch Enhancement (CSD015) is on.                                CSD015
                                                                                               CSD015
      C                   EVAL      CSD015 = 'N'                                               CSD015
@@ -3923,22 +3925,22 @@
       * SrErr - Exception Errors                                      *
       *****************************************************************
      C     SrErr         BEGSR
- 
+
      C                   EVAL      PRetCodeIn = '*ERROR    '
      C                   EVAL      DBPGM = 'IRCACFUPD'
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   DUMP
- 
+
       ** Terminate the program
- 
+
      C                   RETURN
- 
+
      C                   ENDSR
       ****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2002
+(c) Finastra International Limited 2002
 ** WLArr - Watch List Description Array                                                       CSD015
 <Receipt Nostro>                   </Receipt Nostro>                                          CSD015
 <Receipt Ordering Customer>        </Receipt Ordering Customer>                               CSD015

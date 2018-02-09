@@ -7,10 +7,11 @@
 /*                                                                  */
 /*  LEC0609B -  EVENTS FILE CREATION II & FEE BILLS & TELEX EXT     */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. CLE075AP           Date 06Aug12              */
-/*       Prev Amend No. 262509             Date 01Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CLE075AP           Date 06Aug12              */
+/*                      262509             Date 01Aug12              */
 /*                      CLE134             Date 01Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -27,6 +28,7 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CLE075AP - COB Restructure - LE COB Optimisation Phase 1   */
 /*       262509 - Empty STAT flag returned by COB                    */
 /*       CLE134 - Past Due Call Loan Processing                      */
@@ -53,7 +55,7 @@
              PGM        PARM(&CNAM &CSEQ &RERUN)                                          /*CLE134*/
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
              DCL        VAR(&MSG) TYPE(*CHAR) LEN(132) +
@@ -258,5 +260,5 @@
                           FLAG('E') TEXT(&STEXT)                                        /*CLE075AP*/
                                                                                         /*CLE075AP*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 ENDPGM:      ENDPGM

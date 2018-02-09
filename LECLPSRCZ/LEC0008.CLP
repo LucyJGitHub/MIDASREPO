@@ -8,17 +8,19 @@
 /*       LEC0008 - LE Initialisation program to add Part Sold        */
 /*                 records to Facility History file.                 */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2002           */
+/*       (c) Finastra International Limited 2002                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4.01 -----------------------------------------------*/
-/*       Last Amend No. 199570 *CREATE     Date 30Oct01              */
+/*       Prev Amend No. 199570 *CREATE     Date 30Oct01              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       199570 - Calls RPG program LE0008 when CLE005 is switched   */
 /*                on LE0008 reports facilities with missing parts    */
 /*                sold events in FACHISA and generates them.         */
@@ -35,7 +37,7 @@
              DCL        VAR(&RUNCHG) TYPE(*DEC) LEN(5 0)
              DCL        VAR(&RUNDAT) TYPE(*CHAR) LEN(5)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                       Misys International Banking Systems Ltd. 2002')
+                       Finastra International Limited 2002')
  
              DCLF       FILE(SDBANKPD)
  
@@ -121,5 +123,5 @@ ABNOR1:
  /* End program. */
 END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

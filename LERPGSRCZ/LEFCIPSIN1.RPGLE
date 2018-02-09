@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2005')
+     H COPYRIGHT('(c) Finastra International Limited 2005')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas LE Facility BoE input')                          *
@@ -12,15 +12,17 @@
       *  Function:  This is the main screen input function            *
       *             for LE Facility BOE input.                        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. CSD027             Date 21Jan09               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CSD027             Date 21Jan09               *
       * Midas Plus 1.4 Base ------------------------------------------*
-      *  Prev Amend No. LLN022  *CREATE    Date 24Jan05               *
+      *                 LLN022  *CREATE    Date 24Jan05               *
       *                                                               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Convert Customer Number to Alpha                    *
       *  LLN022 - BOE Upgrade to MidasPlus                            *
       *                                                               *
@@ -533,4 +535,4 @@
       ****************************************************************
  
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2005
+(c) Finastra International Limited 2005

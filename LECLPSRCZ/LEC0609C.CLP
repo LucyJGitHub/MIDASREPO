@@ -7,14 +7,15 @@
 /*                                                                   */
 /*       LEC0609C - Manual Utilisation Processing                    */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. AR1042505          Date 24Apr13              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR1042505          Date 24Apr13              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. 228542             Date 10Aug04              */
+/*                      228542             Date 10Aug04              */
 /* Midas Release 4.01 -----------------------------------------------*/
 /*                      CLE023             Date 19Nov01              */
 /* Midas Release 4 --------------- Base -----------------------------*/
@@ -23,6 +24,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       AR1042505 - MFU is not included on rebuild of fclty exposure*/
 /*                   Create a backup of LEMNFUPD before call to      */
 /*                   LE0495. (Child: AR1042506)                      */
@@ -38,7 +40,7 @@
              DCL        VAR(&STAT) TYPE(*CHAR) LEN(1) VALUE(' ')
              DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
              DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)                                     /*CLE023*/
@@ -205,6 +207,6 @@
  
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

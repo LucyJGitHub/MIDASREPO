@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas LE Batch Update of Trailer Files')               *
@@ -9,16 +9,18 @@
       *                                                               *
       *  LE000503 - Midas LE Batch Update of Trailer Files            *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. CLE141             Date 08Feb16               *
-      *  Prev Amend No. MD022860           Date 14Oct13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE141             Date 08Feb16               *
+      *                 MD022860           Date 14Oct13               *
       *                 MD022640           Date 01Oct13               *
       *                 MD021423B          Date 04Sep13               *
       *                 MD021423 *CREATE   Date 21Aug13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE141 - Currency and Location Business Day Convention       *
       *           (Recompile)                                         *
       *  MD022860 - Result variable too small to hold result          *
@@ -68,24 +70,24 @@
      D/COPY ZACPYSRC,PSDS
      D/COPY ZACPYSRC,STD_D_SPEC
       **------------------------------------------------------------------
-
+ 
       ** Data structure for Bank details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
-
+ 
       ***  First DS for access programs, short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
-
+ 
       ***  Second DS for access programs, long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
-
+ 
       ** +--------------------------------------+
       **   Manually included D-specs            +
       **   =========================            +
       ** +--------------------------------------+
-
+ 
      D DSACTN          S              1    INZ('I')
      D P@NATN          S              5  0
-
+ 
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
@@ -126,7 +128,7 @@
      C     SrUpdTrailer  BEGSR
       *
      C                   MOVEL     LGTGTT        TYPE              4
-
+ 
      C                   SELECT
       *
      C                   WHEN      TYPE = 'CLIP'
@@ -140,7 +142,7 @@
      C                   EXSR      xuLOAMSZ1
      C                   EXSR      xsLELOMZ
      C                   EXSR      xuLELOMZ
-
+ 
      C                   WHEN      TYPE = 'LOAM' AND LGLOAN = *BLANKS                       MD022640
      C                             AND (LGATYP = 'SC' OR LGATYP = 'BC')                     MD022640
      C                   EXSR      xsLOAMSZ1                                                MD022640
@@ -258,7 +260,7 @@
      C                   MOVE      DSACTN        CHTP
      C                   Z-ADD     1             TNLU
      C                   UPDATE(E) CLOANZ1F
-
+ 
      C                   IF        %ERROR
      C                   EVAL      DBFILE      = 'CLOANZ1'
      C                   EVAL      DBASE       = 002
@@ -277,23 +279,23 @@
       *                                                               *
       *****************************************************************
      C     xsLOAMSZ1     BEGSR
-
+ 
       ** Retrieve Trailer Records.
-
+ 
      C                   EVAL       KLNRF      = '999999'
      C                   EVAL       KVDAT      = 99999
      C                   EVAL       KLASN      = 999
      C     KLOAMS        CHAIN (E) LOAMS
-
+ 
      C                   IF        NOT %FOUND(LOAMS)
      C                   EVAL      DBFILE      = 'LOAMS'
      C                   EVAL      DBASE       = 003
      C                   EVAL      DBKEY       = '999999'
      C                   EXSR      *PSSR
      C                   ENDIF
-
+ 
       ** Increment Counts & Set Hash Totals.
-
+ 
      C                   SELECT
      C                   WHEN      DSACTN      = 'I'
      C**********         EVAL      NORE       += 1                                          MD022860
@@ -302,7 +304,7 @@
      C                   ADD       1             NORE                                       MD022860
      C                   ADD       1             NINS                                       MD022860
      C                   ADD       1             NLRA                                       MD022860
-
+ 
      C**********         EVAL      ZZTOTI      = VRIF                                       MD022860
      C**********         EVAL      ZZTOTD      = VRIL                                       MD022860
      C                   Z-ADD     VRIF          ZZTOTI                                     MD022860
@@ -312,60 +314,60 @@
      C**********         EVAL      VRIL        = ZZTOTD                                     MD022860
      C                   Z-ADD     ZZTOTI        VRIF                                       MD022860
      C                   Z-ADD     ZZTOTD        VRIL                                       MD022860
-
+ 
      C**********         EVAL      ZZTOTI      = VRRF                                       MD022860
      C**********         EVAL      ZZTOTD      = VRRL                                       MD022860
      C                   Z-ADD     VRRF          ZZTOTI                                     MD022860
      C                   Z-ADD     VRRL          ZZTOTD                                     MD022860
-
+ 
      C                   WHEN      DSACTN      = 'R'
      C**********         EVAL      NDEL       += 1                                          MD022860
      C**********         EVAL      NLRA       -= 1                                          MD022860
      C                   ADD       1             NDEL                                       MD022860
      C                   SUB       1             NLRA                                       MD022860
-
+ 
      C**********         EVAL      ZZTOTI      = VRDF                                       MD022860
      C**********         EVAL      ZZTOTD      = VRDL                                       MD022860
      C                   Z-ADD     VRDF          ZZTOTI                                     MD022860
      C                   Z-ADD     VRDL          ZZTOTD                                     MD022860
      C                   ENDSL
-
+ 
      C**********         EVAL      ZZAMT       = LGAMNT / 1000                              MD022860
      C     LGAMNT        DIV       1000          ZZAMT                                      MD022860
-
+ 
      C                   IF        ZZAMT       < 0
      C                   Z-SUB     ZZAMT         ZZAMT
      C                   ENDIF
-
+ 
       ** Adjust Hash Total by Value of Records after Insert/Reversal.
-
+ 
      C                   EXSR      GLZADD
-
+ 
       ** Set Appropiate Hash Total Fields.
-
+ 
      C                   SELECT
      C                   WHEN      DSACTN      = 'I'
      C**********         EVAL      VRRF        = ZZTOTI                                     MD022860
      C**********         EVAL      VRRL        = ZZTOTD                                     MD022860
      C                   Z-ADD     ZZTOTI        VRRF                                       MD022860
      C                   Z-ADD     ZZTOTD        VRRL                                       MD022860
-
+ 
      C                   WHEN      DSACTN      = 'R'
      C**********         EVAL      VRDF        = ZZTOTI                                     MD022860
      C**********         EVAL      VRDL        = ZZTOTD                                     MD022860
      C                   Z-ADD     ZZTOTI        VRDF                                       MD022860
      C                   Z-ADD     ZZTOTD        VRRL                                       MD022860
      C                   ENDSL
-
+ 
       ** Set Last Change Details.
-
+ 
      C                   EVAL      LCD         = BJRDNB
      C                   EVAL      CHTP        = 'A'
-
+ 
       ** Set Transaction Number of Last Update.
-
+ 
      C                   EVAL      TNLU        = P@NATN
-
+ 
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -378,23 +380,23 @@
       *                                                               *
       *****************************************************************
      C     xsLELOMZ      BEGSR
-
+ 
       ** Retrieve Trailer Records.
-
+ 
      C                   EVAL       KLNRF      = '999999'
      C                   EVAL       KVDAT      = 99999
      C                   EVAL       KLASN      = 999
      C     KLOMKL3       CHAIN (E) LELOMKL3
-
+ 
      C                   IF        NOT %FOUND(LELOMKL3)
      C                   EVAL      DBFILE      = 'LELOMKL3'
      C                   EVAL      DBASE       = 004
      C                   EVAL      DBKEY       = '999999'
      C                   EXSR      *PSSR
      C                   ENDIF
-
+ 
       ** Increment Counts & Set Hash Totals.
-
+ 
      C                   SELECT
      C                   WHEN      DSACTN      = 'I'
      C**********         EVAL      NORE       += 1                                          MD022860
@@ -403,60 +405,60 @@
      C                   ADD       1             NORE                                       MD022860
      C                   ADD       1             NINS                                       MD022860
      C                   ADD       1             NLRA                                       MD022860
-
+ 
      C**********         EVAL      ZZTOTI      = VRRF                                       MD022860
      C**********         EVAL      ZZTOTD      = VRRL                                       MD022860
      C                   Z-ADD     VRRF          ZZTOTI                                     MD022860
      C                   Z-ADD     VRRL          ZZTOTD                                     MD022860
-
+ 
      C                   WHEN      DSACTN      = 'R'
      C**********         EVAL      NDEL       += 1                                          MD022860
      C**********         EVAL      NLRA       -= 1                                          MD022860
      C                   ADD       1             NDEL                                       MD022860
      C                   SUB       1             NLRA                                       MD022860
-
+ 
      C**********         EVAL      ZZTOTI      = VRDF                                       MD022860
      C**********         EVAL      ZZTOTD      = VRDL                                       MD022860
      C                   Z-ADD     VRDF          ZZTOTI                                     MD022860
      C                   Z-ADD     VRDL          ZZTOTD                                     MD022860
      C                   ENDSL
-
+ 
      C**********         EVAL      ZZAMT       = LGAMNT / 1000                              MD022860
      C     LGAMNT        DIV       1000          ZZAMT                                      MD022860
-
+ 
      C                   IF        ZZAMT       < 0
      C                   Z-SUB     ZZAMT         ZZAMT
      C                   ENDIF
-
+ 
       ** Adjust Hash Total by Value of Records after Insert/Reversal.
-
+ 
      C                   EXSR      GLZADD
-
+ 
       ** Set Appropiate Hash Total Fields.
-
+ 
      C                   SELECT
      C                   WHEN      DSACTN      = 'I'
      C**********         EVAL      VRRF        = ZZTOTI                                     MD022860
      C**********         EVAL      VRRL        = ZZTOTD                                     MD022860
      C                   Z-ADD     ZZTOTI        VRRF                                       MD022860
      C                   Z-ADD     ZZTOTD        VRRL                                       MD022860
-
+ 
      C                   WHEN      DSACTN      = 'R'
      C**********         EVAL      VRDF        = ZZTOTI                                     MD022860
      C**********         EVAL      VRDL        = ZZTOTD                                     MD022860
      C                   Z-ADD     ZZTOTI        VRDF                                       MD022860
      C                   Z-ADD     ZZTOTD        VRDL                                       MD022860
      C                   ENDSL
-
+ 
       ** Set Last Change Details.
-
+ 
      C                   EVAL      LCD         = BJRDNB
      C                   EVAL      CHTP        = 'A'
-
+ 
       ** Set Transaction Number of Last Update.
-
+ 
      C                   EVAL      TNLU        = P@NATN
-
+ 
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -469,11 +471,11 @@
       *                                                               *
       *****************************************************************
      C     xuLOAMSZ1     BEGSR
-
+ 
       ** Update Record.
-
+ 
      C                   UPDATE(E) LOAMSZF
-
+ 
      C                   IF        %ERROR
      C                   EVAL      DBFILE      = 'LOAMSZ1'
      C                   EVAL      DBASE       = 005
@@ -482,7 +484,7 @@
      C                                     %CHAR(KLASN)
      C                   EXSR      *PSSR
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -495,11 +497,11 @@
       *                                                               *
       *****************************************************************
      C     xuLELOMZ      BEGSR
-
+ 
       ** Update Record.
-
+ 
      C                   UPDATE(E) LELOMZF
-
+ 
      C                   IF        %ERROR
      C                   EVAL      DBFILE      = 'LELOMZPD'
      C                   EVAL      DBASE       = 006
@@ -508,7 +510,7 @@
      C                                     %CHAR(KLASN)
      C                   EXSR      *PSSR
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -610,12 +612,12 @@
      C                   KFLD                    KLNRF             6
      C                   KFLD                    KVDAT             5 0
      C                   KFLD                    KLASN             3 0
-
+ 
      C     KLOMKL3       KLIST
      C                   KFLD                    KLNRF
      C                   KFLD                    KVDAT
      C                   KFLD                    KLASN
-
+ 
      C     WKLON         KLIST
      C                   KFLD                    WALON             6
      C                   KFLD                    WEPAR             1
@@ -853,4 +855,4 @@
       /EJECT
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2013
+(c) Finastra International Limited 2013

@@ -7,19 +7,21 @@
 /*                                                                  */
 /*                  LEC0306-LOAN ACTIVITY ENQUIRY                   */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Last Amend No. 128954             Date 17Feb98              */
-/*       Prev Amend No. S01408             Date 26Apr96              */
+/*       Prev Amend No. 128954             Date 17Feb98              */
+/*                      S01408             Date 26Apr96              */
 /*                      S01194             Date 08Feb90              */
 /*                                                                  */
 /********************************************************************/
+/*       MD046248 - Finastra Rebranding                              */
 /*       128954 - Call new program LE0212 instead of LE0210 if      */
 /*                CLE004 is installed                               */
 /*       S01408 - Addition of core hooks: LEC0306001                */
@@ -32,7 +34,7 @@
 /*********************************************************************/
              PGM
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)        /*128954*/
              DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7) +
@@ -68,5 +70,5 @@
 /*********** DLTOVR     FILE(*ALL)                                   * *S01194*/
 EXIT:                                                        /*128954*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

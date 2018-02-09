@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas IR FRA database update')                         *
@@ -9,10 +9,11 @@
       *                                                               *
       *  IRFRAUPD - Forward Rate Agreements Database Update           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
-      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 01Sep14               *
       *                 MD025244           Date 09May14               *
@@ -86,6 +87,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
@@ -182,7 +184,7 @@
      FSDCWHTL1  IF   E           K DISK    INFSR(*PSSR)                                       CSD015
                                                                                               CSD015
      F/COPY WNCPYSRC,IRFRADF001
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -201,19 +203,19 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       **------------------------------------------------------------------------CAP006 -------------
       ** The following /COPY line includes the definitions for error and        CAP006
       ** warning message arrays.                                                CAP006
@@ -224,9 +226,9 @@
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
- 
+
       **  EXTERNALLY DESCRIBED DATA STRUCTURE FOR VALID FRA
      D IRVFRA        E DS                  EXTNAME(IRVFRAPD)
      D**@FRDET1***************11    715                                                       CAP084
@@ -241,7 +243,7 @@
      D  @FRDET2             1344   2062                                         CIR005
      D**@FRRCCY*************2063   2092                                  CIR005 222727
      D  @FRRCCY             2097   2126                                         222727
- 
+
       **  DEALS FILE - FORWARD RATE AGREEMENTS
      D DEALS         E DS                  EXTNAME(DEALSDG)
      D**@DLDET1***************11    715                                                       CAP084
@@ -255,7 +257,7 @@
      D**@DLDET2**           1344   2200                                  CAP013 CIR005
      D  @DLDET2             1344   2062                                         CIR005
      D  @DLRCUR             2097   2126                                         CIR005
- 
+
      D ChkDealFmt    E DS                  EXTNAME(DEALSDG)                     CAP006
       ** Rename fields for Transaction No of Last Update Processing             CAP006
      D                                     PREFIX(CH)                           CAP006
@@ -267,41 +269,41 @@
      D                 DS
      D  @XTIME                 1      6  0
      D  DXTIM                  1      4  0
- 
+
       * DATA STRUCTURES FOR USE WITH ACCESS PROGRAMS
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       * DATA STRUCTURE FOR BANK DETAILS
- 
+
      D SDTRAD        E DS                  EXTNAME(SDTRADPD)
       ** External DS for TRADE Details
- 
+
      D SDRETL        E DS                  EXTNAME(SDRETLPD)                                  200400
       ** External data structure for RETAIL details                                           200400
      D  QQACCD1      E                     EXTFLD(QQACCD)                                     CGL029
                                                                                               200400
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
       ** External DS for BRANCH Details
- 
+
      D SDBSRT        E DS                  EXTNAME(SDBSRTPD)
       ** External DS for BASE RATE Details
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ** External DS for CURRENCY Details
- 
+
      D SDBOOK        E DS                  EXTNAME(SDBOOKPD)
       ** External DS for BOOK Details
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                    CIR005
      D  WLCD         E                     EXTFLD(LCD)                          CIR005
       ** External DS for SAR Details                                            CIR005
       *                                                                         CIR005
      D DSFDY         E DS                  EXTNAME(DSFDY)
       * FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       * SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
- 
+
      D SDFAIS        E DS                  EXTNAME(SDFAISPD)                                  CIR008
       ** External data structure for FRA/IRS I.C.D. details                                   CIR008
                                                                                               CIR008
@@ -416,14 +418,14 @@
      C* MAIN - MAIN BODY                                              *
      C*                                                               *
      C*****************************************************************
- 
+
       ** If the user is connected via a browser, the job user name is the data               BUG8550
       ** source conection name - the actual user name is stored in ZMUSER                    BUG8550
      C                   IN        ZMUSER                                                    BUG8550
                                                                                              BUG8550
       * EXIT IF NOT INSERTION, AMENDMENT OR REVERSAL
       * only when CIR008 is switched off                                                      CIR008
- 
+
      C                   IF        CIR008 = 'N'                                               CIR008
      C     FRCHTP        IFNE      'I'
      C     FRCHTP        ANDNE     'A'
@@ -444,7 +446,7 @@
       ** Save the action code                                                                 CIR008
                                                                                               CIR008
      C                   EVAL      WkActn = FRCHTP                                            CIR008
- 
+
       ** Ensure transaction has not been updated by another workstation         CAP006
       ** - if so, bypass updating and return to calling program.                CAP006
      C                   EXSR      CHKOTHUPD                                    CAP006
@@ -468,38 +470,38 @@
      C                                                                                        CAP056
       * INSERT, AMEND, OR REVERSE THE DEAL
       ** or Authorise                                                                         CIR008
- 
+
      C     FRCHTP        CASEQ     'I'           FRINS
      C     FRCHTP        CASEQ     'A'           FRAMD
      C     FRCHTP        CASEQ     'R'           FRDEL
      C     FRCHTP        CASEQ     'X'           SrAuthorise                                  CIR008
      C                   END
- 
+
       * SET PAY/RECEIVE INDICATORS TO BE WRITTEN TO DTRIX
       ** when CIR008 is switched off or when reversing a deal                                 CIR008
       ** Or Authorisation/Re-authorisation flags are both 'N'                                 CIR008
                                                                                               CIR008
      C                   IF        FRCHTP <> *BLANKS                                          CIR008
- 
+
      C                   EXSR      PYRCIN
- 
+
       * WRITE A DTRIX RECORD
      C/COPY WNCPYSRC,IRFRADC001
- 
+
      C                   EXSR      WRTDTX
      C/COPY WNCPYSRC,IRFRADC002
- 
+
       * UPDATE THE DTRIX HEADER RECORD
      C/COPY WNCPYSRC,IRFRADC003
- 
+
      C                   EXSR      UPDDTH
      C/COPY WNCPYSRC,IRFRADC004
                                                                                               CIR008
      C                   ENDIF                                                                CIR008
- 
+
       ** UPDATE THE DEALS FILE TRAILER
       ** ON INSERTS AND REVERSALS
- 
+
      C     FRCHTP        IFEQ      'I'
      C     FRCHTP        OREQ      'R'
      C                   EXSR      UPDTRL
@@ -717,11 +719,11 @@
      C*                                                              *
      C****************************************************************
      C     FRINS         BEGSR
- 
+
       * SET CONFIRMATION REQUIRED INDICATOR
       * TO BE WRITTEN TO DTRIX
       ** when CIR008 is switched off                                                          CIR008
- 
+
      C                   IF        CIR008 = 'N' OR                                            CIR008
      C                             CIR008 = 'Y' AND  BQFIAU <> 'Y'                            CIR008
      C                   EXSR      CNFINS
@@ -740,30 +742,30 @@
      C                   PARM      *BLANK        FRCHTP                                       CIR008
                                                                                               CIR008
      C                   ENDIF                                                                CIR008
- 
+
       * INITIALIZE DEAL
- 
+
      C                   CLEAR                   DEALS
                                                                                              BUG8094
       ** Initialise "before" status of deal for on-line updates.                             BUG8094
      C                   MOVEL     *BLANK        Z#BSTS                                      BUG8094
      C                   Z-ADD     *ZEROS        Z#BAMT                                      BUG8094
- 
+
       * RECORD ID
- 
+
      C                   MOVEL     'D'           RECI
- 
+
       * DEAL NUMBER & RECORD TYPE
- 
+
      C                   Z-ADD     FRDLNO        DLNO
      C                   MOVE      'G'           RCDT
- 
+
       * DEAL RECORD CODE
- 
+
      C                   Z-ADD     21            RCDC
- 
+
       *  DEAL DETAILS
- 
+
      C                   MOVE      @FRDET1       @DLDET1
      C                   MOVEL     FRURACC       URACC                                        CGL029
      C                   MOVEL     FRUPACC       UPACC                                        CGL029
@@ -1017,7 +1019,7 @@
      C                   ENDIF                                                                CIR008
       *
       *  DEAL DETAILS
- 
+
      C                   MOVE      @FRDET1       @DLDET1
      C                   MOVEL     FRURACC       URACC                                        CGL029
      C                   MOVEL     FRUPACC       UPACC                                        CGL029
@@ -1305,7 +1307,7 @@
      C                   MOVEL     DEALS         Z#ASTS                                      BUG8094
      C                   Z-ADD     *ZEROS        Z#AAMT                                      BUG8094
      C                   ENDIF                                                               BUG8094
- 
+
      C                   ENDSR
      C*****************************************************************                       CIR008
       /EJECT                                                                                  CIR008
@@ -1413,7 +1415,7 @@
       *
       * Buy
      C     FRBYSL        IFEQ      'B'
- 
+
      C*****FRTFRFD       IFEQ      *ZEROS
      C*****BJLCCY        IFEQ      BLCYCD                                                      S0119
      C*****FRUCUCY       ANDEQ     BLCYCD                                                      S0119
@@ -2484,7 +2486,7 @@
       ********************************************************************      CIR005
       /COPY ZACPYSRC,PSSR_ILE                                                   CIR005
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 ** CTDATA XOT - XML Opening Tags for the Compliance Engine.                                   CSD015
 <Receipt Our Nostro>                                                                          CSD015
 <Receipt Ord Customer>                                                                        CSD015

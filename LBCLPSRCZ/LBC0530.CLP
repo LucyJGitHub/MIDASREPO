@@ -7,20 +7,22 @@
 /*                                                                   */
 /*       LBC0530 - Guarantees/Pledges signed/unsigned Report.        */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. S01498             DATE 06JUL94              */
-/*       PREV AMEND NO. R00300             DATE 28AUG90              */
+/*       Prev Amend No. S01498             Date 06Jul94              */
+/*                      R00300             Date 28Aug90              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       S01498 - Portfolio Management Upgrade to Release 10.        */
 /*                Copyright Statement and Standard Header Box.       */
 /*                Creation Parameters. Message Files.                */
@@ -36,7 +38,7 @@
              PGM PARM(&RSEQ &RLVL &RENT &RPARM)                       /*S01498*/
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&RSEQ) TYPE(*CHAR) LEN(5)                 /*S01498*/
              DCL        VAR(&RLVL) TYPE(*CHAR) LEN(1) /* RCF level +
@@ -97,5 +99,5 @@
  
  ABNOR:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

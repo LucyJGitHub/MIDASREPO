@@ -9,20 +9,22 @@
 /*                                                                   */
 /*       HFC0551  - CHECK SCAN PARMS AND AUTHORITY                   */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. 083166             DATE 17FEB95              */
-/*       PREV AMEND NO. 046094             DATE 28OCT92              */
+/*       Prev Amend No. 083166             Date 17Feb95              */
+/*                      046094             Date 28Oct92              */
 /*                      S01379             DATE 18SEP92              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       083166 - Unable to insert new scan condition as the error   */
 /*                message, 'these scan conditions belong to a        */
 /*                different user', is always displayed.              */
@@ -41,7 +43,7 @@
              PGM        PARM(&ITEM &OK &STRING)
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
              DCLF       FILE(QTEMP/JRNTEMPX)
@@ -265,5 +267,5 @@
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

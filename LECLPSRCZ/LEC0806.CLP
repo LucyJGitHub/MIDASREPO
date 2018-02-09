@@ -7,17 +7,18 @@
 /*                                                                   */
 /*       LEC0806 - CUSTOMER LENDING INTEREST ACCRUALS REPORT         */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*           1989                                                    */
 /*                                                                   */
-/*       Last Amend No. CLE134             Date 01Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CLE134             Date 01Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. 081966             Date 20Jan95              */
+/*                      081966             Date 20Jan95              */
 /*                      064219             Date 19May94              */
 /*                      E40440             DATE 05AUG92              */
 /*                      BHF798             DATE 09OCT90              */
@@ -26,6 +27,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CLE134 - Past Due Call Loan Processing (Recompile)          */
 /*       081966 - LEACXZZ & LEACXAC empty when LBC0690 runs          */
 /*       064219 - CPF error occurs when pgm tries to close file SLACX*/
@@ -45,7 +47,7 @@
 /*********** PGM                                                     * *S01117*/
              PGM PARM(&RSEQ &RLEV &RENT)                              /*S01117*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
              DCL        VAR(&RSEQ) TYPE(*CHAR) LEN(5)                 /*S01117*/
@@ -113,5 +115,5 @@
              MONMSG     MSGID(CPF0000)                                /*BHF798*/
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

@@ -7,20 +7,22 @@
 /*                                                                   */
 /*       LERC460 - Produce report/enq file - DEALING                 */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. MOF60              DATE 23MAR92              */
-/*       PREV AMEND NO.                    DATE ddmmmyy              */
+/*       Prev Amend No. MOF60              Date 23Mar92              */
+/*                                         Date DDMmmYY              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MOF60  - Customer Lending R10 enhancements                  */
 /*                                                                   */
 /*********************************************************************/
@@ -28,7 +30,7 @@
 PGM
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
      SNDPGMMSG  MSG('Produce Profitability Report/Enquiry file : Dealing') +
@@ -53,6 +55,6 @@ PGM
      ENDDO
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 ENDPGM

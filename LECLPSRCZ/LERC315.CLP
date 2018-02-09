@@ -7,22 +7,24 @@
 /*                                                                   */
 /*       LERC315 - Margin profitability extract for dummy loans      */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
 /*                                                                   */
-/*       Last Amend No. CLE134             Date 01Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CLE134             Date 01Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. E49419             Date 11Jan93              */
+/*                      E49419             Date 11Jan93              */
 /*                      BH3382             DATE 30Jul92              */
 /*                      MOF60              DATE 23MAR92              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CLE134 - Past Due Call Loan Processing                      */
 /*       E49419  -  LER315 has been re-instated for daily accruals   */
 /*                  and LER316 is now called by LERC316              */
@@ -46,7 +48,7 @@ PGM  PARM(&CNAM &CSEQ)
      DCL VAR(&SCSARD) TYPE(*CHAR) LEN(200)                                                /*CLE134*/
      DCL VAR(&CLE134) TYPE(*CHAR) LEN(1)  VALUE('N')                                      /*CLE134*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
      SNDPGMMSG  MSG('Margin Profitability Extract for Dummy Loans') +
@@ -142,6 +144,6 @@ PGM  PARM(&CNAM &CSEQ)
      ENDDO
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 ENDPGM

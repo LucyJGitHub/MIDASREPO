@@ -8,10 +8,11 @@
 /********LEC0606*-*COMMITMENT*FEE*&*FACILITIES*UPDATE*PHASE*ONE*******/
 /*       LEC0606A - FACILITIES UPDATE                                */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD033997           Date 11May15              */
-/*       Prev Amend No. AR1061928          Date 30Nov12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD033997           Date 11May15              */
+/*                      AR1061928          Date 30Nov12              */
 /*                      AR1055539          Date 12Nov12              */
 /*                      CLE134             Date 01Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
@@ -31,6 +32,7 @@
 /*                      S01194                  DATE  08FEB90       */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD033997 - Move process of facility expiry on 2nd COB.     */
 /*       AR1061928 - LEC06 on MSGW during clean COB                 */
 /*       AR1055539 - Various errors encountered in COB during       */
@@ -59,7 +61,7 @@
 /**********  PGM                                                                          /*CLE134*/
              PGM        PARM(&RERUN)                                                      /*CLE134*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
              DCL        VAR(&MSG) TYPE(*CHAR) LEN(132) +
@@ -162,6 +164,6 @@
 /************ENDDO***************************************************/ /* CPF */
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /**********  ENDPGM     */                                                                /*CLE134*/
 ENDPGM:      ENDPGM                                                                       /*CLE134*/

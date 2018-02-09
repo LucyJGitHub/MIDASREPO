@@ -7,21 +7,23 @@
 /*                                                                   */
 /*       LERC04  - Reorganise and archive of facility history        */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
 /*                                                                   */
-/*       Last Amend No. CLE075AA           Date 06Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CLE075AA           Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
-/*       Prev Amend No. 240409             Date 19Jun06              */
+/*                      240409             Date 19Jun06              */
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      Xnnnnn             Date ddmmmyy              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CLE075AA - COB Restructure - LE COB Optimisation Phase 1    */
 /*       240409 - Fee History records are not purged. Apply 193112:- */
 /*       193112 - Drop lending fee history records if associated loan*/
@@ -33,7 +35,7 @@
 PGM
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)                                  /*CLE075AA*/
              DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)                                  /*CLE075AA*/
@@ -136,6 +138,6 @@ PGM
 /****ENDDO                                                                           */ /*CLE075AA*/
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 ENDPGM

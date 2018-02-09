@@ -1,6 +1,6 @@
      H DEBUG
      H DFTACTGRP(*NO)
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas LE PDP New Available Balance Computation')
@@ -10,14 +10,16 @@
       *                                                               *
       *  LE000495 - Midas LE PDP Available Balance Computation        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD039450           Date 04Aug16               *
-      *  Prev Amend No. MD031723 *REWRITE  Date 09Jan15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD039450           Date 04Aug16               *
+      *                 MD031723 *REWRITE  Date 09Jan15               *
       *                 CLE164 *CREATE     Date 18Aug14               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD039450 - Improve COB component LEC000495 performance       *
       *             Added 1 column to prevent SQL0030                 *
       *  MD031723 - LEC000495 Failed during COB due to conflict       *
@@ -26,14 +28,14 @@
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
       *                                                               *
       *****************************************************************
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in
       ** the Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** +--------------------------------------+
       ** ¦ Program Prototypes                   ¦
       ** ¦ ==================                   ¦
@@ -42,37 +44,37 @@
      D  ArraySize                     8s 0 const options(*nopass)
      D Main            pi
      D  ArraySize                     8s 0 const options(*nopass)
- 
+
      D  bSearch        pr              *   extproc('bsearch')
      D    searchFor                    *   value
      D    dataStart                    *   value
      D    elemCount                  10u 0 value
      D    elemSize                   10u 0 value
      D    compareFunc                  *   ProcPtr value
- 
+
      D  qSort          pr                  extproc('qsort')
      D    dataStart                    *   value
      D    elemCount                  10u 0 value
      D    elemSize                   10u 0 value
      D    compareFunc                  *   procptr value
- 
+
      D  SortFunc       pr            10i 0
      D   Candidate1                        likeds(CombineFile)
      D   Candidate2                        likeds(CombineFile)
- 
+
      D  searchForName  pr            10i 0
      D   searchName                  24a
      D   Candidate                         likeds(SortedDS)
- 
+
      D  pSeqProcedure  S               *   procptr
      D                                     inz(%Paddr(SortFunc))
- 
+
      D  pSearchForNam  S               *   procptr
      D                                     inz(%Paddr(SearchForName))
- 
+
      D  getOrder       pr             6a
      D    SortOder                    1a
- 
+
      D  GetBalance     pr                  extpgm('LE000476')
      D    pReturnCd                   1a
      D    pCustCode                   6a
@@ -90,7 +92,7 @@
      D    pBlockDebit                 1a
      D    pCAP205                     1a
      D    pABCFlag                    1a
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
@@ -116,7 +118,7 @@
      D                                     dim(1000)
      D CustSaveDS      ds                  likeds(CombineFile)
      D                                     dim(1000)
- 
+
       ** +--------------------------------------+
       ** ¦ Constants declaration                ¦
       ** ¦ =====================                ¦
@@ -137,7 +139,7 @@
      D START           c                   const(1)
      D TABLE_CREATED   c                   const(7905)
      D TABLE_IS_OPEN   c                   const(-501)
- 
+
       ** +--------------------------------------+
       ** ¦ Variable declaration                 ¦
       ** ¦ ====================                 ¦
@@ -148,7 +150,7 @@
      D wIndex          s              2s 0 inz(0)
      D wIdxPrvBal      s              8s 0 inz(0)
      D SEARCH_START    s              8s 0 inz(0)
- 
+
      D wReturnCd       s              1a
      D wClearBal       s             15p 0
      D wavailBal       s             15p 0
@@ -161,7 +163,7 @@
      D wBlockDebit     s              1a
      D wCAP205         s              1a
      D wABCFlag        s              1a
- 
+
      D sortSequence    s           2000a   inz(*blanks)
      D wSqlStr         s           2000a   inz(*blanks)
      D wNameStr        s           2000a   inz(*blanks)
@@ -171,11 +173,11 @@
      D wSEAAMT         s             10a   inz(*blanks)
      D wSEIPFL         s             10a   inz(*blanks)
      D wSQLTable       s             10a   inz(*blanks)
- 
+
      D isFound         s               n
      D wLibrary        s             10a   inz(*blanks)
      D SearchArgument  s             24a   inz(*blanks)
- 
+
      D wOverdraftAmt   s             15p 0 inz(*zeros)
      D wOverdraftBal   s             15p 0 inz(*zeros)
      D wAvailBalance   s             15p 0 inz(*zeros)
@@ -184,7 +186,7 @@
      D MAX_ARRAY       s              8s 0 inz(30000)
      D  MessageID      S              7A   INZ(*BLANKS)
      D  CommandStr     S            200A   INZ(*BLANKS)
- 
+
       ** +--------------------------------------+
       ** ¦ Array declaration                    ¦
       ** ¦ ==================                   ¦
@@ -193,19 +195,19 @@
      D aValName        s           2000a   dim(35)
      D aFilName        s             10a   dim(7)
      D aTblName        s             10a   dim(4)
- 
+
       /free
- 
+
        // ** +--- Start of Main processing -----------------------------------+
        // ** ¦                                                                ¦
        // ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
        // ** ¦ executed at program activation.                                ¦
        // ** ¦                                                                ¦
        // ** +----------------------------------------------------------------+
- 
+
        // Set compile options for this program, Commit = *Chg is specified to
        // ensure that commit/rollback processing would be peformed
- 
+
                    exec sql
                       set option
                          Naming    = *Sys,
@@ -214,9 +216,9 @@
                          DynUsrPrf = *Owner,
                          Datfmt    = *iso,
                          CloSqlCsr = *EndMod;
- 
+
        // Initialise array of extract files
- 
+
                    aFilName(1) = 'LEPK1DPD';
                    aFilName(2) = 'LEPK2DPD';
                    aFilName(3) = 'LEPK3DPD';
@@ -224,51 +226,51 @@
                    aFilName(5) = 'LEACCFPD';
                    aFilName(6) = 'LEREMRPD';
                    aFilName(7) = 'LELEGDPD';
- 
+
        // If parameter to this program is passed, set maximum array
        // element to current parameter passed, otherwise default this
        // to 1000 elements
- 
+
                    if %Parms() <> 0;
                       MAX_ARRAY = ArraySize;
                    else;
                       MAX_ARRAY = 1000;
                    endif;
- 
+
                    exsr prepareAdjTable;
- 
+
                    exsr clearExtractTables;
- 
+
                    exsr resetIdentityColumn;
- 
+
                    exsr determineRepaymentSequence;
- 
+
        // Loop through all extract tables and combine them to a single one
        // called LETMPLTD
- 
+
                    for i = START to MAX_TABLE;
                       exsr combineExtractTable;
                    endFor;
- 
+
                    exsr processCustomerBalances;
- 
+
                    exsr processAvailableBalance;
- 
+
        // Loop through all extract tables and extract available
        // amount column from LEXTRCTD, this will be use to update
        // the individual extract tables, which is later referred
        // to by other PDP components such as LEC000131, LEC000138 and
        // LEC000456
- 
+
                    for i = START to MAX_TABLE;
                       exsr distributeAvailableBalance;
                    endFor;
- 
+
        // Ensure that an SQL COMMIT statement is executed so that
        // the changes will be commited to affected tables
- 
+
                    exsr  commitTransaction;
- 
+
                    *Inlr = *On;
                    return;
        //*************************************************************
@@ -281,35 +283,35 @@
        // Calls: srCommand                                           *
        //                                                            *
        //*************************************************************
- 
+
        begsr prepareAdjTable;
- 
+
                    CommandStr =  'CLRPFM FILE(GLACPMPD)';
                    exsr SrCommand;
- 
+
                    CommandStr =  'CLRPFM FILE(GLACRMPD)';
                    exsr SrCommand;
- 
+
                    CommandStr =  'CPYF FROMFILE(ACPO1) ' +
                                  ' TOFILE(GLACPMPD) ' +
                                  ' MBROPT(*REPLACE) ' +
                                  ' RCDFMT(APOSTPDF) ';
                    exsr SrCommand;
- 
+
                    CommandStr =  'CPYF FROMFILE(GLACPOL0) ' +
                                  ' TOFILE(GLACPMPD) ' +
                                  ' MBROPT(*ADD) ' +
                                  ' RCDFMT(APOSTPDF) ';
                    exsr SrCommand;
- 
+
                    CommandStr =  'CPYF FROMFILE(ACPO1) ' +
                                  ' TOFILE(GLACRMPD) ' +
                                  ' MBROPT(*ADD) ' +
                                  ' RCDFMT(APOSTRAF) ';
                    exsr SrCommand;
- 
+
        endsr;
- 
+
        //*************************************************************
        //                                                            *
        // clearExtractTables - This function will process all        *
@@ -321,20 +323,20 @@
        // Calls: clearTable                                          *
        //                                                            *
        //*************************************************************
- 
+
        begsr clearExtractTables;
- 
+
                    aTblName(1) = 'LETMPLTD';
                    aTblName(2) = 'LETBL1TD';
                    aTblName(3) = 'LEXTRCTD';
- 
+
                    for i = START to MAX_EXTR;
                       wSQLTable = %Trim(aTblName(i));
                       exsr clearTable;
                    endfor;
                    Commit;
        endsr;
- 
+
        //*************************************************************
        /EJECT
        //*************************************************************
@@ -347,13 +349,13 @@
        // Calls: None                                                *
        //                                                            *
        //*************************************************************
- 
+
        begsr clearTable;
- 
+
                    wSqlStr = 'delete from ' + wSQLTable;
                    exec sql
                    execute immediate :wSqlStr;
- 
+
                    if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
                       dBase    = 001;
                       dBfile   = wSQlTable;
@@ -361,9 +363,9 @@
                       dBpgm    = 'LE000495';
                       exsr *pssr;
                    endif;
- 
+
        endsr;
- 
+
        //*************************************************************
        /EJECT
        //*************************************************************
@@ -377,14 +379,14 @@
        // Calls: None                                                *
        //                                                            *
        //*************************************************************
- 
+
        begsr resetIdentityColumn;
- 
+
                    wSqlStr = 'alter table LETMPLTD ' +
                              'alter column SEUNIQ restart with 1';
                    exec sql
                    execute immediate :wSqlStr;
- 
+
                    if sqlCod <> NO_ERROR;
                       dBase    = 002;
                       dBFile   = 'LETMPLTD';
@@ -392,9 +394,9 @@
                       dBpgm    = 'LE000495';
                       exsr *pssr;
                    endif;
- 
+
        endsr;
- 
+
        //*************************************************************
        /EJECT
        //*************************************************************
@@ -410,23 +412,23 @@
        // Calls: None                                                *
        //                                                            *
        //*************************************************************
- 
+
        begsr determineRepaymentSequence;
- 
+
                    wSQLStr = 'select * from SDRPKYTD ' +
                              'where RPKPOS <> 0 ' +
                              'order by RPKPOS';
- 
+
                    exec sql prepare P1 from :wSQLStr;
                    exec sql declare P1 cursor for P1;
                    exec sql open P1;
                    exec sql fetch next From P1 into :RepaymentKey;
- 
+
                    if sqlCod = TABLE_IS_OPEN;
                       exec sql open P1;
                       exec sql fetch next From P1 into :RepaymentKey;
                    endif;
- 
+
                    if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
                       dBkey = *Blanks;
                       dBfile = 'SDRPKYTD';
@@ -434,12 +436,12 @@
                       dBpgm  = 'LE000495';
                       exsr *pssr;
                    endif;
- 
+
                    dow sqlCod = NO_ERROR;
- 
+
                       exsr buildSortSequence;
                       exec sql fetch next from P1 into :RepaymentKey;
- 
+
                       if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
                          dBkey = *Blanks;
                          dBfile = 'SDRPKYTD';
@@ -447,16 +449,16 @@
                          dBpgm  = 'LE000495';
                          exsr *pssr;
                       endif;
- 
+
                    enddo;
- 
+
                    sortSequence = %Subst(%Trim(sortSequence):1:
                                   %Len(%Trim(sortSequence))-1);
- 
+
                    exec sql close P1;
- 
+
        endsr;
- 
+
        //*************************************************************
        /EJECT
        //*************************************************************
@@ -469,9 +471,9 @@
        // Calls: getOrder()                                          *
        //                                                            *
        //*************************************************************
- 
+
        begsr buildSortSequence;
- 
+
                    select;
                       when %Trim(RPKEYF) = 'RepaymentPR';
                          sortSequence = %TRIM(SortSequence) + 'SEREPR ' +
@@ -502,7 +504,7 @@
                                         getOrder(RPKORD);
                    endsl;
        endsr;
- 
+
        //*************************************************************
        /EJECT
        //*************************************************************
@@ -516,11 +518,11 @@
        // Calls: None                                                *
        //                                                            *
        //*************************************************************
- 
+
        begsr combineExtractTable;
- 
+
        // Initialise array of column names to be included in select
- 
+
                    aColName( 1) = 'SEFILE';
                    aColName( 2) = 'SETRID';
                    aColName( 3) = 'SEBRCA';
@@ -555,9 +557,9 @@
                    aColName(32) = 'SEKEYF';
                    aColName(33) = 'SEIND1';
                    aColName(34) = 'SEIND2';
- 
+
        // Initialise array of column names to be included in select
- 
+
                    aValName( 1) = '*SAME';
                    aValName( 2) = '*SAME';
                    aValName( 3) = '*SAME';
@@ -573,14 +575,14 @@
                    aValName(13) = '*BLANKS';
                    aValName(15) = '*ZEROS';
                    aValName(14) = '*SAME';
- 
+
                    select;
                       when aFilName(i) = 'LEPK1DPD';
                            aValName( 9) = 'LNNO';
                            aValName(13) = 'substr(AKEY,1,10)';
                            aValName(14) = 'EDAT';
                            aValName(15) = 'REVI';
- 
+
                       when aFilName(i) = 'LEPK2DPD' Or
                            aFilName(i) = 'LEPK3DPD';
                            aValName( 8) = 'LKCNU2';
@@ -605,7 +607,7 @@
                            aFilName(i) = 'LELEGDPD';
                            aValName(14) = 'VDAT';
                    endSl;
- 
+
                    aValName(16) = '*SAME';
                    aValName(17) = '*SAME';
                    aValName(18) = '*SAME';
@@ -628,9 +630,9 @@
                                   'sebrca';
                    aValName(33) = '*ZEROS';
                    aValName(34) = '*ZEROS';
- 
+
        // Initialise Column Names String
- 
+
                    for wIndex = START to MAX_COLS;
                       if wIndex = 1;
                          wNameStr = '(';
@@ -642,9 +644,9 @@
                          wNameStr = %Trim(wNameStr) + ') ';
                       endif;
                    endfor;
- 
+
        // Initialise Column Values String
- 
+
                    wValueStr = '';
                    for wIndex = START to MAX_COLS;
                       select;
@@ -663,9 +665,9 @@
                             wValueStr = %Trim(wValueStr) + ', ';
                       endif;
                    endFor;
- 
+
        // Execute INSERT SQL for each of the extract file in the array
- 
+
                    wSqlStr = 'insert into LETMPLTD ' +
                              %Trim(wNameStr) +
                              ' select ' + %Trim(wValueStr) +
@@ -680,16 +682,16 @@
                              ' seacsq <> 0 ' +
                              ' and ' +
                              ' sebrca <> ' + QUO + ' ' + QUO;
- 
+
                    if aFilName(i) = 'LEPK1DPD';
                       wSqlStr = %Trim(wSqlStr) +
                                 ' and (REVI = 0 and EAMT > 0) ' +
                                 ' or  (REVI = 1 and EAMT < 0) ';
                    endif;
- 
+
                    exec sql
                    execute immediate :wSqlStr;
- 
+
                    if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
                       dBase    = 005;
                       dBfile   = 'LETMPLTD';
@@ -697,9 +699,9 @@
                       dBPgm    = 'LE000495';
                       exsr *pssr;
                    endif;
- 
+
        endsr;
- 
+
        //*************************************************************
        /EJECT
        //*************************************************************
@@ -715,11 +717,11 @@
        // Calls: None                                                *
        //                                                            *
        //*************************************************************
- 
+
        begsr processCustomerBalances;
- 
+
                    wStr1   = 'SECNUM, SEACCY, SEACOD, SEACSQ, SEBRCA,';
- 
+
                    wSQLStr = 'select * from ' +
                              '(select LETMPLTD.*, ROW_NUMBER() over ' +
                              '(partition by SECNUM, SEACCY, SEACOD, ' +
@@ -728,13 +730,13 @@
                              %Trim(SortSequence) +
                              ') as RecNo from LETMPLTD) as ' +
                              'Tbl where RecNo = 1';
- 
+
                    exec sql prepare P2 from :wSQLStr;
                    exec sql declare P2 cursor for P2;
                    exec sql open P2;
                    exec sql fetch next from P2 for :MAX_ARRAY
                    rows into :CustomerDS;
- 
+
                    if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
                       dBkey = *Blanks;
                       dBFile = 'LETBL1TD';
@@ -742,15 +744,15 @@
                       dBPgm  = 'LE000495';
                       exsr *pssr;
                    endif;
- 
+
                    dow sqlCod = NO_ERROR;
- 
+
                       wRowsReturned = SqlErrd(3);
                       exsr updateCurrentBalance;
- 
+
                       exec sql fetch next from P2 for :MAX_ARRAY
                       rows into :CustomerDS;
- 
+
                       if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
                          dBkey = *Blanks;
                          dBfile = 'LETBL1TD';
@@ -758,10 +760,10 @@
                          dBpgm  = 'LE000495';
                          exsr *pssr;
                       endif;
- 
+
                    enddo;
                    exec sql close P2;
- 
+
                    wSqlStr = 'update LETMPLTD A set (A.SEAAMT, ' +
                              'A.SEOAMT,A.SEAVFL, A.SEIPFL, SEACNO,'+
                              'A.SERAMT, A.SECLBL, A.SECOLL,' +
@@ -776,7 +778,7 @@
                              'A.SEUNIQ = C.SEUNIQ)';
                    exec sql
                    execute immediate :wSqlStr;
- 
+
                    if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
                       dBase    = 008;
                       dBfile   = 'LETMPLTD';
@@ -785,7 +787,7 @@
                       exsr *pssr;
                    endif;
        endsr;
- 
+
        //*************************************************************
        /EJECT
        //*************************************************************
@@ -799,14 +801,14 @@
        // Calls: GetBalance()                                        *
        //                                                            *
        //*************************************************************
- 
+
        begsr updateCurrentBalance;
- 
+
        // Process all settlement account records loaded in a paged
        // array by calling GetBalance API to retrieve Available Amount,
        // Cleared Balances and Adjustments, Held Items, Overdraft
        // amount and Blocked Collateral
- 
+
                    for i = START to wRowsReturned;
                       wReturnCd = *Blanks;
                       wClrAdjBal= 0;
@@ -848,22 +850,22 @@
                          CustomerDS(i).SERETB = wBlockDebit;
                          CustomerDS(i).SEC205 = wCAP205;
                          CustomerDS(i).SEABCF = wABCFlag;
- 
+
        // Set current balance to Available amount as retrieved from
        // current settlement account. Overdraft amount is added if
        // overdraft flag of transaction is set to 'Y'
- 
+
                          CurBalance = CustomerDS(i).SEAAMT;
                          CustomerDS(i).SEAVOD = CustomerDS(i).SEAAMT +
                                                     CustomerDS(i).SEOAMT;
                          if CustomerDS(i).SEOVFL = 'Y';
                             CurBalance += CustomerDS(i).SEOAMT;
                          endif;
- 
+
        // If current available balance is greater than or equal to
        // event amount set amount repaid to event amount otherwise
        // set this to current available balance
- 
+
                          if CurBalance >= 0;
                             CustomerDS(i).SERAMT = 0;
                          else;
@@ -876,22 +878,22 @@
                                   CurBalance * -1;
                             endif;
                          endif;
- 
+
                          CustomerDS(i).SEIPFL = 'Y';
                          CustomerDS(i).SEAVFL = 'Y';
                       endif;
- 
+
                    endfor;
- 
+
        // Insert one page of data to temporary combined extract table
        // LETBL1TD, a page is defined as the number of array defined
        // in MAX_ARRAY variable which is initially set to 500
- 
+
                    CustSaveDS = %Subarr(CustomerDS:1);
                    exec sql insert into LETBL1TD
                         :wRowsReturned rows
                         values (:CustSaveDS);
- 
+
                    if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
                       dBase    = 010;
                       dBfile   = 'LETBL1TD';
@@ -899,7 +901,7 @@
                       dBpgm    = 'LE000495';
                       exsr *pssr;
                    endif;
- 
+
        endsr;
        //*************************************************************
        /EJECT
@@ -914,12 +916,12 @@
        // Calls: updateAvailableBalance                              *
        //                                                            *
        //*************************************************************
- 
+
        begsr processAvailableBalance;
- 
+
        // Process all records from combined extract file sorted by
        // repayment sequence as defined in SRPKYTD
- 
+
                    wSQLStr= 'select * from LETMPLTD order by ' +
                             %Trim(SortSequence);
                    exec sql prepare P3 from :wSQLStr;
@@ -927,7 +929,7 @@
                    exec sql open P3;
                    exec sql fetch next from P3 for :MAX_ARRAY
                    rows into :TransactDS;
- 
+
                    if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
                       dBkey = *Blanks;
                       dBfile = 'LETMPLTD';
@@ -935,19 +937,19 @@
                       dBpgm  = 'LE000495';
                       exsr *pssr;
                    endif;
- 
+
                    dow sqlCod = NO_ERROR;
- 
+
                       wRowsReturned = SqlErrd(3);
- 
+
                       for i = START to wRowsReturned;
                           TransactDS(i).C_SEIND1    = i;
                       endfor;
- 
+
                       exsr updateAvailableBalance;
                       exec sql fetch next from P3 for :MAX_ARRAY
                       rows into :TransactDS;
- 
+
                       if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
                          dBkey = *Blanks;
                          dBfile = 'LEXTRCTD';
@@ -955,12 +957,12 @@
                          dBpgm  = 'LE000495';
                          exsr *pssr;
                       endif;
- 
+
                    enddo;
- 
+
                    exec sql close P3;
        endsr;
- 
+
        //*************************************************************
        /EJECT
        //*************************************************************
@@ -974,42 +976,42 @@
        // Calls: qSORT API; bSEARCH API                              *
        //                                                            *
        //*************************************************************
- 
+
        begsr updateAvailableBalance;
- 
+
        // Create a new DS array which is sorted by customer, this will
        // be initialised to Transact DS array
- 
+
                    sortedDS = %Subarr(TransactDS:1);
- 
+
        // Call QSORT API to sort the array elements since
        // BSEARCH API will work only in sorted arrays
- 
+
                    qSort(%Addr(SortedDS)
                          :wRowsReturned
                          :%Size(SortedDS)
                          :pSeqProcedure);
- 
+
                    for i = START to wRowsReturned;
                        sortedDS(i).C_SEIND2 = i;
                    endfor;
- 
+
        // Populate TransactDS.SEIND2
- 
+
                    for i = START to wRowsReturned;
                       transactDS(sortedDS(i).C_SEIND1).C_SEIND2 =
                       sortedDS(i).C_SEIND2;
                    endfor;
- 
+
                    for i = START to wRowsReturned;
                       searchArgument = transactDS(i).C_SEKEYF;
                       if transactDS(i).C_SEAVFL <> 'Y';
- 
+
        // Search for the item using Binary Search algorithm, as
        // comparison with linear search %Lookup, using 1000 elements
        // Linear Search: 500.5 comparison Binary Search: 10.976 comparison
        // which makes bSearch ideal when processing time is crucial
- 
+
                          pResult =
                          bSearch(
                                       %Addr(SearchArgument)
@@ -1021,9 +1023,9 @@
                          if pResult <> *null;
                             isFound = *Off;
                             SEARCH_START = Result.C_SEIND2;
- 
+
        // Search starts at the middle to end of array
- 
+
                             for j = SEARCH_START to wRowsReturned;
                                if SearchArgument =
                                   sortedDS(j).C_SEKEYF;
@@ -1037,9 +1039,9 @@
                                   j = wRowsReturned;
                                endif;
                             endfor;
- 
+
        // Search starts at the middle to beginning of array
- 
+
                             if isFound = *Off;
                                for j = SEARCH_START downto 1;
                                   if searchArgument =
@@ -1055,11 +1057,11 @@
                                   endif;
                                endfor;
                             endif;
- 
+
             // If current settlement account is found in array,
             // retrieve account balances details on this array
             // otherwise retrieve this from LEXTRCTD table
- 
+
                             if  isFound;
                                exsr retrieveFromArray;
                             else;
@@ -1069,14 +1071,14 @@
                          endif;
                       endif;
                    endFor;
- 
+
             // Issue an SQL INSERt statement to insert page full of
             // information to LEXTRCTD
- 
+
                    exec sql insert into LEXTRCTD
                         :wRowsReturned rows
                         values (:transactDS);
- 
+
                    if sqlCod <> NO_ERROR and sqlCod <> NO_ERROR;
                       dBase    = 013;
                       dBfile   = 'LEXTRCTD';
@@ -1084,9 +1086,9 @@
                       dBPgm    = 'LE000495';
                       exsr *pssr;
                   endif;
- 
+
        endsr;
- 
+
        //*************************************************************
        /EJECT
        //*************************************************************
@@ -1098,36 +1100,36 @@
        // Calls: None                                                *
        //                                                            *
        //*************************************************************
- 
+
        begsr retrieveFromArray;
- 
+
        // Current Available Balance is set from previous Available
        // Amount without Overdraft + previous Amount Repaid
- 
+
                    wAvailBalance =
                       sortedDS(wIdxPrvBal).C_SEAAMT +
                          sortedDS(wIdxPrvBal).C_SERAMT;
- 
+
        // Current Available Amount with Ovderdraft is set to Previous
        // Available Amount with Overdraft + previous Amount Repaid
- 
+
                    wOverdraftAmt =
                       sortedDS(wIdxPrvBal).C_SEAVOD +
                             sortedDS(wIdxPrvBal).C_SERAMT;
- 
+
        // Set Current Balance to Computed Available Amount without
        // Overdraft. If current transaction Overdraft Flag is 'Y'
        // set this to Available Amount with Overdraft
- 
+
                    CurBalance = wAvailBalance * -1;
                    if transactDS(i).C_SEOVFL = 'Y';
                       CurBalance = wOverdraftAmt * -1;
                    endif;
- 
+
        // If current available balance is greater than or equal to
        // event amount set amount repaid to event amount otherwise
        // set this to current available balance
- 
+
                    if CurBalance >= 0;
                       transactDS(i).C_SERAMT = transactDS(i).C_SEEAMT;
                       sortedDS(TransactDS(i).C_SEIND2).C_SERAMT =
@@ -1138,7 +1140,7 @@
                             CurBalance;
                       endif;
                    endif;
- 
+
                    sortedDS(wIdxPrvBal).C_SEAVFL = ' ';
                    transactDS(i).C_SEAAMT = wAvailBalance;
                    transactDS(i).C_SEAVOD = wOverdraftAmt;
@@ -1146,7 +1148,7 @@
                    transactDS(i).C_SERETB = sortedDS(wIdxPrvBal).C_SERETB;
                    transactDS(i).C_SEACNO = sortedDS(wIdxPrvBal).C_SEACNO;
                    transactDS(i).C_SEC205 = sortedDS(wIdxPrvBal).C_SEC205;
- 
+
                    sortedDS(TransactDS(i).C_SEIND2).C_SEAVFL =
                        'Y';
                    sortedDS(TransactDS(i).C_SEIND2).C_SEAAMT =
@@ -1159,9 +1161,9 @@
                    sortedDS(wIdxPrvBal).C_SEACNO;
                    sortedDS(TransactDS(i).C_SEIND2).C_SEC205 =
                    sortedDS(wIdxPrvBal).C_SEC205;
- 
+
        endsr;
- 
+
        //*************************************************************
        /EJECT
        //*************************************************************
@@ -1174,9 +1176,9 @@
        // Calls: None                                                *
        //                                                            *
        //*************************************************************
- 
+
        begsr retrieveFromTable;
- 
+
                    wSQLStr = 'select *  from (select LEXTRCTD.*,'+
                              'row_number() over (partition by ' +
                              'SEKEYF order by SEKEYF) as RecNo ' +
@@ -1190,7 +1192,7 @@
                    exec sql declare P4 cursor for P4;
                    exec sql open P4;
                    exec sql fetch P4 into :AvailableBal;
- 
+
                    if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD
                       and sqlCod <> IGNORE_ERROR;
                       dbKey = *Blanks;
@@ -1199,30 +1201,30 @@
                       dbPgm  = 'LE000495';
                       out Lda;
                    endif;
- 
+
        // Current Available Balance is set from previous Available
        // Amount without Overdraft + previous Amount Repaid
- 
+
                    wAvailBalance = B_SEAAMT + B_SERAMT;
- 
+
        // Current Available Amount with Ovderdraft is set to Previous
        // Available Amount with Overdraft + previous Amount Repaid
- 
+
                    wOverdraftAmt = B_SEAVOD + B_SERAMT;
- 
+
        // Set Current Balance to Computed Available Amount without
        // Overdraft. If current transaction Overdraft Flag is 'Y'
        // set this to Available Amount with Overdraft
- 
+
                    CurBalance = wAvailBalance * -1;
                    if transactDS(i).C_SEOVFL = 'Y';
                       CurBalance = wOverdraftAmt * -1;
                    endif;
- 
+
        // If current available balance is greater than or equal to
        // event amount set amount repaid to event amount otherwise set
        // this to current available balance
- 
+
                    if CurBalance >= 0;
                       transactDS(i).C_SERAMT = transactDS(i).C_SEEAMT;
                       sortedDS(TransactDS(i).C_SEIND2).C_SERAMT =
@@ -1233,14 +1235,14 @@
                          CurBalance;
                       endif;
                    endif;
- 
+
                    transactDS(i).C_SEAVOD = wOverdraftAmt;
                    transactDS(i).C_SEAAMT = wAvailBalance;
                    transactDS(i).C_SEAVFL = 'Y';
                    transactDS(i).C_SERETB = B_SERETB;
                    transactDS(i).C_SEACNO = B_SEACNO;
                    transactDS(i).C_SEC205 = B_SEC205;
- 
+
                    sortedDS(TransactDS(i).C_SEIND2).C_SEAVFL =
                        'Y';
                    sortedDS(TransactDS(i).C_SEIND2).C_SEAAMT =
@@ -1253,9 +1255,9 @@
                    B_SEACNO;
                    sortedDS(TransactDS(i).C_SEIND2).C_SEC205 =
                    B_SEC205;
- 
+
                    exec sql close P4;
- 
+
        endsr;
        //*************************************************************
        /EJECT
@@ -1270,11 +1272,11 @@
        // Calls: None                                                *
        //                                                            *
        //*************************************************************
- 
+
        begsr distributeAvailableBalance;
- 
+
                    wSEFILE = %Trim(aFilName(i));
- 
+
                    select;
                       when wSEFILE = 'LEPK1DPD';
                          wSEAAMT = 'AAMT';
@@ -1287,7 +1289,7 @@
                          wSEAAMT = 'SEAAMT';
                          wSEIPFL = 'SEIPFL';
                    endsl;
- 
+
                    wStr1 = 'case when SERETB <> ' + QUO + 'Y' + QUO +
                            ' then case when SEOVFL = ' + QUO + 'Y' + QUO +
                            ' then SEAVOD else SEAAMT end else 0 end';
@@ -1304,7 +1306,7 @@
                              ' = C.SEFILE)';
                    exec sql
                    execute immediate :wSqlStr;
- 
+
                    if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;
                       dBase    = 015;
                       dBfile   = wSEFILE;
@@ -1312,7 +1314,7 @@
                       dBpgm    = 'LE000495';
                       exsr *pssr;
                    endif;
- 
+
        endsr;
        //*************************************************************
        /EJECT
@@ -1326,13 +1328,13 @@
        // Calls: None                                                *
        //                                                            *
        //*************************************************************
- 
+
        begsr rollBackTransaction;
                    wSqlStr = 'rollback';
                    exec sql
                    execute immediate :wSqlStr;
        endsr;
- 
+
        //*************************************************************
        /EJECT
        //*************************************************************
@@ -1345,13 +1347,13 @@
        // Calls: None                                                *
        //                                                            *
        //*************************************************************
- 
+
        begsr commitTransaction;
                    wSqlStr = 'commit';
                    exec sql
                    execute immediate :wSqlStr;
        endsr;
- 
+
        //*************************************************************
        /EJECT
        //*************************************************************
@@ -1363,12 +1365,12 @@
        //  Calls: None                                               *
        //                                                            *
        //*************************************************************
- 
+
        begsr *inzsr;
                    In Sdstat;
                    wLibrary = LIBR + 'DMLIB';
        endsr;
- 
+
        //*************************************************************
        /EJECT
        //*************************************************************
@@ -1378,7 +1380,7 @@
        //   Called By: Main Processing                               *
        //                                                            *
        //*************************************************************
- 
+
        begsr *pssr;
                    *inu7 = *on;
                    *inu8 = *on;
@@ -1389,9 +1391,9 @@
                    exsr  rollBackTransaction;
                    return;
        endsr;
- 
+
       /end-free
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1414,7 +1416,7 @@
      C                             PSExcpNo
      C                   ENDIF
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1423,7 +1425,7 @@
       *             be returned                                       *
       *                                                               *
       *****************************************************************
- 
+
      P getOrder        B
      D getOrder        PI             6A
      D   SortOrder                    1A
@@ -1438,7 +1440,7 @@
      C                   EVAL      RetVal  = %TRIM(RetVal) + ', '
      C                   RETURN    RetVal
      P   getOrder      E
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1446,7 +1448,7 @@
       *  SortFunc - Sort function called by QSORT                     *
       *                                                               *
       *****************************************************************
- 
+
      P SortFunc        B
      D SortFunc        PI            10I 0
      D   Candidate1                        LIKEDS(CombineFile)
@@ -1460,7 +1462,7 @@
      C                   ENDIF
      C
      P SortFunc        E
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1468,7 +1470,7 @@
       *  SeachForName - Search function called by BSEARCH             *
       *                                                               *
       *****************************************************************
- 
+
      P searchForName   B
      D searchForName   PI            10I 0
      D   searchName                  24A
@@ -1482,5 +1484,5 @@
      C                   ENDIF
      C
      P searchForName   E
- 
- 
+
+

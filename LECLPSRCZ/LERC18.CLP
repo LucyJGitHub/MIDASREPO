@@ -7,19 +7,21 @@
 /*                                                                   */
 /*       LERC18  - Fee Accruals report                               */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. BH3518             DATE 18SEP92              */
-/*       PREV AMEND NO. BH3504             DATE 27AUG92              */
+/*       PREV AMEND NO. BH3518             DATE 18SEP92              */
+/*                      BH3504             DATE 27AUG92              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BH3518  -  Make report run monthly, and on request          */
 /*       BH3504  -  Fee accruals report added to system              */
 /*                                                                   */
@@ -31,7 +33,7 @@
              DCL        VAR(&LVL) TYPE(*CHAR) LEN(1)                  /*BH3518*/
              DCL        VAR(&RENT) TYPE(*CHAR) LEN(3)                 /*BH3518*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
              SNDPGMMSG  MSG('Fee Accruals Report') TOMSGQ(MRUNQ)
@@ -45,6 +47,6 @@
      ENDDO
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 ENDPGM

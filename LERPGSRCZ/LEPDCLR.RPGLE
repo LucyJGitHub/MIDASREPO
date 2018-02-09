@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+     H COPYRIGHT('(c) Finastra International Limited 2012')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas LE PDCL Conversion - Retrieve')                  *
@@ -11,14 +11,16 @@
       *                                                               *
       *  Function:  This module retrieves a record from the file      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. AR1078092          Date 20Jan12               *
-      *  Prev Amend No. 264044             Date 01Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR1078092          Date 20Jan12               *
+      *                 264044             Date 01Aug12               *
       *                 CLE134  *CREATE    Date 01Aug12               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR1078092 - Event Code of 45021706 (settlement account is    *
       *              (blocked) is not user configurable               *
       *  264044 - CLE134 Test PDCL SOAP API                           *
@@ -523,4 +525,4 @@
      C                   ENDSR
       *****************************************************************
 **  CPY@
-(c) MIsys International Banking Systems Ltd. 2012
+(c) Finastra International Limited 2012

@@ -7,19 +7,21 @@
 /*                                                                   */
 /*       LEC4310 - Cash Flow Using All-in-Rate Revaluation           */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2002           */
+/*       (c) Finastra International Limited 2002                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. BUG10874           Date 16Mar06              */
-/*       Prev Amend No. 232628             Date 14Mar05              */
+/*       Prev Amend No. BUG10874           Date 16Mar06              */
+/*                      232628             Date 14Mar05              */
 /*                      CAS009             Date 04May04              */
 /*                      CAS005  *CREATE    Date 16Dec02              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BUG10874 - Empty member of LOAMSDK not copied               */
 /*       232628 - CAS009 Rollover patch (LE).                        */
 /*       CAS009 - Effective Interest Rate/Amortised Cost Accounting  */
@@ -39,7 +41,7 @@
              DCL        VAR(&CAS009) TYPE(*CHAR) LEN(1)                                   /*CAS009*/
              DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)                                 /*CAS009*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2002')
  
 /* Global monitor message */
@@ -118,5 +120,5 @@
  
 END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

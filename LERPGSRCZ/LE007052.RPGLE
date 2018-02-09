@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
+     H COPYRIGHT('(c) Finastra International Limited 2011')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas LE PDCL Repayments - extract LEACCFPD - Fees')   *
@@ -13,16 +13,18 @@
       *  This function extracts late fees (FECALT = '90') whose loan  *
       *  has repayment today and is linked to a Past Due Call Loan    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. CLE164             Date 18Aug14               *
-      *  Prev Amend No. AR1056323          Date 14Nov12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE164             Date 18Aug14               *
+      *                 AR1056323          Date 14Nov12               *
       *                 AR1022006          Date 01Aug12               *
       *                 AR217562           Date 01Aug12               *
       *                 CLE134  *CREATE    Date 01Aug12               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
       *  AR1056323 - Revert back changes of CLE134 for LKEY1DP and    *
       *              LKEYFED (Recompile)                              *
@@ -559,4 +561,4 @@
      C/COPY ZACPYSRC,PSSR_ILEB
      C/EJECT
 **  CPY@
-(c) MIsys International Banking Systems Ltd. 2011
+(c) Finastra International Limited 2011

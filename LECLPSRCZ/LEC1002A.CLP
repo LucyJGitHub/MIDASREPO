@@ -7,22 +7,24 @@
 /*                                                                  */
 /*       LEC1002A - FACILITIES EXPIRING/REVIEW REPORT               */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CLE041             Date 11Oct04              */
+/*       Prev Amend No. CLE041             Date 11Oct04              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.02 ---------------------------------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend no. BHF798             Date 09Oct90              */
+/*                      BHF798             Date 09Oct90              */
 /*                      BHF742             Date 02Oct90              */
 /*                      S01194              DATE  07FEB90           */
 /*                      S01117              DATE  07FEB90           */
 /*                                                                  */
 /********************************************************************/
+/*       MD046248 - Finastra Rebranding                              */
 /*       CLE041 - Collateralised Lending Phase 2B                    */
 /*       BHF798 - CLOF ALL OPNDBF AT END OF PGM                     */
 /*       BHF742 - SHOULD CLOSE FILE OPENED TO CHECK FILE POSITIONING*/
@@ -36,7 +38,7 @@
 /*********** PGM                                                     * *S01117*/
              PGM PARM(&RSEQ &RLEV &RENT)                              /*S01117*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&RSEQ) TYPE(*CHAR) LEN(5)                 /*S01117*/
              DCL        VAR(&RLEV) TYPE(*CHAR) LEN(1)                 /*S01117*/
@@ -105,6 +107,6 @@
              MONMSG     MSGID(CPF0000)                                /*BHF798*/
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 ENDPGM:                                                                                   /*CLE041*/
              ENDPGM

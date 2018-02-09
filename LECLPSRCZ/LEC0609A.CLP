@@ -7,10 +7,11 @@
 /*                                                                  */
 /*     LEC0609A -  EVENTS FILE CREATION I                           */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD021351           Date 06May14              */
-/*       Prev Amend No. MD021605           Date 22Aug13              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD021351           Date 06May14              */
+/*                      MD021605           Date 22Aug13              */
 /*                      MD020954           Date 02Aug13              */
 /*                      AR1097204          Date 06Apr13              */
 /*                      CCB022B            Date 06Aug12              */
@@ -59,6 +60,7 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD021351 - Design for Kill object locks                    */
 /*       MD021605 - Process only non-PDCL on the first run and only */
 /*                  PDCL on the second run to make sure that all    */
@@ -128,7 +130,7 @@
 /**********  PGM        PARM(&CNAM &CSEQ)                                          /*S01189 CLE134*/
              PGM        PARM(&CNAM &CSEQ &RERUN)                                          /*CLE134*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
              DCL        VAR(&MSG) TYPE(*CHAR) LEN(132) +
@@ -897,5 +899,5 @@ ABNOR:                                                                /*131373*/
              DMPCLPGM                                                 /*131373*/
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                /*131373*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 ENDPGM:      ENDPGM

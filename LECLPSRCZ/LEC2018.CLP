@@ -15,19 +15,21 @@
 /*                 LEC2017                                           */
 /*                 AOBRCHR0                                          */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2002           */
+/*       (c) Finastra International Limited 2002                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. 225286             Date 17Mar04              */
-/*       Prev Amend No. 216737             Date 08Apr03              */
+/*       Prev Amend No. 225286             Date 17Mar04              */
+/*                      216737             Date 08Apr03              */
 /* Midas Release 4.01.02 --------------------------------------------*/
 /*                      203561 *CREATE     Date 21Jun02              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*  225286 - Ensure REST message is not sent if current status of    */
 /*           Loan manager is CLOSED or RESTRICTED. Use new COBREOPEN */
 /*           flag on LMxxx data area tocontrol this                  */
@@ -62,7 +64,7 @@
              DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
              DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2002')
  
 /* Global Monitor Message */
@@ -276,6 +278,6 @@
 /* Normal termination */
  END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

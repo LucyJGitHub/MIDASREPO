@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas LE Customer Loans amend checking 2')             *
@@ -16,10 +16,11 @@
       *             the calling process.                              *
       *             If can optionally reset fields wrongly amended.   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE141             Date 08Feb16               *
-      *  Prev Amend No. MD025521           Date 19Aug14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE141             Date 08Feb16               *
+      *                 MD025521           Date 19Aug14               *
       *                 MD000091           Date 09May13               *
       *                 AR804863           Date 10Dec12               *
       *                 CLE134             Date 01Aug12               *
@@ -46,6 +47,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE141 - Currency and Location Business Day Convention for   *
       *           Lending Transactions (Recompile)                    *
       *  MD025521 - Recompile due to changes on LECLI2PD.             *
@@ -301,7 +303,7 @@
      C                   PARM      DDRTSP        ZCMPAMT1         25
      C                   PARM      @DDRTSP       ZCMPAMT2         25
      C                   PARM      'N'           ZCMPAMTDif        1
-
+ 
      C     ZCMPAMTDif    IFEQ      'Y'
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDRTSP'
@@ -362,7 +364,7 @@
      C                   PARM      DDIPRD        ZCMPAMT1         25
      C                   PARM      @DDIPRD       ZCMPAMT2         25
      C                   PARM      'N'           ZCMPAMTDif        1
-
+ 
      C     ZCMPAMTDif    IFEQ      'Y'
      C     CL_PTYP       ANDNE     80                                                        BUG3721
      C                   ADD       1             Idx
@@ -890,7 +892,7 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
-
+ 
      C     *ENTRY        PLIST
       *
       ***  INPUTS
@@ -1020,4 +1022,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2002
+(c) Finastra International Limited 2002

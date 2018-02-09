@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas IRS Addtnl Interest Details')                    *
@@ -12,10 +12,11 @@
       *  Function:  This program will display additional interest     *
       *             details for IRS deals                             *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
-      *  Prev Amend No. MD037890           Date 25May16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 MD037890           Date 25May16               *
       *                 CGL165             Date 17Feb15               *
       *                 MD030928           Date 03Dec14               *
       *                 CDL096             Date 25Nov14               *
@@ -25,6 +26,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  MD037890 - Display negative amounts correctly. (Recompile)   *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -358,4 +360,4 @@
       *****************************************************************
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2013
+(c) Finastra International Limited 2013

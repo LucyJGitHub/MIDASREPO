@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+     H COPYRIGHT('(c) Finastra International Limited 2012')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas LE Loan ISO7064 37,36 check')                    *
@@ -14,14 +14,16 @@
       *             and validates that the loan reference entered     *
       *             meets user defined criteria                       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. AR1019833          Date 25Mar13               *
-      *  Prev Amend No. AR1071068          Date 10Jan13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR1019833          Date 25Mar13               *
+      *                 AR1071068          Date 10Jan13               *
       *                 CLE148  *CREATE    Date 23Jul12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR1019833 - Performance issue. Put call of AOSVAL to *INZSR  *
       *              and prevent setting on of *INLR for normal end   *
       *              of the program. (Child: AR1064795)               *

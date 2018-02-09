@@ -7,18 +7,20 @@
 /*                                                                  */
 /*             LEC05 - CUSTOMER LENDING FILE SIZE CHANGE            */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. AR322731           Date 01Aug12             */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR322731           Date 01Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. 00                DATE  00/00/00            */
+/*                      00                 Date 00/00/00             */
 /*                                                                  */
 /********************************************************************/
+/*       MD046248 - Finastra Rebranding                              */
 /*       AR322731 - LEC0212A and APISERVER locks LTRIX file. Apply   */
 /*                  fix 252833A. (Child:AR322732)                    */
 /*       252833A  - Prevent LTRIX RRN 1 from being locked.           */
@@ -28,7 +30,7 @@
 /*********************************************************************/
              PGM
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
              DCL        VAR(&FLSZ) TYPE(*DEC) LEN(5)
@@ -55,5 +57,5 @@
                             TOMSGQ(MOPERQ)) */                                           /*252833A*/
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

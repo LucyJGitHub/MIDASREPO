@@ -1,6 +1,6 @@
      H*DEBUG****                                                                             BUG6139
      H DEBUG ALWNULL(*INPUTONLY)                                                             BUG6139
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas LE Retrieve Eligible Customers')
@@ -15,18 +15,20 @@
       *             Eligible Customers, using the Customer Group      *
       *             accepted as an input parameter.                   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. BUG6139            Date 14Feb05               *
-      *  Prev Amend No. BUG3819            Date 27Jul04               *
+      *  Prev Amend No. BUG6139            Date 14Feb05               *
+      *                 BUG3819            Date 27Jul04               *
       *                 CLE039  *CREATE    Date 20Oct03               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG6139 - Allow files with null-capable fields to be read    *
       *            without causing data mapping errors.               *
       *  BUG3819 - Ignore null values in files. (Recompile)           *
@@ -176,4 +178,4 @@
      C                   ENDSR
       ****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2004
+(c) Finastra International Limited 2004

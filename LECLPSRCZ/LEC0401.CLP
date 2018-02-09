@@ -7,10 +7,11 @@
 /*                                                                   */
 /*       LEC0401 - INPUT CYCLE TERMINATION CONFIRMATION PRINT        */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD040628           Date 07Sep16              */
-/*       Prev Amend No. MD021155           Date 19Jul13              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD040628           Date 07Sep16              */
+/*                      MD021155           Date 19Jul13              */
 /*                      CLE134             Date 01Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -38,6 +39,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD040628 - If error occurs, return to calling program       */
 /*                  with correct job switches.                       */
 /*       MD021155 - COB Restructure Phase 1 remnants                 */
@@ -77,7 +79,7 @@
              PGM
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
              DCL        VAR(&MSG) TYPE(*CHAR) LEN(50)
@@ -469,7 +471,7 @@ ERROR:       IF         COND(&MSG = ' ') THEN(DO)
              RETURN                                                                     /*MD040628*/
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
                                                                       /*E40242*/
 /* Call Message Generation Audit Report with parameters of Module  */ /*E40242*/
 /* ID, Type of run, Current Journal and Date and Time of job       */ /*E40242*/

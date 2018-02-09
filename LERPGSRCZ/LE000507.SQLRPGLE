@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas LE Batch Bulk of Repayment Priority')
@@ -9,7 +9,7 @@
       *                                                               *
       *  LE000507 - Midas LE Batch Bulk of Repayment Priority         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
       *  Last Amend No. MD038258           Date 13Apr16               *
       *  Prev Amend No. MD037489           Date 11Feb16               *

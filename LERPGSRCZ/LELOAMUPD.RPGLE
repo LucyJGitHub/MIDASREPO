@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*XBI *  OVRDBF FILE(LOAMD) TOFILE(LOAMS) SHARE(*NO)                  *
 /*STD *  RPGBASEMOD                                                   *
@@ -10,10 +10,11 @@
       *                                                               *
       *  LELOAMUPD - Midas LE Loan Amendment - Database Update        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. AR848765           Date 30Jun15               *
-      *  Prev Amend No. AR943686           Date 23Sep16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR848765           Date 30Jun15               *
+      *                 AR943686           Date 23Sep16               *
       *                 CLE141             Date 08Feb16               *
       *                 AR547813           Date 13Nov15               *
       *                 MD026167           Date 13May14               *
@@ -97,6 +98,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR848765 - During amend of Principal Increase, value of OSAC *
       *             is not updated correctly, Instead of PONS/RONS,   *
       *             LAPONS/LARONS will be moved to field OSAC.        *
@@ -5347,7 +5349,7 @@
       /EJECT
       ********************************************************************
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2002
+(c) Finastra International Limited 2002
 **CTDATA CWA - Array for watch list fields                                                   BUG3760
 <Receipt Nostro>                                                                             BUG3760
 </Receipt Nostro>                                                                            BUG3760

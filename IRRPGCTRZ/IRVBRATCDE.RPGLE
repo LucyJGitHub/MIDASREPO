@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas IR Validate our/their base rate code')
@@ -16,7 +16,7 @@
       *             if it is not it will contain 'Error'              *
       *                                                               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *    This source is centrally supported and must ONLY be        *
       *    amended by Core Development Personnel                      *
@@ -24,14 +24,15 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4.01 -------------------------------------------*
-      *  Last Amend No. CAP055             Date 13Mar02               *
+      *  Prev Amend No. CAP055             Date 13Mar02               *
       * Midas Release 4 --------------- Base -------------------------*
-      *  Prev Amend No. CIR007             Date 11May01               *
+      *                 CIR007             Date 11May01               *
       * Midas DBA 3.05 -----------------------------------------------*
       *                 CSD006             Date 15May01               *
       * Midas DBA 3.00 ---------------- Base -------------------------*
@@ -39,6 +40,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CAP055 - APIs for FRA/IRS Caps/Collars/Floors                *
       *  CIR007 - Overnight Index Swaps                               *
       *  CSD006 - Use long DS with SDBSRTPD.                          *
@@ -262,4 +264,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

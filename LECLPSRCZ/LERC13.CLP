@@ -7,11 +7,12 @@
 /*                                                                   */
 /*       LERC13  - Fee accruals update & account key generation      */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
 /*                                                                   */
-/*       Last Amend No. MD025212           Date 10May14              */
-/*       Prev Amend No. 263074             Date 01Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD025212           Date 10May14              */
+/*                      263074             Date 01Aug12              */
 /*                      CLE134             Date 01Aug12              */
 /*                      AR817264           Date 09Feb12              */
 /*                      CLE139             Date 06Dec10              */
@@ -34,6 +35,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD025212 - Close of Business: LERC13 - file control         */
 /*                  out of balance                                   */
 /*       263074 - Wrong Postings when interest and principal are     */
@@ -78,7 +80,7 @@ PGM  PARM(&CNAM &CSEQ &CCAP)                                                    
              DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(7) VALUE('  DPLIB')                   /*CAS009*/
              DCL        VAR(&CLE134) TYPE(*CHAR) LEN(1) VALUE(' ')                        /*CLE134*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /*/COPY WNCPYSRC,LEH01209                                            */
 /**/                                                                                      /*CLE034*/
@@ -335,6 +337,6 @@ PGM  PARM(&CNAM &CSEQ &CCAP)                                                    
              ENDCMTCTL                                                                    /*CLE034*/
              MONMSG     MSGID(CPF0000 MCH0000)                                            /*CLE034*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
           ENDPGM

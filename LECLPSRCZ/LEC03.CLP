@@ -7,14 +7,15 @@
 /*                                                                  */
 /*       LEC03 - ON LINE ENQUIRIES                                  */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CGL029              Date  01Sep03           */
-/*       Prev Amend No. CLE034             Date 05May03              */
+/*       Prev Amend No. CGL029             Date 01Sep03              */
+/*                      CLE034             Date 05May03              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      S01311              Date  27Feb91           */
@@ -23,6 +24,7 @@
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CGL029 - Increase Account Codes to 10 digits               */
 /*       CLE034 - Lending Enhancements.                             */
 /*       S01311 - EXPOSURE MANAGEMENT ENQUIRIES                     */
@@ -37,7 +39,7 @@
 /*********************************************************************/
              PGM        PARM(&PARM)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
              DCL        VAR(&PARM) TYPE(*CHAR) LEN(10)
@@ -108,5 +110,5 @@
                 ENDDO
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

@@ -7,21 +7,23 @@
 /*                                                                   */
 /*       HFC0500  - DISPLAY INFORMATION ON LINE                      */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. 240378             DATE 15JUN06              */
+/*       Prev Amend No. 240378             Date 15Jun06              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev AMEND NO. 087527             DATE 16JUN95              */
+/*                      087527             Date 16Jun95              */
 /*                      S01379             DATE 17SEP92              */
 /*            AMEND NO.                    DATE                      */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       240378 - History Audit Facility failing with session or     */
 /*                device error.  Fix is to ensure consistent record  */
 /*                lenght of JRNDUMMY.  Applied fix 236026.           */
@@ -38,7 +40,7 @@
              PGM
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&USER) TYPE(*CHAR) LEN(10)
              DCL        VAR(&JUSER) TYPE(*CHAR) LEN(10)
@@ -603,5 +605,5 @@
 /* Exit point for program */
 /* */
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

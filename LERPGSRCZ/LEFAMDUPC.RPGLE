@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas LE Facility amd database update controller')
@@ -9,19 +9,21 @@
       *                                                               *
       *  LEFAMDUPC - LE Facility Amendment Update Controller          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSD027             Date 09Dec05               *
-      *  Prev Amend No. CAP086             Date 07Jul05               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CAP086             Date 07Jul05               *
       * Midas Release 4.01 -------------------------------------------*
       *                 CAP071  *CREATE    Date 21Mar02               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CAP086 - Introduce Auto Authorisation to the API's           *
       *           without it (Recompile)                              *
@@ -434,6 +436,6 @@
       /EJECT
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2002
+(c) Finastra International Limited 2002
 ** ##OX1
 OVRDBF FILE(LEFAMDLR) TOFILE(LEFAMDL0) SHARE(*NO)

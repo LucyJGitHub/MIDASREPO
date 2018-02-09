@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+     H COPYRIGHT('(c) Finastra International Limited 2012')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas LE Validate Partial Limit')                      *
@@ -13,15 +13,17 @@
       *            Partial Limit value and confirms whether it's      *
       *            a valid entry or not                               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. AR318270           Date 01Aug12               *
-      *  Prev Amend No. 262672             Date 01Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR318270           Date 01Aug12               *
+      *                 262672             Date 01Aug12               *
       *                 262513             Date 01Aug12               *
       *                 CLE134   *CREATE   Date 01Aug12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR318270 - CLE134 Specific Fee amendment ends in error       *
       *             (Child: AR321380)                                 *
       *  262672 - Fee input fails with MidasPlus error                *

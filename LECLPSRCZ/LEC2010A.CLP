@@ -12,10 +12,11 @@
 /*                                                                   */
 /*  Calls:    LE2010                                                 */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*  Last Amend No. CLE134            Date  01Aug12                   */
-/*  Prev Amend No. CCB020            Date  06Aug12                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CLE134             Date 01Aug12              */
+/*                      CCB020             Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -41,6 +42,7 @@
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*  CLE134 - Past Due Call Loan Processing (Recompile)               */
 /*  CCB020 - COB Restructure - Secondary COB Infrastructure         */
 /*  CLE038 - Lending Enhancement for Nordea: Allocation by Amount   */
@@ -81,7 +83,7 @@
 /**********  DCL        VAR(&PHASE) TYPE(*CHAR) LEN(1)                          */ /*216709 CCB020*/
              DCL        VAR(&COBST) TYPE(*CHAR) LEN(4)                                    /*CCB020*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&JOBID) TYPE(*CHAR) LEN(10)                                   /*219608*/
              DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(10) +
@@ -265,7 +267,7 @@ FILEND:                                                                         
 /************MONMSG     MSGID(CPF0000)                */                       /*200600*/ /*221254*/
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
                                                                                           /*219608*/
 /* Close file LEBSTLPD on access object AOBSTLR0 using Option '*FREE':                    /*219608*/
              CALL       PGM(AOBSTLR0) PARM(&PRTCD &POPTN &PTYPE +

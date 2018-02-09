@@ -7,10 +7,11 @@
 /*                                                                   */
 /*       LEC0212A-INPUT CYCLE CONFIRMATIONS PRINT                    */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. AR322731           Date 01Aug12              */
-/*       Prev Amend No. CLE134             Date 01Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR322731           Date 01Aug12              */
+/*                      CLE134             Date 01Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /*                      CSW208             Date 15Apr08              */
@@ -41,6 +42,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       AR322731 - LEC0212A and APISERVER locks LTRIX file. Apply   */
 /*                  fix 252833A (Child:AR322732)                     */
 /*       252833A - Prevent LTRIX RRN 1 from being locked             */
@@ -82,7 +84,7 @@
              PGM
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
              DCL        VAR(&MSG) TYPE(*CHAR) LEN(50)
@@ -453,7 +455,7 @@ END:         ENDCMTCTL
 /************MONMSG     MSGID(CPF0000 RPG0000 MCH0000)                /*124684*/
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
              DLCOBJ     OBJ((LECONF *DTAARA *EXCL))                   /*124684*/
              MONMSG     MSGID(CPF0000)                                /*124684*/

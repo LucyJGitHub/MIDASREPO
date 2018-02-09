@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas IR Invalid Principal Change Sched Retrieval')
@@ -14,17 +14,19 @@
       *             This enables the dates/amounts to be worked upon  *
       *             in the Repair function.                           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. 239491             Date 14Mar06               *
-      *  Prev Amend No. CAP043  *CREATE    Date 02May02               *
+      *  Prev Amend No. 239491             Date 14Mar06               *
+      *                 CAP043  *CREATE    Date 02May02               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  239491 - Decimal data error occurred when the principal      *
       *           change amount is blank.                             *
       *  CAP043 - Additional APIs for IRS Schedules                   *
@@ -677,4 +679,4 @@
  
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2002
+(c) Finastra International Limited 2002

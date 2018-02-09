@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas LE Fee database update')                         *
@@ -9,10 +9,11 @@
       *                                                               *
       *  LEFEEMUPD - Fee database update                              *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD034020           Date 19Jul17               *
-      *  Prev Amend No. AR943686           Date 23Sep16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD034020           Date 19Jul17               *
+      *                 AR943686           Date 23Sep16               *
       *                 CLE141             Date 08Feb16               *
       *                 CLE164             Date 28Nov14               *
       *                 MD030700           Date 28Nov14               *
@@ -79,6 +80,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD034020 - Rename settlement fields of CLOANCL to prevent    *
       *             missing projections when fee customer also has    *
       *             defined customer swiftID.                         *
@@ -4828,7 +4830,7 @@
      O                                           45 ' '                                     AR322732
      C****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2002
+(c) Finastra International Limited 2002
 ** WLArr - Watch List Description Array                                                      BUG3760
 <Receipt Nostro>                   </Receipt Nostro>                                         BUG3760
 <Receipt Ordering Customer>        </Receipt Ordering Customer>                              BUG3760

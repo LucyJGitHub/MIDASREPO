@@ -7,20 +7,22 @@
 /*                                                                   */
 /*       LERC42  - Profitability format file audit list              */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. 000005             DATE 15APR92              */
-/*       PREV AMEND NO.                    DATE ddmmmyy              */
+/*       Prev Amend No. 000005             Date 15Apr92              */
+/*                                         Date DDMmmYY              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       000005 - Commercial Banking System Test                     */
 /*                                                                   */
 /*********************************************************************/
@@ -28,7 +30,7 @@
              PGM                                           /*000005*/
 /************DCL        &MODE *CHAR 1                        000005*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /**If*mode*=*'A'*(Update)*Take*Security*copy*of*Profitabilty*000005*/
@@ -65,6 +67,6 @@
          ENDDO
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
          ENDPGM

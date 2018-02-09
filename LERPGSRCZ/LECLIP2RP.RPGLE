@@ -1,10 +1,10 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2005')
+     H COPYRIGHT('(c) Finastra International Limited 2005')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas LE CLIP Repair - LU Window')                     *
       *****************************************************************
-      *  Misys - Lending Module                                       *
+      *  Finastra - Lending Module                                    *
       *                                                               *
       *  LECLIP2RP - Midas LE Customer Loans Input - Lux Repair       *
       *                                                               *
@@ -13,10 +13,11 @@
       *                                                               *
       *  Entry Module of: LECLIP2RP - Midas LE CLIP Repair - Extension*
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. AR910559           Date 10Dec12               *
-      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR910559           Date 10Dec12               *
+      *                 CLE148             Date 23Jul12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -26,6 +27,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR910559 - Details are not correctly reverted back when the  *
       *             amended transaction is rejected in WIP. Add @ACTRV*
       *             parameter in LECLIP5VL. (Child: AR910560)         *
@@ -578,4 +580,4 @@
       /EJECT
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2005
+(c) Finastra International Limited 2005

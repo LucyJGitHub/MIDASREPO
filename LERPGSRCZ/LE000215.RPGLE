@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+     H COPYRIGHT('(c) Finastra International Limited 2012')
       *****************************************************************
 /*STD *  RPGBASEBNC                                                   *
 /*EXI *  TEXT('Midas LE Past Due Loans enquiry')                      *
@@ -12,16 +12,18 @@
       *  Function:  This function displays the Past Due Loans         *
       *             relating to a loan or a fee                       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD036918           Date 18Jan16               *
-      *  Prev Amend No. AR830785           Date 07May13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD036918           Date 18Jan16               *
+      *                 AR830785           Date 07May13               *
       *                 MD020076           Date 17Apr13               *
       *                 263840             Date 01Aug12               *
       *                 CLE134  *CREATE    Date 01Aug12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD036918 - Additional screen with PDCL details is absent for *
       *             fee                                               *
       *           - Added Fee code detail                             *
@@ -1256,6 +1258,6 @@
      C                   ENDSR
       *****************************************************************
 **  CPY@
-(c) MIsys International Banking Systems Ltd. 2012
+(c) Finastra International Limited 2012
 **   ZFMD  -  NUMBER OF DAYS IN THE MONTH
 312831303130313130313031

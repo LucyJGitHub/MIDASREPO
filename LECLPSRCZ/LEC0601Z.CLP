@@ -8,16 +8,18 @@
 /*       LEC0601Z - Loan Amendments, Repayments and Manual          */
 /*                  Repayments Input Today report                   */
 /*                                                                  */
-/*       (c) COPYRIGHT Misys Banking Systems 2006                   */
+/*       (c) COPYRIGHT Finastra International Limited 2006          */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CLE045 *Create     Date  10Feb06            */
+/*       Prev Amend No. CLE045 *Create     Date  10Feb06            */
 /* Midas Plus 1.2 ---------------- Base ----------------------------*/
 /*                                                                  */
 /********************************************************************/
+/*       MD046248 - Finastra Rebranding                             */
 /*       CLE045 - Make List of Today's Facilities report            */
 /*                Availabale in I/C. Midas Plus upgrade             */
 /********************************************************************/
@@ -27,7 +29,7 @@
              DCL        VAR(&RLEV) TYPE(*CHAR) LEN(1)
              DCL        VAR(&RENT) TYPE(*CHAR) LEN(3)
              DCL        VAR(&BISCPY) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Copyright Misys Banking Systems 2006')
+                          Copyright Finastra International Limited 2016')
              DCL        VAR(&MSG) TYPE(*CHAR) LEN(132) +
                           VALUE('LOAN AMENDMENTS AND REPAYMENTS +
                           INPUT TODAY REPORT')
@@ -40,6 +42,6 @@
 /**/
              DLTOVR     FILE(*ALL)
 /**/
-             CHGVAR     VAR(&BISCPY) VALUE('(C) COPYRIGHT Misys +
-                          Banking Systems 2006')
+             CHGVAR     VAR(&BISCPY) VALUE('(C) COPYRIGHT Finastra +
+                          International Limited 2006')
              ENDPGM

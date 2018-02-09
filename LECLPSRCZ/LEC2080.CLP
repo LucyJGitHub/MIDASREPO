@@ -7,16 +7,18 @@
 /*                                                                   */
 /*       LEC2080 - Transaction Income Splits Mnt/Repair/Enq          */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2003           */
+/*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CLE035  *CREATE    Date 22Sep03              */
+/*       Prev Amend No. CLE035  *CREATE    Date 22Sep03              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CLE035 - Lending Enhancements for Nordea Priority 1 Phase 2:*/
 /*                Income Splits                                      */
 /*                                                                   */
@@ -28,7 +30,7 @@
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2003')
  
 /* Global monitor message */
@@ -79,5 +81,5 @@
  
  ENDPGM:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

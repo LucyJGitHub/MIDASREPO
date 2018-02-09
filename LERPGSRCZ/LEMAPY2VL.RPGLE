@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas LE Manual Repayments- Addl valid. for Settl')    *
@@ -9,10 +9,11 @@
       *                                                               *
       *  LEMAPY2VL - Midas LE Manual Repayments - Add. Validations    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD039016           Date 26May16               *
-      *  Prev Amend No. CLE141A            Date 28Apr16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD039016           Date 26May16               *
+      *                 CLE141A            Date 28Apr16               *
       *                 MD038373           Date 20Apr16               *
       *                 CLE141             Date 08Feb16               *
       *                 MD020626           Date 26Jun13               *
@@ -33,6 +34,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD039016 - Different event codes for BDC validation in       *
       *             various Lending APIs                              *
       *  CLE141A - CLE141 Change Control 1                            *
@@ -721,4 +723,4 @@
       *****************************************************************
       /EJECT
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2002
+(c) Finastra International Limited 2002

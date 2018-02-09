@@ -7,21 +7,23 @@
 /*                                                                  */
 /*       LEC0805 - LOANS OUTSTANDING BY GUARANTOR REPORT           */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. E40440            DATE  05AUG92             */
-/*       PREV AMEND NO. BHF798              DATE  09OCT90           */
+/*       Prev Amend No. E40440             Date 05Aug92              */
+/*                      BHF798             Date 09Oct90              */
 /*                      S01194              DATE  07FEB90           */
 /*                      S01117              DATE  07FEB90           */
 /*                      S01179              DATE  14/09/88          */
 /*                                                                  */
 /********************************************************************/
+/*       MD046248 - Finastra Rebranding                              */
 /*       E40440 - ALLOW CALL IF LEVEL IS BLANK                      */
 /*       BHF798 - CLOF ALL OPNDBF AT END OF PGM                     */
 /*       S01194 - NEW STANDING DATA                                 */
@@ -35,7 +37,7 @@
 /*********** PGM                                                     * *S01117*/
              PGM PARM(&RSEQ &RLEV &RENT)                              /*S01117*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
              DCL        VAR(&RSEQ) TYPE(*CHAR) LEN(5)                 /*S01117*/
@@ -131,5 +133,5 @@ ENDDO03:     ENDDO
              MONMSG     MSGID(CPF0000)                                /*BHF798*/
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

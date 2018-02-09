@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas LE Customer loans screen 1 validations')         *
@@ -9,10 +9,11 @@
       *                                                               *
       *  LECLIP1VL -  Customer Loans screen 1 validations             *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD041443           Date 19Sep16               *
-      *  Prev Amend No. CLE154             Date 06Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD041443           Date 19Sep16               *
+      *                 CLE154             Date 06Aug12               *
       *                 CLE141             Date 08Feb16               *
       *                 MD031089           Date 12Feb15               *
       *                 MD032052           Date 23Jan15               *
@@ -154,6 +155,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD041443 - CBC022001 failed due to invalid character in file *
       *             text description (Recompile)                      *
       *  CLE154 - Loan Repayment Schedule Enhancement (Recompile)     *
@@ -791,7 +793,7 @@
                                                                                               CLE106
      D ClilFilFmt    E DS                  EXTNAME(CLOANCL) PREFIX(@@)
       * (Current) Loans record CL in file Format
-
+ 
       *
      D OKFlagsDS     E DS                  EXTNAME(LEECLI1PD)
      D OKFlagsDS2    E DS                  EXTNAME(LEECLI7PD)                                 CLE141
@@ -2047,7 +2049,7 @@
       ***  Original borrower must be different from purchased from
       ***  customer
      C     *IN82         IFEQ      '1'
-
+ 
      C     DDCUSTOK      IFNE      'N'
      C     DDCUST        ANDEQ     DDPFRM
      C                   MOVE      'N'           DDCUSTOK
@@ -2056,7 +2058,7 @@
      C                   MOVEL     'LEL0172'     MsgIDXAr(Idx)
      C                   ENDIF
      C                   ENDIF
-
+ 
      C     DDCUSTOK      IFNE      'N'
      C     *IN82         IFEQ      '0'
      C                   MOVEL     DDCUST        CCLCNUM
@@ -2360,7 +2362,7 @@
      C                   MOVEL     A8SYCU        W#SYCU            6
       *
      C                   MOVEL     DDCUST        WWCUST            6
-
+ 
      C     DDFCUSOK      IFNE      'N'
      C     *IN83         ANDEQ     '0'
      C     MCSIF         ANDNE     'Y'
@@ -2651,7 +2653,7 @@
       ***  Determine if loan type is allowed on facility
       *
      C     *IN83         IFEQ      '0'
-
+ 
      C                   MOVEA     *BLANKS       DRAW
      C     CLE028        IFEQ      'Y'                                                       BUG3721
      C                   MOVEA     DTPX          DRAW                                        BUG3721
@@ -2693,7 +2695,7 @@
      C                   MOVEL     'DDLTYP'      FldNamXAr(Idx)
      C                   MOVEL     'LEL0498'     MsgIDXAr(Idx)
      C                   ENDIF
-
+ 
      C                   ENDIF
       *
       **  For insert, Loan Type must not begin with X, Y or Z.                                263288
@@ -3122,7 +3124,7 @@ B002 C     DDOLNOOK      IFNE      'N'
      C                   MOVE      FCLB          FCLBM             3
      C                   MOVE      MCRA          MCRAM             1
      C                   MOVE      PTYP          PTYPM             2 0
-
+ 
      C                   CALLB     'AOCURRR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*KEY   '     @OPTN
@@ -4723,7 +4725,7 @@ E004 C                   ENDIF
       *
      C     S             DOWLE     10
      C     RUNS(S)       ANDLE     DTEXF
-
+ 
      C     RUNS(S)       IFGE      WSVVD
      C     FAMT          ANDLT     OAM(S)
      C     WREAC         ANDEQ     *OFF
@@ -4739,7 +4741,7 @@ E004 C                   ENDIF
      C     CLE030        IFEQ      'Y'                                                        CLE030
      C                   EVAL      CCLLSTS = 'Q'                                              CLE030
      C                   ENDIF                                                                CLE030
-
+ 
      C*****WE003         IFEQ      *BLANK                                                    BUG4351
      C*****WE003         OREQ      'Y'                                                       BUG4351
      C*****WSVAM         ANDNE     W1AM                                                      BUG4351
@@ -4908,7 +4910,7 @@ E004 C                   ENDIF
      C     CLE030        IFEQ      'Y'                                                        CLE030
      C                   EVAL      CCLLSTS = 'Q'                                              CLE030
      C                   ENDIF                                                                CLE030
-
+ 
      C*****WE004         IFEQ      *BLANK                                                    BUG4351
      C*****WE004         OREQ      'Y'                                                       BUG4351
      C*****WSVAM         ANDNE     WOSVAM                                                    BUG4351
@@ -7085,7 +7087,7 @@ B001 C     ZERR          IFNE      *BLANKS
      C     WLLOAN        SETGT     HISTSL0                                                  AR682750
      C     WLLOAN        READPE    HISTSL0                                99                AR682750
       *                                                                                     AR682750
-
+ 
      C     DDACTN        IFEQ      'A'
      C     WSVMD         ANDLT     @@IACD
      C     DDACTN        OREQ      'A'                                                      AR682750
@@ -10002,7 +10004,7 @@ E004 C                   ENDIF
       *****************************************************************
       /EJECT
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2002
+(c) Finastra International Limited 2002
 ** WFREQ **      Table of frequency codes for rollovers                                       CLE064
 DWFMTQ45X789VEYCIJNU                                                                          CLE064
 **  POWER - ARRAY OF POWERS FOR CURRENCY CONVERSION

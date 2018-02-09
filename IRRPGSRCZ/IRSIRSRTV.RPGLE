@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas IR Single ccy IRS retrv + act code/deal val')    *
@@ -14,10 +14,11 @@
       *             the database. As it does so, it validates the     *
       *             action code and deal number.                      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
-      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 MD000091           Date 08May13               *
@@ -69,6 +70,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
@@ -157,7 +159,7 @@
                                                                                               CAP185
       ** Midas AP API Configuration                                                           CAP185
      FAPICFGL0  IF   E           K DISK    INFSR(*PSSR)                                       CAP185
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -176,66 +178,66 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
       ** EXTERNAL DS FOR GENERAL LEDGER DETAILS
- 
+
      D SDDEAL        E DS                  EXTNAME(SDDEALPD)
      D  QQACC1       E                     EXTFLD(QQACCD)                                     CGL029
       ** EXTERNAL DS FOR DEALING DETAILS
                                                                                               CIR008
      D SDFAIS        E DS                  EXTNAME(SDFAISPD)                                  CIR008
       ** External DS for FRA/IRS ICD Dat                                                      CIR008
- 
+
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
       ** EXTERNAL DS FOR BRANCH DETAILS
      D/COPY WNCPYSRC,IRH00050
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CAS004
      D  SCLCD        E                     EXTFLD(LCD)                                        CAS004
       ** External DS for Switchable Features Details                                          CAS004
@@ -251,11 +253,11 @@
                                                                                               CSD015
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D ZMUSER          DS            17
      D  BRC                   11     13
      D  DEPT                  14     16
- 
+
      D DealFilFmt    E DS                  EXTNAME(DEALSDG)
       ** Deal in File Format
                                                                                               CLE025
@@ -272,12 +274,12 @@
      D  PAcSeq                17     18                                                       CGL014
      D  WRetail                1     10                                                       CGL014
      D  Wrk11                 11     18                                                       CGL014
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0
                                                                                               CIR008
@@ -294,7 +296,7 @@
                                                                                               CAS004
       ** Index for arrays of of warning message ids etc                                       CAS004
      D WIdx            S              3P 0                                                    CAS004
- 
+
       ** Compliance Watch Enhancement Indicator                                               CSD015
      D CSD015          S              1    INZ('N')                                           CSD015
                                                                                               CSD015
@@ -356,14 +358,14 @@
       ** +--------------------------------------+
       *****************************************************************
       /EJECT
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *inzsr is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       **  GET ZMUSER to access default branch.                                               BUG8550
      C     *DTAARA       DEFINE                  ZMUSER                                      BUG8550
      C                   IN        ZMUSER                                                    BUG8550
@@ -371,12 +373,12 @@
                                                                                              BUG8550
       * INITIALIZATION
      C                   EXSR      INIT
- 
+
       * IF THE MODE IS 'FRONT OFFICE TRANSACTION INTERFACE'
       * DO (EXTRA) VALIDATION FOR FRONT OFFICE TRANSACTION INTERFACE
      C     ModeofOp      IFEQ      '*FRONT'
      C                   EXSR      VFRNT
- 
+
       **  Carry out no further validation if errors have occurred.
      C     OKACTN        IFEQ      'N'
      C     OKDLNO        OREQ      'N'
@@ -384,16 +386,16 @@
      C                   END
      C/COPY WNCPYSRC,IRH00038
      C                   END
- 
+
       * VALIDATE ACTION CODE & DEAL NUMBER
      C                   EXSR      VAL
- 
+
       **  Carry out no further validation if errors have occurred.
      C     OKACTN        IFEQ      'N'
      C     OKDLNO        OREQ      'N'
      C                   RETURN
      C                   END
- 
+
       *  *--------------------------------*
       *  * Validation for Action Code 'E' *
       *  *--------------------------------*
@@ -407,7 +409,7 @@
      C                   IF        SACCD = 'X' AND CIR008 = 'Y'                               CIR008
      C                   EXSR      SRValAcX                                                   CIR008
      C                   ENDIF                                                                CIR008
- 
+
       *  *--------------------------------*
       *  * Validation for Action Code 'I' *
       *  *--------------------------------*
@@ -417,35 +419,35 @@
      C     SDLNO         ANDNE     *BLANKS
      C                   EXSR      VALACI
      C                   END
- 
+
       *  *--------------------------------*
       *  * Validation for Action Code 'A' *
       *  *--------------------------------*
      C     SACCD         IFEQ      'A'
      C                   EXSR      VALACA
      C                   END
- 
+
       *  *--------------------------------*
       *  * Validation for Action Code 'D' *
       *  *--------------------------------*
      C     SACCD         IFEQ      'R'
      C                   EXSR      VALACD
      C                   END
- 
+
      C/COPY WNCPYSRC,IRH00039
       **  Carry out no further validation if errors occurred.
      C     OKACTN        IFEQ      'N'
      C     OKDLNO        OREQ      'N'
      C                   RETURN
      C                   END
- 
+
       *  *-----------------------------------------------*
       *  * Access Security Checking                      *
       *  *-----------------------------------------------*
      C     RespMode      IFEQ      'S'
      C                   EXSR      ACSSEC
      C                   END
- 
+
       * Return
      C                   RETURN
       *****************************************************************
@@ -454,7 +456,7 @@
       * VFRNT - VALIDATION FOR FRONT OFFICE TRANSACTION INTERFACE
       *****************************************************************
      C     VFRNT         BEGSR
- 
+
       * ERROR IF ACTION CODE IS NOT 'I', 'A, or 'D'
      C     SACCD         IFNE      'I'
      C     SACCD         ANDNE     'A'
@@ -475,7 +477,7 @@
      C                   ENDIF                                                                CIR008
                                                                                               CIR008
      C                   END
- 
+
       * ERROR IF FRONT OFFICE TRANSACTION ID IS BLANK
      C     FOTRID        IFEQ      *BLANK
      C                   MOVE      'N'           OKACTN
@@ -484,13 +486,13 @@
      C                   MOVEL     'APM0101'     MsgIdArr(Idx)
      C                   GOTO      EVFRNT
      C                   END
- 
+
       * ACCESS DEAL WITH FRONT OFFICE TRANSACTION ID
      C     FOTRID        CHAIN     IRSIRSL0F                          99
- 
+
       * IF INSERT
      C     SACCD         IFEQ      'I'
- 
+
       * FRONT OFFICE TRANSACTION ID CAN'T BE PRESENT ALREADY
      C     *IN99         IFEQ      '0'
      C                   MOVE      'N'           OKACTN
@@ -502,9 +504,9 @@
      C                   EVAL      MsgDtaArr(Idx) = LenStr +%TRIM(FOTRID)                   MD000091
      C                   GOTO      EVFRNT
      C                   END
- 
+
      C                   ELSE
- 
+
       * IF NOT INSERT, FRONT OFFICE TRANSACTION ID MUST BE PRESENT
      C     *IN99         IFEQ      '1'
      C                   MOVE      'N'           OKACTN
@@ -516,12 +518,12 @@
      C                   EVAL      MsgDtaArr(Idx) = LenStr +%TRIM(FOTRID)                   MD000091
      C                   GOTO      EVFRNT
      C                   END
- 
+
       * IF NOT INSERT, UPDATE MIDAS DEAL NUMBER
      C                   MOVEL     DLNO          SDLNO
- 
+
      C                   END
- 
+
      C     EVFRNT        ENDSR
       *****************************************************************
       /EJECT
@@ -529,9 +531,9 @@
       * VAL - VALIDATION OF ACTION CODE AND DEAL NUMBER
       *****************************************************************
      C     VAL           BEGSR
- 
+
       **  Check that the action code is valid
- 
+
      C     SACCD         IFNE      'I'
      C     SACCD         ANDNE     'A'
      C     SACCD         ANDNE     'R'
@@ -563,7 +565,7 @@
      C                   EVAL      FldNameArr(Idx) = 'SACCD '                                 CIR008
      C                   EVAL      MsgIdArr(Idx) = 'MMM9035'                                  CIR008
      C                   ENDIF                                                                CIR008
- 
+
       **  If the deal number is not blank, check that it is numeric.
      C                   TESTN                   SDLNO                98
      C                   MOVE      SDLNO         @@TEST            1
@@ -578,7 +580,7 @@
      C                   MOVEL     'MMM0162'     MsgIdArr(Idx)
      C                   GOTO      EVAL
      C                   END
- 
+
       **  Set up the deal number as a numeric field.
      C                   MOVE      SDLNO         @@DLNO            6 0
       *
@@ -589,9 +591,9 @@
       * VALACE - VALIDATION OF ACTION CODE 'E'
       *****************************************************************
      C     VALACE        BEGSR
- 
+
       **  If the deal number is blank, it is an error.
- 
+
      C     SDLNO         IFEQ      *BLANKS
      C                   MOVE      'N'           OKDLNO
      C                   ADD       1             Idx
@@ -599,10 +601,10 @@
      C                   MOVEL     'MMM0111'     MsgIdArr(Idx)
      C                   GOTO      EVALAE
      C                   END
- 
+
      C**  If there is no valid record on DLDLDGLE, it is an error.
      C     @@DLNO        CHAIN     DLDLDGLE                           65
- 
+
       **  Check for a valid record.
      C     *IN65         IFEQ      '1'
      C     DTYP          ORNE      'RS'
@@ -638,7 +640,7 @@
      C                   EXSR      *PSSR                                                      CLE025
      C                   ENDIF                                                                CLE025
      C                   ENDIF                                                                CLE025
- 
+
      C     EVALAE        ENDSR
       *****************************************************************
       /EJECT                                                                                  CIR008
@@ -762,7 +764,7 @@
       * VALACI - VALIDATION OF ACTION CODE 'I'
       *****************************************************************
      C     VALACI        BEGSR
- 
+
       **  Check that the deal does not exist on any Deals File
       **  Midas or DRS. If it does it's an error.
      C     @@DLNO        SETLL     DEALSALL                               65
@@ -773,7 +775,7 @@
      C                   MOVEL     'MMM0163'     MsgIdArr(Idx)
      C                   GOTO      EVALAI
      C                   END
- 
+
       **  Check that the deal does not exist on Deal Extension file                           CLE025
       **  If it does it's an error.                                                           CLE025
      C     SDLNO         SETLL     DLDLDGLM                               65                  CLE025
@@ -800,7 +802,7 @@
      C                   END                                                    CAP006
      C                   END
      C                   ENDIF                                                              AR996631
- 
+
      C     EVALAI        ENDSR
       *****************************************************************
       /EJECT
@@ -808,7 +810,7 @@
       * VALACA - VALIDATION OF ACTION CODE 'A'
       *****************************************************************
      C     VALACA        BEGSR
- 
+
       **  If the deal number is blank, it is an error.
      C     SDLNO         IFEQ      *BLANKS
      C                   MOVE      'N'           OKDLNO
@@ -817,11 +819,11 @@
      C                   MOVEL     'MMM0111'     MsgIdArr(Idx)
      C                   GOTO      EVALAA
      C                   END
- 
+
       **  If there is no valid, undeleted record on DLDLDGLE, it is an
       **  error.
      C     @@DLNO        CHAIN     DLDLDGLE                           65
- 
+
       **  Check for a valid record.
      C     *IN65         IFEQ      '1'
      C     RECI          ORNE      'D'
@@ -832,7 +834,7 @@
      C                   MOVEL     'FXM0003'     MsgIdArr(Idx)
      C                   GOTO      EVALAA
      C                   END
- 
+
       **  If the deal has been deleted, then it may not be amended.
      C     RECI          IFEQ      'R'
      C                   MOVE      'N'           OKDLNO
@@ -866,7 +868,7 @@
      C                   EXSR      *PSSR                                                      CLE025
      C                   ENDIF                                                                CLE025
      C                   ENDIF                                                                CLE025
- 
+
      C     EVALAA        ENDSR
       *****************************************************************
       /EJECT
@@ -874,7 +876,7 @@
       * VALACD - VALIDATION OF ACTION CODE 'D'
       *****************************************************************
      C     VALACD        BEGSR
- 
+
       **  If the deal number is blank, it is an error.
      C     SDLNO         IFEQ      *BLANKS
      C                   MOVE      'N'           OKDLNO
@@ -883,11 +885,11 @@
      C                   MOVEL     'MMM0111'     MsgIdArr(Idx)
      C                   GOTO      EVALAD
      C                   END
- 
+
       **  If there is no valid, undeleted record on DLDLDGLE, it is an
       **  error.
      C     @@DLNO        CHAIN     DLDLDGLE                           65
- 
+
       **  Check for a valid record.
      C     *IN65         IFEQ      '1'
      C     DTYP          ORNE      'RS'
@@ -897,7 +899,7 @@
      C                   MOVEL     'MMM2623'     MsgIdArr(Idx)
      C                   GOTO      EVALAD
      C                   END
- 
+
       **  If a valid record exists but has already been deleted
       **  it is an error.
      C     RECI          IFEQ      'R'
@@ -1019,7 +1021,7 @@
      C                   GOTO      EVALAD                                                     CGL014
      C                   ENDIF                                                                CGL014
      C                   ENDIF                                                                CGL014
- 
+
      C     EVALAD        ENDSR
       *****************************************************************
       /EJECT
@@ -1027,7 +1029,7 @@
       * ACSSEC - ACCESS SECURITY CHECKING
       *****************************************************************
      C     ACSSEC        BEGSR
- 
+
       * If not multi-branching, check authority to only action code
      C     BJSBRC        IFNE      *BLANK
      C                   CALL      'ZVACTU'
@@ -1042,7 +1044,7 @@
      C                   GOTO      EACSSE
      C                   END
      C                   END
- 
+
       * If multi-branching, check authority to booking branch
      C     BJSBRC        IFEQ      *BLANK
      C     SACCD         IFEQ      'I'
@@ -1080,7 +1082,7 @@
      C                   PARM                    @@ERR             1 0
      C     @@ERR         IFEQ      1
      C                   MOVE      'N'           OKACTN
- 
+
       ** (If Insert then highlight branch field else deal number)
      C     SACCD         IFEQ      'I'
      C                   MOVE      'N'           OKBRCA
@@ -1094,7 +1096,7 @@
      C                   END
      C     @@ERR         IFEQ      2
      C                   MOVE      'N'           OKACTN
- 
+
       ** (If Insert then highlight branch field else deal number)
      C     SACCD         IFEQ      'I'
      C                   MOVE      'N'           OKBRCA
@@ -1106,7 +1108,7 @@
      C                   MOVEL     'FXM0291'     MsgIdArr(Idx)
      C                   GOTO      EACSSE
      C                   END
- 
+
       * Check authority to originating branch
      C     BKOBUV        IFEQ      'Y'
      C     SACCD         ANDNE     'E'
@@ -1132,7 +1134,7 @@
      C                   END
      C                   END
      C                   END
- 
+
      C     EACSSE        ENDSR
       *****************************************************************
       /EJECT
@@ -1140,7 +1142,7 @@
       * INIT - INITIALIZATION
       *****************************************************************
      C     INIT          BEGSR
- 
+
       * CLEAR OUTPUTS
      C                   CLEAR                   DealFilFmt
      C                   EVAL      DLNO = *ZEROS                                              CAP056
@@ -1266,7 +1268,7 @@
      C                   MOVEL     'Y'           OKDLNO
      C                   MOVEL     'Y'           OKBRCA
      C                   EVAL      WIdx = *ZEROS                                              CAS004
- 
+
      C                   ENDSR
       ********************************************************************
       /EJECT
@@ -1274,10 +1276,10 @@
       * *INZSR - INITIAL PROCESSING
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
       * Parameters
      C     *ENTRY        PLIST
- 
+
       * INPUTS
       * Return code
      C                   PARM                    RetCodeIn
@@ -1300,7 +1302,7 @@
      C                   PARM                    SBRCA             3
       ** Switchable feature CIR008                                                            CIR008
      C                   PARM                    CIR008                                       CIR008
- 
+
       * OUTPUTS
       * (Current) deal in file format
       ** (Current) deal extenstion in file format                                             CLE025
@@ -1329,7 +1331,7 @@
       ** Array index (3P0) from/to caller                                                     CAS004
                                                                                               CAS004
      C                   PARM                    WIdx                                         CAS004
- 
+
       ** Compliance Watch Hit List Key                                                        CSD015
                                                                                               CSD015
      C     KCWHT         KLIST                                                                CSD015
@@ -1338,15 +1340,15 @@
      C                   KFLD                    KBranch                                      CSD015
                                                                                               CSD015
       ** Initialize program name
- 
+
      C                   MOVEL     'IRSIRSRTV'   DBPGM
- 
+
       ** ACCESS BANK DETAILS
      C                   CALL      'AOBANKR0'
      C                   PARM      *BLANKS       @RTCD             7
      C                   PARM      '*FIRST '     @OPTN             7
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       * DATABASE ERROR
      C     @RTCD         IFNE      *BLANKS
      C                   MOVEL     'SDBANKPD'    DBFILE                         ************
@@ -1354,7 +1356,7 @@
      C                   MOVEL     @OPTN         DBKEY                          ************
      C                   EXSR      *PSSR
      C                   END
- 
+
       ** ACCESS GENERAL LEDGER DETAILS
      C**********         CALL      'AOGELRR0'                                                 CGL029
      C                   CALL      'AOGELRR1'                                                 CGL029
@@ -1362,7 +1364,7 @@
      C                   PARM      '*FIRST '     @OPTN             7
      C*****SDGELR        PARM      SDGELR        DSFDY                                        CGL029
      C     SDGELR        PARM      SDGELR        DSSDY                                        CGL029
- 
+
       * DATABASE ERROR
      C     @RTCD         IFNE      *BLANKS
      C                   MOVEL     'SDGELRPD'    DBFILE                         ************
@@ -1370,7 +1372,7 @@
      C                   MOVEL     @OPTN         DBKEY                          ************
      C                   EXSR      *PSSR
      C                   END
- 
+
       ** ACCESS DEALING DETAILS
      C**********         CALL      'AODEALR0'                                                 CGL029
      C                   CALL      'AODEALR1'                                                 CGL029
@@ -1378,7 +1380,7 @@
      C                   PARM      '*FIRST '     @OPTN             7
      C*****SDDEAL        PARM      SDDEAL        DSFDY                                        CGL029
      C     SDDEAL        PARM      SDDEAL        DSSDY                                        CGL029
- 
+
       * DATABASE ERROR
      C     @RTCD         IFNE      *BLANK
      C                   MOVEL     @OPTN         DBKEY
@@ -1403,10 +1405,10 @@
      C                   EXSR      *PSSR                                                      CIR008
      C                   ENDIF                                                                CIR008
      C/COPY WNCPYSRC,IRH00051
- 
+
       ** ACCESS DEAL NUMBER RECORD
      C     1             CHAIN     FDDLNMLL                           99
- 
+
       * DATABASE ERROR
      C     *IN99         IFEQ      '1'
      C     NODLTF        OREQ      '*'
@@ -1445,12 +1447,12 @@
      C                   KFLD                    KDlNo                                        CAS004
                                                                                               CAS004
      C                   EVAL      KMod = 'DL'                                                CAS004
- 
+
       **  GET ZMUSER to access default branch.
      C******DTAARA       DEFINE                  ZMUSER                                      BUG8550
      C**********         IN        ZMUSER                                                    BUG8550
      C**********         UNLOCK    ZMUSER                                                    BUG8550
- 
+
       **  Access the SDSTAT Data Area.                                                        CSD015
      C                   IN        SDSTAT                                                     CSD015
                                                                                               CSD015
@@ -1691,4 +1693,4 @@
       /COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

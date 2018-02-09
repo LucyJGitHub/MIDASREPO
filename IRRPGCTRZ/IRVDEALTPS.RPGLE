@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas IR Validate deal type/subtype combination')
@@ -15,19 +15,21 @@
       *             the 10A return code will be blank; if it is not,  *
       *             it will contain 'Error'                           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CDL038             Date 10May05               *
+      *  Prev Amend No. CDL038             Date 10May05               *
       * Midas Release 4.01.02 ----------------------------------------*
-      *  Prev Amend No. 186676 *CREATE     Date 27Mar02               *
+      *                 186676 *C *CREATE  Date 27Mar02               *
       *                 Xnnnnn             Date ddmmmyy               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL038 - Extended Deal Sub Type                              *
       *  186676 - Created to validate the deal type/subtype           *
       *           combination for FRA/IRS deals.                      *
@@ -282,4 +284,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2002
+(c) Finastra International Limited 2002

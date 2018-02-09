@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas LE Transactions initialisation program')         *
@@ -13,10 +13,11 @@
       *  Called from: Command Entry line                              *
       *               One-time set-up program.                        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CLE141             Date 08Feb16               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE141             Date 08Feb16               *
+      *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 CRE073             Date 06Dec10               *
       *                 CLE143             Date 06Dec10               *
@@ -38,6 +39,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE141 - Currency and Location Business Day Convention       *
       *           (Recompile)                                         *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
@@ -88,68 +90,68 @@
      F                                     IGNORE(CLOANZ1F)
      F                                     COMMIT
       ** Loans File
-
+ 
      FSDLOANL1  IF   E           K DISK    INFSR(*PSSR)
       ** Loan Types/Subtypes Retrieval Index
-
+ 
      FLE000012AUO    E             PRINTER
       ** Lending Transactions Initialisation Audit Report
-
+ 
       ** Array containing Copyright statement
      D CPY@            S             80    DIM(1) CTDATA PERRCD(1)
-
+ 
       ** Short Data Structure for Access programs
      D DSFDY         E DS                  EXTNAME(DSFDY)
-
+ 
       ** External DS for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
-
+ 
       ** Local data area for database error details
      D LDA           E DS           256    EXTNAME(LDA)
-
+ 
       ** Program Status Data Structure
      D PSDS           SDS
-
+ 
      D  ##PGM            *PROC
      D  JOB                  244    253
      D  WSID                 244    246
      D  USER                 254    263
-
+ 
       ** Main Processing
-
+ 
      C     *LOVAL        SETLL     CLOAN
      C                   DOU       *IN60 = *ON
      C                   READ      CLOAN                                  60
-
+ 
       ** Process live transaction details.
-
+ 
      C                   IF        *IN60 = *OFF and RECI = 'D'
-
+ 
       ** Where the CLOANCL record, is NOT a Guarantee Issued.
       ** (not processing type 70, 71 or 72)
-
+ 
      C                             and PTYP <> 70
      C                             and PTYP <> 71
      C                             and PTYP <> 72
-
+ 
      C                   ADD       1             COUNT1
-
+ 
       ** Initialize extension record.
-
+ 
      C                   EXSR      SRDfltFlds
-
+ 
      C                   ENDIF
-
+ 
      C                   ENDDO
-
+ 
      C                   COMMIT
-
+ 
      C                   EVAL      *INLR = *ON
-
+ 
       ** Write File Controls Report.
-
+ 
      C                   EXSR      SRAudit
-
+ 
       *****************************************************************
       *                                                               *
       * SRDfltFlds - Subroutine that default fields                   *
@@ -160,42 +162,42 @@
       *                                                               *
       *****************************************************************
      C     SRDfltFlds    BEGSR
-
+ 
       ** Initialise key fields
-
+ 
      C                   EVAL      WkLTYP = LTYP
      C                   EVAL      WkSUTP = SUTP
      C                   EVAL      WkCLAS = CLAS                                              CLE042
-
+ 
      C     KyLOAN        CHAIN     SDLOANL1                           01
      C                   IF        *IN01 = *OFF
-
+ 
       ** If found, default fields
-
+ 
      C                   MOVEL     AYYLDC        FSYLDC
-
+ 
       ****For*'Forward*Yield*Curve',*only*use*the*default*value*if*****                      BUG9480
       ****the*loan*is*linked*to*a*base*rate*code.**********************                      BUG9480
-
+ 
      C**********         IF        BRTT <> 00                                                BUG9480
      C                   MOVEL     AYFYLD        FSFYLD
      C**********         ELSE                                                                BUG9480
      C**********         MOVEL     *blanks       FSFYLD                                      BUG9480
      C**********         ENDIF                                                               BUG9480
-
+ 
      C                   ELSE
      C                   MOVE      *blanks       FSYLDC
      C                   MOVEL     *blanks       FSFYLD
      C                   ENDIF
-
+ 
      C                   UPDATE    CLOANCLF
-
+ 
       ** Increment counter only if fields are initialised with values
-
+ 
      C                   IF        (FSYLDC <> *blanks)  OR (FSFYLD <> *blanks)
      C                   ADD       1             COUNT2
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -209,18 +211,18 @@
       *                                                               *
       *****************************************************************
      C     SRAudit       BEGSR
-
+ 
       ** Write File Control Report Heading
-
+ 
      C                   WRITE     HEADAU
-
+ 
      C                   IF        COUNT1 <> 0
      C                   WRITE     CONTROL
-
+ 
      C                   ELSE
      C                   WRITE     NODTLS
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -234,11 +236,11 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
-
+ 
      C                   MOVEA     CPY@          BIS@             80
-
+ 
       **  Set up Local Data Area (LDA)
-
+ 
      C     *DTAARA       DEFINE                  LDA
      C     *LOCK         IN        LDA
      C                   MOVE      *blanks       DBFILE
@@ -247,16 +249,16 @@
      C                   MOVEL     'LE000012'    DBPGM
      C                   Z-ADD     0             DBASE
      C                   OUT       LDA
-
+ 
       ** Access Bank details
-
+ 
      C                   CALL      'AOBANKR0'
      C                   PARM      *BLANKS       PRTCD             7
      C                   PARM      '*FIRST '     POPTN             7
      C     SDBANK        PARM      SDBANK        DSFDY
-
+ 
       ** If not found, database error
-
+ 
      C     PRTCD         IFNE      *BLANK
      C     *LOCK         IN        LDA
      C                   MOVEL     'SDBANKPD'    DBFILE
@@ -266,24 +268,24 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
-
+ 
      C                   Z-ADD     *ZERO         COUNT1
      C                   Z-ADD     *ZERO         COUNT2
-
+ 
       ** Initialize constant fields.
-
+ 
      C                   Z-ADD     *ZEROS        FSURPL
      C                   Z-ADD     *ZEROS        FSPLAM
      C                   Z-ADD     *ZEROS        FSPLDT
      C                   Z-ADD     *ZEROS        FSYUPL
-
+ 
       ** Key List for Loan types/subtypes file
-
+ 
      C     KyLOAN        KLIST
      C                   KFLD                    WkLTYP            2
      C                   KFLD                    WkSUTP            2
      C                   KFLD                    WkCLAS            4                          CLE042
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -297,27 +299,27 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
-
+ 
      C                   IF        WDUMP = *blanks
      C                   MOVE      'Y'           WDUMP             1
      C                   MOVE      *ON           *INU7
      C                   MOVE      *ON           *INU8
      C                   MOVE      *ON           *INLR
      C                   DUMP
-
+ 
       ** Write File Control Report Heading
-
+ 
      C                   WRITE     HEADAU
-
+ 
       ** Write Database error
-
+ 
      C                   WRITE     DBERROR
-
+ 
      C                   RETURN
-
+ 
      C                   ENDIF
-
+ 
      C                   ENDSR
       ****************************************************************
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

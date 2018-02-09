@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas LE Customer Loans Log Setup Module')             *
@@ -14,10 +14,11 @@
       *             format to be used in writing records to the log   *
       *             file.                                             *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE141             Date 08Feb16               *
-      *  Prev Amend No. CDL094             Date 01Sep14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE141             Date 08Feb16               *
+      *                 CDL094             Date 01Sep14               *
       *                 MD025521           Date 19Aug14               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
@@ -47,6 +48,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE141 - Currency and Location Business Day Convention for   *
       *           Lending Transactions (Recompile)                    *
       *  CDL094 - Enhance Receive Settlement Instructions             *
@@ -157,19 +159,19 @@
      D F_PAY         E DS                  EXTNAME(SDESFPPD)
       ***  File Payment instructions
      D  FLPAY                  1    559
-
+ 
      D FRIRFilFmt    E DS                  EXTNAME(SDESFFPD)
       ** Midas SD File Extended Settlement Instruction - FRA/IRS
-
+ 
      D PAYScnFmt     E DS                  EXTNAME(SDESSPPD)
       ** Midas SD Screen Extended Settlement Instruction - Pay
-
+ 
      D RECScnFmt     E DS                  EXTNAME(SDESSRPD)
       ** Midas SD Screen Extended Settlement Instruction - Receive
-
+ 
      D FRIRScnFmt    E DS                  EXTNAME(SDESSFPD)
       ** Midas SD Screen Extended Settlement Instruction - FRA/IRS
-
+ 
       *
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ***  External DS for Bank Details
@@ -197,7 +199,7 @@
       ** Ê ==============                       Ê
       ** +--------------------------------------+
       *****************************************************************
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -307,9 +309,9 @@
       *
      C                   ELSE
       *
-
+ 
      C                   CALLB     'ZASETINCVT'
-
+ 
      C                   PARM                    F_PAY
      C                   PARM                    F_REC
      C                   PARM      *BLANKS       FRIRFilFmt
@@ -318,7 +320,7 @@
      C                   PARM      *BLANKS       FRIRScnFmt
      C                   PARM      DDCURR        #TRCCY                                      CSF011A
      C                   PARM      DDCURR        #TPCCY                                      CSF011A
-
+ 
       *
      C                   EVAL      TRANSDTL = LoanScnFmt1+ LoanScnFmt2+
      C                                        LoanScnFmt3+ LoanScnFmt4+
@@ -451,4 +453,4 @@
       /COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2002
+(c) Finastra International Limited 2002

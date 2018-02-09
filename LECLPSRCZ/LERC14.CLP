@@ -7,20 +7,22 @@
 /*                                                                   */
 /*       LERC14  - Fees input today report                           */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. MOF60              DATE 23MAR92              */
-/*       PREV AMEND NO.                    DATE ddmmmyy              */
+/*       Prev Amend No. MOF60              Date 23Mar92              */
+/*                                         Date DDMmmYY              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MOF60  - Customer Lending R10 enhancements                  */
 /*                                                                   */
 /*********************************************************************/
@@ -33,7 +35,7 @@ PGM  PARM(&CNAM &CSEQ)
      DCL VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
      DCL VAR(&STAT) TYPE(*CHAR) LEN(1) VALUE(' ')
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
      SNDPGMMSG  MSG('Fees Input Today Report') TOMSGQ(MRUNQ)
@@ -82,6 +84,6 @@ PGM  PARM(&CNAM &CSEQ)
  
  END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
           ENDPGM

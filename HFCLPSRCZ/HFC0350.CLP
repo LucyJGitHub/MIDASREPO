@@ -7,23 +7,25 @@
 /*                                                                   */
 /*       HFC0350  - RESTORE DATA FROM TAPE                           */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4.01.02 --------------------------------------------*/
-/*       Last Amend No. 207764             Date 23Jul02              */
+/*       Prev Amend No. 207764             Date 23Jul02              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. 143606             DATE 26APR99              */
+/*                      143606             Date 26Apr99              */
 /*                      S01408             DATE 04MAY95              */
 /*                      049980             DATE 03FEB93              */
 /*                      S01379             DATE 17SEP92              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       207764 - Change all SAV* and RST* commands to print a       */
 /*                report of objects saved or restored.               */
 /*       143606 - Restore of HAF data from TAP01 fails.              */
@@ -38,7 +40,7 @@
              PGM
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
              DCLF       FILE(HFFILEL1)
@@ -278,7 +280,7 @@ LOOP:
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              CALL       PGM(AOHAFDR0) PARM(&RTCD '*FREE' &DSFDY)      /*049980*/
 /*/COPY WNCPYSRC,HFC0350002                                          */
              ENDPGM

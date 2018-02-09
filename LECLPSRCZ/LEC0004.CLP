@@ -7,10 +7,11 @@
 /*                                                                   */
 /*       LEC0004 - Lending I/C Termination                           */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CCB023             Date 06Aug12              */
-/*       Prev Amend No. CLE134             Date 01Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CCB023             Date 06Aug12              */
+/*                      CLE134             Date 01Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /*                      CSC042             Date 16Feb09              */
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -25,6 +26,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CCB023 - COB Restructure - Input Cycle Termination          */
 /*                Restructuring                                      */
 /*       CLE134 - Past Due Call Loan Processing (Recompile)          */
@@ -47,7 +49,7 @@
 /*/COPY WNCPYSRC,LEC0004INT                                          */                   /*CPK024*/
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /* Global monitor message */
@@ -97,6 +99,6 @@
 /*/COPY WNCPYSRC,LEC0004END                                          */                   /*CPK024*/
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

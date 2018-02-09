@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas LE Resend XML Transactions in Resend Status')    *
@@ -9,13 +9,15 @@
       *                                                               *
       *  LE000504 - Midas LE Resend XML Transactions                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD022807F *REWRITE Date 18Oct13               *
-      *  Prev Amend No. MD022807E *CREATE  Date 17Oct13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD022807F          Date 18Oct13               *
+      *                 MD022807E *CREATE  Date 17Oct13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD022807F - Set LGSTAT as 'X' upon three (3) retries         *
       *  MD022807E - Resend XML Transactions Tagged as 'R'            *
       *                                                               *
@@ -243,4 +245,4 @@
       /EJECT
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2013
+(c) Finastra International Limited 2013

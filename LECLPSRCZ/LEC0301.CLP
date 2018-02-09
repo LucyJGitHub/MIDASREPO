@@ -7,16 +7,17 @@
 /*                                                                  */
 /*        LEC0301-OUTSTANDING FACILITIES BY CUSTOMER ENQUIRY        */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Last Amend NO. 122657             Date 05SEP97             */
-/*       Prev Amend No. CLE004             Date 02Dec96              */
+/*       Prev Amend No. 122657             Date 05Sep97              */
+/*                      CLE004             Date 02Dec96              */
 /*                      S01408            Date  20Jun95             */
 /*                      S01473            DATE  28JUL94             */
 /*                      S01311            DATE  22FEB91             */
@@ -24,6 +25,7 @@
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       122657 - Override to Facility File                         */
 /*       CLE004 - Customer Lending Enhancements - Syndications.      */
 /*       S01408 - Addition of core hooks LEC0301MP1                 */
@@ -55,7 +57,7 @@
      DCL        VAR(&PARM1) TYPE(*CHAR) LEN(10)                       /*S01473*/
      DCL        VAR(&PARM2) TYPE(*CHAR) LEN(10)                       /*S01473*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
                                                                       /*S01473*/
 /* Access switchable features file to see if feature S01473     */    /*S01473*/
@@ -139,5 +141,5 @@ ERROR:                                                                /*S01473*/
              CHGDTAARA  DTAARA(*LDA (81 10)) VALUE(' ')               /*S01473*/
                                                                       /*S01473*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

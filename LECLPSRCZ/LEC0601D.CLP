@@ -7,20 +7,22 @@
 /*                                                                  */
 /*       LEC0601D - ADJUSTMENTS TO ACC. INT. & COMMITMENT FEES      */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CLE106            Date  01Aug04             */
+/*       Prev Amend No. CLE106             Date 01Aug04              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. BH3489            DATE  28AUG92             */
+/*                      BH3489             Date 28Aug92              */
 /*                      S01194            DATE  08FEB90             */
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CLE106 - Syndication Manager. LE0332 is no longer required */
 /*                as Manual Adjustments don't need to be extracted  */
 /*                but are stored in LEADINPD instead.               */
@@ -34,7 +36,7 @@
 /*********************************************************************/
              PGM
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
              DCL        VAR(&MSG) TYPE(*CHAR) LEN(132) +
@@ -95,5 +97,5 @@
 /*********** DLTOVR     FILE(TABLE)                                  * *S01194*/
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

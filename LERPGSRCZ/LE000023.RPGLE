@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
      H THREAD(*SERIALIZE)
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
@@ -15,19 +15,21 @@
       *             10 days) by invoking java method                  *
       *             calculateFacilityFxmrReqmt                        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSD027             Date 09Dec05               *
-      *  Prev Amend No. BUG6135            Date 02Mar05               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 BUG6135            Date 02Mar05               *
       *                 BUG3644            Date 12Jul04               *
       *                 CLE025  *CREATE    Date 20Oct03               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  BUG6135 - LEC06A 100015 failed due to incorrect class path.  *
       *  BUG3644 - Serious Error in Collateralised Lending            *

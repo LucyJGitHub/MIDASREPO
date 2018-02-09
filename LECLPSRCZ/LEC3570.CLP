@@ -7,14 +7,15 @@
 /*                                                                   */
 /*       LEC3570 - Facilities Currency Conversion - Control          */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CLE134             Date 01Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CLE134             Date 01Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CLE106             Date 01Aug04              */
+/*                      CLE106             Date 01Aug04              */
 /* Midas Release 4.01 -----------------------------------------------*/
 /*                      CPK015             Date 08Jul02              */
 /*                      205448             Date 02May02              */
@@ -32,6 +33,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CLE134 - Past Due Call Loan Processing (Recompile)          */
 /*       CLE106 - Syndication Manager                                */
 /*       CPK015 - R4.01 Packaging:                                   */
@@ -54,7 +56,7 @@
  
              DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
              DCL        VAR(&FMT) TYPE(*CHAR) LEN(200)
@@ -545,6 +547,6 @@
              ENDCMTCTL
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

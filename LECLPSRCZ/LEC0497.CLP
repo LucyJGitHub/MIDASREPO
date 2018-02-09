@@ -7,10 +7,11 @@
 /*                                                                   */
 /*       LEC0497 - Contingent Facility A/c Keys Generation           */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD030126           Date 27Oct14              */
-/*       Prev Amend No. CLE075AR           Date 06Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD030126           Date 27Oct14              */
+/*                      CLE075AR           Date 06Aug12              */
 /*                      CLE134             Date 01Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -24,6 +25,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD030126 - Added processing for 2nd run of LEC0497-PDCL run */
 /*                  Patterned after MP1.4 AR996468.                  */
 /*       CLE075AR - COB Restructure - LE COB Optimisation Phase 1    */
@@ -54,7 +56,7 @@
              DCL        VAR(&FJRNRCVR) TYPE(*CHAR) LEN(10)                              /*CLE075AR*/
              DCL        VAR(&RERUN) TYPE(*CHAR) LEN(10)                                 /*MD030126*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /* Global monitor message */
@@ -193,7 +195,7 @@
  
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
                                                                                         /*CLE075AR*/
 /* Write current journal sequence number to file SCJSEQPD, using */                     /*CLE075AR*/
 /* command SCWRTJREG */                                                                 /*CLE075AR*/

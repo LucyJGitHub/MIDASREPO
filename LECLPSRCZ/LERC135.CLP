@@ -7,10 +7,11 @@
 /*                                                                   */
 /*       LERC135 - Fee calculations & accruals (COB)                 */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD027396           Date 19Aug14              */
-/*       Prev Amend No. AR996830           Date 25Nov12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD027396           Date 19Aug14              */
+/*                      AR996830           Date 25Nov12              */
 /*                      AR1055539          Date 12Nov12              */
 /*                      263074             Date 01Aug12              */
 /*                      CLE134             Date 01Aug12              */
@@ -33,6 +34,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD027396 - XPSTTOM not being cleared before component starts*/
 /*                  that causes previous days posting posts again.   */
 /*       AR996830 - Incorrect accrual postings after holiday.        */
@@ -96,7 +98,7 @@
 /*/COPY SDCPYSRC,SDSVALDCL                                                    */          /*CDL045*/
                                                                                           /*CDL045*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
                                                                                           /*CDL045*/
              RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PRFX)                                /*CLE134*/
@@ -429,6 +431,6 @@
  
 END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 ENDPGM

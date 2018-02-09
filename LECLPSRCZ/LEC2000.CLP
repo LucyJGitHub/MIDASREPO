@@ -11,17 +11,19 @@
 /*                                                                   */
 /*       Calls:    None.                                             */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2004           */
+/*       (c) Finastra International Limited 2004                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. 223603 *CREATE     Date 21Jun02              */
-/*       Prev Amend No. Xnnnnn             Date ddmmmyy              */
+/*       Prev Amend No. 223603 *CREATE     Date 21Jun02              */
+/*                      Xnnnnn             Date ddmmmyy              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       223603 - Check whether a Loan Manager branch has been       */
 /*                disabled                                           */
 /*                                                                   */
@@ -37,7 +39,7 @@
              DCL        VAR(&LMDTAARA) TYPE(*CHAR) LEN(5) VALUE(' ')
              DCL        VAR(&DLYPERIOD) TYPE(*CHAR) LEN(2) VALUE('10')
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2002')
  
 /* Global Monitor Message */
@@ -92,6 +94,6 @@
  END:
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

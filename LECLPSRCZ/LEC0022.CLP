@@ -7,10 +7,11 @@
 /*                                                                   */
 /*       LEC0022 - History of Margin File                            */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2002           */
+/*       (c) Finastra International Limited 2002                     */
 /*                                                                   */
-/*       Last Amend No. CCB023A            Date 28Feb13              */
-/*       Prev Amend No. CCB023             Date 06Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CCB023A            Date 28Feb13              */
+/*                      CCB023             Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -20,6 +21,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CCB023A - COB Restructure - Input Cycle Termination         */
 /*                 Restructuring                                     */
 /*       CCB023 - COB Restructure - Input Cycle Termination          */
@@ -37,7 +39,7 @@
              DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5)
 /**********  DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(7) VALUE('  DPLIB')*/                 /*CCB023*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2002')
              DCL        VAR(&CSEQA) TYPE(*CHAR) LEN(5)                                    /*CCB023*/
              DCL        VAR(&STEXT) TYPE(*CHAR) LEN(26)                                   /*CCB023*/
@@ -167,7 +169,7 @@ ABNOR:
                                                                                           /*CCB023*/
 END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 /* Write current journal sequence number to file SCJSEQPD, using   */                     /*CCB023*/
 /* command SCWRTJREG                                               */                     /*CCB023*/

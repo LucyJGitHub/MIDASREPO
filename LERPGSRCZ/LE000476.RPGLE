@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGSQLMOD                                                    *
 /*EXI *  TEXT('Midas LE Retrieve Available Balance')                  *
@@ -9,16 +9,18 @@
       *                                                               *
       *  LE000476 - Midas LE Retrieve Available Balance               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. CGL165             Date 17Feb15               *
-      *  Prev Amend No. MD032020           Date 23Jan15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *                 MD032020           Date 23Jan15               *
       *                 MD031853           Date 18Jan15               *
       *                 MD027718           Date 23Sep14               *
       *                 CLE164 *CREATE     Date 18Aug14               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  MD032020 - LE000496P1 report cleared balance is not equal    *
       *             to PAMV                                           *
@@ -766,4 +768,4 @@
       /EJECT
       *****************************************************************
 **  CPY@
-(c) MIsys International Banking Systems Ltd. 2014
+(c) Finastra International Limited 2014

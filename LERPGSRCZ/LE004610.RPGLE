@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas LE Effective Interest Rate Update')              *
@@ -16,10 +16,11 @@
       *             effective interest rate details and the cash      *
       *             flows where it was derived.                       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CLE154             Date 07Aug12               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE154             Date 07Aug12               *
+      *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 262654             Date 11May09               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -48,6 +49,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE154 - Loan Repayment Schedule Enhancement (Recompile)     *
       *  CLE134 - Past Due Call Loan Processing                       *
       *  CLE148 - Alpha Loan Reference                                *
@@ -1150,7 +1152,7 @@
       **--------------------------------------------------------------------------------------------
       ** Two Commands added to array ##OX1                                                    231712
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2004
+(c) Finastra International Limited 2004
 ** ##OX1
 OVRDBF FILE(ZAEIRPL0) TOFILE(LEEIRPL0) SEQONLY(*YES 500)
 OVRDBF FILE(ZAEIRFL0) TOFILE(LEEIRFL0) SEQONLY(*YES 500)

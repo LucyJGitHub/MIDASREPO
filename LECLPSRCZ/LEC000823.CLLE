@@ -7,82 +7,84 @@
 /*                                                                   */
 /*       LEC000823 - PDCL creation of settlement account keys        */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2017           */
+/*       (c) Finastra International Limited 2017                     */
 /*                                                                   */
-/*       Last Amend No. MD046080 *CREATE   Date 17Sep17              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD046080 *CREATE   Date 17Sep17              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD046080 - Gap between CLE031 (Settlement to different      */
 /*                  currency) and CLE134 (PDCL processing)           */
 /*                                                                   */
 /*********************************************************************/
- 
+
              PGM        PARM(&CNAM &CSEQ &POST)
- 
+
              DCL        VAR(&CNAM)    TYPE(*CHAR) LEN(10)
              DCL        VAR(&CSEQ)    TYPE(*DEC)  LEN(5 0)
              DCL        VAR(&STAT)    TYPE(*CHAR) LEN(1) VALUE(' ')
              DCL        VAR(&FLAG)    TYPE(*CHAR) LEN(1) VALUE('Y')
              DCL        VAR(&POST)   TYPE(*CHAR)  LEN(1)
- 
-             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) Misys +
-                          International Banking Systems Ltd. 2017')
- 
+
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) Finastra +
+                          International Limited 2017')
+
 /** Initialisation */
- 
+
              CHGJOB     SWS(00000000)
- 
+
              CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
              MONMSG     MSGID(CPF1023)
- 
- 
+
+
 /** Main Processing Control */
- 
+
              SNDPGMMSG  MSG('PDCL creation of settlement account keys Amendments') +
                           TOMSGQ(MRUNQ)
- 
+
 /** Check the current status of this component */
- 
+
              CALL       PGM(CB0160) PARM(&CNAM &CSEQ &STAT)
- 
+
              IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO ERR_DIE)
- 
- 
+
+
 /** Update Component Status */
- 
+
              CHGVAR     VAR(&STAT) VALUE('Y')
              CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
- 
+
 /** Execute Primary Function */
- 
+
              CALL       PGM(LE000823)
              MONMSG     MSGID(CPF0000) EXEC(GOTO ERR_DIE)
              IF         COND(%SWITCH(XXXXXX1X)) THEN(GOTO ERR_DIE)
- 
+
 /** Reset Component Status */
- 
+
              CHGVAR     VAR(&STAT) VALUE('N')
              CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)
              IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO ERR_DIE)
- 
+
              GOTO       CMDLBL(ENDPGM)
- 
+
 /** Process Errors */
- 
+
 ERR_DIE:
              SNDPGMMSG  MSG('Job terminated, database in error.') +
                            TOMSGQ(MOPERQ MRUNQ)
- 
+
              GOTO       CMDLBL(ENDPGM)
- 
+
 /** Termination Process. */
- 
+
 ENDPGM:
              DLTOVR     FILE(*ALL)
              MONMSG     MSGID(CPF0000)
- 
-             CHGVAR     VAR(&CPYFLD) VALUE('(c) Misys International Banking +
-                          Systems Ltd 2017')
+
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International Limited +
+                          2017')
              ENDPGM
- 
+

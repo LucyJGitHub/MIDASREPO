@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+     H COPYRIGHT('(c) Finastra International Limited 2012')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas LE Validate Suspend Fee Allowed')                *
@@ -13,14 +13,16 @@
       *            Suspend Fee Allowed value and confirms whether it  *
       *            is a valid entry or not                            *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. AR314017           Date 01Aug12               *
-      *  Prev Amend No. 262672             Date 01Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR314017           Date 01Aug12               *
+      *                 262672             Date 01Aug12               *
       *                 CLE134   *CREATE   Date 01Aug12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR314017 - CLE134 LEC0459 failed in COB # 10 in BB           *
       *             Component LEC0459 00001 failed in COB             *
       *             PONS/RONS warning if changed with LEACCNPD records*

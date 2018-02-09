@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
+     H COPYRIGHT('(c) Finastra International Limited 2011')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas LE Identify loans that need EIR calculation')    *
@@ -17,14 +17,16 @@
       *                                                               *
       *  Component of: LEC0609A                                       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2011            *
+      *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. AR1063971          Date 06Dec12               *
-      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR1063971          Date 06Dec12               *
+      *                 CLE148             Date 23Jul12               *
       *                 262545  *CREATE    Date 19Jan11               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR1063971 - Access hedge details when CAS009 enhancement is  *
       *              switched on.                                     *
       *  CLE148 - Alpha Loan Reference (Recompile)                    *

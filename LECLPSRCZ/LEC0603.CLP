@@ -7,10 +7,11 @@
 /*                                                                  */
 /*     LEC0603 - DAILY FILE MAINTENANCE  -  1                       */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. CLE134             Date 01Aug12              */
-/*       Prev Amend No. 251331             Date 22Nov07              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CLE134             Date 01Aug12              */
+/*                      251331             Date 22Nov07              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /*                      CAS016             Date 28Feb06              */
@@ -32,6 +33,7 @@
 /*                                                                  */
 /********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CLE134 - Past Due Call Loan Processing                      */
 /*       251331 - Ensure CLOAN* files are correctly rolled back if   */
 /*                component fails.                                   */
@@ -54,7 +56,7 @@
 /************PGM                                                ****/ /*CLE003*/
              PGM        PARM(&CONAM &COSEQ)                           /*CLE003*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
              DCL        VAR(&MSG) TYPE(*CHAR) LEN(132) +
@@ -423,6 +425,6 @@ SNDPGMMSG  MSGID(MEM0002) MSGF(*LIBL/MIDAS) MSGDTA(&MEM) TOMSGQ(*LIBL/MOPERQ +
              ENDDO                                                    /*S01427*/
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 ENDPGM:      ENDPGM                                                   /*S01427*/
 /************ENDPGM    */                            /*S01427*/

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+     H COPYRIGHT('(c) Finastra International Limited 2012')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas LE PDCL Conversion - Amounts')                   *
@@ -9,16 +9,18 @@
       *                                                               *
       *  LEVPDAM - Validate Amounts                                   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. AR1095654          Date 13Mar13               *
-      *  Prev Amend No. AR1078092          Date 20Jan13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR1095654          Date 13Mar13               *
+      *                 AR1078092          Date 20Jan13               *
       *                 263415             Date 01Aug12               *
       *                 263360             Date 01Aug12               *
       *                 CLE134   *CREATE   Date 01Aug12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR1095654 - Loan Principal amount cannot be entered as       *
       *              PDCL for Principal already exists                *
       *  AR1078092 - Event Code of 45021706 (settlement account is    *
@@ -565,4 +567,4 @@
       /COPY ZACPYSRC,PSSR_ILE
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2012
+(c) Finastra International Limited 2012

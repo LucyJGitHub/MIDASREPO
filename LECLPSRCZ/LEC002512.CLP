@@ -7,17 +7,19 @@
 /*                                                                   */
 /*       LEC002512 - Repayments Schedule Menu Control                */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2002           */
+/*       (c) Finastra International Limited 2002                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CRE020             Date 20Jan04              */
-/*       Prev Amend No. CAP079  *CREATE    Date 16Jul02              */
+/*       Prev Amend No. CRE020             Date 20Jan04              */
+/*                      CAP079  *CREATE    Date 16Jul02              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CRE020 - Midas Plus Online Printing of Advices (GE7)        */
 /*       CAP079 - Lending API enhancements - Repayments Schedule.    */
 /*                                                                   */
@@ -37,7 +39,7 @@
                           runs in */
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2002')
              DCL        VAR(&PARM) TYPE(*CHAR) LEN(10)                                    /*CRE020*/
              DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7)                                    /*CRE020*/
@@ -148,8 +150,8 @@ RUN:
              RCLRSC
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

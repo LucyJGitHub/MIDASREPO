@@ -7,19 +7,21 @@
 /*                                                                   */
 /*       HFC0220  - COPY COB EXTRACT TO THE DATABASE                 */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. 102670             DATE 26APR96              */
-/*       PREV AMEND NO. S01379             DATE 15SEP92              */
+/*       Prev Amend No. 102670             Date 26Apr96              */
+/*                      S01379             Date 15Sep92              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       102670 - Avoid abnormal termination if no files selected    */
 /*                for HAF monitoring.                                */
 /*       S01379 - New program for HAF.                               */
@@ -33,7 +35,7 @@
              PGM
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&COUN) TYPE(*DEC) LEN(1 0) VALUE(0)
              DCL        VAR(&Z) TYPE(*CHAR) LEN(5000)
@@ -182,5 +184,5 @@
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

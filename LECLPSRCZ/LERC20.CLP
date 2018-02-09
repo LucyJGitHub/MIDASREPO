@@ -7,11 +7,12 @@
 /*                                                                   */
 /*       LERC20  - Automatic facility update                         */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
 /*                                                                   */
-/*       Last Amend No. MD022082           Date 22Aug13              */
-/*       Prev Amend No. MD020634           Date 26May13              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD022082           Date 22Aug13              */
+/*                      MD020634           Date 26May13              */
 /*                      AR1042505          Date 24Apr13              */
 /*                      262509             Date 01Aug12              */
 /*                      CLE134             Date 01Aug12              */
@@ -30,6 +31,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD022082 - FCLTYFN Differences after check COB 6            */
 /*       MD020634 - FCLTYFM/FAMT Difference between C1 and RU        */
 /*       AR1042505 - MFU is not included on rebuild of fclty exposure*/
@@ -70,7 +72,7 @@
      DCL        VAR(&FMT) TYPE(*CHAR) LEN(200)                        /*S01473*/
              DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(7) VALUE('  DPLIB')                   /*CLE134*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&RERUN) TYPE(*CHAR) LEN(10)                                   /*CLE134*/
              DCL        VAR(&LEPDCL) TYPE(*CHAR) LEN(256)                                 /*CLE134*/
@@ -280,7 +282,7 @@ ERROR:                                                                          
      ENDDO
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 /**********ENDPGM  */                                                                     /*CLE134*/
 ENDPGM: ENDPGM                                                                            /*CLE134*/

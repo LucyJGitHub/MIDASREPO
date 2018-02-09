@@ -7,18 +7,20 @@
 /*                                                                   */
 /*       ILC0200 - IBLC ICD MAINTENANCE CONTROL PROGRAM.             */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2005           */
+/*       (c) Finastra International Limited 2005                     */
 /*                                                                   */
-/*       Last Amend No. CCB020             Date 06Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CCB020             Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CER001             Date 25Apr05              */
+/*                      CER001             Date 25Apr05              */
 /*                      ULX043             Date 23Jul01              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CCB020 - COB Restructure - Secondary COB Infrastructure    */
 /*       CER001 - LUX Upgrade to MidasPlus                           */
 /*       ULX043 - IBLC 2002 Reporting                                */
@@ -43,12 +45,12 @@
              DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7) VALUE('*FIRST ')
              DCL        VAR(&FMT) TYPE(*CHAR) LEN(200)
              DCL        VAR(&BISCPY) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2005')
  
              MONMSG     MSGID(CPF0000 MCH0000) EXEC(GOTO (ERROR))
  
-       CHGVAR &BISCPY '(c) Misys International Banking Systems Ltd.+
+       CHGVAR &BISCPY '(c) Finastra International Limited +
                  2005'
              CHGJOB     SWS(10000000)
  

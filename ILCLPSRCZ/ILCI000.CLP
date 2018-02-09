@@ -8,20 +8,22 @@
 /*       ILCI000  - IBLC 2002 FULL MODULE INSTALLATION               */
 /*                  FROM EXISTING BL MODULE                          */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2005           */
+/*       (c) Finastra International Limited 2005                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. BUG10108           Date 25Jan06              */
-/*       Prev Amend No. BUG10059           Date 24Jan06              */
+/*       Prev Amend No. BUG10108           Date 25Jan06              */
+/*                      BUG10059           Date 24Jan06              */
 /*                      CER001             Date 25Apr05              */
 /*                      IL0025             Date 27Dec01              */
 /*                      201093             Date 13Dec01              */
 /*                      ULX043             DATE 21AUG01              */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BUG10108 - Failed during switching off                      */
 /*       BUG10059 - Initialisation failed                            */
 /*       CER001 - LUX Upgrade to MidasPlus                           */
@@ -35,7 +37,7 @@
              PGM        PARM(&RTCODE &MODULE)
  
              DCL        VAR(&ACTCPY) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2005')
              DCL        VAR(&END) TYPE(*CHAR) LEN(1)
              DCL        VAR(&SDSTAT) TYPE(*CHAR) LEN(256)

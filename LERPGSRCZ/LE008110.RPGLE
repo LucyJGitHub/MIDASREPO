@@ -8,13 +8,15 @@
      F*                                                               *
      F*  LE008110 - Stamp Tax Account Keys & Generated Entries Report *
      F*                                                               *
-     F*  (c) Copyright Misys International Banking Systems Ltd 2010   *
+     F*  (c) Copyright Finastra International Limited 2010            *
      F*                                                               *
-      *  Last Amend No. CLE148             Date 23Jul12               *
-      *  Prev Amend No. CER049  *CREATE    Date 06Dec201              *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *                 CER049  *CREATE    Date 06Dec201              *
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE148 - Alpha Loan Reference (Recompile)                    *
      F*  CER049 - Stamp Tax                                           *
      F*                                                               *
@@ -314,4 +316,4 @@
       *
      C                   ENDSR
 ** CPY@   **      OBJECT COPYRIGHT
-(C) Copyright Misys International Banking Systems Ltd. 2010
+(C) Copyright Finastra International Limited 2010

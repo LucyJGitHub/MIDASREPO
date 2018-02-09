@@ -7,10 +7,11 @@
 /*                                                                   */
 /*       LEC1310 - Midas LE Released transactions Control            */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2002           */
+/*       (c) Finastra International Limited 2002                     */
 /*                                                                   */
-/*       Last Amend No. AR1097217          Date 25Mar13              */
-/*       Prev Amend No. CCB023B            Date 06Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR1097217          Date 25Mar13              */
+/*                      CCB023B            Date 06Aug12              */
 /*                      CCB023             Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -20,6 +21,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       AR1097217 - DBICDM in use                                   */
 /*       CCB023B - COB Restructure - Input Cycle Termination         */
 /*                 Restructuring                                     */
@@ -42,7 +44,7 @@
              DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(8)                                   /*CCB023B*/
              DCL        VAR(&ZONEID) TYPE(*CHAR) LEN(2)                                  /*CCB023B*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2002')
  
 /* Global monitor message */
@@ -102,6 +104,6 @@ WAIT:          ALCOBJ     OBJ((DBICDM *FILE *EXCL)) WAIT(3)                     
  
 END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

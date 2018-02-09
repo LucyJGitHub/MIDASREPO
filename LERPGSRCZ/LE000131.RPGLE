@@ -1,5 +1,5 @@
      H DEBUG
-     H Copyright('(c) Misys International Banking Systems Ltd. 2013')
+     H Copyright('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas LE PDCL process - non calculated fees')          *
@@ -21,10 +21,11 @@
       *  Called By: LEC000131 (COB) - PDCL generation for non         *
       *             calculated fees.                                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD046080           Date 17Sep17               *
-      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD046080           Date 17Sep17               *
+      *                 CGL165             Date 17Feb15               *
       *                 CLE164             Date 18Aug14               *
       *                 MD022807H          Date 22Apr14               *
       *                 MD021423E          Date 12Sep13               *
@@ -42,8 +43,9 @@
       *                 CLE134  *CREATE    Date 01Aug12               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD046080 - Gap between CLE031 (Settlement to different       *
-      *             currency) and CLE134 (PDCL processing)            *
+      *             currency) and CLE134 (PDCL processing)            *    
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
       *           (Recompile)                                         *

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas LE Customer Loans cnv: file to screen DSP 1')    *
@@ -13,10 +13,11 @@
       *             loan from their format as on file to a screen     *
       *             format (record format 1)                          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE141             Date 08Feb16               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE141             Date 08Feb16               *
+      *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 CSF011A            Date 28Nov11               *
       *                 CRE073             Date 06Dec10               *
@@ -48,6 +49,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE141 - Currency and Location Business Day Convention for   *
       *           Lending Transactions (Recompile)                    *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
@@ -220,9 +222,9 @@
       ** SETFLD - Set output screen fields                            *
       *****************************************************************
      C     SETFLD        BEGSR
-
+ 
       * Determine Loan type
-
+ 
      C                   EXSR      DET_LOANTYPE
       *
       ***  Loan number.
@@ -587,7 +589,7 @@
       * DET_LOANTYPE - Determine Loan Type                            *
       *****************************************************************
      C     DET_LOANTYPE  BEGSR
-
+ 
      C                   SELECT
      C     PTYP          WHENEQ    61
      C     PTYP          OREQ      62
@@ -605,7 +607,7 @@
      C     PTYP          OREQ      72
      C                   MOVEL     'PTSO'        LoanType          4
      C                   ENDSL
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -690,7 +692,7 @@
      C                   MOVEL     '002'         DBASE                          * DBERR 002 *
      C                   EXSR      *PSSR                                        *************
      C                   END
-
+ 
      C                   EVAL      @RTCD = *BLANKS
       *                                                                                       CER020
       ** Check for Switchable Feature CER020                                                  CER020
@@ -732,4 +734,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2002
+(c) Finastra International Limited 2002

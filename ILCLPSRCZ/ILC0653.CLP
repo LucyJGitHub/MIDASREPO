@@ -7,18 +7,20 @@
 /*                                                                   */
 /*       ILC0653  - IBLC 2002 AWND Items addition                    */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2005           */
+/*       (c) Finastra International Limited 2005                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CER001             Date 25Apr05              */
-/*       Prev Amend No. 200733             Date 30Nov01              */
+/*       Prev Amend No. CER001             Date 25Apr05              */
+/*                      200733             Date 30Nov01              */
 /*                      ULX043             Date 29Sep01              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CER001 - LUX Upgrade to MidasPlus                           */
 /*       200733 - ULX043 - ILITEMPDXX not restored when Reopen       */
 /*                Put and take copy in xxDPLIB instead (WORKING FILE)*/
@@ -28,7 +30,7 @@
              PGM        PARM(&CNAM &CSEQ)
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2005')
  
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
@@ -183,7 +185,7 @@
  
 /***  End Program.  ***/
  
- ENDPGM:     CHGVAR     VAR(&CPYFLD) VALUE('(c) Misys International +
-                          Banking Systems Ltd. 2005')
+ ENDPGM:     CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International +
+                          Limited 2005')
              MONMSG     MSGID(CPF0000)
              ENDPGM

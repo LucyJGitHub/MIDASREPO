@@ -1,5 +1,5 @@
      H DEBUG FIXNBR(*INPUTPACKED)
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas LE Lending drip feed')                           *
@@ -23,10 +23,11 @@
       *                                                               *
       *  LEC2016  - Lending PC Front-End Drip Feed Control Program    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CLE164             Date 18Aug14               *
-      *  Prev Amend No. CSD095             Date 08Apr14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE164             Date 18Aug14               *
+      *                 CSD095             Date 08Apr14               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 CCB020             Date 06Aug12               *
@@ -143,6 +144,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
       *           (Recompile)                                         *
       *  CSD095 - Allow Deal Sub-Type and Branch for MM and FX SSIs   *
@@ -7335,4 +7337,4 @@
      C                   ENDSR
       *****************************************************************
 **  CPY@ - Copyright Statement
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

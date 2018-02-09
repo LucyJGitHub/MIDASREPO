@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys Banking Systems Ltd. 2010')
+     H COPYRIGHT('(c) Finastra International Limited 2010')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas LE PDCL remove records from FACACT')             *
@@ -14,13 +14,15 @@
       *            Called by LEC07016.                                *
       *                                                               *
       *                                                               *
-      *  (c) Misys Banking Systems Ltd. 2010                          *
+      *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. AR596051 *CREATE   Date 31Jul10               *
-      *  Prev Amend No. XXXXXX             Date nnXxxnn               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR596051 *CREATE   Date 31Jul10               *
+      *                 XXXXXX             Date NNXxxNN               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR596051 - Delete from FACACT records that don't have a      *
       *             corresponding Facility record                     *
       *                                                               *
@@ -125,4 +127,4 @@
       *
      C/EJECT
 **  CPY@
-(c) Misys Banking Systems Ltd. 2010
+(c) Finastra International Limited 2010

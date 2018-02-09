@@ -7,22 +7,24 @@
 /*                                                                   */
 /*       LBC0700 - Portfolio Lending Extract Summary Creation        */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. S01498             DATE 11AUG94              */
-/*       PREV AMEND NO. S01189     GB      DATE 11AUG92              */
+/*       Prev Amend No. S01498             Date 11Aug94              */
+/*                      S01189             Date 11Aug92              */
 /*                      S01355             DATE 10JUL92              */
 /*                      35723              DATE 20MAR92              */
 /*                      R0720              DATE 14NOV90              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       S01498 - Portfolio Lending Upgrade to Release 10            */
 /*       S01189 - COB RECOVERY PROCESSING                            */
 /*       S01355 - RELEASE 3 INCORPORATION                            */
@@ -44,7 +46,7 @@
              DCL        VAR(&BUSY) TYPE(*CHAR) LEN(1)
 /*<<S01189<<*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /* RESET JOB SWITCHES                                                */
@@ -111,5 +113,5 @@
 /*END:********ENDPGM                                               */ /*S01498*/
  ENDPGM:                                                              /*S01498*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM                                                   /*S01498*/

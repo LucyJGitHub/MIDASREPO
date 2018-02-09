@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*XBI *: OVRDBF FILE(LEFEEAXX) TOFILE(LEFEEAL2) SHARE(*NO)          : *
 /*STD *  RPGBASEMOD                                                   *
@@ -10,10 +10,11 @@
       *                                                               *
       *  LEFESTUPD -  Fee Settlement Update                           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE134             Date 01Aug12               *
-      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
       *                 CLE073             Date 13May08               *
       *                 CSD083             Date 27May10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -43,6 +44,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing                       *
       *  CLE148 - Alpha Loan Reference                                *
       *  CLE073 - Calculated Loan Based Fees                          *
@@ -2388,7 +2390,7 @@
       /EJECT                                                                                 BUG3760
       ********************************************************************                    CAP084
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2002
+(c) Finastra International Limited 2002
 ** WLArr - Watch List Description Array                                                      BUG3760
 <Receipt Nostro>                   </Receipt Nostro>                                         BUG3760
 <Receipt Ordering Customer>        </Receipt Ordering Customer>                              BUG3760

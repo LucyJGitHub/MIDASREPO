@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas LE Fee conversion - file to screen format')      *
@@ -12,10 +12,11 @@
       *  Function:  This module converts the fields of a Fee          *
       *             from their format as on file to a screen format.  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. AR318270           Date 01Aug12               *
-      *  Prev Amend No. 263801             Date 01Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR318270           Date 01Aug12               *
+      *                 263801             Date 01Aug12               *
       *                 262672             Date 01Aug12               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
@@ -43,6 +44,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR318270 - Specific Fee amendment ends in error              *
       *             (Child: AR321380)                                 *
       *  263801 - P2: CLE134 API FEEM Wrong interpretaion of DDSFPM   *
@@ -1034,4 +1036,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2002
+(c) Finastra International Limited 2002

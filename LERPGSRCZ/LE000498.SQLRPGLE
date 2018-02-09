@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
      H DFTACTGRP(*NO) ACTGRP('QILE')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
@@ -10,23 +10,25 @@
       *                                                               *
       *  LE000498 - Midas LE PDP Available Balance Computation        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. CLE164 *CREATE     Date 18Aug14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE164 *CREATE     Date 18Aug14               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
       *                                                               *
       *****************************************************************
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in
       ** the Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** +--------------------------------------+
       ** ¦ Program Prototypes                   ¦
       ** ¦ ==================                   ¦
@@ -37,18 +39,18 @@
      D Main            PI
      D  ArraySize                     5S 0 CONST OPTIONS(*NOPASS)
      D  RandomFlag                    1A   CONST OPTIONS(*NOPASS)
- 
+
      D  availableBal   PR                  Extpgm('LE000495')
      D  RandomFlag                    1A   CONST OPTIONS(*NOPASS)
      D  printReport    PR                  Extpgm('LEC000496')
      D  UserData                     10A
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
      D RepaymentKey  E DS                  EXTNAME(SDRPKYTD)
- 
+
       ** +--------------------------------------+
       ** ¦ Constants declaration                ¦
       ** ¦ =====================                ¦
@@ -66,7 +68,7 @@
      D TABLE_CREATED   C                   CONST(7905)
      D IGNORE_ERROR    C                   CONST(30)
      D QUO             C                   CONST('''')
- 
+
       ** +--------------------------------------+
       ** ¦ Variable declaration                 ¦
       ** ¦ ====================                 ¦
@@ -78,17 +80,17 @@
      D  DPLIB          S             10A   INZ(*BLANKS)
      D  DMLIB          S             10A   INZ(*BLANKS)
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)
- 
+
       ** +--------------------------------------+
       ** ¦ Array declaration                    ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D CEERAN0         PR
      D seed                          10I 0
      D ranno                          8F
      D fc                            12A   options(*omit)
- 
+
      D highno          s             10I 0 Inz(9)
      D lowno           s             10I 0 Inz(1)
      D seed            s             10I 0 inz(0)
@@ -115,31 +117,31 @@
      D isExit          s               N
      D isDone          s               N
      D SEQN            s             10A
- 
+
        // ** +--- Start of Main processing -----------------------------------+
        // ** ¦                                                                ¦
        // ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
        // ** ¦ executed at program activation.                                ¦
        // ** ¦                                                                ¦
        // ** +----------------------------------------------------------------+
- 
+
       /free
                    if %Parms() <> 0;
                       numElems  = ArraySize;
                    else;
                       numElems  = 10;
                    endif;
- 
+
                    arraySortSeq(1)   = 'A';
                    arraySortSeq(2)   = 'N';
                    arraySortSeq(3)   = 'D';
- 
+
                    CommandStr =  'DLTF (QTEMP/PDPDP*)';
                    exsr SrCommand;
- 
+
                    CommandStr =  'DLTF (QTEMP/PDPDM*)';
                    exsr SrCommand;
- 
+
                    for i = 1 to numElems;
                       if RandomFlag = 'Y';
                          exsr backupExtractTables;
@@ -157,7 +159,7 @@
                          endif;
                       endif;
                    endfor;
- 
+
                    *Inlr = *On;
                    return;
        //*************************************************************
@@ -171,13 +173,13 @@
        //  Calls: None                                               *
        //                                                            *
        //*************************************************************
- 
+
        begsr insertTable;
- 
+
                    wSqlStr = 'delete from SDRPKYTD';
                    exec SQL
                    execute immediate :wSqlStr;
- 
+
                    if SqlCod <> NO_ERROR AND SqlCod <> NO_RECORD;
                       Dbase    = 001;
                       DbFile   = 'LEXTRCTD';
@@ -185,7 +187,7 @@
                       DbPgm    = 'LE000495';
                       Exsr *Pssr;
                    endif;
- 
+
              z = 1;
              for j = 1 to 9;
                    if newSortSeq(j) <> 'N';
@@ -194,7 +196,7 @@
                    else;
                       Pos = 0;
                    endif;
- 
+
                    Ind = %Lookup(newRepayment(j):arrayRepayment);
                    repaymentDesc = arrayDesc(Ind);
                    wSqlStr = 'insert into SDRPKYTD ' +
@@ -214,10 +216,10 @@
                              ',' +
                              QUO + '' + QUO +
                              ')';
- 
+
                    exec SQL
                    execute immediate :wSqlStr;
- 
+
                    if SqlCod <> NO_ERROR AND SqlCod <> NO_RECORD;
                       Dbase    = 002;
                       DbFile   = 'LEXTRCTD';
@@ -227,7 +229,7 @@
                    endif;
              endfor;
        endsr;
- 
+
        //*************************************************************
        /EJECT
        //*************************************************************
@@ -239,16 +241,16 @@
        //  Calls: None                                               *
        //                                                            *
        //*************************************************************
- 
+
        begsr retrieveValues;
        // Retrieve sorting sequence from Repayment Key File
                    wSQLStr = 'select * from SDRPKYTD ';
- 
+
                    exec sql prepare P1 from :wSQLStr;
                    exec sql declare P1 cursor for P1;
                    exec sql open P1;
                    exec sql fetch next From P1 into :RepaymentKey;
- 
+
                    z = 0;
                    if Sqlcod <> 0 and Sqlcod <> 100;
                       DbKey = *Blanks;
@@ -257,14 +259,14 @@
                       DbPgm  = 'LE000495';
                       exsr *Pssr;
                    endif;
- 
+
                    dow Sqlcod = 0;
- 
+
                       z = z + 1;
                       arrayRepayment(z) = RPKEYF;
                       arrayDesc(z)      = RPKDES;
                       exec sql fetch next from P1 into :RepaymentKey;
- 
+
                       if SQLCOD <> 0        and SQLCOD <> 100;
                          DbKey = *Blanks;
                          DbFile = 'SDRPKYTD';
@@ -272,14 +274,14 @@
                          DbPgm  = 'LE000495';
                          Exsr *Pssr;
                       Endif;
- 
+
                    enddo;
- 
+
                    exec sql Close P1;
- 
- 
+
+
        endsr;
- 
+
        //*************************************************************
        /EJECT
        //*************************************************************
@@ -291,7 +293,7 @@
        //  Calls: None                                               *
        //                                                            *
        //*************************************************************
- 
+
        begsr processBalance;
                    clear newRepayment;
                    clear newDesc;
@@ -310,7 +312,7 @@
                       if j <> 1;
                          newRepayment(j) = repaymentStr;
                       endif;
- 
+
                       result = 0;
                       isExit = *Off;
                       dow isExit = *Off;
@@ -343,7 +345,7 @@
                       newSortSeq  (j) = arraySortSeq(result);
                    endfor;
        endsr;
- 
+
        //*************************************************************
        /EJECT
        //*************************************************************
@@ -355,7 +357,7 @@
        //  Calls: None                                               *
        //                                                            *
        //*************************************************************
- 
+
        begsr randomNumber;
                    range = (highno - lowno) + 1;
                    CEERAN0( seed : rand : *omit );
@@ -372,18 +374,18 @@
        //  Calls: None                                               *
        //                                                            *
        //*************************************************************
- 
+
        begsr saveExtractTables;
- 
- 
- 
+
+
+
                    FileStr1 = 'PDPDP' + %EditC(i:'X');
                    FileStr2 = 'PDPDM' + %EditC(i:'X');
                    CommandStr =  'CRTSAVF FILE(QTEMP/' +
                                  %Trim(FileStr1) +
                                  ') AUT(*ALL)';
                    exsr SrCommand;
- 
+
                    CommandStr = 'SAVOBJ OBJ('+
                                 'LEPK1DPD '+
                                 'LEPK2DPD '+
@@ -396,13 +398,13 @@
                                 'SAVF(QTEMP/' + %Trim(FileStr1) +')' +
                                 ' OUTPUT(*NONE)';
                       exsr SrCommand;
- 
+
                    FileStr2 = 'PDPDM' + %EditC(i:'X');
                    CommandStr =  'CRTSAVF FILE(QTEMP/' +
                                  %Trim(FileStr2)+
                                  ') AUT(*ALL)';
                    exsr SrCommand;
- 
+
                    CommandStr = 'SAVOBJ OBJ('+
                                 'LELEGDPD) '+
                                 'LIB(' + %Trim(DMLIB) +') ' +
@@ -410,9 +412,9 @@
                                 'SAVF(QTEMP/' + %Trim(FileStr2) +')' +
                                 ' OUTPUT(*NONE)';
                       exsr SrCommand;
- 
+
        endsr;
- 
+
        //*************************************************************
        /EJECT
        //*************************************************************
@@ -424,21 +426,21 @@
        //  Calls: None                                               *
        //                                                            *
        //*************************************************************
- 
+
        begsr backupExtractTables;
- 
+
                    CommandStr =  'DLTF (QTEMP/PDPDPBACK)';
                    exsr SrCommand;
- 
+
                    CommandStr =  'DLTF (QTEMP/PDPDMBACK)';
                    exsr SrCommand;
- 
+
                    FileStr1 = 'PDPDPBACK';
                    CommandStr =  'CRTSAVF FILE(QTEMP/' +
                                  %Trim(FileStr1) +
                                  ') AUT(*ALL)';
                    exsr SrCommand;
- 
+
                    CommandStr = 'SAVOBJ OBJ('+
                                 'LEPK1DPD '+
                                 'LEPK2DPD '+
@@ -451,13 +453,13 @@
                                 'SAVF(QTEMP/' + %Trim(FileStr1) +')' +
                                 ' OUTPUT(*NONE)';
                       exsr SrCommand;
- 
+
                    FileStr2 = 'PDPDMBACK';
                    CommandStr =  'CRTSAVF FILE(QTEMP/' +
                                  %Trim(FileStr2)+
                                  ') AUT(*ALL)';
                    exsr SrCommand;
- 
+
                    CommandStr = 'SAVOBJ OBJ('+
                                 'LELEGDPD SDRPKYTD) '+
                                 'LIB(' + %Trim(DMLIB) +') ' +
@@ -465,9 +467,9 @@
                                 'SAVF(QTEMP/' + %Trim(FileStr2) +')' +
                                 ' OUTPUT(*NONE)';
                       exsr SrCommand;
- 
+
        endsr;
- 
+
        //*************************************************************
        /EJECT
        //*************************************************************
@@ -480,9 +482,9 @@
        //                                                            *
        //*************************************************************
        begsr restoreExtractTables;
- 
+
                    FileStr1 = 'PDPDPBACK';
- 
+
                    CommandStr = 'RSTOBJ OBJ('+
                                 'LEPK1DPD '+
                                 'LEPK2DPD '+
@@ -494,7 +496,7 @@
                                 'DEV(*SAVF) ' +
                                 'SAVF(QTEMP/' + %Trim(FileStr1) +')';
                    exsr SrCommand;
- 
+
                    FileStr2 = 'PDPDMBACK';
                    CommandStr = 'RSTOBJ OBJ('+
                                 'LELEGDPD '+
@@ -503,7 +505,7 @@
                                 'DEV(*SAVF) ' +
                                 'SAVF(QTEMP/' + %Trim(FileStr2) +')';
                    exsr SrCommand;
- 
+
        endsr;
        //*************************************************************
        /EJECT
@@ -516,14 +518,14 @@
        //  Calls: None                                               *
        //                                                            *
        //*************************************************************
- 
+
        begsr *inzsr;
                    In Sdstat;
                    DPLIB    = LIBR + 'DPLIB';
                    DMLIB    = LIBR + 'DMLIB';
- 
+
        endsr;
- 
+
        //*************************************************************
        /EJECT
        //*************************************************************
@@ -533,7 +535,7 @@
        //   Called By: Main Processing                               *
        //                                                            *
        //*************************************************************
- 
+
        begsr *pssr;
                    *inu7 = *ON;
                    *inu8 = *ON;
@@ -541,7 +543,7 @@
                    *Inlr = *ON;
                    return;
        endsr;
- 
+
       /end-free
       *****************************************************************
       /EJECT
@@ -565,4 +567,4 @@
      C                             PSExcpNo
      C                   ENDIF
      C                   ENDSR
- 
+

@@ -7,15 +7,17 @@
 /*                                                                   */
 /*     LEC0609E  -  EVENTS FILE CREATION RZ TO END OF BOOK           */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2008           */
+/*       (c) Finastra International Limited 2008                     */
 /*                                                                   */
-/*       Last Amend No. MD021605           Date 22Aug13              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD021605           Date 22Aug13              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
-/*       Prev Amend No. CCB016  *Create    Date 28May08              */
+/*                      CCB016  *CREATE    Date 28May08              */
 /*      Midas Plus 1.4 Base -----------------------------------------*/
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*   MD021605 - Add a parameter for LE0480.                          */
 /*   CCB016 - CoB Performance Enhancements                           */
 /*            Generate lending events to end of book for GTS         */
@@ -31,7 +33,7 @@
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
              DCL        VAR(&LDA) TYPE(*CHAR) LEN(256)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2008')
  
 /*  Global Monitor Message                                                    */
@@ -87,6 +89,6 @@ ABNOR:       IF         COND(%SWITCH(XXXXXXX1)) THEN(DO)
              DMPCLPGM
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
  
- END:        CHGVAR     VAR(&CPYFLD) VALUE('(c) Misys International +
-                          Banking Systems Ltd.')
+ END:        CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International +
+                          Limited')
              ENDPGM

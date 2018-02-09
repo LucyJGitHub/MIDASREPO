@@ -7,16 +7,17 @@
 /*                                                                   */
 /*       LBC0640 - Portfolio Lending Extract Retail Regeneration     */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD031950           Date 17Jun15             */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD031950           Date 17Jun15              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. 095241             Date 01Nov95              */
+/*                      095241             Date 01Nov95              */
 /*                      S01408             Date 05May95              */
 /*                      S01498             DATE 11AUG94              */
 /*                      064504             DATE 22DEC93              */
@@ -28,6 +29,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD031950 - Recompiled due to changed CUSEXZ1.               */
 /*       095241 - WRONG NAME FOR MESSAGE FILE LBUSRMSG               */
 /*       S01408 - Addition of core hook LBC0640MP1                   */
@@ -51,7 +53,7 @@
 /**********  PGM                                                    **/
              PGM        PARM(&CNAM &CSEQ)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
              DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5)
@@ -218,6 +220,6 @@ OVRDBF CUSEXZ1 SHARE(*NO)
 /*<<< 064504 <<<*/
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
  END:        ENDPGM

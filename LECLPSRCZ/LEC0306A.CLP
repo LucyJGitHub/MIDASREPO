@@ -7,11 +7,12 @@
 /*                                                                  */
 /*       LEC0306A - Matured Loan Activity Enquiry                   */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. CLE134             Date 01Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CLE134             Date 01Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
-/*       Prev Amend No. 260601             Date 04Jun09              */
+/*                      260601             Date 04Jun09              */
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /*                      BUG12979           Date 28Dec06              */
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
@@ -23,6 +24,7 @@
 /*                      S01408             Date 03May96              */
 /*                                                                  */
 /********************************************************************/
+/*       MD046248 - Finastra Rebranding                              */
 /*       CLE134 - Past Due Call Loan Processing (Recompile)          */
 /*       260601 - Matured loans can't be enquired on option MLON.    */
 /*                Add override to MLOAN to see matured loans.        */
@@ -41,7 +43,7 @@
              PGM
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)        /*128954*/
              DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7) +
@@ -84,7 +86,7 @@
              DLTOVR     FILE(*ALL)                                                        /*260601*/
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /**/
 EXIT:                                                        /*128954*/
              ENDPGM

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(C) Copyright Midas-Kapiti International Ltd. 2005')
+     H COPYRIGHT('(C) Copyright Finastra International Limited, 2005')
       *****************************************************************
 /*STD *  RPGBASEBNC                                                   *
 /*EXI *  TEXT('Midas LE Create transaction classes')
@@ -10,16 +10,18 @@
       *  LECLINI1 - Create transaction classes                        *
       *             (Lending initialisation program)                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CLE042  *CREATE    Date 06Sep05               *
+      *  Prev Amend No. CLE042  *CREATE    Date 06Sep05               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE042 - Extended Loan Sub Type                              *
       *                                                               *
       *****************************************************************

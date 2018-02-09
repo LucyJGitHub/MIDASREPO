@@ -8,14 +8,15 @@
 /*                                                                   */
 /*       ILC0645 - IBLC 2002 Futures&Options Module Extraction       */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2005           */
+/*       (c) Finastra International Limited 2005                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CER001             Date 25Apr05              */
-/*       Prev Amend No. UPG404             Date 17Mar05              */
+/*       Prev Amend No. CER001             Date 25Apr05              */
+/*                      UPG404             Date 17Mar05              */
 /*                      202483             Date 04Feb02              */
 /*                      IL0023             Date 20Dec01              */
 /*                      IL0009             Date 05Dec01              */
@@ -23,6 +24,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CER001 - LUX Upgrade to MidasPlus                           */
 /*       UPG404 - Change creation parameter to CLPBASE               */
 /*       202483 - OPERATIONS REPORTED TWICE.                         */
@@ -34,7 +36,7 @@
              PGM        PARM(&CSEQ &RSEQ &RLEV &RENT)
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2005')
  
 /***  Declare variables.  ***/
@@ -385,8 +387,8 @@ ENDROUND1:
  
 /***  End Program.  ***/
  
- ENDPGM:     CHGVAR     VAR(&CPYFLD) VALUE('(c) Misys International +
-                          Banking Systems Ltd. 2005')
+ ENDPGM:     CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International +
+                          Limited 2005')
              MONMSG     MSGID(CPF0000)
              DLTOVR     FILE(ILDIWKPD)
              MONMSG     MSGID(CPF0000)

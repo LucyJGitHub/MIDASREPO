@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas LE Customer Loans screen 2 validations')         *
@@ -9,10 +9,11 @@
       *                                                               *
       *  LECLIP2VL -  Customer Loans screen 2 validations             *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD034840           Date 10Feb17               *
-      *  Prev Amend No. MD041917           Date 20Dec16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD034840           Date 10Feb17               *
+      *                 MD041917           Date 20Dec16               *
       *                 MD040412           Date 17Aug16               *
       *                 MD039304           Date 19Jul16               *
       *                 CLE141             Date 08Feb16               *
@@ -111,6 +112,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD034840 - No error issued for input of base rate even if    *
       *             Base Rate Change Facility ICD is set to 'N'.      *
       *  MD041917 - Total interest is calculated as zero when fixed   *
@@ -6393,7 +6395,7 @@ E004 C                   ENDIF
       ** Elements of Array FREQ were amended from 'WFMTQXY' to 'DWFMTQ45X789VEYCIJNU'         CLE064
       *                                                                                       CLE064
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2002
+(c) Finastra International Limited 2002
 ** WFREQ **      Table of frequency codes for interests and repayments
 DWFMTQ45X789VEYCIJNU                                                                          CLE064
 ** NDAYS/NFREQ **      Table of Days and frequency codes                                      CLE064

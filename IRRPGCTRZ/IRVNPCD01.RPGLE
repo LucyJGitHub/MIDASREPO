@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas IR Validate next principal change date')         *
@@ -9,7 +9,7 @@
       *                                                               *
       *  IRVNPCD01 - Validate Next Principal Change Date              *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
       *    This source is centrally supported and must ONLY be        *
       *    amended by Core Development Personnel                      *
@@ -17,12 +17,13 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. 264029             Date 22Feb10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. 264029             Date 22Feb10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. 240134             Date 09Sep06               *
+      *                 240134             Date 09Sep06               *
       *                 233467 (REOPEN)    Date 25Jul05               *
       *                 233467             Date 06Jun05               *
       *                 222373             Date 31Oct03               *
@@ -33,6 +34,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  264029 - Reverse fix 233467 is transferred to IRSIRSVU and   *
       *           IRCIRSVU since this is blocking the user from       *
       *           removing the principal change schedules and xNPCD.  *
@@ -554,4 +556,4 @@
       /COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2002
+(c) Finastra International Limited 2002

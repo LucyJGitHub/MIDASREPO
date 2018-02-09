@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas LE Facility Second screen validation')           *
@@ -9,10 +9,11 @@
       *                                                               *
       *  LEFCIP2VL -  Facility Second screen  Validation              *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD031311           Date 13Jun16               *
-      *  Prev Amend No. MD041034           Date 05Sep16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD031311           Date 13Jun16               *
+      *                 MD041034           Date 05Sep16               *
       *                 MD035306           Date 14Aug15               *
       *                 MD024398           Date 11May14               *
       *                 CLE134             Date 01Aug12               *
@@ -67,6 +68,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD031311 - Error message required if total of tranches       *
       *             exceed Credit Agreement amount                    *
       *  MD041034 - Drawing Type 6 field is unavailable in Pre        *
@@ -158,7 +160,7 @@
       ** Ê =======                              Ê
       ** +--------------------------------------+
       *****************************************************************
-
+ 
       **  Funding Participant Details file
      FLEFCLTL2  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(FCLTYFMF:FCLTYFL2)
@@ -193,89 +195,89 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
-
+ 
      D/COPY ZACPYSRC,STD_D_SPEC
-
+ 
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
-
+ 
      D/COPY ZACPYSRC,PSDS
       ** The following /COPY line includes definitions for the above fields
       ** as #ProcPgm, #ProcMod and #ProcName.  They are based on the
       ** corresponding fields in the PSDS /COPY member, so that member
       ** must be included where this one is used.
-
+ 
      D/COPY ZACPYSRC,PROCPARMS
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
-
+ 
       ** +--------------------------------------+
       ** Ê End of automatically included D-specsÊ
       ** Ê =====================================Ê
       ** +--------------------------------------+
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** Ê Manually included D-specs            Ê
       ** Ê =========================            Ê
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** Ê Named constants                      Ê
       ** Ê ===============                      Ê
       ** +--------------------------------------+
-
+ 
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(75)
-
+ 
       ** +--------------------------------------+
       ** Ê Arrays and Data Structures           Ê
       ** Ê ==========================           Ê
       ** +--------------------------------------+
-
+ 
       ** Array of Fields in error.
      D FldNamXAr       S             10A   DIM(XArrayMax)
-
+ 
       ** Array of error message IDs
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
-
+ 
       ** Array of error message data.
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
-
+ 
       ** Array of Fields with warnings.
      D WFldNmXAr       S             10A   DIM(XArrayMax)
-
+ 
       ** Array of warning message IDs
      D WMsgIDXAr       S                   DIM(XArrayMax) LIKE(#MsgId)
-
+ 
       ** Array of warning message data.
      D WMsgDtXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
-
+ 
      D*DTS******       S              1    DIM(5)                              Drawing Types BUG3723
      D DTS             S              1    DIM(6)                                            BUG3723
      D DTSca           S              1    DIM(6)                                           AR785547
       ** Rollover types
      D*ROT******       S              1    DIM(6)                                             CLE064
      D ROT             S              1    DIM(21)                                            CLE064
-
+ 
      D ACY             S              3    DIM(12)
      D/COPY ZSRSRC,ZALIGNZ1LE
-
+ 
       **  Compile time arrays
      D*ADT******       S              1    DIM(6) CTDATA PERRCD(6)                           BUG3723
      D ADT             S              1    DIM(7) CTDATA PERRCD(7)                           BUG3723
      D*ARO******       S              1    DIM(7) CTDATA PERRCD(7)                            CLE064
      D ARO             S              1    DIM(22) CTDATA PERRCD(22)                          CLE064
-
+ 
       ** Flags to indicate whether transaction fields are valid
      D*OKFlagsDS       DS                                                                     CLE064
      D**DDSYINOK                      1A                                                      CLE064
@@ -329,58 +331,58 @@
      D**DDDFCLOK                      1A                                               CLE042 CLE064
      D**DDSLCLOK                      1A                                               CLE042 CLE064
      D OKFlagsDS     E DS                  EXTNAME(LEEFCISPD)                                 CLE064
-
+ 
       * First DS for Access programs - short data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
-
+ 
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
      D  A8SYCA               178    183
       ** BRANCH CODES
-
+ 
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
      D QQDFAC1       E                     EXTFLD(QQDFAC)                                     CGL029
       ** CUSTOMER
-
+ 
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
-
+ 
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
       ** EXTERNAL DS FOR GENERAL LEDGER DETAILS
-
+ 
      D SDCLND        E DS                  EXTNAME(SDCLNDPD)
       **  CUSTOMER LENDING DETAILS
-
+ 
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** EXTERNAL DS FOR MIDAS MODULES DETAILS
-
+ 
      D SDACOF        E DS                  EXTNAME(SDACOFPD)
       **   ACCOUNT OFFICER DETAILS
-
+ 
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       **   CURRENCY TYPE
-
+ 
      D SDFACT        E DS                  EXTNAME(SDFACTPD)
       **   FACILITY TYPE
-
+ 
      D SDCTRY        E DS                  EXTNAME(SDCTRYPD)
       **   COUNTRY
-
+ 
      D SDBSRT        E DS                  EXTNAME(SDBSRTPD)
       **   BASE RATE
       *
-
+ 
      D DSFDY         E DS                  EXTNAME(DSFDY)
       * FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
-
+ 
      D SDLOAN        E DS                  EXTNAME(SDLOANPD)
       * Data structures:
-
+ 
       * SDSTAT Data Structure
      D SDSTAT        E DS                  EXTNAME(SDSTAT)
-
+ 
       * 24X7 Data Structure
      D SC24X7        E DS                  EXTNAME(SC24X7)
-
+ 
      D FacmFilFmt    E DS                  EXTNAME(FCLTYFM)
       ***  Current Fclty in File Format FM
      D                                     PREFIX(M)
@@ -388,24 +390,24 @@
      D FacnFilFmt    E DS                  EXTNAME(FCLTYFN)
       ***  Current Fclty in File Format FN
      D                                     PREFIX(N)
-
+ 
      D ValidFacm     E DS                  EXTNAME(LEVFCIMPD)
       * Valid Facility FM layout -> FCLTYFM
-
+ 
      D ValidFacn     E DS                  EXTNAME(LEVFCINPD)
       * Valid Facility FN layout -> FCLTYFN
-
+ 
      D TranInPrim    E DS                  EXTNAME(LEFCPPPD)
       * Incoming Transaction
-
+ 
      D TranInSeco    E DS                  EXTNAME(LEFCSPPD)
       * Incoming Transaction
-
+ 
      D ZMUSER          DS            17
      D  USRBCH                11     13
       * ZMUSER data layout
      D  DBRN                  11     13
-
+ 
      D RUNDAT          DS            13
      D  RUNA                   1      7
      D  RUND                   8     10P 0
@@ -413,7 +415,7 @@
      D  DATF                  12     12
      D  AGMBIN                13     13
       * Rundate data area
-
+ 
      D                 DS
      D  DDDTX5                 1      5
      D  DDDTX6                 1      6                                                      BUG3723
@@ -465,35 +467,35 @@
      D  DDCY10A               28     30
      D  DDCY11A               31     33
      D  DDCY12A               34     36
-
+ 
       ** +--------------------------------------+
       ** Ê Declared variables                   Ê
       ** Ê ==================                   Ê
       ** +--------------------------------------+
-
+ 
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0
-
+ 
       ** Index for arrays of of warning message ids etc
      D WId             S              3P 0
      D WIdx            S              3P 0                                                   BUG4351
-
+ 
       ** Response Mode, received as a parameter from the common header
      D RespMode        S              1A
-
+ 
       ** +--------------------------------------+
       ** Ê End of D-specs                       Ê
       ** Ê ==============                       Ê
       ** +--------------------------------------+
-
+ 
       ** +----------------------------------------+
       ** Ê Hook for non-core D-specs (all types)  Ê
       ** Ê also any I-specs (if necessary)        Ê
       ** Ê =====================================  Ê
       ** +----------------------------------------+
-
+ 
      D C#LPAM          C                   CONST('     0.0000000')
-
+ 
       *****************************************************************
       /EJECT
       ** +--- Start of Main processing -----------------------------------+
@@ -585,13 +587,13 @@
      C                   EXSR      VCaxr
       ** Validate Severity Code                                                               CLE029
      C                   EXSR      VSvcd                                                      CLE029
-
+ 
      C                   EXSR      UPDATERRS
       *
       *  *-------------------------------------------------------*
       *  * If no errors set up outstanding fields for valid file *
       *  *-------------------------------------------------------*
-
+ 
      C                   IF        Idx = 0
      C                   EXSR      SetupValid
      C                   ENDIF
@@ -602,7 +604,7 @@
       ** VSYIN   - Validate Syndication indicator
       *****************************************************************
      C     VSYIN         BEGSR
-
+ 
      C     CLE006        IFEQ      'Y'
      C                   SELECT
      C     DDSYIN        WHENEQ    *BLANKS
@@ -614,7 +616,7 @@
      C                   Add       1             Idx
      C                   Movel     'DDSYIN'      FldNamXAr(Idx)
      C                   Movel     'LEF0063'     MsgIDXAr(Idx)
-
+ 
      C     DDACTN        WHENNE    'I'
      C     DDSYIN        ANDEQ     'N'
      C     MSYIN         ANDEQ     'Y'
@@ -689,7 +691,7 @@
      C                   PARM      '*KEY   '     @OPTN
      C                   PARM      DDBRCA        @BRCA             3
      C     SDBRCH        PARM      SDBRCH        DSSDY
-
+ 
      C     @RTCD         IFNE      *BLANKS
      C     *LOCK         IN        LDA
      C                   Z-ADD     5             DBASE
@@ -725,14 +727,14 @@
      C                   PARM      DDANUM        @CNUM            10
      C                   PARM                    @CNST             7
      C     SDCUST        PARM      SDCUST        DSSDY
-
+ 
      C     @RTCD         IFNE      *BLANKS
      C                   Move      'N'           DDANUMOK
      C                   Add       1             Idx
      C                   Movel     'DDANUM'      FldNamXAr(Idx)
      C                   Movel     'LEF0067'     MsgIDXAr(Idx)
      C                   ELSE
-
+ 
      C*****BBPAIN        IFEQ      'Y'                                                        CLE106
      C     BBPAIN        IFEQ      'P'                                                        CLE106
      C                   Move      'N'           DDANUMOK
@@ -740,7 +742,7 @@
      C                   Movel     'DDANUM'      FldNamXAr(Idx)
      C                   Movel     'LEF0068'     MsgIDXAr(Idx)
      C                   ELSE
-
+ 
      C**********         MOVEL(P)  BBCUST        DDANUM                                       225447
      C***********        MOVEL     BBCUST        DDANUM                                225447 CLE106
      C                   EVAL      DDANUM = BBCUST                                            CLE106
@@ -847,7 +849,7 @@
      C     CLE028        IFEQ      'Y'                                                       BUG3723
      C                   MOVE      DDDTS6        DDDTS6A                                     BUG3723
      C                   ENDIF                                                               BUG3723
-
+ 
      C     DDDTX5        IFEQ      *BLANKS
      C     CLE028        ANDEQ     'N'                                                       BUG3723
      C     DDDTX6        OREQ      *BLANKS                                                   BUG3723
@@ -1035,14 +1037,14 @@
       *
       * Retrieve default interest calculation basis for currency
       * entered.
-
+ 
      C     DDACTN        IFEQ      'I'
      C     DDDICB        ANDEQ     *BLANKS
      C                   MOVEL     DDFCCY        WCURR
      C                   EXSR      SRCURR
      C                   MOVE      A6DICB        DDDICB
      C                   ENDIF
-
+ 
      C     DDDICB        IFEQ      *BLANKS
      C                   Move      'N'           DDDICBOK
      C                   Add       1             Idx
@@ -1058,7 +1060,7 @@
      C                   Movel     'DDDICB'      FldNamXAr(Idx)
      C                   Movel     'LEF0071'     MsgIDXAr(Idx)
      C                   ELSE
-
+ 
      C                   MOVE      DDDICB        W#DICB            1 0
      C     W#DICB        IFGT      6
      C     W#DICB        ORLT      1
@@ -1078,7 +1080,7 @@
       ** VRTS1 Validate Rollover type
       *****************************************************************
      C     VRTS1         BEGSR
-
+ 
      C                   MOVE      DDRTS1        DDRTS1A
      C                   MOVE      DDRTS2        DDRTS2A
      C                   MOVE      DDRTS3        DDRTS3A
@@ -1291,7 +1293,7 @@
      C                   Movel     'DDCSEL'      FldNamXAr(Idx)
      C                   Movel     'LEF0076'     MsgIDXAr(Idx)
      C                   ENDSL
-
+ 
      C                   ELSE
      C                   MOVE      'N'           DDCSEL
      C                   ENDIF
@@ -1316,7 +1318,7 @@
      C                   Move      DDCY10        DDCY10A
      C                   Move      DDCY11        DDCY11A
      C                   Move      DDCY12        DDCY12A
-
+ 
      C     DDCSEL        IFEQ      'Y'
       *
      C     DDACCY        IFEQ      *BLANKS
@@ -1327,7 +1329,7 @@
      C                   Movel     'DDCY01'      FldNamXAr(Idx)
      C                   Movel     'LEF0077'     MsgIDXAr(Idx)
      C                   ELSE
-
+ 
       *   Check for valid entries
      C                   MOVEA     DDACCY        ACY
      C                   Z-ADD     1             Y
@@ -1416,9 +1418,9 @@
       ** VCOMD Validate Approval date
       *****************************************************************
      C     VCOMD         BEGSR
-
+ 
      C                   Z-ADD     *ZERO         W#COMD
-
+ 
       * Retrieve the Start date
      C                   MOVE      WWDTAP        W#DTAP            5 0
       *
@@ -1447,7 +1449,7 @@
      C                   PARM                    ZDAYNO            5 0
      C                   PARM                    BJDFIN
      C                   PARM                    ErrorFlag         1
-
+ 
       **   - invalid format or not numeric
      C     ErrorFlag     IFEQ      'Y'
      C                   Move      'N'           DDCOMDOK
@@ -1485,12 +1487,12 @@
       ** VCDTE Validate Closing date
       *****************************************************************
      C     VCDTE         BEGSR
-
+ 
      C                   Z-ADD     *ZERO         W#CDTE
-
+ 
       * Retrieve Expiry date
      C                   MOVE      WWDTEX        W#DTEX            5 0
-
+ 
       ** Validate Closing date if CLE006 is on
       ** and CLE106 is *ON                                                                   BUG9459
      C     CLE006        IFEQ      'Y'
@@ -1520,7 +1522,7 @@
      C                   PARM                    ZDAYNO
      C                   PARM                    BJDFIN
      C                   PARM                    ErrorFlag
-
+ 
       **   - invalid format or not numeric
      C     ErrorFlag     IFEQ      'Y'
      C                   Move      'N'           DDCDTEOK
@@ -1528,7 +1530,7 @@
      C                   Movel     'DDCDTE'      FldNamXAr(Idx)
      C                   Movel     'LEF0082'     MsgIDXAr(Idx)
      C                   ELSE
-
+ 
      C     ZDAYNO        IFLT      W#DTAP
      C     ZDAYNO        ORGT      W#DTEX
      C                   Move      'N'           DDCDTEOK
@@ -1537,7 +1539,7 @@
      C                   Movel     'LEF0083'     MsgIDXAr(Idx)
      C                   ENDIF
      C                   ENDIF
-
+ 
      C                   Z-ADD     ZDAYNO        W#CDTE            5 0
      C                   ENDIF
       *                                                                                       246880
@@ -1554,7 +1556,7 @@
      C                   Endif                                                                246880
       *
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -1562,9 +1564,9 @@
       ** VAVLD Validate Last Avail. date
       *****************************************************************
      C     VAVLD         BEGSR
-
+ 
      C                   Z-ADD     *ZERO         W#AVLD
-
+ 
       * Save value of DTEX in date form for validation of AVLD
      C                   MOVE      MDTEX         ZDAYNO
      C                   CALLB     'ZDATE2'
@@ -1573,7 +1575,7 @@
      C                   PARM      *ZERO         ZDATE             6 0
      C                   PARM      *BLANK        ZADATE            7
      C                   MOVE      ZDATE         DTEXS2            6
-
+ 
       *  Save value of AVLD which was output on screen:
      C                   MOVE      MAVLD         ZDAYNO
      C                   CALLB     'ZDATE2'
@@ -1582,10 +1584,10 @@
      C                   PARM      *ZERO         ZDATE             6 0
      C                   PARM      *BLANK        ZADATE            7
      C                   MOVE      ZDATE         AVLDS3            6
-
+ 
       * Move New expiry date from entry parm to a work field
      C                   MOVE      WNDTEX        WWNDTEX           5 0
-
+ 
       *    If no value of AVLD input or stored on file,
      C     DDAVLD        IFEQ      *BLANKS
       * Or if AVLD was previously same as Expiry Date, and the Expiry
@@ -1611,9 +1613,9 @@
      C                   PARM                    BJDFIN
      C                   PARM                    ErrorFlag
      C                   ENDIF
-
+ 
      C                   Z-ADD     ZDAYNO        W#AVLD            5 0
-
+ 
       **   - invalid format or not numeric
      C     ErrorFlag     IFEQ      'Y'
      C                   Move      'N'           DDAVLDOK
@@ -1875,7 +1877,7 @@
       ** VLPAM Validate Amount
       *****************************************************************
      C     VLPAM         BEGSR
-
+ 
      C                   Z-ADD     *ZERO         W#LPAM
       *
      C*****DDLPAM        IFNE      *BLANKS                                                    CLE106
@@ -2008,7 +2010,7 @@
       *                                                                                       CLE106
      C                   ENDIF                                                                CLE106
       *
-
+ 
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -2026,7 +2028,7 @@
      C                   MOVEL     'DDLPAM'      FldNamXAr(Idx)                              BUG9094
      C                   Movel     'LEF0093'     MsgIDXAr(Idx)
      C                   ENDIF
-
+ 
      C     DDLPPS        WHENEQ    *BLANKS
      C*****DDLPAM        ANDNE     *BLANKS                                                    CLE106
      C*****DDLPAMOK      ANDNE     'N'                                                        CLE106
@@ -2341,7 +2343,7 @@
       ** VCAXR Validate C/A Exchange rate
       *****************************************************************
      C     VCAXR         BEGSR
-
+ 
      C                   Z-ADD     *ZERO         W#CAXR
      C                   MOVE      *BLANK        W#CACY
       *
@@ -2382,7 +2384,7 @@
      C                   Z-ADD     A6SPRT        ZRATE1           13 8
      C                   MOVE      WMDIN         ZMDI2             1
      C                   Z-ADD     WSPRT         ZRATE2           13 8
-
+ 
      C                   CALLB     'ZXRATE'
      C                   PARM                    ZRATE1           13 8
      C                   PARM                    ZMDI1             1
@@ -2424,7 +2426,7 @@
      C                   CALLB     'ZEDIT'
      C                   PARM                    ZFIELD           16
      C                   PARM                    ZADEC             1 0
-
+ 
      C                   MOVE      ZFIELD        DDCAXR
      C                   MOVE      *BLANKS       ZFIELD
      C                   MOVE      DDCAXR        ZFIELD
@@ -2456,7 +2458,7 @@
      C                   CALLB     'ZEDIT'
      C                   PARM                    ZFIELD
      C                   PARM                    ZADEC
-
+ 
      C                   MOVE      ZFIELD        DDCAXR
      C                   MOVE      *BLANKS       ZFIELD
      C                   MOVE      DDCAXR        ZFIELD
@@ -2494,7 +2496,7 @@
      C                   CALLB     'ZEDIT'
      C                   PARM                    ZFIELD
      C                   PARM                    ZADEC
-
+ 
      C                   MOVE      ZFIELD        DDCAXR
      C                   MOVE      *BLANKS       ZFIELD
      C                   MOVE      DDCAXR        ZFIELD
@@ -2720,11 +2722,11 @@
       *    Valid file record.                                         *
       *                                                               *
       *****************************************************************
-
+ 
      C     SETUPVALID    BEGSR
       *
       * File LEVFCIMPD - FM file
-
+ 
      C                   MOVEL     DDSYIN        FPSYIN
      C                   MOVEL     DDSYCP        FPSYCP
      C*********          MOVE      DDANUM        FPANUM                                       BG1958
@@ -2765,16 +2767,16 @@
      C                   MOVE      DDLMTI        FPLMTI                                       CLE029
       *
       * File LEVFCINPD - FN file
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
       *****************************************************************
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
-
+ 
      C     *INZSR        BEGSR
-
+ 
      C     *ENTRY        PLIST
       * Response mode (1A), from source system common header
      C                   PARM                    RespMode
@@ -2799,7 +2801,7 @@
      C                   PARM                    WWNBDP            1
       * OK indicator - filed TRCA
      C                   PARM                    OKTRCA            1
-
+ 
       * OK indicator - filed CAFT
      C                   PARM                    OKCAFT            1
       * OK indicator - filed CAFN
@@ -2812,7 +2814,7 @@
      C                   PARM                    WBLACF            1
       * Participant Facility ind. from FCLTYFM file
      C                   PARM                    WPRTR             1
-
+ 
       * Customer Extra Data file data
      C                   PARM                    ExtData         500
       * CLE005
@@ -2827,7 +2829,7 @@
      C                   PARM                    CSC011            1
       * CEU013
      C                   PARM                    CEU013            1
-
+ 
       * OUTPUTS
       * Field OK flags (DS) from/to caller
      C                   PARM                    OKFlagsDS
@@ -2851,7 +2853,7 @@
      C                   PARM                    FacAmChg          1
       * Table OAM to be updated
      C                   PARM                    UpdOam            1
-
+ 
       *
       **  GET ZMUSER to access default branch.
      C******DTAARA       DEFINE                  ZMUSER                                      BUG8550
@@ -2867,7 +2869,7 @@
      C     *LOCK         IN        LDA
      C                   MOVEL     'LEFCIP2VL'   DBPGM
      C                   OUT       LDA
-
+ 
       ** Define work field
      C     *LIKE         DEFINE    A6NBDP        W#NBDP
       *
@@ -2952,7 +2954,7 @@
       *
      C     *DTAARA       DEFINE                  SDSTAT
      C                   IN        SDSTAT
-
+ 
      C     *DTAARA       DEFINE                  SC24X7
      C                   IN        SC24X7
       *
@@ -2979,7 +2981,7 @@
      C                   PARM      '*FIRST '     @OPTN
      C*****SDGELR        PARM      SDGELR        DSFDY                                        CGL029
      C     SDGELR        PARM      SDGELR        DSSDY                                        CGL029
-
+ 
       **  ACCESS CUSTOMER LENDING DATA
      C                   CALL      'AOCLNDR0'
      C                   PARM      '*DBERR '     @RTCD
@@ -3001,11 +3003,11 @@
      C                   PARM      '*DBERR '     @RTCD
      C                   PARM      '*FIRST '     @OPTN
      C     SDMMOD        PARM      SDMMOD        DSFDY
-
+ 
       *  Set up the name of the MSGF from which the message handler will
       *   get the messages
      C                   EVAL      #MsgFile = 'DRSMM'
-
+ 
       **  Chain to LEFCLTL0
      C     K#KY01        KLIST
      C**********         KFLD                    K1CNUM            6 0                        CSD027
@@ -3031,12 +3033,12 @@
      C**********         KFLD                    K5LNRF            6 0                        CLE148
      C                   KFLD                    K5LNRF            6                          CLE148
      C                   KFLD                    K5RCTP            1
-
+ 
       ** Key for LEFEDL1
      C     K#KY07        KLIST
      C                   KFLD                    K7CNUM            6 0
      C                   KFLD                    K7FCTY            5 0
-
+ 
       **  Used for LEREF
      C     K#KY08        KLIST
      C                   KFLD                    K8CNUM            6 0
@@ -3048,44 +3050,44 @@
      C                   KFLD                    K9CUST            6 0
      C                   KFLD                    K9FCTY            3 0
      C                   KFLD                    K9FTNO            2 0
-
+ 
       **  Used for LEFCLTL9
      C     K#KY10        KLIST
      C**********         KFLD                    K0CANM            6 0                        CSD027
      C                   KFLD                    K0CANM            6                          CSD027
      C                   KFLD                    K0CAFT            3 0
      C                   KFLD                    K0CAFN            2 0
-
+ 
      C     K#FCTYP       KLIST
      C                   KFLD                    K#CNUM            6 0
      C                   KFLD                    K#FACT            3 0
      C                   KFLD                    K4FCNO            2 0
-
+ 
      C     PLIST1        PLIST
      C                   PARM      '*BLANKS'     @RTCD             7
      C                   PARM      '*KEY   '     @OPTN             7
      C                   PARM                    FKEY              3
      C     SDFACT        PARM      SDFACT        DSFDY
-
+ 
      C     PLIST2        PLIST
      C                   PARM                    @RTCD
      C                   PARM      '*KEY   '     @OPTN
      C                   PARM                    CKEY              3
      C     SDCURR        PARM      SDCURR        DSSDY
-
+ 
      C     PLIST4        PLIST
      C                   PARM      '*BLANKS'     @RTCD
      C                   PARM      '*KEY   '     @OPTN
      C                   PARM                    ACOKEY            2
      C     SDACOF        PARM      SDACOF        DSFDY
-
-
+ 
+ 
      C     PLIST5        PLIST
      C                   PARM      '*BLANKS'     @RTCD
      C                   PARM      '*KEY   '     @OPTN
      C                   PARM                    CTRYKY            2
      C     SDCTRY        PARM      SDCTRY        DSFDY
-
+ 
      C     PLIST7        PLIST
      C                   PARM      '*BLANKS'     @RTCD
      C                   PARM      '*KEY   '     @OPTN
@@ -3105,7 +3107,7 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -3113,9 +3115,9 @@
       * RESETERRS - Reset error information that is received back     *
       *    from each validation module.                               *
       *****************************************************************
-
+ 
      C     RESETERRS     BEGSR
-
+ 
      C                   EVAL      RetCodeOut = *Blanks
       *
       * Reset error & warning fields/message IDs/message data (arrays)
@@ -3129,7 +3131,7 @@
       ** Reset Index of Warning errors.                                                      BUG5863
                                                                                              BUG5863
      C                   EVAL      WId = *ZERO                                               BUG5863
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -3137,7 +3139,7 @@
       * UPDATERRS - Update error information with that received back  *
       *    from each validation module.                               *
       *****************************************************************
-
+ 
      C     UPDATERRS     BEGSR
       *
       * Update error fields/message IDs/message data (arrays)
@@ -3205,7 +3207,7 @@
       ** Elements of Array ARO were amended from 'MTQXYZ' to 'DWFMTQ45X789VEYCIJNUZ'          CLE064
       *                                                                                       CLE064
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2002
+(c) Finastra International Limited 2002
 ** ADT
  CTDRMF                                                                                      BUG3723
 ** ARO

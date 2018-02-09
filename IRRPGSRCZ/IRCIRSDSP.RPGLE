@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas IR Cross currency IRS insert/display')           *
@@ -14,14 +14,15 @@
       *             of the cross ccy interest rate swaps screen       *
       *             input function.                                   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. BUG11376           Date 11May06               *
-      *  Prev Amend No. CDL038             Date 10May05               *
+      *  Prev Amend No. BUG11376           Date 11May06               *
+      *                 CDL038             Date 10May05               *
       *                 BUG6472            Date 20Apr05               *
       *                 CDL028             Date 07Feb05               *
       *                 CAS008             Date 16Jun04               *
@@ -46,6 +47,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG11376-Remove the incorrect declaration of STDDECLARE      *
       *  CDL038 - Extended Deal Sub Type                              *
       *  BUG6472- Added sign field for short term rate (Recompile)    *
@@ -891,7 +893,7 @@
       /COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 ** @Z0
 000000000000000000000000000000000000000000000000000000000000
 ** @NAR

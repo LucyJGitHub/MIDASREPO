@@ -7,16 +7,17 @@
 /*                                                                  */
 /*                LEC0206-ROLLOVER INSTRUCTIONS INPUT               */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CLE034             Date 05May03              */
+/*       Prev Amend No. CLE034             Date 05May03              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.03 ---------------------------------------------------*/
-/*       Prev Amend No. CLE105             Date 22Mar00              */
+/*                      CLE105             Date 22Mar00              */
 /* Midas DBA 3.02 ---------------------------------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      CLE004             Date 02Dec96              */
@@ -24,6 +25,7 @@
 /*                                                                  */
 /********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CLE034 - Lending Enhancements.                              */
 /*       CLE105 - LE Maintenance Function Switchability             */
 /*       CLE004 - Customer Lending Enhancements - Syndications      */
@@ -35,7 +37,7 @@
 /*********************************************************************/
              PGM
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/                                                         /*CLE004*/
              DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)        /*CLE004*/
@@ -82,5 +84,5 @@
              ENDDO                                           /*CLE004*/
 EXIT:                                                        /*CLE004*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

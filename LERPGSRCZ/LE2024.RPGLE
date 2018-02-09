@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*S*D****RPGBASEBND****************************************************                       CAP070
 /*STD *  RPGBASEMOD                                                   *                       CAP070
@@ -12,20 +12,22 @@
       *                                                               *
       *  Function:                                                    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4.01 -------------------------------------------*
-      *  Last Amend No. CAP070             Date 04Mar02               *
+      *  Prev Amend No. CAP070             Date 04Mar02               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.00 ---------------- Base -------------------------*
-      *  Prev Amend No. CLE004  *CREATE    Date 140297                *
+      *                 CLE004  *CREATE    Date 140297                *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CAP070 - Conversion of LE inputs into modular structure to   *
       *           use as APIs.                                        *
       *  CLE004 - Customer Lending Enhancements - Syndications.       *

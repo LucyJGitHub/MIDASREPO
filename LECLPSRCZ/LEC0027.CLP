@@ -8,17 +8,19 @@
 /********LEC0011I*-*LE*FACILITY*CURRENCY*AMOUNT*INITIALISATION********/                   /*CLE106*/
 /*       LEC0027  - LE Facility Currency Amount Initialisation       */                   /*CLE106*/
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2003           */
+/*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CLE106             Date 01Aug04              */
-/*       Prev Amend No. 223803  *CREATE    Date 23Dec03              */
+/*       Prev Amend No. CLE106             Date 01Aug04              */
+/*                      223803  *CREATE    Date 23Dec03              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CLE106 - Renamed LEC0017 and LE0017 to LEC0027 and LE0027   */
 /*                respectively since LEC0017 and LE0017 aready exist */
 /*                in core library.                                   */
@@ -30,7 +32,7 @@
              PGM
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&LDA) TYPE(*CHAR) LEN(256)
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
@@ -71,6 +73,6 @@
              MONMSG     MSGID(CPF0000 MCH0000)
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

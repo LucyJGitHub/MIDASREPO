@@ -7,10 +7,11 @@
 /*                                                                   */
 /*       LEC0702 - CLOSE OF BUSINESS CONFIRMATION PROCESSING         */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD021577           Date 05Aug13              */
-/*       Prev Amend No. CLE075BO           Date 06Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD021577           Date 05Aug13              */
+/*                      CLE075BO           Date 06Aug12              */
 /*                      CLE134             Date 01Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -35,6 +36,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD021577 - LEC0702 failed due to lock conflict              */
 /*       CLE075BO - COB Restructure - LE COB Optimisation Phase 1    */
 /*       CLE134 - Past Due Call Loan Processing                      */
@@ -58,7 +60,7 @@
              PGM        PARM(&CNAM &CSEQ &RERUN)                                          /*CLE134*/
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /**********  DCL        VAR(&JLIB) TYPE(*CHAR) LEN(6)              */                   /*CLE075BO*/
@@ -617,7 +619,7 @@ ERROR:       IF         COND(&MSG = ' ') THEN(DO)
 /**********      CALL       PGM(CB0150) PARM(&CNAM &CSEQ &STAT)    */            /*CCB009 CLE075BO*/
 /*******************************************************************/            /*CCB009 CLE075BO*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /*                                                                                        /*CSC020*/
 /* Write current journal sequence number to file SCJSEQPD, using command SCWRTJREG.       /*CSC020*/
 /*                                                                                        /*CSC020*/

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas LE Customer loans input database Controller')    *
@@ -9,10 +9,11 @@
       *                                                               *
       *  LECLIPUPC - Loans input database update controller           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE141             Date 08Feb16               *
-      *  Prev Amend No. LLN022A            Date 03Jun15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE141             Date 08Feb16               *
+      *                 LLN022A            Date 03Jun15               *
       *                 LLN022             Date 03Jun15               *
       *                 MD030621           Date 26Feb15               *
       *                 AR868380           Date 11Jun13               *
@@ -49,6 +50,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE141 - Currency and Location Business Day Convention for   *
       *           Lending Transactions (Recompile)                    *
       *  LLN022A - BOE Upgrade to MidasPlus - incorporate code from   *
@@ -102,7 +104,7 @@
       *  CAP074 - Lending API enhancements - Loans input.             *
       *                                                               *
       *****************************************************************
-
+ 
      FLEVCLILPD UF   E             DISK
      F                                     COMMIT
      FLEVCLIKPD UF   E             DISK
@@ -127,10 +129,10 @@
      F                                     RENAME(LEVCLILD0:LEVCLILERR)
      FLEVECLIKPDO    E             DISK
      F                                     RENAME(LEVCLIKD0:LEVCLIKERR)
-
+ 
       * Hook to enable non-core files to be included
       /COPY WNCPYSRC,LECLIPU010
-
+ 
       ** Valid File                                                                          LLN022A
       *                                                                                      LLN022A
      FLEVCLIPY0 UF A E           K DISK    INFSR(*PSSR)                                      LLN022A
@@ -159,51 +161,51 @@
       *                                     handler)
       *  and the following variables:
       *     RunBefore  1A (for the PSSR)
-
+ 
      D/COPY ZACPYSRC,STD_D_SPEC
-
+ 
       * Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
-
+ 
       * Program Status Data Structure
       * =============================
       * The following /COPY line includes all the defined fields in the
       * PSDS.  They have meaningful names, prefixed by 'PS'.
-
+ 
      D/COPY ZACPYSRC,PSDS
-
+ 
       *------------------------------------------------------------------------
       * The following /COPY line includes the definitions for fields
       * used in checking whether there are messages on the data queue.
      D/COPY ZACPYSRC,DTAQCHKDCL
       *------------------------------------------------------------------------
-
+ 
       * +--------------------------------------+
       *   End of automatically included D-specs 
       *   ===================================== 
       * +--------------------------------------+
      D DBerrUpd        C                   CONST('DB error in CLIP API update')
-
+ 
       *****************************************************************
-
+ 
       * Externally described data structure for valid loan format CL
      D LECLIL        E DS                  EXTNAME(LEVCLILPD)
-
+ 
       * Externally described data structure for valid loan format CK
      D LECLIK        E DS                  EXTNAME(LEVCLIKPD)
      D                                     PREFIX(K_)
-
+ 
      D LECLIPUPC       DS             1    DTAARA(LECLIPUPC)
-
+ 
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
       * External data structure for SAR details
-
+ 
      D DSFDY         E DS                  EXTNAME(DSFDY)
       * First DS for access programs, short date structure
-
+ 
      D SDLOAN        E DS                  EXTNAME(SDLOANPD)
       * External DS for loans details
-
+ 
      D SDLENO        E DS                  EXTNAME(SDLENOPD)
       * Loan number ranges file
       *                                                                                       CER001
@@ -218,7 +220,7 @@
       *                                                                                       CER001
       ** DS Customer Loans - LU Ext. File                                                     CER001
       *                                                                                       CER001
-
+ 
      D Object          S             10A   INZ('LECLIPUPC')
      D LockObj         S             10A   INZ('LECLIPLCK')                                   201589
      D Lib             S             10A   INZ('*LIBL')
@@ -232,18 +234,18 @@
      D Return2         S              7A                                                      201589
      D Endjob          S              1A   INZ('Y')                                           201589
      D @Timestamp      S             26Z
-
+ 
       * Dummy message ID and message file fields for use on the calls to
       * ZAMSGTOOPR
      D DummyMsgID      S                   LIKE(#MsgID)
      D DummyMsgF       S             10A
-
-
+ 
+ 
       * +--------------------------------------+
       *   End of D-specs                        
       *   ==============                        
       * +--------------------------------------+
-
+ 
       * +----------------------------------------+
       *   Hook for non-core D-specs (all types)   
       *   also any I-specs (if necessary)         
@@ -264,19 +266,19 @@
       * MAIN - MAIN BODY                                              *
       *                                                               *
       *****************************************************************
-
+ 
       /COPY WNCPYSRC,LECLIPU001
-
+ 
       * Set up the name of the server/database updater data queue.
      C                   EVAL      DtaQName = 'APCLIPDTQ'
-
+ 
       *------------------------------------------------------------------------
       * The following /COPY line includes a check for whether there
       * are messages on the server/updater data queue, and sends a 'GO'.
       * message to the data queue if there are not.
      D/COPY ZACPYSRC,DTAQCHK
       *------------------------------------------------------------------------
-
+ 
       * Initialise Data queue parms
      C                   EVAL      DtqLen = 10
      C                   EVAL      DtqWait = -1
@@ -304,38 +306,38 @@ B002 C     DtqDta        IFEQ      'GO'
      C                   PARM                    WaitTime
      C                   PARM                    Dlcobj
      C                   PARM                    Return
-
+ 
       /COPY WNCPYSRC,LECLIPU002
-
+ 
       * Position file cursor to start of file to prevent problems on
       * later calls
      C     1             SETLL     LEVCLILPD
      C     1             SETLL     LEVCLIKPD
-
+ 
       * Read valid loans
      C                   READ      LEVCLIKD0                              99    *
      C                   READ      LEVCLILD0                              99    *
 B003 C     *IN99         DOWEQ     '0'
-
+ 
      C                   EVAL      @LoanNo = CLLNRF
      C                   EVAL      @Timestamp = CLTMES
       /COPY WNCPYSRC,LECLIPU003
-
+ 
       * Load the API Dump data area with as many fields from the message
       *  header as are available, so that dumps in any lowere level modules
       *  will include the key information
      C                   EVAL      ARFOTranID = CLFRNT
      C                   EVAL      ARRprLocn  = CLREPA
-
+ 
       /COPY WNCPYSRC,LECLIPU004
-
+ 
       * Get the range number
      C                   MOVEL     *BLANKS       @@LNTY
      C                   MOVEL     *BLANKS       @@LNST
      C                   MOVEL     *BLANKS       @@LNCL                                       CLE042
      C                   MOVEL     *BLANKS       @@PRang
      C                   EXSR      SRNXLN
-
+ 
       * Data base update
      C                   CALLB     'LECLIPUPD'
      C                   PARM                    @@RTCD
@@ -401,9 +403,9 @@ B003 C     *IN99         DOWEQ     '0'
       *                                                                                       CER001
      C                   ENDIF                                                                CER001
      C                   ENDIF                                                              AR868380
-
+ 
       /COPY WNCPYSRC,LECLIPU007
-
+ 
      C                   IF        LLN007 = 'Y'                                              LLN022A
       *                                                                                      LLN022A
       ** Call LECLIPUPD1 to update BoE database if no errors in the                          LLN022A
@@ -475,9 +477,9 @@ X004 C                   ELSE
       *                                                                                       CER001
      C                   COMMIT
 E004 C                   ENDIF
-
+ 
       /COPY WNCPYSRC,LECLIPU008
-
+ 
       * If an error has occurred, reaccess record in error and remove from
       * the file to prevent program processing the same record again
 B004 C     @@RTCD        IFEQ      '*ERROR '
@@ -496,7 +498,7 @@ B004 C     *IN89         IFEQ      *ON
      C                   EXSR      *PSSR
 E004 C                   ENDIF
      C                   DELETE    LEVCLILD1
-
+ 
      C                   WRITE     LEVCLIKERR
      C     @KLECL1       CHAIN     LEVCLIKL1                          89
 B004 C     *IN89         IFEQ      *ON
@@ -549,16 +551,16 @@ E004 C                   ENDIF                                                  
      C                   PARM                    DBError
      C                   PARM                    DummyMsgID
      C                   PARM                    DummyMsgF
-
+ 
 E004 C                   ENDIF
-
+ 
       * Read valid loans
      C                   READ      LEVCLILD0                              99    *
      C                   READ      LEVCLIKD0                              99    *
-
+ 
 E003 C                   END
 E002 C                   END
-
+ 
       * Unlock allocation data area
      C                   CALLB     'APCDLCOBJ'
      C                   PARM                    Object
@@ -567,18 +569,18 @@ E002 C                   END
      C                   PARM                    LockStateE
      C                   PARM                    Member
      C                   PARM                    Return
-
+ 
       * End loop for data queue prompt
 E001 C                   END
-
+ 
       /COPY WNCPYSRC,LECLIPU009
-
+ 
       * Exit from program
      C                   RETURN
-
+ 
       * Hook to enable non-core subroutines to be included
       /COPY WNCPYSRC,LECLIPU012
-
+ 
       /EJECT
       *****************************************************************
       *                                                               *
@@ -586,7 +588,7 @@ E001 C                   END
       *                                                               *
       *****************************************************************
      C     SRNXLN        BEGSR
-
+ 
      C                   MOVE      CLLTYP        @@LNTY            2
      C                   MOVE      CLSUTP        @@LNST            2
      C                   MOVE      CLCLAS        @@LNCL            4                          CLE042
@@ -607,7 +609,7 @@ E001 C                   END
      C                   ELSE
      C                   MOVE      AYRANG        @@PRang           2
      C                   ENDIF
-
+ 
      C                   ENDSR
      C****************************************************************
       /EJECT
@@ -655,7 +657,7 @@ E001 C                   END
      C                   EXSR      *PSSR                                                     BUG3721
      C                   ENDIF                                                               BUG3721
      C                   ENDIF                                                               BUG3721
-
+ 
       ** Access SAR details file to determine if LLN007                                      LLN022A
       ** Bank of England Yellow Book Changes is installed.                                   LLN022A
       *                                                                                      LLN022A
@@ -713,24 +715,24 @@ E001 C                   END
      C                   PARM                    Return2                                      201589
                                                                                               201589
       * Lock allocation data area
-
+ 
       * The data area is allocated *SHRRD here and *EXCL whilst processing
       * of the valid file is actually taking place.
       * The function to submit this updater tries to get a *EXCL lock.
       * The controller tries to get a *SHRRD lock.
-
+ 
       *                         Submitter             Controller
       *                 Lock      Lock     Submitter     Lock     Controller
       *      Status    Status   Successful   Action   Successful    Action
       *      ------    ------   ---------- ---------  ----------  ----------
       *   Not running  None        Yes      Submit       Yes        Prompt
       *                                     updater                 updater
-
+ 
       *   Running not  *SHRRD      No        None        Yes        Prompt
       *    processing                                               updater
-
+ 
       *   Processing   *EXCL       No        None        No         None
-
+ 
      C                   CALLB     'APCALCOBJ'
      C                   PARM                    Object
      C                   PARM                    Lib
@@ -740,16 +742,16 @@ E001 C                   END
      C                   PARM                    WaitTime
      C                   PARM                    Dlcobj
      C                   PARM                    Return
-
+ 
       * Create required QTEMP objects
      C                   CALL      'APCCRTQTO'
      C                   PARM                    ReturnCde        10
-
+ 
      C                   EVAL      @RTCD = *BLANKS
-
+ 
       * Hook to enable non-core initial processing to be included
       /COPY WNCPYSRC,LECLIPU013
-
+ 
      C                   ENDSR
      C****************************************************************
       /EJECT
@@ -758,4 +760,4 @@ E001 C                   END
      C/COPY ZACPYSRC,PSSR_ILE
       /EJECT
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2002
+(c) Finastra International Limited 2002

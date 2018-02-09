@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas IR Validate Up-Front Fee Value Date')
@@ -9,7 +9,7 @@
       *                                                               *
       *  IRVUPVD01 - Validate Up-Front Fee Value Date                 *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
       *    This source is centrally supported and must ONLY be        *
       *    amended by Core Development Personnel                      *
@@ -17,16 +17,18 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. 218649             Date 10Jul03               *
+      *  Prev Amend No. 218649             Date 10Jul03               *
       * Midas Release 4.01 -------------------------------------------*
-      *  Prev Amend No. CAP041  *CREATE    Date 07Jan02               *
+      *                 CAP041  *CREATE    Date 07Jan02               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  218649 - The system does not allow the entry of Up-Front Fee *
       *           Value Date that is equal to the Maturity Date.      *
       *  CAP041 - APIs for IRS Fees/Buy-Outs/Processing Method/Next   *
@@ -421,4 +423,4 @@
       /COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2002
+(c) Finastra International Limited 2002

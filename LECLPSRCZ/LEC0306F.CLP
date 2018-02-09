@@ -7,10 +7,11 @@
 /*                                                                   */
 /*       LEC0306F - Facility Activity Enquiry                        */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD044620           Date 10Apr17              */
-/*       Prev Amend No. AR936915           Date 07Oct14              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD044620           Date 10Apr17              */
+/*                      AR936915           Date 07Oct14              */
 /*                      AR693662           Date 06Jan11              */
 /*                      CUP005             Date 21Sep10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
@@ -30,6 +31,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD044620 - Temporary files of LEFCENPD & LEFATRPD are being */
 /*                  created in XPLIB. Use multi-member for LEFCENPD  */
 /*                  & LEFATRPD to create a member for the job.       */
@@ -57,11 +59,11 @@
 /*                                                                   */
 /*********************************************************************/
              PGM
-
+ 
              DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&JOBID) TYPE(*CHAR) LEN(10)               /*189088*/
              DCL        VAR(&JOBNBR) TYPE(*CHAR) LEN(6)                                   /*CUP005*/
@@ -78,21 +80,21 @@
              DCL        VAR(&NEWPF2) TYPE(*CHAR) LEN(10)                                  /*CUP005*/
              DCL        VAR(&NEWL02) TYPE(*CHAR) LEN(10)                                  /*CUP005*/
              DCL        VAR(&PREFIX) TYPE(*CHAR) LEN(2)               /*189088*/
-
+ 
 /**********  CPYF       FROMFILE(LEFCENPD) TOFILE(QTEMP/LEFCENPD) +                    */ /*CUP005*/
 /**********               CRTFILE(*YES)                                     */ /*189088*/ /*CUP005*/
 /**********  MONMSG     MSGID(CPF2863 CPF2817) EXEC(CLRPFM +                           */ /*CUP005*/
 /**********               FILE(QTEMP/LEFCENPD))                             */ /*189088*/ /*CUP005*/
-
+ 
 /* Global monitor message */
-
+ 
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
-
+ 
 /* LF LEFCENL0 needs to be based on LEFCENPD in QTEMP. This is          189088*/
 /* achieved by CRTDUPOBJ of LF to QTEMP (called 'job name' to ensure    189088*/
 /* uniqueness), MOVOBJ to xxDMLIB, CRTDUPOBJ back to QTEMP.             189088*/
-
+ 
 /**********  RTVJOBA    JOB(&JOBID)                                         */ /*189088*/ /*CUP005*/
              RTVJOBA    JOB(&JOBID) NBR(&JOBNBR)                                          /*CUP005*/
              RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&PREFIX)          /*189088*/
@@ -112,7 +114,7 @@
              CHGVAR     VAR(&NEWL02) VALUE('LE' *TCAT &JOBNBR *TCAT +
                           'L2')                                                         /*AR693662*/
 /**********               'L02')                                          */ /*CUP005*/ /*AR693662*/
-
+ 
 /**********  CPYF       FROMFILE(LEFCENPD) TOFILE(&XPLIB/LEFCENPD) +                 */ /*MD044620*/
 /**********               CRTFILE(*YES)                                       */ /*CUP005 MD044620*/
              CPYF       FROMFILE(LEFCENPD) TOFILE(LEFCENPD) +
@@ -126,35 +128,35 @@
              MONMSG     MSGID(CPF5812 CPF7306)                                          /*MD044620*/
              OVRDBF     FILE(LEFCENPD) TOFILE(LEFCENPD) MBR(&NEWPF1)                    /*MD044620*/
              OVRDBF     FILE(LEFCENL0) TOFILE(LEFCENL0) MBR(&NEWL01)                    /*MD044620*/
-
+ 
 /**********  CRTDUPOBJ  OBJ(LEFCENL0) FROMLIB(&DVLIB) OBJTYPE(*FILE) +                 */ /*CUP005*/
 /**********               TOLIB(QTEMP) NEWOBJ(&JOBID)                       */ /*189088*/ /*CUP005*/
 /**********  CRTDUPOBJ  OBJ(LEFCENL0) FROMLIB(&DVLIB) OBJTYPE(*FILE) +               */ /*MD044620*/
 /**********               TOLIB(&XPLIB) NEWOBJ(&JOBID)                        */ /*CUP005 MD044620*/
 /**********  MONMSG     MSGID(CPF2130 CPD2104)                                */ /*189088 MD044620*/
-
+ 
 /**********  MOVOBJ     OBJ(&JOBID) OBJTYPE(*FILE) TOLIB(&DMLIB)              */ /*189088 MD044620*/
 /**********  MONMSG     MSGID(CPF2135)                                        */ /*189088 MD044620*/
-
+ 
 /**********  CRTDUPOBJ  OBJ(&JOBID) FROMLIB(&DMLIB) OBJTYPE(*FILE) +                   */ /*CUP005*/
 /**********               TOLIB(QTEMP) NEWOBJ(LEFCENL0)                     */ /*189088*/ /*CUP005*/
 /**********  CRTDUPOBJ  OBJ(&JOBID) FROMLIB(&DMLIB) OBJTYPE(*FILE) +                 */ /*MD044620*/
 /**********               TOLIB(&XPLIB) NEWOBJ(LEFCENL0)                      */ /*CUP005 MD044620*/
 /**********  MONMSG     MSGID(CPF2130 CPD2104)                                */ /*189088 MD044620*/
 /**********  DLTF       FILE(&DMLIB/&JOBID)                                   */ /*189088 MD044620*/
-
+ 
 /**********  RNMOBJ     OBJ(&XPLIB/LEFCENPD) OBJTYPE(*FILE) +                        */ /*MD044620*/
 /**********               NEWOBJ(&NEWPF1)                                     */ /*CUP005 MD044620*/
 /**********  RNMOBJ     OBJ(&XPLIB/LEFCENL0) OBJTYPE(*FILE) +                        */ /*MD044620*/
 /**********               NEWOBJ(&NEWL01)                                     */ /*CUP005 MD044620*/
 /**********  MOVOBJ     OBJ(&XPLIB/&NEWPF1) OBJTYPE(*FILE) TOLIB(&DPLIB)      */ /*CUP005 MD044620*/
 /**********  MOVOBJ     OBJ(&XPLIB/&NEWL01) OBJTYPE(*FILE) TOLIB(&DPLIB)      */ /*CUP005 MD044620*/
-
+ 
 /**********  OVRDBF     FILE(LEFCENPD) TOFILE(QTEMP/LEFCENPD)               */ /*189088*/ /*CUP005*/
 /**********  OVRDBF     FILE(LEFCENL0) TOFILE(QTEMP/LEFCENL0)               */ /*189088*/ /*CUP005*/
 /**********  OVRDBF     FILE(LEFCENPD) TOFILE(&DPLIB/&NEWPF1)                 */ /*CUP005 MD044620*/
 /**********  OVRDBF     FILE(LEFCENL0) TOFILE(&DPLIB/&NEWL01)                 */ /*CUP005 MD044620*/
-
+ 
 /**********  STRJRNPF   FILE(QTEMP/LEFCENPD) JRN(ICJRN) +                              */ /*CUP005*/
 /**********               IMAGES(*BOTH) OMTJRNE(*OPNCLO)                    */ /*189088*/ /*CUP005*/
 /**********  STRJRNPF   FILE(&DPLIB/&NEWPF1) JRN(ICJRN) IMAGES(*BOTH) +              */ /*MD044620*/
@@ -205,7 +207,7 @@
 /**********               NEWOBJ(&NEWL02)                                     */ /*CUP005 MD044620*/
 /**********  MOVOBJ     OBJ(&XPLIB/&NEWPF2) OBJTYPE(*FILE) TOLIB(&DPLIB)      */ /*CUP005 MD044620*/
 /**********  MOVOBJ     OBJ(&XPLIB/&NEWL02) OBJTYPE(*FILE) TOLIB(&DPLIB)      */ /*CUP005 MD044620*/
-
+ 
 /**********  OVRDBF     FILE(LEFATRPD) TOFILE(QTEMP/LEFATRPD)               */ /*189343*/ /*CUP005*/
 /**********  OVRDBF     FILE(LEFATRL0) TOFILE(QTEMP/LEFATRL0)               */ /*189343*/ /*CUP005*/
 /**********  OVRDBF     FILE(LEFATRPD) TOFILE(&DPLIB/&NEWPF2)                 */ /*CUP005 MD044620*/
@@ -216,18 +218,18 @@
 /**********  STRJRNPF   FILE(&DPLIB/&NEWPF2) JRN(ICJRN) IMAGES(*BOTH) +              */ /*MD044620*/
 /**********               OMTJRNE(*OPNCLO)                                    */ /*CUP005 MD044620*/
 /**********  MONMSG     MSGID(CPF7030)                                        */ /*189343 MD044620*/
-
+ 
              RTVJOBA    TYPE(&JOBTYPE)
              CHGDTAARA  DTAARA(LDA) VALUE(' ')
              CHGJOB     SWS(XXXXXX00)
-
+ 
 /* Call Facility Activity Enquiry */
-
+ 
              OVRDBF     FILE(FCLTY) TOFILE(FCLTY4)  SHARE(*YES)                         /*BUG22126*/
 /**********  CALL       PGM(LE0211)                                         */          /*AR936915*/
              CALL       PGM(LE0211) PARM(&NEWPF1 &NEWPF2)                               /*AR936915*/
              DLTOVR     FILE(FCLTY)                                                     /*BUG22126*/
-
+ 
 /**********  ENDJRNPF   FILE(QTEMP/LEFCENPD QTEMP/LEFATRPD) +               */ /*189343*/ /*CUP005*/
 /**********               JRN(ICJRN)                                        */ /*189343*/ /*CUP005*/
 /**********  ENDJRNPF   FILE(&DPLIB/&NEWPF1 &DPLIB/&NEWPF2) JRN(ICJRN)        */ /*CUP005 MD044620*/
@@ -235,7 +237,7 @@
              DLTOVR     FILE(LEFCENL0)                                /*189088*/
              DLTOVR     FILE(LEFATRPD)                                                    /*189343*/
              DLTOVR     FILE(LEFATRL0)                                                    /*189343*/
-
+ 
 /**********  DLTF       FILE(QTEMP/LEFCENL0)                                */ /*194909*/ /*CUP005*/
 /**********  DLTF       FILE(QTEMP/LEFCENPD)                                */ /*194909*/ /*CUP005*/
 /**********  DLTF       FILE(&DPLIB/&NEWL01)                                  */ /*CUP005 MD044620*/
@@ -249,18 +251,18 @@
              RMVM       FILE(LEFATRPD) MBR(&NEWPF2)                                     /*MD044620*/
                                                                                         /*MD044620*/
 /* Database error processing */
-
+ 
              IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
                 RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
                 SNDPGMMSG  MSGID(MEM0001) MSGF(MIDAS) MSGDTA(&MEM) +
                              TOPGMQ(*EXT) TOMSGQ(MOPERQ)
              ENDDO
-
+ 
              GOTO       CMDLBL(END)
-
+ 
  ABNOR:      CHGJOB     SWS(XXXXXX11)
-
+ 
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
-
+                          Finastra International Limited')
+ 
              ENDPGM

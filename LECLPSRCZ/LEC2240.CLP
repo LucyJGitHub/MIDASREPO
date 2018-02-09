@@ -7,17 +7,19 @@
 /*                                                                   */
 /*       LEC2240 - Settlement Allocations Batch Update               */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2002           */
+/*       (c) Finastra International Limited 2002                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CLE038             Date 20May04              */
-/*       Prev Amend No. CLE034 *CREATE     Date 05May03              */
+/*       Prev Amend No. CLE038             Date 20May04              */
+/*                      CLE034 *C *CREATE  Date 05May03              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CLE038 - Lending Enhancement for Nordea: Allocation by Amt  */
 /*       CLE034 - Lending Enhancements.                              */
 /*                                                                   */
@@ -32,7 +34,7 @@
              DCL        VAR(&TSTMP) TYPE(*CHAR) LEN(26)
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2002')
  
 /* Global monitor message */
@@ -55,7 +57,7 @@
  
  ENDPGM:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
  
              ENDPGM

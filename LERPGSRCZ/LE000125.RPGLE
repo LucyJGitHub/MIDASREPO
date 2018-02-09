@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas LE Connect to BF Midas thru Web Services')       *
@@ -13,15 +13,17 @@
       *             Calls by accessing the Web services               *
       *             Patterned from BF000013                           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD034502           Date 25May15               *
-      *  Prev Amend No. MD033895           Date 15Apr15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD034502           Date 25May15               *
+      *                 MD033895           Date 15Apr15               *
       *                 MD021278           Date 22Jul13               *
       *                 AR1095331*CREATE   Date 07Apr13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD034502 - FB Midas 2.1 SP8 Drop3 COB issues                 *
       *  MD033895 - Password retrieval issue during COB               *
       *  MD021278 - LEC000125 fails with timeout error                *

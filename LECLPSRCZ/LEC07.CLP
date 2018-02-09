@@ -7,10 +7,11 @@
 /*                                                                  */
 /*       LEC07 - END OF DAY PROCESSING                              */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. AR1061796          Date  03Dec12             */
-/*       Prev Amend No. CLE134             Date  01Aug12             */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR1061796          Date 03Dec12              */
+/*                      CLE134             Date 01Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -23,6 +24,7 @@
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       AR1061796 - Encountered error in component LEC07 sequence  */
 /*                   10003, 10004 and 10005                         */
 /*       CLE134 - Past Due Call Loan Processing                     */
@@ -43,7 +45,7 @@
              PGM        PARM(&PARM &FILE1 &FILE2 &FILE3 &RERUN &RSEQ +
                           &RLEV &RENT)                                                 /*AR1061796*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
 /*           DCLDTAARA  DTAARA(LDA)                                 *  *S01179*/
@@ -101,5 +103,5 @@ ERROR:       IF         COND(%SWITCH(XXXXXX11)) THEN(DO)
              ENDDO
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 ENDPGM:         ENDPGM

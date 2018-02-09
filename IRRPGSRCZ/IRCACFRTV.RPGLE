@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas IR Caps/Collars/Floors Retrieve')                *
@@ -13,10 +13,11 @@
       *             from the database.  As it does so, it validates   *
       *             the action code, deal number and deal type.       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
-      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 MD000091           Date 08May13               *
@@ -57,6 +58,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
@@ -127,20 +129,20 @@
       *    RESET for subsequent passes.                               *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FIRFRAL0   IF   E           K DISK    INFSR(*PSSR)
       ** FRA/IRS by Front Office ID
- 
+
      FDLCACFL0  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(DEALSDGF:DLCACFLL)
      F
       ** All Caps/Collars/Floors Deal Type = 'RR', 'RP' and 'RF'
- 
+
      FDEALSALL  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(FXDEALP0:FXDLALL)
      F                                     RENAME(MMDELDP0:MMDELALL)
@@ -148,10 +150,10 @@
      F                                     RENAME(MMDENBP0:MMDEBALL)
      F                                     RENAME(DEALSDGF:DLSDGALL)
       ** All Deals File
- 
+
      FFDDLNMLL  IF   E             DISK    INFSR(*PSSR)
       ** Deal Number Record
- 
+
      FSDCWHTL1  IF   E           K DISK    INFSR(*PSSR)                                       CSD015
       ** Compliance Watch Hit List by Function                                                CSD015
                                                                                               CSD015
@@ -163,10 +165,10 @@
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
       ** +--------------------------------------+
- 
+
       ** Standard D-specs
       ** ================
- 
+
       ** The following /COPY line includes the LDA layout,
       ** the copyright array definition,
       ** and the following named constants:
@@ -182,51 +184,51 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** External DS for Branch Details
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
- 
+
       ** First DS for Access Programs, Short Data Structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
                                                                                               CSD015
@@ -245,28 +247,28 @@
                                                                                               CSD015
       ** 24X7 Status DataArea Layout                                                          CSD015
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)                     CSD015
- 
+
       ** Deal in File Format
      D CACFFmt       E DS                  EXTNAME(DEALSDG)
- 
+
       ** Deal in File Format
      D CrIRFilFmt    E DS                  EXTNAME(DEALSDG)
      D                                     PREFIX(Cr)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0
- 
+
       ** OK flags
      D OKACCD          S              1
      D OKDLNO          S              1
      D OKDTYP          S              1
      D OKBRCA          S              1
- 
+
      ** Switchable Features                                                                   CSD015
      D CSD015          S              1A                                                      CSD015
      D CSC011          S              1A                                                      CSD015
@@ -298,7 +300,7 @@
      D PBranch         S              3
      D P2Brca          S              3
      D CIR008          S              1A                                                      CIR008
- 
+
      D BJSBRC          S              3
      D PkDBRC          S              3
      D BKOBUV          S              1
@@ -329,7 +331,7 @@
      D P@VL10          S            200A                                                    AR996631
      D WPEAInd         S              1A                                                    AR996631
      D CSC054          S              1A                                                    AR996631
- 
+
       **                                                                                    MD000091
      D BChar           DS                                                                   MD000091
      D   BLen                  1      2B 0                                                  MD000091
@@ -342,50 +344,50 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *inzsr is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initialization
- 
+
      C                   EXSR      SRInitial
- 
+
       ** If the mode is 'Front Office Transaction Interface',
       ** perform validation for Front Office Transaction Interface
- 
+
      C                   IF        ModeofOp = '*FRONT'
      C                   EXSR      SRValFront
- 
+
       ** Carry out no further validation if errors have occurred.
- 
+
      C                   IF        OKACCD = 'N' OR OKDLNO = 'N'
      C                             OR OKDTYP = 'N'
      C                   RETURN
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Validate Action Code, Deal Number and Deal Type
- 
+
      C                   EXSR      SRValidate
- 
+
       **  Carry out no further validation if errors have occurred.
- 
+
      C                   IF        OKACCD = 'N' OR OKDLNO = 'N'
      C                             OR OKDTYP = 'N'
      C                   RETURN
      C                   ENDIF
- 
+
       ** Validation of Action Codes
- 
+
      C                   SELECT
- 
+
       ** Validation for Action Code 'E'
- 
+
      C                   WHEN      PAcCd = 'E'
      C                   EXSR      SRValEnq
                                                                                               CIR008
@@ -393,27 +395,27 @@
                                                                                               CIR008
      C                   WHEN      PAcCd = 'X' AND CIR008 = 'Y'                               CIR008
      C                   EXSR      SRValAuth                                                  CIR008
- 
+
       ** Validation for Action Code 'I', if deal number is not to be
       ** generated
- 
+
      C                   WHEN      PAcCd = 'I' and PDlNo <> *BLANKS
      C                   EXSR      SRValIns
- 
+
       ** Validation for Action Code 'A'
- 
+
      C                   WHEN      PAcCd = 'A'
      C                   EXSR      SRValAmd
- 
+
       ** Validation for Action Code 'D'
- 
+
      C                   WHEN      PAcCd= 'R'
      C                   EXSR      SRValDel
- 
+
      C                   ENDSL
- 
+
       ** Carry out no further validation if errors occurred
- 
+
      C                   IF        OKACCD = 'N' OR OKDLNO = 'N'
      C                             OR OKDTYP = 'N'
      C                   RETURN
@@ -425,17 +427,17 @@
      C                   IF        PAcCd <> 'I'
      C                   EVAL      CrIRFilFmt = CACFFmt
      C                   ENDIF
- 
+
       ** Access Security Checking
- 
+
      C                   IF        RespMode = 'S'
      C                   EXSR      SRSecChk
      C                   ENDIF
- 
+
       ** Return
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -444,12 +446,12 @@
       *               Interface                                       *
       *                                                               *
       *****************************************************************
- 
+
      C     SRValFront    BEGSR
- 
+
       ** Error if Action Code is not 'I', 'A', 'R'
       ** ... or 'X' if CIR008 is installed                                                    CIR008
- 
+
      C                   IF        PAcCd <> 'I' AND PAcCd <> 'A' AND
      C                             PAcCd <> 'R'
      C                   IF        CIR008 = 'N' OR  PAcCd <> 'X'                              CIR008
@@ -463,9 +465,9 @@
      C                   ENDIF                                                                CIR008
      C                   ENDIF
      C                   ENDIF                                                                CIR008
- 
+
       ** Error if Front Office Transaction ID is Blank
- 
+
      C                   IF        PFOTrId = *BLANK
      C                   EVAL      OKACCD = 'N'
      C                   EVAL      Idx = Idx + 1
@@ -476,17 +478,17 @@
      C                   IF        OKACCD = 'N'
      C                   GOTO      EValFrnt
      C                   ENDIF
- 
+
       ** Access Deal with Front Office Transaction ID
- 
+
      C     PFOTrId       CHAIN     IRFRAL0
- 
+
       ** If Insert
- 
+
      C                   IF        PAcCd = 'I'
- 
+
       ** Front Office Transaction ID cannot be present already
- 
+
      C                   IF        %FOUND(IRFRAL0)
      C                   EVAL      OKACCD = 'N'
      C                   EVAL      Idx = Idx + 1
@@ -497,11 +499,11 @@
      C                   EVAL      MsgDtaArr(Idx) = LenStr +%TRIM(PFOTrId)                  MD000091
      C                   GOTO      EValFrnt
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
       ** If not insert, Front Office Transaction ID must be present
- 
+
      C                   IF        NOT %FOUND(IRFRAL0)
      C                   EVAL      OKACCD = 'N'
      C                   EVAL      Idx = Idx + 1
@@ -512,16 +514,16 @@
      C                   EVAL      MsgDtaArr(Idx) = LenStr +%TRIM(PFOTrId)                  MD000091
      C                   GOTO      EValFrnt
      C                   ENDIF
- 
+
       ** If not insert, update Midas Deal Number
- 
+
      C                   MOVEL     DLNO          PDlNo
      C                   MOVEL     DTYP          PDTyp
- 
+
      C                   ENDIF
- 
+
      C     EValFrnt      ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -530,11 +532,11 @@
       *               Number                                          *
       *                                                               *
       *****************************************************************
- 
+
      C     SRValidate    BEGSR
- 
+
       ** Check that the action code is valid
- 
+
      C                   IF        (PAcCd <> 'I') AND (PAcCd <> 'A') AND
      C                             (PAcCd <> 'R') AND (PAcCd <> 'E')
                                                                                               CIR008
@@ -573,13 +575,13 @@
      C                   EVAL      MsgIdArr(Idx) = 'MMM0111'
      C                   GOTO      EValid
      C                   ENDIF
- 
+
       **  If the deal number is not blank, check that it is numeric.
- 
+
      C                   TESTN                   PDlNo                30
      C                   MOVE      PDlNo         WTest
      C                   TESTZ                   WTest                    31
- 
+
      C                   IF        (PDlNo <> *BLANKS AND *IN30 = *OFF) OR
      C                             (PDlNo <> *BLANKS AND *IN31 = *OFF)
      C                   EVAL      OKDLNO = 'N'
@@ -588,19 +590,19 @@
      C                   EVAL      MsgIdArr(Idx) = 'MMM0162'
      C                   GOTO      EValid
      C                   ENDIF
- 
+
       ** Get Deal Type
- 
+
      C                   IF        PAcCd <> 'I' AND PDTyp = *BLANKS
      C                   MOVEL     PDlNo         WkDlNo
      C     WkDlNo        CHAIN     DEALSALL                           01
- 
+
       ** If deal is found,
- 
+
      C                   IF        *IN01 = *OFF
- 
+
       ** If deal type is not a Cap/Collar/Floor, error message
- 
+
      C                   IF        DTYP <> 'RP' AND DTYP <> 'RR' AND
      C                             DTYP <> 'RF'
      C                   EVAL      OKDTYP = 'N'
@@ -610,18 +612,18 @@
      C                   EVAL      MsgIdArr(Idx) = 'MMM3010'
      C                   GOTO      EValid
      C                   ENDIF
- 
+
       ** Else, its correct type, if action is amend, enquire or reverse
       ** get deal type
- 
+
      C                   EVAL      PDTyp = DTYP
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Error if Deal Type is not 'RR', 'RF' or 'RP'
- 
+
      C                   IF        PDtyp <> 'RR' AND PDtyp <> 'RF' AND
      C                             PDtyp <> 'RP'
      C                   EVAL      OKDTYP = 'N'
@@ -629,9 +631,9 @@
      C                   EVAL      FldNameArr(Idx) = '#0DTYP'
      C                   EVAL      MsgIdArr(Idx) = 'MMM3004'
      C                   ENDIF
- 
+
      C     EValid        ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -639,17 +641,17 @@
       *  SRValEnq - Validation of Action Code 'E'                     *
       *                                                               *
       *****************************************************************
- 
+
      C     SRValEnq      BEGSR
- 
+
       ** If the deal number is blank, it is an error
- 
+
      C                   MOVEL     PDlNo         WkDlNo
      C                   MOVEL     PDTyp         WkDTyp
      C     KCACF         CHAIN     DLCACFL0
- 
+
       ** If there is no valid record on DLCACFL0, it is an error.
- 
+
      C                   IF        NOT %FOUND(DLCACFL0)
      C                   EVAL      OKDLNO = 'N'
      C                   EVAL      Idx = Idx + 1
@@ -669,9 +671,9 @@
      C                   EVAL      MsgIdArr(Idx)   = 'MMM9033'                                CIR008
      C                   GOTO      EValEnq                                                    CIR008
      C                   ENDIF                                                                CIR008
- 
+
      C     EValEnq       ENDSR
- 
+
       *****************************************************************
       /EJECT                                                                                  CIR008
       *****************************************************************                       CIR008
@@ -777,12 +779,12 @@
       *  SRValIns - Validation of Action Code 'I'                     *
       *                                                               *
       *****************************************************************
- 
+
      C     SRValIns      BEGSR
- 
+
       ** Check that the deal does not exist on any Deals File
       ** Midas or DRS
- 
+
      C                   IF        PDlNo <> *BLANKS
      C                   MOVEL     PDlNo         WkDlNo
      C                   ENDIF
@@ -794,11 +796,11 @@
      C                   EVAL      MsgIdArr(Idx) = 'MMM0163'
      C                   GOTO      EValIns
      C                   ENDIF
- 
+
       ** Check that the deal number is in the allowed range, if not
       ** generated through APIs
      C                   IF        WPEAInd <> 'Y'                                           AR996631
- 
+
      C                   IF        WkDlNo < NORDLN
      C                             OR WkDlNo = 999999
      C                   IF        ModeofOp <> '*FRONT'
@@ -811,9 +813,9 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF                                                              AR996631
- 
+
      C     EValIns       ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -821,15 +823,15 @@
       *  SRValAmd - Validation of Action Code 'A'                     *
       *                                                               *
       *****************************************************************
- 
+
      C     SRValAmd      BEGSR
- 
+
      C                   MOVEL     PDlNo         WkDlNo
      C                   MOVEL     PDTyp         WkDTyp
      C     KCACF         CHAIN     DLCACFL0
- 
+
       ** Error if there is no valid, undeleted record on DLCACFL0
- 
+
      C                   IF        NOT %FOUND(DLCACFL0) OR
      C                             (%FOUND(DLCACFL0) AND RECI <> 'D')
      C                   EVAL      OKDLNO = 'N'
@@ -849,9 +851,9 @@
      C                   EVAL      MsgIDArr(Idx) = 'MMM0166'                                  CIR008
      C                   GOTO      EValAmd                                                    CIR008
      C                   ENDIF                                                                CIR008
- 
+
      C     EValAmd       ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -859,15 +861,15 @@
       *  SRValDel - Validation of Action Code 'D'                     *
       *                                                               *
       *****************************************************************
- 
+
      C     SRValDel      BEGSR
- 
+
      C                   MOVEL     PDlNo         WkDlNo
      C                   MOVEL     PDTyp         WkDTyp
      C     KCACF         CHAIN     DLCACFL0
- 
+
       ** Error if there is no valid, undeleted record on DLCACFL0
- 
+
      C                   IF        NOT %FOUND(DLCACFL0) OR
      C                             (%FOUND(DLCACFL0) AND RECI <> 'D')
      C                   EVAL      OKDLNO = 'N'
@@ -886,9 +888,9 @@
      C                   EVAL      MsgIdArr(Idx) = 'MMM0169'                                  CIR008
      C                   GOTO      EVALDel                                                    CIR008
      C                   ENDIF                                                                CIR008
- 
+
      C     EValDel       ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -896,17 +898,17 @@
       *  SRSecChk - Access Security Checking                          *
       *                                                               *
       *****************************************************************
- 
+
      C     SRSecChk      BEGSR
- 
+
       ** If not multi-branching, check authority to action code only
- 
+
      C                   IF        BJSBRC <> *BLANK
- 
+
      C                   CALL      'ZVACTU'
      C                   PARM      PAcCd         PAction
      C                   PARM                    PError
- 
+
      C                   IF        PError = 1
      C                   EVAL      OKACCD = 'N'
      C                   EVAL      OKDLNO = 'N'
@@ -916,28 +918,28 @@
      C                   EVAL      MsgIdArr(Idx) = 'FXM0292'
      C                   GOTO      ESecChk
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** If multi-branching, check authority to booking branch
- 
+
      C                   IF        BJSBRC = *BLANK
- 
+
      C                   IF        PAcCd = 'I'
- 
+
      C                   IF        P1Brca = *BLANKS
      C                   EVAL      P2Brca = PkDBRC
      C                   EVAL      P1Brca = PkDBRC
      C                   ELSE
      C                   EVAL      P2Brca = P1Brca
      C                   ENDIF
- 
+
      C                   ELSE
      C                   EVAL      P2Brca = BRCA
      C                   ENDIF
- 
+
      C                   IF        PAcCd = 'I'
- 
+
      C**********         CALLB     'AOBRCHR0'                                                 CGL029
      C                   CALL      'AOBRCHR1'                                                 CGL029
      C                   PARM      *BLANKS       PRtCd
@@ -945,7 +947,7 @@
      C                   PARM      P1Brca        PBranch
      C*****SDBRCH        PARM      SDBRCH        DSFDY                                        CGL029
      C     SDBRCH        PARM      SDBRCH        DSSDY                                        CGL029
- 
+
      C                   IF        PRtCd <> *BLANKS
      C                   EVAL      OKBRCA = 'N'
      C                   EVAL      Idx = Idx + 1
@@ -956,46 +958,46 @@
      C                   EVAL      P2Brca = A8BRCD
      C                   EVAL      P1Brca = A8BRCD
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   CALL      'ZVACTBU'
      C                   PARM      PAcCd         PAction
      C                   PARM                    P2Brca
      C                   PARM                    PError
- 
+
      C                   IF        PError = 1 OR PError = 2
      C                   EVAL      OKACCD = 'N'
- 
+
       ** If Insert, then highlight branch field else deal number
- 
+
      C                   IF        PAcCd = 'I'
      C                   EVAL      OKBRCA = 'N'
      C                   ELSE
      C                   EVAL      OKDLNO = 'N'
      C                   ENDIF
- 
+
      C                   EVAL      Idx = Idx + 1
      C                   EVAL      FldNameArr(Idx) = '#0ACCD'
- 
+
      C                   IF        PError = 1
      C                   EVAL      MsgIdArr(Idx) = 'FXM0290'
      C                   ELSE
      C                   EVAL      MsgIdArr(Idx) = 'FXM0291'
      C                   ENDIF
- 
+
      C                   GOTO      ESecChk
      C                   ENDIF
- 
+
       ** Check authority to originating branch
- 
+
      C                   IF        BKOBUV = 'Y' AND PAcCd <> 'E'
      C                             AND PAcCd <> 'I'
- 
+
      C                   CALL      'ZVOBU'
      C                   PARM      ORBR          PBranch
      C                   PARM                    PError
- 
+
      C                   IF        PError = 1
      C                   EVAL      OKACCD = 'N'
      C                   EVAL      OKDLNO = 'N'
@@ -1003,7 +1005,7 @@
      C                   EVAL      FldNameArr(Idx) = '#0ACCD'
      C                   EVAL      MsgIdArr(Idx) = 'FXM0287'
      C                   ENDIF
- 
+
      C                   IF        PError = 2
      C                   EVAL      OKACCD = 'N'
      C                   EVAL      OKDLNO = 'N'
@@ -1011,13 +1013,13 @@
      C                   EVAL      FldNameArr(Idx) = '#0ACCD'
      C                   EVAL      MsgIdArr(Idx) = 'FXM0288'
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C     ESecChk       ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1025,11 +1027,11 @@
       *  SRInitial - Initialization Subroutine                        *
       *                                                               *
       *****************************************************************
- 
+
      C     SRInitial     BEGSR
- 
+
       ** Clear Outputs
- 
+
      C                   CLEAR                   CrIRFilFmt
      C                   EVAL      CrDLNO = *ZEROS
      C                   EVAL      CrRCDC = *ZEROS
@@ -1150,7 +1152,7 @@
      C                   EVAL      CrPLULRC = *ZEROS
      C                   EVAL      CrPLTLRC = *ZEROS
      C                   EVAL      CrAGVC = *ZEROS
- 
+
      C                   CLEAR                   CACFFmt
      C                   EVAL      DLNO = *ZEROS
      C                   EVAL      RCDC = *ZEROS
@@ -1275,7 +1277,7 @@
      C                   EVAL      OKDLNO = 'Y'
      C                   EVAL      OKDTYP = 'Y'
      C                   EVAL      OKBRCA = 'Y'
- 
+
       ** Check whether user is a web browser user, if so overwrite              CAP084
      C                   CALL      'SFC000026'                                  CAP084
      C                   PARM      *BLANKS       USER             10            CAP084
@@ -1283,9 +1285,9 @@
      C                   IF        USER <> *BLANKS                              CAP084
      C                   EVAL      PSUser = USER                                CAP084
      C                   ENDIF                                                  CAP084
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1293,22 +1295,22 @@
       *  *INZSR - Program Initialisation routine                      *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
       ** Parameters
- 
+
      C     *ENTRY        PLIST
- 
+
       ** Inputs:
       ** Return code
       ** Mode = '*FRONT' or *BLANK
       ** Response mode
- 
+
      C                   PARM                    RetCodeIn
      C                   PARM                    ModeofOp
      C                   PARM                    RespMode
- 
+
       ** Action Code
       ** Front Office Transaction ID
       ** Front Office Associated Transaction Id
@@ -1316,7 +1318,7 @@
       ** (Midas) Associated Deal Number
       ** Booking branch
       ** Deal Type
- 
+
      C                   PARM                    PAcCd
      C                   PARM                    PFOTrId
      C                   PARM                    PFOAsId
@@ -1324,13 +1326,13 @@
      C                   PARM                    PLnkd
      C                   PARM                    P1Brca
      C                   PARM                    PDTyp
- 
+
       ** Single Branch Code from SDBANKPD
       ** Default Branch for ZMUSER
       ** Originating Branch/User Validation Required for SDGELRPD
       ** FRA/IRS Authorisation Required                                                       CIR008
       ** FRA/IRS Re-authorise Amended Deals                                                   CIR008
- 
+
      C                   PARM                    BJSBRC
      C                   PARM                    PkDBRC
      C                   PARM                    BKOBUV
@@ -1340,33 +1342,33 @@
       ** FRA/IRS Deals Authorisation                                                          CIR008
                                                                                               CIR008
      C                   PARM                    CIR008                                       CIR008
- 
+
       ** Outputs:
       ** Current Deal in File Format
       ** Action Code OK flag
       ** Deal Number OK flag
       ** Deal Type OK flag
- 
+
      C                   PARM                    CrIRFilFmt
      C                   PARM                    OKACCD
      C                   PARM                    OKDLNO
      C                   PARM                    OKBRCA
      C                   PARM                    OKDTYP
- 
+
       ** Error fields/message IDs/message data (arrays) from/to caller
       ** Array index (3P0) from/to caller
- 
+
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIdArr
      C                   PARM                    MsgDtaArr
      C                   PARM                    Idx
- 
+
       ** Access Deal Number Record
- 
+
      C     1             CHAIN     FDDLNMLL
- 
+
       ** Database Error
- 
+
      C                   IF        NOT %FOUND(FDDLNMLL) or NODLTF = '*'
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'FDDLNMLL'
@@ -1375,13 +1377,13 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Parameters in chaining DLCACFL0
- 
+
      C     KCACF         KLIST
      C                   KFLD                    WkDlNo
      C                   KFLD                    WkDtyp
- 
+
       ** Parameters in chaining SDCWHTPD                                                      CSD015
                                                                                               CSD015
      C     CWHTKy        KLIST                                                                CSD015
@@ -1578,9 +1580,9 @@
       ** The following /COPY sets the values of program, module and
       ** procedure names for database error processing.
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       ********************************************************************
@@ -1592,4 +1594,4 @@
       /COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2002
+(c) Finastra International Limited 2002

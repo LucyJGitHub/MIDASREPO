@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2016')
+     H COPYRIGHT('(c) Finastra International Limited 2016')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas LE Initialisation Program for CLE141')           *
@@ -9,13 +9,15 @@
       *                                                               *
       *  LE000888 - Midas LE Initialisation Program for CLE141        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2016            *
+      *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. CLE141A            Date 28Apr16               *
-      *  Prev Amend No. CLE141  *CREATE    Date 01Mar16               *
+      *  Last Amend No. MD046248           Date 27Oct17               * 
+      *  Prev Amend No. CLE141A            Date 28Apr16               *
+      *                 CLE141  *CREATE    Date 01Mar16               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               * 
       *  CLE141A - CLE141 Change Control 1                            *
       *  CLE141 - Currency and Location Business Day Convention for   *
       *           Lending Transactions - Phase 2                      *

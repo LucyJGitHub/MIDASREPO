@@ -7,14 +7,15 @@
 /*                                                                   */
 /*       ILC0630 - IBLC 2002 Initial Margin FF Module extraction     */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2005           */
+/*       (c) Finastra International Limited 2005                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. 230177             Date 22Nov04              */
-/*       Prev Amend No. 219626             Date 06Feb02              */
+/*       Prev Amend No. 230177             Date 22Nov04              */
+/*                      219626             Date 06Feb02              */
 /*                      CER001             Date 25Apr05              */
 /*                      202483             Date 06Feb02              */
 /*                      IL0009             Date 05Dec01              */
@@ -22,6 +23,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       230177 - Skip processing of IL0630 if member is missing from*/
 /*                TRANS or TRSET. This means that the market is      */
 /*                newly inserted.                                    */
@@ -37,7 +39,7 @@
 /*   DECLARE VARIABLES                                              */
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2005')
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
              DCL        VAR(&CNAME) TYPE(*CHAR) LEN(10)
@@ -286,8 +288,8 @@ ENDPGM:
 END:
              DLTOVR     FILE(*ALL)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
-             CHGVAR     VAR(&CPYFLD) VALUE('(c) Misys International +
-                          Banking Systems Ltd. 2005')
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International +
+                          Limited 2005')
              MONMSG     MSGID(CPF0000)
 /**/
              ENDPGM

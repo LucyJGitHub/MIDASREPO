@@ -7,11 +7,12 @@
 /*                                                                   */
 /*       LERC22  - Loans extract - 1st level                         */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
 /*                                                                   */
-/*       Last Amend No. CLE075AM           Date 06Aug12              */
-/*       Prev Amend No. CLE134             Date 01Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CLE075AM           Date 06Aug12              */
+/*                      CLE134             Date 01Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -24,6 +25,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CLE075AM - COB Restructure - LE COB Optimisation Phase 1    */
 /*       CLE134 - Past Due Call Loan Processing                      */
 /*       156766 - Clear RVLNSRV, RVLNSHH, and RVLNST2 after LER220   */
@@ -55,7 +57,7 @@
              DCL        VAR(&SJRNRCVR) TYPE(*CHAR) LEN(10)                              /*CLE075AM*/
              DCL        VAR(&FJRNRCVR) TYPE(*CHAR) LEN(10)                              /*CLE075AM*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&RERUN) TYPE(*CHAR) LEN(10)                                   /*CLE134*/
              DCL        VAR(&LEPDCL) TYPE(*CHAR) LEN(256)                                 /*CLE134*/
@@ -190,7 +192,7 @@
                           FLAG('E') TEXT(&STEXT)                                        /*CLE075AM*/
                                                                                         /*CLE075AM*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 /**********ENDPGM */                                                                      /*CLE134*/
 ENDPGM: ENDPGM                                                                            /*CLE134*/

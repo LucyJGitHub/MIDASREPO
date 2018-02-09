@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2016')
+     H COPYRIGHT('(c) Finastra International Limited 2016')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas LE Ccy for business day conv. validation')       *
@@ -10,12 +10,14 @@
       *  LEVBDYLE - Midas LE Business Day Convention for Loans        *
       *             Validation                                        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2016            *
+      *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. CLE141  *CREATE    Date 08Feb16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE141  *CREATE    Date 08Feb16               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE141 - Currency and Location Business Day Convention       *
       *           for LE Transactions                                 *
       *                                                               *
@@ -43,7 +45,7 @@
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
@@ -74,7 +76,7 @@
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -82,7 +84,7 @@
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -92,16 +94,16 @@
      D Ind             S              1
      D ParmCCY         S              3
      D ParmLoc         S              3
-
+ 
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
-
+ 
      C                   Exsr      HolidayVal
-
+ 
      C                   Eval      *INLR = *On
      C                   Return
       *****************************************************************
@@ -116,9 +118,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
-
+ 
      C     HolidayVal    Begsr
-
+ 
      C                   If        RetCode = *Blanks and CCY1 <> *Blanks
      C                   Eval      ParmCCY = CCY1
      C                   Eval      ParmLoc = LOC1
@@ -199,7 +201,7 @@
      C                   Eval      RetCode = 'HOLIDAY'
      C                   Endif
      C                   Endif
-
+ 
      C                   Endsr
       *****************************************************************
       /EJECT
@@ -212,15 +214,15 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
-
+ 
      C     CheckHol      Begsr
-
+ 
      C                   CALLB     'ZCHKH'
      C                   PARM                    DayNo
      C                   PARM                    ParmCCY
      C                   PARM                    ParmLoc
      C                   PARM      *BLANK        Ind
-
+ 
      C                   Endsr
       *****************************************************************
       /EJECT
@@ -233,14 +235,14 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
-
+ 
      C     *INZSR        Begsr
-
+ 
      C     *Entry        Plist
      C                   Parm                    RetCode
      C                   Parm                    LoanBDC
      C                   Parm                    DayNo
-
+ 
      C                   Endsr
       *****************************************************************
       /EJECT

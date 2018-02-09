@@ -7,20 +7,22 @@
 /*                                                                  */
 /*                LEC0901 - CREATE SHADOW POSTINGS                  */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. 105140              DATE  18NOV96           */
-/*       PREV AMEND NO. S01194              DATE  07FEB90           */
+/*       Prev Amend No. 105140             Date 18Nov96              */
+/*                      S01194             Date 07Feb90              */
 /*                      E17849              DATE  20JUL89           */
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       105140 - Recompile over changed LVENTZZ.                   */
 /*       S01194 - NEW STANDING DATA                                 */
 /*       E17849 - DO NOT CALL LE0820 IF LVENT IS EMPTY.             *  *E17849*/
@@ -32,7 +34,7 @@
 /*********************************************************************/
              PGM
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /*                                                             E17849*/
              DCLF FILE(LVENTZZ)
@@ -58,5 +60,5 @@
 /*********** ENDPGM*/
  ENDPGM:     ENDPGM
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /*                                                             E17849*/

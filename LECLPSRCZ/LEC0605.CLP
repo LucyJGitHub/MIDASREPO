@@ -7,10 +7,11 @@
 /*                                                                  */
 /*     LEC0605  -  DAILY MAINTENANCE PHASE - 2                      */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD048608           Date 20Nov17              */
-/*       Prev Amend No. MD031676           Date 17Dec14              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD048608           Date 20Nov17              */
+/*                      MD031676           Date 17Dec14              */
 /*                      MD023527           Date 18Nov13              */
 /*                      MD022967           Date 21Oct13              */
 /*                      MD022290           Date 09Sep13              */
@@ -62,6 +63,7 @@
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*     MD046248 - Finastra Rebranding                               */
 /*     MD048608 - Component LEC0609B seq 01001 failed               */
 /*     MD031676 - Component LEC06A 0010 Failed during COB           */
 /*                Removed copy statement for file LEACCNPD which    */
@@ -147,7 +149,7 @@
 /**********  PGM        PARM(&CNAM &CSEQ) */                                       /*S01189 CLE134*/
              PGM        PARM(&CNAM &CSEQ &RERUN)                                          /*CLE134*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
              DCL        VAR(&MSG) TYPE(*CHAR) LEN(132) +
@@ -489,7 +491,7 @@
                           FILE(PMLOANPD))                             /*093379*/
 /**/
 /*  TAKE TEMPORARY COPY OF CLOANCL FOR P'TY EXTRACTS         */
-
+ 
              IF         COND(&RERUN *NE 'NEWCOB') THEN(DO)                              /*MD022290*/
                 DLTF       FILE(&DPLIB/XPETEMPLN)                                       /*MD022290*/
                 MONMSG     MSGID(CPF2105)                                               /*MD022290*/
@@ -501,7 +503,7 @@
              CPYF       FROMFILE(CLOAN) TOFILE(PETEMPLN) +
                           MBROPT(*REPLACE) RCDFMT(CLOANCLF)
      MONMSG MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM FILE(PETEMPLN))
-
+ 
              CPYF       FROMFILE(CLOAN) TOFILE(LETEMPPD) +
                           MBROPT(*REPLACE) RCDFMT(CLOANCKF)
     MONMSG MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM FILE(LETEMPPD)) /*128044*/
@@ -530,7 +532,7 @@
 /**/
 /**********        OVRDBF     FILE(TABLE)  TOFILE(TABLEEI)  */        /*S01194*/
 /**********      OVRDBF     FILE(TABLED) TOFILE(TABLEEI) SHARE(*NO)*/ /*S01194*/
-
+ 
 /***Keep*a*copy*of MCLONCL and MCLONCK before the run of next   *099147 119350*/
 /*********** CPYF       FROMFILE(MCLONCL) TOFILE(XMCLONCL) +          /*119350*/
 /***************          MBROPT(*ADD)                      */ /*099147 119350*/
@@ -541,7 +543,7 @@
                    OVRDBF     FILE(MCLONCL) TOFILE(XMCLONCL)          /*106892*/
                    OVRDBF     FILE(MCLONCK) TOFILE(XMCLONCK)          /*106892*/
 /**/                                                                  /*106892*/
-
+ 
 /**********        CALL       PGM(LE0450) */                                              /*CLE134*/
                    CALL       PGM(LE0450) PARM(&RERUN)                                    /*CLE134*/
 /**/                                                                  /*106892*/
@@ -962,5 +964,5 @@ ABNOR:       SNDPGMMSG  MSG('LEC0605 ended abnormally') TOPGMQ(*EXT) +
              CHGJOB     SWS(XXXXXX11)                                 /*105061*/
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 ENDPGM:      ENDPGM

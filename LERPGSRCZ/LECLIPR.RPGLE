@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas LE Loan Details Retrieve a record')              *
@@ -12,10 +12,11 @@
       *  Function:  This module retrieves a record from the file      *
       *                                                               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD039248           Date 07Jun16               *
-      *  Prev Amend No. MD037909           Date 08Mar16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD039248           Date 07Jun16               *
+      *                 MD037909           Date 08Mar16               *
       *                 CLE141             Date 08Feb16               *
       *                 LLN022A            Date 03Jun15               *
       *                 LLN022             Date 03Jun15               *
@@ -58,6 +59,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD039248 - Business Day Convention details missing in BDC    *
       *             tab for authorised loan (Recompile)               *
       *  MD037909 - In the loan mainlist upon enquire, defined BDC of *
@@ -121,7 +123,7 @@
       *  CAP084 - Midas Plus API development                          *
       *                                                               *
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** Ê F-specs                              Ê
       ** Ê =======                              Ê
@@ -136,15 +138,15 @@
      FCLOAN     IF   E           K DISK    PREFIX(PS)                                         CLE106
      F                                     RENAME(CLOANCLF:PSOLDF)                            CLE106
      F                                     IGNORE(CLOANHHF:CLOANCKF:CLOANZ1F)                 CLE106
-
+ 
       **--------------------------------------------------------------------------------------------
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
-
+ 
       **--------------------------------------------------------------------------------------------
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
-
+ 
       **--------------------------------------------------------------------------------------------
       ** SCREEN FORMATS
       **--------------------------------------------------------------------------------------------
@@ -165,7 +167,7 @@
      D CrLnScnFmt3   E DS                  EXTNAME(LECLI3PD)
       ***  (Current) Loan in Screen Format - Screen 3
      D                                     PREFIX(@)
-
+ 
      D CrLnScnFmt4   E DS                  EXTNAME(LECLI4PD)
       ***  (Current) Loan in Screen Format - Screen 4
      D                                     PREFIX(@)
@@ -185,12 +187,12 @@
       *                                                                                       CLE141
      D CrLnScnFmt7   E DS                  EXTNAME(LECLI7PD)                                  CLE141
       ** Customer Loans details definition file                                               CLE141
-
-
+ 
+ 
       **--------------------------------------------------------------------------------------------
       ** FILE FORMATS
       **--------------------------------------------------------------------------------------------
-
+ 
      D CrLnFilFmtCL  E DS                  EXTNAME(CLOANCL)
       ***  Current Loan in File Format CL
      D                                     PREFIX(L)
@@ -207,7 +209,7 @@
       *                                                                                       CER001
       ** Customer Loans Extension Files                                                       CER001
       *                                                                                       CER001
-
+ 
      D ##RECF        E DS                  EXTNAME(SDESFRPD)
      D**FLREC***               1     69                                                       TCA094
      D  FLREC                 21     75                                                       TCA094
@@ -230,9 +232,9 @@
       ***  Screen FRA/IRS Instructions
       *
       ** Additional file information e.g. settlements files
-
+ 
       **--------------------------------------------------------------------------------------------
-
+ 
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CER001
       *                                                                                       CER001
       ** SC Switchable features descriptions                                                  CER001
@@ -254,10 +256,10 @@
                                                                                              CSF011A
      D Idx             S              3P 0
       ** Index for arrays of of error message ids etc
-
+ 
      D WIdx            S              3P 0
       ** Index for arrays of warning message ids etc
-
+ 
       * Asset code and health code                                                            CLE120
      D SASCD           S              4                                                       CLE120
      D SHLCD           S              4                                                       CLE120
@@ -326,7 +328,7 @@
      D wLoanAlpha      S              1A                                                      CLE148
      D @ERRDTA         S              2A                                                      CLE148
       **--------------------------------------------------------------------------------------------
-
+ 
       * If the action code is blank, enquire unless authorising
      C                   CLEAR                   CrLnFilFmtCL
      C                   CLEAR                   CrLnFilFmtCK
@@ -339,7 +341,7 @@
      C                   MOVEL     'E'           DDACTN
      C                   ENDIF
      C                   ENDIF
-
+ 
      C     FwdBck        IFEQ      'F'
      C                   MOVEL     'Y'           @RDFWD
      C                   MOVEL     'N'           @RDBCK
@@ -352,7 +354,7 @@
      C                   MOVEL     'N'           @RDBCK
      C                   ENDIF
      C                   ENDIF
-
+ 
      C     @RDFWD        IFEQ      'Y'
      C     @RDBCK        OREQ      'Y'
      C                   EXSR      LECLIPRED
@@ -447,20 +449,20 @@
                                                                                              LLN022A
      C                   EXSR      ZASETINCVT
      C                   ENDIF
-
+ 
      C                   ENDIF
                                                                                               CSF011
       ** Populate Customer Name on Input details                                              CSF011
                                                                                               CSF011
      C                   EXSR      SrCustActN                                                 CSF011
-
+ 
      C     @ERRMS        IFNE      *BLANK
      C                   MOVEL     '0'           APIRetc
      C                   MOVEL     'DDLNRF'      FldNameArr(1)
      C                   MOVEL     @ERRMS        MsgIDArr(1)
      C                   MOVEL     @ERRDTA       MsgDtaArr(1)                                 CLE148
      C                   ENDIF
-
+ 
       *                                                                                    AR1075452
       ** Populate affected fields for interest details in screen 2                         AR1075452
       *                                                                                    AR1075452
@@ -489,7 +491,7 @@
      C                                           + Infdata                              CAP086246159
      C                                           + RegData                                    CER001
      C                                           + ExtData                                    246159
-
+ 
      C                   SETON                                        LR
      C                   RETURN
       *****************************************************************                       CSF011
@@ -607,7 +609,7 @@
       *
      C     *INZSR        BEGSR
       *
-
+ 
      C     *ENTRY        PLIST
      C                   PARM                    AuthComp          1
      C                   PARM                    FwdBck            1
@@ -624,7 +626,7 @@
       *                                                                                     AR804863
      C                   PARM                    @ACTRV            1                        AR804863
      C/COPY WNCPYSRC,LECLIPYC01
-
+ 
       ** Determine if BOE Yellow Book is installed                                           LLN022A
       *                                                                                      LLN022A
      C                   MOVE      'N'           LLN007            1                         LLN022A
@@ -761,7 +763,7 @@
      C                   KFLD                    KFACT                                        CLE031
      C                   KFLD                    KFCNO                                        CLE031
      C                   KFLD                    KRCTP                                        CLE031
-
+ 
       *  Hook to enable non-core message files to be included
      C/COPY WNCPYSRC,LECLIPM01
       *                                                                                      LLN022A
@@ -852,7 +854,7 @@
      C                   MOVEL     PSysVal1      wLoanAlpha                                   CLE148
       *
      C                   ENDSR
-
+ 
       *****************************************************************
       /EJECT
       **********************************************************************
@@ -903,20 +905,20 @@
       *
       * Front Office ID READ
      C                   PARM      *BLANK        @FTRED           20
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
       **********************************************************************
      C     LECLIPRTV     BEGSR
-
+ 
      C                   CALLB     'LECLIPRTV'
-
+ 
       * INPUTS
-
+ 
       * Return code
      C                   PARM                    ReturnCode
-
+ 
       * Mode = '*FRONT' (FRONT OFFICE TRANSACTION INTERFACE)
       * Mode = '      ' (NOT FRONT OFFICE TRANSACTION INTERFACE)
      C                   PARM                    ModeofOp          6
@@ -936,14 +938,14 @@
                                                                                              BUG3721
       ** Switchable features                                                                 BUG3721
      C                   PARM                    CLE028                                      BUG3721
-
+ 
       * OUTPUTS
-
+ 
       * Loan Processing Type
      C                   PARM                    LoanPtyp          2 0
       * Loan Type
      C                   PARM                    LoanType          4
-
+ 
       * (Current) Customer loan CL in file format
      C                   PARM                    CrLnFilFmtCL
       * (Current) Customer loan CK in file format
@@ -968,7 +970,7 @@
       *                                                                                     AR804863
      C                   PARM                    @ACTRV                                     AR804863
      C/COPY WNCPYSRC,LECLIPYC02
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT                                                                                  CER001
@@ -1177,9 +1179,9 @@
      C                   ELSE
      C                   MOVE      LOMDB         FLPOBR
      C                   ENDIF
-
+ 
       ***  Set up receive instructions from loan
-
+ 
      C                   MOVEL     ClipFilREC    FLREC
      C                   MOVEL     LSCCY         FLRSCY
      C                   MOVEL     LRSTM         FLRSTM                                       TCA094
@@ -1199,7 +1201,7 @@
      C                   MOVE      LPEXI         FLPEXI                                       CLE031
      C                   MOVE      LSCCY         FLRSCY                                       CLE031
      C                   MOVE      LPSCY         FLPSCY                                       CLE031
-
+ 
       *
       ***  Convert settlement details from file to screen format
       *
@@ -1283,4 +1285,4 @@
      C                   ENDSR                                                               BUG3721
       ********************************************************************                   BUG3721
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2003
+(c) Finastra International Limited 2003

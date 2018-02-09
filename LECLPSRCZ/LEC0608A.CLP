@@ -7,10 +7,11 @@
 /*                                                                  */
 /*     LEC0608A -  GENERATE ACCOUNTING ENTRIES                      */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. AR1055617          Date 12Nov12              */
-/*       Prev Amend No. CLE134             Date 01Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR1055617          Date 12Nov12              */
+/*                      CLE134             Date 01Aug12              */
 /*                      AR824348           Date 02Sep11              */
 /*                      CER049             Date 06Dec10              */
 /*                      CER059             Date 19Jul10              */
@@ -36,6 +37,7 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*     AR1055617 - Additional code changes based on code            */
 /*                 review                                           */
 /*       CLE134 - Past Due Call Loan Processing                      */
@@ -70,7 +72,7 @@
 /**********  PGM        PARM(&POST &NAM &SEQ)                                      /*LN0465 CLE134*/
              PGM        PARM(&POST &NAM &SEQ &RERUN)                                      /*CLE134*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&POST) TYPE(*CHAR) LEN(1)
 /*           DCLDTAARA  DTAARA(MMOD)                                *  *S01179*/
@@ -301,7 +303,7 @@
              ENDDO
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /*/COPY WNCPYSRC,LEC0608A01                                          */
 /**********  ENDPGM    */                                                                 /*CLE134*/
 ENDPGM:      ENDPGM                                                                       /*CLE134*/

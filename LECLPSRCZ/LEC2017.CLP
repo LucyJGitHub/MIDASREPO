@@ -7,18 +7,20 @@
 /*                                                                   */
 /*       LEC2017 - Lending PC Front-End Transmit Control Messages    */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2002           */
+/*       (c) Finastra International Limited 2002                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4.01.02 --------------------------------------------*/
-/*       Last Amend No. 203561  *CREATE    Date 04Mar02              */
-/*       Prev Amend No. Xnnnnn             Date ddmmmyy              */
+/*       Prev Amend No. 203561  *CREATE    Date 04Mar02              */
+/*                      XNNNNN             Date DDMmmYY              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       203561 - Loan Manager download does not take place if       */
 /*                LEC2016 job is not running.                        */
 /*                - New program LEC2017 added.                       */
@@ -32,7 +34,7 @@
              DCL        VAR(&LMSERV) TYPE(*CHAR) LEN(3)
              DCL        VAR(&LMBRCH) TYPE(*CHAR) LEN(3)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2002')
  
 /* Global Monitor Message:                                   */
@@ -89,6 +91,6 @@
  
  END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd. 2002')
+                          Finastra International Limited 2002')
  
              ENDPGM

@@ -7,14 +7,15 @@
 /*                                                                   */
 /*       HFC0400  - INPUT CYCLE EXTRACT                              */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. BUG7286            Date 23May05              */
-/*       Prev Amend No. CSC020             Date 31Mar04              */
+/*       Prev Amend No. BUG7286            Date 23May05              */
+/*                      CSC020             Date 31Mar04              */
 /*                      223027             DATE 13Nov03              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
@@ -25,6 +26,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BUG7286 - Error in SCRTVJEVT command                        */
 /*       CSC020 - Journaling changes for MidasPlus.                  */
 /*       223027 - Increase format field for AOHAFDR0 to 200 bytes.   */
@@ -40,7 +42,7 @@
              PGM
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
              DCLF       FILE(HFFILEPD)
@@ -305,6 +307,6 @@ OK:          CALL       PGM(HFC0420)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

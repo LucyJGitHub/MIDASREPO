@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('MIDAS LE Past Due Call Loan creation/update')          *
@@ -14,10 +14,11 @@
       *                                                               *
       *  Called By: LEC000473                                         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD049078           Date 12Jan18               *
-      *  Prev Amend No. MD046080           Date 17Sep17               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD049078           Date 12Jan18               *
+      *                 MD046080           Date 17Sep17               *    
       *                 MD035433           Date 02Sep15               *
       *                 MD033895           Date 15Apr15               *
       *                 MD031851           Date 25Jan15               *
@@ -96,9 +97,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD049078 - Wrong postings of MR and RE of PDCL loan          *
       *  MD046080 - Gap between CLE031 (Settlement to different       *
-      *             currency) and CLE134 (PDCL processing)            *
+      *             currency) and CLE134 (PDCL processing)            *     
       *  MD035433 - System generated new PDCL instead of using old    *
       *             one. Evaluate WRECI equals to 'D' for AYSIIN = 'Y'*
       *             to correctly retrieve record of PDCL details.     *
@@ -389,11 +391,11 @@
       ** PDP Transaction Log File sent to MQ
      FLEMQLGL0  UF A E           K DISK    COMMIT
      F                                     INFSR(*PSSR)
-
+ 
       *
       ** Temporary Loan Amendments File
      FLELOANPI  UF A E           K DISK    INFSR(*PSSR)
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -410,43 +412,43 @@
       ** handler)
       ** and the following variables:
       ** RunBefore  1A (for the PSSR)
-
+ 
      D/COPY ZACPYSRC,STD_D_SPEC
-
+ 
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
-
+ 
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
-
+ 
      D/COPY ZACPYSRC,PSDS
-
+ 
       ** The following /COPY line includes the definitions for error &
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** Arrays and Data Structures
      D @BIC            S              6    DIM(999)
-
+ 
       ** For CCY Conversion
      D POWR            S              7  3 DIM(7) CTDATA PERRCD(1)
-
+ 
       ** Months Array
      D MONAR           S             10A   DIM(12) CTDATA PERRCD(1)
-
+ 
      D                 DS
      D  WPRME                  1     12
      D  WLPFI                  1      1
      D  WPTFC                  2      7
      D  WPTFT                  8     10  0
      D  WPTFN                 11     12  0
-
+ 
       ** Dummy Timestamp
      D TimeStmpDS      DS
      D  RetYear                1      4A   INZ('0001')
@@ -463,19 +465,19 @@
      D                        20     20A   INZ('.')
      D  RetMilli              21     23A   INZ('000')
      D  RetMicro              24     26A   INZ('000')
-
+ 
       ** Data structure for database error message
      D                 DS
      D  WFCUS                         6
      D  WFTYP                         3  0
      D  WFSEQ                         2  0
      D  WDBKEY                       11
-
+ 
      D DateDS          DS             6
      D   DatDD                 1      2A
      D   DatMM                 3      4S 0
      D   DatYY                 5      6A
-
+ 
       ** Working DS with Amounts
      D                 DS
      D  PRAMR                  1     13  0
@@ -484,7 +486,7 @@
      D  TAMTR                 40     52  0
      D  WTXAR                 53     65  0
      D  SAMT                   1     65
-
+ 
       ** Loan Amendment Current Amount in numeric
       ** (on Valid format LOAMSDKF)
      D  OPRAM                 66     78  0
@@ -493,7 +495,7 @@
      D  OTAMT                105    117  0
      D  OWTXA                118    130  0
      D  OAMT                  66    130
-
+ 
       ** Input Amount in numeric  (on Valid format LEVMAPY)
       ** Data structure of rundates
      D                 DS
@@ -508,10 +510,10 @@
      D  M_RUN8                25     27P 0
      D  M_RUN9                28     30P 0
      D  RUNS                   1     30P 0
-
+ 
       ** Fclty dates
      D                                     DIM(10) ASCEND
-
+ 
       ** Data structure of drawn amounts
      D                 DS
      D  M_OAM1                 1      7P 0
@@ -525,10 +527,10 @@
      D  M_OAM9                57     63P 0
      D  M_OA10                64     70P 0
      D  OAM                    1     70P 0
-
+ 
       ** Fclty amounts
      D                                     DIM(10)
-
+ 
       ** Input parameters on call to AOPLCSR1
      D I@PARM          DS           256
      D  I#PORS                 1      1
@@ -538,7 +540,7 @@
      D  I#BOOK                19     20
      D  I#PTFR                21     24
      D  I#CPGM                25     34
-
+ 
       ** Output parameters on call to AOPLCSR1
      D O@PARM          DS           256
      D  O#BOOK                 1      2
@@ -546,20 +548,20 @@
      D  O#BICN                 7     12
      D  O#CRNM                13     22
      D  O#ACOF                23     24
-
+ 
       ** Data structure for Nostro Details
      D SDNOST        E DS                  EXTNAME(SDNOSTPD)
      D QQACCD2       E                     EXTFLD(QQACCD)
-
+ 
       ** Data structure for Facility ICD Details
      D SDLENO        E DS                  EXTNAME(SDLENOPD)
-
+ 
       ** Data structure for Currency Details
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
-
+ 
       ** Data structure for loan ICD details
      D SDLOAN        E DS                  EXTNAME(SDLOANPD)
-
+ 
       ** Data structure for loan ICD details
      D SDLOAN1       E DS                  EXTNAME(SDLOANPD)
      D                                     PREFIX(@)
@@ -568,84 +570,84 @@
      D                                     PREFIX(@2)
       ** Data structure for Branch details
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
-
+ 
       ** Data structure for Bank details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
-
+ 
       ** Data structure for fees ICD details
      D SDFEE         E DS                  EXTNAME(SDFEEPD )
-
+ 
       ** Data structure for AO objects
      D DSSDY         E DS                  EXTNAME(DSSDY   )
-
+ 
       ** Short data structure for access objects
      D DSFDY         E DS                  EXTNAME(DSFDY)
-
+ 
       ** DS for calculating PC reference
      D LEALLO        E DS                  EXTNAME(LEALLO  )
-
+ 
       ** Data structure for Base Rate details
      D SDBSRT        E DS                  EXTNAME(SDBSRTPD)
-
+ 
       ** Portfolio ICD
      D SDPORT        E DS                  EXTNAME(SDPORTPD)
-
+ 
       ** Data structure for Facility ICD
      D SDFACT        E DS                  EXTNAME(SDFACTPD)
-
+ 
       ** Data structure for Customer Data
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
      D QQDFAC2       E                     EXTFLD(QQDFAC)
-
+ 
       ** Error indicators
      D OKTrPDCL      E DS                  EXTNAME(LEEPDCLPD)
-
+ 
       ** Data structure for Modules details
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
-
+ 
       ** Data structure for General Ledger Details
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
-
+ 
       ** Data structure for Lending ICD
      D SDCLND        E DS                  EXTNAME(SDCLNDPD)
-
+ 
       ** Portfolio management customer details
      D SDPLCS        E DS                  EXTNAME(SDPLCSPD)
-
+ 
       ** Current transaction record in file format Loan
      D PDCLFilFmtLoanE DS                  EXTNAME(CLOANCL)
      D                                     PREFIX(C_)
       ** Current transaction record in file format Loan for loan fee
      D PDCLFilFmtLF  E DS                  EXTNAME(CLOANCL)
      D                                     PREFIX(LF_)
-
+ 
       ** Current transaction record in file format Loan 2
      D PDCLFilFmtLoaKE DS                  EXTNAME(CLOANCK)
      D                                     PREFIX(K_)
-
+ 
       ** Current transaction record in file format Fee
      D PDCLFilFmtFee E DS                  EXTNAME(LEFEED)
      D                                     PREFIX(E_)
-
+ 
       ** Current transaction record in file format Facility
      D PDCLFilFmtFctyE DS                  EXTNAME(FCLTYFM)
      D                                     PREFIX(M_)
-
+ 
       ** Externally desc'd DS for valid loan Details CL
      D LEVCliL       E DS                  EXTNAME(LEVCLILPD)
      D                                     PREFIX(L_)
-
+ 
       ** Externally desc'd DS for valid loan Details CL
      D LEVCliK       E DS                  EXTNAME(LEVCLIKPD)
      D                                     PREFIX(R_)
-
+ 
      D LEPDCL        E DS                  EXTNAME(LEPDCL)
-
+ 
      D                 DS
      D PGlobal                 1      2
      D PZonal                 18     19
      D PWipQueue               1     48
-
+ 
      D                 DS
      D  WPGM                          8
      D  WBJRDNB                       5
@@ -653,7 +655,7 @@
      D**WPDCLSEQ               1     19                                                     MD023203
      D  WPDCLTS                       7S 0                                                  MD023203
      D  WPDCLSEQ               1     20                                                     MD023203
-
+ 
      D WDSCURTIME1     DS             8
      D  CURHH1                 1      2A
      D  CURMM1                 4      5A
@@ -663,10 +665,10 @@
      D  CURMM2                 3      4A
      D  CURSS2                 5      6A
       ** Declared variables
-
+ 
       ** Work variable used in *PSSR
      D@RUN             S              1
-
+ 
       ** *ENTRY Parameters
      DWRETCD           S              7
      DW@TYPE           S              1
@@ -691,7 +693,7 @@
      DWPGNM            S             10
      DBlockCredit      S              1                                                    MD021423E
      DLoamType         S              2    INZ(*BLANKS)                                    MD021423E
-
+ 
       ** Other variables
      DPLoanType        S              2
      DPLSubType        S              2
@@ -735,7 +737,7 @@
      DWLASN            S              3  0
      DWTIMES           S              1  0 INZ(0)
      DWLSEQ            S                   LIKE(L_CLLASQ)
-
+ 
      DP2_PDCLF         S              1
      D@@RTCD           S              7
      DPPTIN            S              1
@@ -755,7 +757,7 @@
      DWSPRTC           S             13  8
      DWMDINF           S              1
      DWSPRTF           S             13  8
-
+ 
      DPRTNC            S              1
      DPBOOK            S              2
      DPTRTP            S              5
@@ -766,17 +768,17 @@
      DPACOF            S              2
      DPCNUM            S              6
      DPPRFC            S              4
-
+ 
      DWPTCS            S              1
      DWAUTOA           S              1
      DWAUTOY           S              1
      DPFPTF            S              1
-
+ 
      DWORLNT           S              6
      DWLOANT           S              6
      DWFSEQT           S              2
      DWFACLT           S              5
-
+ 
      DWAMTP            S              2
      DWBRTT            S              2
      DWRTSP            S             11  7
@@ -801,36 +803,36 @@
      DWRONS            S             18
      DWOSAC            S             18
      DWBASR            S             11  7
-
+ 
      DWrkPart          S              1
-
+ 
      DWRVCRC           S              1
      DWVLDT            S              5  0
-
+ 
      DCDPF             S              1  0
-
+ 
      DP@RTCD           S             10
-
+ 
      DSPRME            S             12
-
+ 
      DWFCXR            S             13  8
      DWROFXR           S              1
      DCX               S              1  0
      DOFCXRT           S             15  9
      DPRAM_Fac         S             13  0
-
+ 
      DZMDI1            S              1
-
+ 
      DZRATE1           S             13  8
      DZNBDP1           S              1  0
-
+ 
      DZMDI2            S              1
      DZRATE2           S             13  8
      DZNBDP2           S              1  0
-
+ 
      DZRATEX           S             13  8
      DZMDIX            S              1
-
+ 
      DZEXCH            S             13  8
      DZMD              S              1
      DZAMTCI           S             15  0
@@ -839,56 +841,56 @@
      DZCDPI            S              1  0
      DZCDPO            S              1  0
      DZAMTCO           S             15  0
-
+ 
      DWrkPRAMS         S             13  0
-
+ 
      DENDAY            S              5  0
      DDAYNO            S              5  0
-
+ 
      DFCBAL            S             13  0
-
+ 
      DWKSWRI           S              1
-
+ 
      DX                S              2  0
      DW                S              3  0
-
+ 
      DICUSTN           S              6
-
+ 
      DWTCCY            S              3
      DWCMDI            S              1
      DWCAXR            S             13  8
-
+ 
      DWRVCRF           S              1
-
+ 
      DPOPTN            S              7
-
+ 
      DCDPC             S              1  0
-
+ 
      DWTRCA            S              1
-
+ 
      DZZAMT            S             15  3
      DZZAMTI           S             15  0
      DZZAMTD           S              3  0
-
+ 
      DZZTOTI           S             15  0
      DZZTOTD           S              3  0
-
+ 
      DZZWK2            S              4  0
      DZZWK3            S             15  0
      DZZNEGD           S              5
-
+ 
      D@BRCA            S              3
      DW#1ST3           S              3
      DPCNEXT           S              8
      DW1ST11           S             11
      DWPCRF            S             15
-
+ 
      DCGL058           S              1
      DCLE028           S              1
-
+ 
      DI                S              3  0
      D WaitFlag        S              1    INZ(*BLANKS)
-
+ 
       ** System Value Parameter
      D RunAsIdentity   S              1A
      D SeqFlg          S              1A
@@ -913,13 +915,13 @@
      D POP10           S             20A
      D PVL10           S            200A
      D LOANTYPE        S              4A
-
+ 
      DWFECU            S              6A
      DWFFAC            S              3  0
      DWORLN            S              6  0
      DWFCTY            S              5  0
      DWFLNO            S              6
-
+ 
      D PRtCd           S              7
      D PErrMsg         S             30A
      D PRequest        S             10A
@@ -958,25 +960,25 @@
      D MQLTYP          S              2A
      D MQSTYP          S              2A
      D MQCLAS          S              4A
-
+ 
      D WX1             S              1  0
      D W@FACL5A        S              5A
      D W@FCOD6A        S              6A
      D W@FSEQ2A        S              2A
-
+ 
       ** Establish the transaction type
      DRecordType       S              1A
      DLoan             C                   CONST('1')
      DFeeLoan          C                   CONST('2')
      DFeeFacility      C                   CONST('3')
      DValidList        C                   CONST('GPLDAPVL')
-
+ 
      DTXT01            C                   CONST('Original Loan Ref ')
      DTXT02            C                   CONST('Original Fee  Ref ')
-
+ 
      DPartsSold        C                   CONST('1')
      DPartsPurchase    C                   CONST('2')
-
+ 
      D TimeStamp       S               Z
       ***  Timestamp of the transaction
      D W1STPASS        S              1A
@@ -1000,9 +1002,9 @@
      D PPassword1      S            600A                                                    MD033895
      D PPassword2      S            600A                                                    MD033895
      D PDescrptn       S           1000A                                                    MD033895
-
+ 
      D SysPrefix       S              2A
-
+ 
      D wPBSR           S              2S 0
      D wPBRT           S             11P 7
      D wPRSP           S             11P 7
@@ -1033,7 +1035,7 @@
      ** Storage for Currency Details (Full Cache)                                           MD022465
       *                                                                                    MD022807B
      D @@PDCL          S              6A   INZ(*BLANKS)                                    MD022807B
-
+ 
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
@@ -1181,39 +1183,39 @@
      C                   EVAL      ExistLEPRAT = *OFF
      C     W@LOAN        CHAIN     LEPRATL1
      C                   IF        %FOUND
-
+ 
      C                   EVAL      ExistLEPRAT = *ON
      C                   IF        B2CAPI <> ' '
      C                   EVAL      AYCAPI = B2CAPI
      C                   ENDIF
-
+ 
      C                   IF        B2SPLI <> ' '
      C                   EVAL      AYSIIN = B2SPLI
      C                   ENDIF
-
+ 
      C                   EVAL      AYPBSR = B2PBSR
-
+ 
      C                   EVAL      AYPBRT = B2PBRT
-
+ 
      C                   EVAL      AYPRSP = B2PRSP
-
+ 
      C                   EVAL      AYPRSI = B2PRAT
-
+ 
      C                   IF        B2PICB <> 0
      C                   EVAL      AYPICB = B2PICB
      C                   ENDIF
-
+ 
      C                   EVAL      AYIBSR = B2IBSR
      C                   EVAL      AYIRSP = B2IRSP
-
+ 
      C                   EVAL      AYIBRT = B2IBRT
-
+ 
      C                   EVAL      AYIRSI = B2IRAT
-
+ 
      C                   IF        B2IICB <> 0
      C                   EVAL      AYIICB = B2IICB
      C                   ENDIF
-
+ 
      C                   IF        B2POPR <> ' '
      C                   EVAL      AYPOPR = B2POPR
      C                   ENDIF
@@ -1223,35 +1225,35 @@
      C                   EVAL      WPDAMT = W@PDAMT
      C                   EVAL      WCPAM = 0
      C                   EVAL      WAV = W@AV
-
+ 
       ** set return fields
-
+ 
      C                   EVAL      W@OPDAM = WPDAMT
      C                   EVAL      W@OPDINT = WINT
-
+ 
       ** Clear Principal Amount fields if it is an Interest PDCL
-
+ 
      C                   IF        W@DCLTYP = 'I'
      C                   EVAL      WPDAMT = 0
      C                   EVAL      W@PDAMT = 0
      C                   ENDIF
-
+ 
       ** if PDCL already exists, get separate indicator from file
-
+ 
      C                   IF        P2_PDCLF = 'Y'
      C                             AND P2_YPSIIN <> AYSIIN
      C                   EVAL      AYSIIN = P2_YPSIIN
      C                   ENDIF
-
+ 
       ** Clear Interest Amount fields if it is a Principal PDCL
-
+ 
      C                   IF        W@DCLTYP = 'P'
      C                   EVAL      WINT = 0
      C                   EVAL      W@INT = 0
      C                   ENDIF
-
+ 
       ** Nothing to do here and exit
-
+ 
      C                   IF        W@DCLTYP = 'I'
      C                             AND AYCAPI = 'N'
      C                             AND AYSIIN = 'N'
@@ -1259,22 +1261,22 @@
      C                   EVAL      WRETCD = 'NOINTPD'
      C                   ENDIF
      C                   ELSE
-
+ 
       ** Amounts calculations
-
+ 
      C                   IF        AYSIIN = 'N'
      C                             AND AYCAPI = 'Y'
      C                             OR  AYSIIN = 'Y'
      C                             AND AYCAPI = 'N'
      C                   EXSR      SRPDCALC
      C                   ENDIF
-
+ 
       ** Write/Update PDCLs
-
+ 
      C                   IF        AYSIIN = 'Y'
-
+ 
       ** PDCL on PD Interest
-
+ 
      C                   EVAL      WRECI = 'D'                                              MD035433
      C                   IF        WINT > 0
      C                   EVAL      WCPAM = WINT
@@ -1308,14 +1310,14 @@
      C                   EXSR      SRPDCLIN
      C                   ENDIF
      C                   ENDIF
-
+ 
      C                   ELSE
       *
       ** PDCL on PD Principal and Interest
       *
      C                   EVAL      WPIIN = 'T'
      C                   EVAL      WCPAM = WPDAMT + WINT
-
+ 
      C                   EVAL      WINT  = 0
      C                   EVAL      WRECI = 'D'
      C                   EVAL      W1STPASS = 'Y'
@@ -1330,7 +1332,7 @@
      C                   ENDIF
      C                   EVAL      WRECI = 'd'
      C                   ENDDO
-
+ 
      C                   IF        %FOUND
      C                   EXSR      SRPDCLUP
      C                   ELSE
@@ -1339,11 +1341,11 @@
       ** Insert PDCL
      C                   EXSR      SRPDCLIN
      C                   ENDIF
-
+ 
      C                   ENDIF
-
+ 
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1364,7 +1366,7 @@
      C                   EVAL      WPDAMT = W@PDAMT
      C                   EVAL      WCPAM = W@PDAMT
      C                   EVAL      WYPLNR = *BLANKS
-
+ 
      C                   IF        W@PDAMT >= W@AV
      C                   EVAL      WCPAM = W@PDAMT
      C                   EVAL      WAV = 0
@@ -1377,7 +1379,7 @@
      C                   PARM      '*KEY   '     @OPTN
      C                   PARM                    @FECD
      C     SDFEE         PARM      SDFEE         DSFDY
-
+ 
      C                   IF        @RTCD <> *BLANKS
      C                   EVAL      WRETCD = '*ERROR'
      C                   EVAL      DBFILE = 'SDFEEPD'
@@ -1401,7 +1403,7 @@
      C                   PARM      WSUTP         PLSubType
      C                   PARM      WCLAS         PLClass
      C     SDLOAN        PARM      SDLOAN        DSFDY
-
+ 
      C                   IF        @RTCD <> *BLANKS
      C                   EVAL      WRETCD = '*ERROR'
      C     WLTYP         CAT       WSUTP         DBKEY
@@ -1410,7 +1412,7 @@
      C                   EVAL      DBASE = 006
      C                   EXSR      *PSSR
      C                   ENDIF
-
+ 
      C                   EVAL      WPIIN = ' '
      C                   EVAL      W@FACL5A = *BLANKS
      C                   IF        W@FACL  > 0
@@ -1440,7 +1442,7 @@
      C                   ENDIF
      C                   EVAL      WRECI = 'd'
      C                   ENDDO
-
+ 
      C                   IF        %FOUND
      C     WFELNK2       CHAIN(N)  CLOANLF                            99
      C                   EXSR      SRPDCLUP
@@ -1451,7 +1453,7 @@
      C                   EXSR      SRPDCLIN
      C                   EVAL      WYPLNR = F9NALA
      C                   ENDIF
-
+ 
      C                   ELSE
       *
       ** Principal amount is less than available balance, just return
@@ -1463,7 +1465,7 @@
       *
      C                   EVAL      W@OPDAM = WPDAMT
      C                   EVAL      W@OPDINT = WINT
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1484,7 +1486,7 @@
      C                   EVAL      WPDCLTS += 1
      C                   MOVE      WPDCLTS       PDCLTS
      C                   OUT       LEPDCL
-
+ 
      C                   IF        W@TYPE = 'L'
      C                   EVAL      RecordType = Loan
       *
@@ -1520,7 +1522,7 @@
      C                   Parm                    PCUST
      C                   PARM      *BLANKS       PSTKEY            7
      C     SDCUST        PARM      SDCUST        DSSDY
-
+ 
      C                   IF        PRTCD <> *BLANKS
      C                             AND PRTCD <> '*NRF   '
      C                   EVAL      DBKEY = POPTN
@@ -1700,7 +1702,7 @@
       *                                                               *
       *****************************************************************
      C     setLEPDUFPD   BEGSR
-
+ 
      C                   CLEAR                   LEPDUFD0
       *
       ** Primary record
@@ -1719,18 +1721,18 @@
      C                   MOVE      'N'           YPSIIN
      C                   MOVE      'N'           YPCIIN
      C                   MOVE      E_FEBRCA      YBRCA
-
+ 
      C                   MOVE      *BLANKS       YTKPABR
      C                   MOVE      *BLANKS       YTKPACL
      C                   MOVE      *BLANKS       YTKPACY
      C                   Z-ADD     0             YTKPAAC
      C                   Z-ADD     0             YTKPASE
-
+ 
      C                   Z-ADD     0             YRIDT
      C                   Z-ADD     0             YBIDT
      C                   Z-ADD     0             YRCAT
      C                   Z-ADD     0             YBCAT
-
+ 
      C                   MOVE      'N'           YDECRE
      C                   Z-ADD     W@EDATYP      YPDVDT
      C                   Z-ADD     BJRDNB        YLCD
@@ -1776,24 +1778,24 @@
      C                   MOVE      'N'           YDECRE
      C                   MOVE      AYSIIN        YPSIIN
      C                   MOVE      AYCAPI        YPCIIN
-
+ 
      C                   MOVE      *BLANKS       YTKPABR
      C                   MOVE      *BLANKS       YTKPACL
      C                   MOVE      *BLANKS       YTKPACY
      C                   Z-ADD     0             YTKPAAC
      C                   Z-ADD     0             YTKPASE
-
+ 
      C                   MOVE      *BLANKS       YTKIABR
      C                   MOVE      *BLANKS       YTKIACL
      C                   MOVE      *BLANKS       YTKIACY
      C                   Z-ADD     0             YTKIAAC
      C                   Z-ADD     0             YTKIASE
-
+ 
      C                   Z-ADD     0             YRIDT
      C                   Z-ADD     0             YBIDT
      C                   Z-ADD     0             YRCAT
      C                   Z-ADD     0             YBCAT
-
+ 
      C                   Z-ADD     W@EDATYP      YPDVDT
      C                   Z-ADD     BJRDNB        YLCD
      C                   MOVE      'I'           YTYLC
@@ -1805,11 +1807,11 @@
      C                   MOVEL     WPDCLSEQ      YPFRNT
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    YPTMST
-
+ 
      C                   WRITE     LEPDUED0
-
+ 
       ** Primary record
-
+ 
      C                   MOVE      'P'           YRECI
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    YPTMST
@@ -1848,10 +1850,10 @@
      C                   ENDIF
      C                   EVAL      YPFRNT= WPDCLSEQ
      C                   UPDATE    LEPDUED0
-
+ 
       ** Create a new details record
       ** (only field differences are include)
-
+ 
      C                   EVAL      YRECI = 'P'
      C                   EVAL      YPCPAM = 0
      C                   IF        WPIIN = 'P' OR WPIIN = 'T'
@@ -1884,20 +1886,20 @@
      C                   Z-ADD     W@LASN        YPOSEQ
      C                   EVAL      YPFRNT= WPDCLSEQ
      C                   WRITE     LEPDUED0
-
+ 
       ** Fees
-
+ 
      C                   ELSE
-
+ 
       ** Update the summary record
-
+ 
      C                   EVAL      YPCPAM = YPCPAM + WCPAM
      C                   EVAL      YPFRNT= WPDCLSEQ
      C                   UPDATE    LEPDUFD0
-
+ 
       ** Create a new details record
       ** (only field differences are include)
-
+ 
      C                   EVAL      YRECI = 'P'
      C                   EVAL      YPCPAM = WCPAM
      C                   EVAL      YDECRE = 'N'
@@ -1918,15 +1920,15 @@
      C                   PARM                    YPTMST
      C                   EVAL      YPFRNT= WPDCLSEQ
      C                   WRITE     LEPDUFD0
-
+ 
      C                   ENDIF
-
+ 
       ** Read Penalties for PDCL loan
-
+ 
       ** Override fields if penalties are present
-
+ 
      C     YPLON         CHAIN     LEPRATL1
-
+ 
      C                   IF        %FOUND
      C                   EVAL      AYCAPI = B2CAPI
      C                   EVAL      AYSIIN = B2SPLI
@@ -1986,30 +1988,30 @@
      C                   EVAL      WINT = WINT - W@AV
      C                   EVAL      WAV = 0
      C                   ENDIF
-
+ 
      C                   IF        W@INT > 0
      C                             AND W@INT < W@AV
      C                   EVAL      WAV = WAV - WINT
      C                   EVAL      WINT = 0
      C                   ENDIF
-
+ 
      C                   IF        W@PDAMT > 0
      C                             AND W@PDAMT >= WAV
      C                   EVAL      WPDAMT = WPDAMT - WAV
      C                   EVAL      WAV = 0
      C                   ENDIF
-
+ 
      C                   IF        W@PDAMT > 0
      C                             AND W@PDAMT < WAV
      C                   EVAL      WAV = WAV - WPDAMT
      C                   EVAL      WPDAMT = 0
      C                   ENDIF
-
+ 
       ** set return fields
-
+ 
      C                   EVAL      W@OPDAM = WPDAMT
      C                   EVAL      W@OPDINT = WINT
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2023,15 +2025,15 @@
       * Calls: SRPDCLUP & SRPDCLIN                                    *
       *                                                               *
       *****************************************************************
-
+ 
      C     ChkSysValue   BEGSR
-
+ 
       ** Check if Window Maintenance is activated
-
+ 
      C                   EVAL      @RTCD = *BLANKS
      C                   EVAL      POP01 = 'PDCLAccSeqNo'
      C                   EVAL      PVL01 = *BLANKS
-
+ 
      C                   CALL      'AOSVALR0'
      C                   PARM                    @RTCD
      C                   PARM                    POP01
@@ -2054,7 +2056,7 @@
      C                   PARM      *BLANKS       PVL09
      C                   PARM      *BLANKS       POP10
      C                   PARM      *BLANKS       PVL10
-
+ 
      C                   EVAL      SeqFlg = *BLANKS
      C                   IF        @RTCD = *BLANKS
      C                   MOVEL     PVL01         SeqFlg
@@ -2151,7 +2153,7 @@
      C                   EXSR      SRFmtWMsg
       *
      C                   IF        RunAsIdentity = 'N'
-
+ 
      C                   EVAL      PFldTag  = 'APUSERID'
      C                   EVAL      PFldData = WkUser
      C                   EVAL      PFldType = *BLANK
@@ -2163,7 +2165,7 @@
      C                   EVAL      PFldType = *BLANK
      C                   EVAL      PFldAttr = *BLANK
      C                   EXSR      SRFmtWMsg
-
+ 
      C                   ENDIF
       *
      C                   EVAL      PFldTag  = 'DDACTN'
@@ -2250,9 +2252,9 @@
      C                   IF        W#LAS > WLASN
      C                   EVAL      WLASN = W#LAS
      C                   ENDIF
-
+ 
       ** Write Loan details in temporary file LELOANPI
-
+ 
      C                   EVAL      PILNRF = W#LON
      C                   EVAL      PIVDAT = W#DAT
      C                   EVAL      PILASN = WLASN
@@ -3353,7 +3355,7 @@
      C                   EVAL      LGSENT = TimeStamp
      C                   MOVEL     PMsgBuf       LGXMLF
      C                   WRITE     LEMQLGPF
-
+ 
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -3501,9 +3503,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
-
+ 
      C     *INZSR        BEGSR
-
+ 
       *
      C     WKLON         KLIST
      C                   KFLD                    WALON             6
@@ -3894,7 +3896,7 @@
      C     LEMQLGK1      KLIST
      C                   KFLD                    WSTAT
      C                   KFLD                    WPGNM
-
+ 
      C     KLOAM2        KLIST
      C                   KFLD                    W#LON
      C                   KFLD                    W#DAT
@@ -4007,7 +4009,7 @@
      C                   EXSR      SRFmtWMsg
       *
      C                   IF        RunAsIdentity = 'N'
-
+ 
      C                   EVAL      PFldTag  = 'APUSERID'
      C                   EVAL      PFldData = WkUser
      C                   EVAL      PFldType = *BLANK
@@ -4019,7 +4021,7 @@
      C                   EVAL      PFldType = *BLANK
      C                   EVAL      PFldAttr = *BLANK
      C                   EXSR      SRFmtWMsg
-
+ 
      C                   ENDIF
       *
       ** Front Office ID
@@ -4150,7 +4152,7 @@
      C                   EVAL      PFldData = AUCLTY
       *
      C                   ENDSL
-
+ 
      C                   MOVEL     PFldData      MQLTYP
      C                   EVAL      PFldTag  = 'DDLTYP'
      C                   EVAL      PFldType = *BLANK
@@ -4172,7 +4174,7 @@
      C                   EVAL      PFldData = AUCLST
       *
      C                   ENDSL
-
+ 
      C                   MOVEL     PFldData      MQSTYP
      C                   EVAL      PFldTag  = 'DDSUTP'
      C                   EVAL      PFldType = *BLANK
@@ -4204,7 +4206,7 @@
      C                   OTHER
      C                   EVAL      PFldData = *BLANKS
      C                   ENDSL
-
+ 
      C                   EVAL      PFldTag  = 'DDOLNO'
      C                   EVAL      PFldType = *BLANK
      C                   EVAL      PFldAttr = *BLANK
@@ -4217,7 +4219,7 @@
      C                   OTHER
      C                   EVAL      PFldData = C_MLNR
      C                   ENDSL
-
+ 
      C                   EVAL      PFldTag  = 'DDMLNR'
      C                   EVAL      PFldType = *BLANK
      C                   EVAL      PFldAttr = *BLANK
@@ -4358,7 +4360,7 @@
      C                   OTHER
      C                   EVAL      PFldData = C_FCCY
      C                   ENDSL
-
+ 
      C                   EVAL      PFldTag  = 'DDFCCY'
      C                   EVAL      PFldType = *BLANK
      C                   EVAL      PFldAttr = *BLANK
@@ -4507,7 +4509,7 @@
      C                   EVAL      PFldData = *BLANKS                                       MD031851
      C                   ENDIF                                                              MD031851
      C                   MOVEL     ZFIELD        RTSPX            16
-
+ 
      C                   EVAL      PFldTag  = 'DDRTSP'
      C                   EVAL      PFldType = *BLANK
      C                   EVAL      PFldAttr = *BLANK
@@ -4578,7 +4580,7 @@
      C                   PARM                    ZFIELD
      C                   PARM                    ZDEC
      C                   MOVEL     ZFIELD        PFldData
-
+ 
      C                   EVAL      PFldTag  = 'DDMARG'
      C                   EVAL      PFldType = *BLANK
      C                   EVAL      PFldAttr = *BLANK
@@ -4738,13 +4740,13 @@
      C                   ENDIF                                                              MD031851
      C                   ENDSL
      C                   ENDIF                                                              MD031225
-
+ 
      C                   EVAL      PFldData  = ZFIELD
      C                   EVAL      PFldTag  = 'DDBASR'
      C                   EVAL      PFldType = *BLANK
      C                   EVAL      PFldAttr = *BLANK
      C                   EXSR      SRFmtWMsg
-
+ 
      C                   IF        RATESPFL = 'Y'
      C                   EVAL      PFldData  = RTSPX
      C                   EVAL      PFldTag  = 'DDFXRT'
@@ -4760,7 +4762,7 @@
      C                   OTHER
      C                   MOVEL     E_FEACOF      PFldData
      C                   ENDSL
-
+ 
      C                   EVAL      PFldTag  = 'DDACOF'
      C                   EVAL      PFldType = *BLANK
      C                   EVAL      PFldAttr = *BLANK
@@ -4777,7 +4779,7 @@
      C                   MOVE      BBLICD        LINDX
      C                   ENDIF
      C                   ENDSL
-
+ 
      C                   MOVEL     LINDX         PFldData
      C                   EVAL      PFldTag  = 'DDLIND'
      C                   EVAL      PFldType = *BLANK
@@ -4794,7 +4796,7 @@
      C                   EVAL      PFldData = 'Y'                                           MD022640
      C                   ENDIF
      C                   ENDSL
-
+ 
      C                   EVAL      PFldTag  = 'DDFEEI'
      C                   EVAL      PFldType = *BLANK
      C                   EVAL      PFldAttr = *BLANK
@@ -4821,7 +4823,7 @@
      C                   MOVEL     E_FEBRCA      ORBR                                       MD022640
      C                   ENDIF
      C                   ENDSL
-
+ 
      C                   MOVEL     ORBR          PFldData
      C                   EVAL      PFldTag  = 'DDORBR'
      C                   EVAL      PFldType = *BLANK
@@ -4835,7 +4837,7 @@
      C                   OTHER
      C                   MOVEL     M_CRSK        PFldData
      C                   ENDSL
-
+ 
      C                   EVAL      PFldTag  = 'DDCRSK'
      C                   EVAL      PFldType = *BLANK
      C                   EVAL      PFldAttr = *BLANK
@@ -4849,7 +4851,7 @@
      C                   OTHER
      C                   MOVEL     BPDBKC        PFldData
      C                   ENDSL
-
+ 
      C                   EVAL      PFldTag  = 'DDBOKC'
      C                   EVAL      PFldType = *BLANK
      C                   EVAL      PFldAttr = *BLANK
@@ -4908,7 +4910,7 @@
      C                   ENDSL                                                             MD021423D
      C                   ENDIF
      C                   ENDSL
-
+ 
      C**********         MOVEL     FSEQX         PFldData                                  MD021423D
      C                   MOVEL     SEQX          PFldData                                  MD021423D
      C                   EVAL      PFldTag  = 'DDACSQ'
@@ -5065,7 +5067,7 @@
      C                   EVAL      PFldType = *BLANK
      C                   EVAL      PFldAttr = *BLANK
      C                   EXSR      SRFmtWMsg
-
+ 
      C                   SELECT
      C                   WHEN      RecordType = Loan
       *
@@ -5104,7 +5106,7 @@
      C                   MOVEL     M_PCRF        PFldData
      C                   ENDIF
      C                   ENDSL
-
+ 
      C                   EVAL      PFldTag  = 'DDFUTN'
      C                   EVAL      PFldType = *BLANK
      C                   EVAL      PFldAttr = *BLANK
@@ -5128,7 +5130,7 @@
      C                   EVAL      PFldType = *BLANK
      C                   EVAL      PFldAttr = *BLANK
      C                   EXSR      SRFmtWMsg
-
+ 
      C                   EVAL      PFldTag  = 'DDSUTN'
      C                   EVAL      PFldType = *BLANK
      C                   EVAL      PFldAttr = *BLANK
@@ -5735,7 +5737,7 @@
      C                   PARM                    ZFIELD
      C                   PARM                    ZDEC
      C                   EVAL      PFldData  = ZFIELD
-
+ 
      C                   EVAL      PFldTag  = 'DDCNSP'
      C                   EVAL      PFldType = *BLANK
      C                   EVAL      PFldAttr = *BLANK
@@ -5814,16 +5816,16 @@
      C                   EVAL      PFldType = *BLANK
      C                   EVAL      PFldAttr = *BLANK
      C                   EXSR      SRFmtWMsg
-
+ 
      C                   EVAL      MQCNUM = W@CNU2                                         MD022807I
      C**********         ENDSL                                                             MD022807I
-
+ 
      C                   EVAL      MQCNUM = W@CNU2
      C                   IF        W@FACL <> 0
      C                   MOVEL     W@FACL        MQORLN
      C                   ENDIF
      C                   ENDSL                                                             MD022807I
-
+ 
      C                   EVAL      PFldTag  = 'AUTH'                                       MD021423B
      C                   EVAL      PFldData = 'Y'                                          MD021423B
      C                   EVAL      PFldType = *BLANK                                       MD021423B
@@ -5832,7 +5834,7 @@
                                                                                            MD021423B
      C                   EVAL      PMode    = '*RETURN'
      C                   EXSR      SRFmtWMsg
-
+ 
      C                   MOVEL     W@LOAN        MQORLN
       *
      C                   ENDSR
@@ -5993,7 +5995,7 @@
       /EJECT                                                                                MD023203
       *****************************************************************                     MD023203
 **  CPY@
-(c) MIsys International Banking Systems Ltd. 2013
+(c) Finastra International Limited 2013
 **  POWR -- USED IN CURRENCY CONVERSION(FACILITY)
 0000001
 0000010

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2005')
+     H COPYRIGHT('(c) Finastra International Limited 2005')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas LE Customer Loans BoE Input')                    *
@@ -13,14 +13,16 @@
       *               on customer loans entered via SIN for           *
       *               BoE Customer Loans.                             *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Midas Plus 1.4 Base ------------------------------------------*
-      *  Last Amend No. LLN022  *CREATE    Date 24Jan05               *
-      *  Prev Amend No.                                               *
+      *  Prev Amend No. LLN022  *CREATE    Date 24Jan05               *
+      *                                    Date                       *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  LLN022 - BOE Upgrade to MidasPlus                            *
       *                                                               *
       *****************************************************************
@@ -64,7 +66,7 @@
      F***LELOAN#0* CF   E             WORKSTN                                               MD034876
      FLELOANDF  CF   E             WORKSTN                                                  MD034876
      F                                     INFSR(*PSSR)
-
+ 
       *****************************************************************
       /EJECT
       *
@@ -78,44 +80,44 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
-
+ 
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
@@ -123,43 +125,43 @@
       *
       ** Add 1 onto elements in array for each field on window
      D @EI             S              1    DIM(10)
-
+ 
       *
      D SPARE2          S            256A
-
+ 
       *
      D** Copyright array
      D A@CPY           DS
-
+ 
       *
       ** Local data area for database error details
-
+ 
       ** Datastructure to define input parameter DATA
      D/COPY QWINDSRC,LECLIPDTA
-
+ 
       ** First DS for access programs, short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
-
+ 
       ** Data structure for Bank details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
-
+ 
       ** NEW Loan Details in Screen Format
      D NwCLIPScnFmt  E DS                  EXTNAME(LECLEXPD)
-
+ 
       ** NEW Loan Details in File Format
      D NwCLIPFilFmt  E DS                  EXTNAME(LEVCLIPX0)
-
+ 
       ** Error indicators (OK#S)
      D OKFLAGS       E DS                  EXTNAME(LEECLIPX0)
-
+ 
       ** Loan number ranges file
      D SDLENO        E DS                  EXTNAME(SDLENOPD)
-
+ 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
-
+ 
       ** Action Code
      D ACTN            S              1A
      D W0RTN           S              7A
@@ -169,32 +171,32 @@
      D WProcess        S              1
      D TITLE           S              7A
      D TEXT            S            132A
-
+ 
       ** Standards Input Parameters
-
+ 
       ** Window position
      D SROW            S              3  0
      D SCOL            S              3  0
-
+ 
       ** Standards Output Parameters
-
+ 
       ** Function Keys
      D @INKC           S              1
      D @INKL           S              1
-
+ 
       ** Index error array
      D Idx             S              3P 0 INZ(0)
       ** Index warning array
      D WIdx            S              3P 0 INZ(0)
-
+ 
      D PRTCD           S              7A
      D POPTN           S              7A
-
+ 
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -309,7 +311,7 @@
       *  *INZSR - INITIAL PROCESSING                                  *
       *****************************************************************
      C     *INZSR        BEGSR
-
+ 
       ** Entry Parameters
      C     *ENTRY        PLIST
      C                   PARM                    ACTN
@@ -583,4 +585,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2005
+(c) Finastra International Limited 2005

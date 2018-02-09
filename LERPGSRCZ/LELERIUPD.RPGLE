@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*XBI *  OVRDBF FILE(CLOANX) TOFILE(CLOAN) SHARE(*NO)                 *
 /*STD *  RPGBASEMOD                                                   *
@@ -13,10 +13,11 @@
       *  Function:  This is the update function for the Rollover      *
       *             Instructions                                      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD034840           Date 10Feb17               *
-      *  Prev Amend No. 243232             Date 13Mar15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD034840           Date 10Feb17               *
+      *                 243232             Date 13Mar15               *
       *                 MD028338           Date 25Nov14               *
       *                 AR826115           Date 07Dec12               *
       *                 CLE134             Date 01Aug12               *
@@ -63,6 +64,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD034840 - No error issued for input of base rate even if    *
       *             Base Rate Change Facility ICD is set to 'N'.      *
       *  243232 - Frontoffice Id on CLOANCL corrupted by rollover.    *
@@ -2133,7 +2135,7 @@
       *  FSFYLB  New Forward Yield Curve      Yes                        Yes    *             BUG874
       ***************************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2002
+(c) Finastra International Limited 2002
 **  LNOST
 010708
 ** CTDATA XOT - XML Opening Tags for the Compliance Engine.                                  BUG3760

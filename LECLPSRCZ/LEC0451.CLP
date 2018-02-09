@@ -7,10 +7,11 @@
 /*                                                                  */
 /*     LEC0451  -  MONTHLY NMATLN UPDATE PROCESSING                 */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD021155           Date 03Jul13              */
-/*       Prev Amend No. AR1089839          Date 19Feb13              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD021155           Date 03Jul13              */
+/*                      AR1089839          Date 19Feb13              */
 /*                      CLE075AS           Date 06Aug12              */
 /*                      CLE134             Date 01Aug12              */
 /*                      CER059             Date 19Jul10              */
@@ -31,6 +32,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD021155 - COB Restructure Phase 1 remnants                 */
 /*                - PDP changes still taking security copies         */
 /*       AR1089839 - COBOP and 2.1 source clashes                    */
@@ -82,7 +84,7 @@ PGM PARM(&CNAM &CSEQ)
              DCL        VAR(&SJRNRCVR) TYPE(*CHAR) LEN(10)                              /*CLE075AS*/
              DCL        VAR(&FJRNRCVR) TYPE(*CHAR) LEN(10)                              /*CLE075AS*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /*/COPY WNCPYSRC,LEC0451004                                          */
@@ -332,6 +334,6 @@ PGM PARM(&CNAM &CSEQ)
                           FLAG('E') TEXT(&STEXT)                                        /*CLE075AS*/
                                                                                         /*CLE075AS*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 ENDPGM

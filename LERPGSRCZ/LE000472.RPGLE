@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+     H COPYRIGHT('(c) Finastra International Limited 2012')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('MIDAS LE Merge PDCL Postings into GELEPD')             *
@@ -14,15 +14,17 @@
       *                                                               *
       *  Called By: LEC0472                                           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD023377           Date 25Apr14               *
-      *  Prev Amend No. AR589238           Date 01Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD023377           Date 25Apr14               *
+      *                 AR589238           Date 01Aug12               *
       *                 262864             Date 01Aug12               *
       *                 CLE134  *CREATE    Date 01Aug12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD023377  - APOSTPD file has wrong source of posting (SPOS)  *
       *  AR589238  - Suspense postings should not refer to irrelevant *
       *              Loans.                                           *

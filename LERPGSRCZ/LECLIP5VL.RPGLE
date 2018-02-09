@@ -3,7 +3,7 @@
 /*EXI *  TEXT('Midas SD CLIP Validation - Extension')                 *
       *****************************************************************
       *                                                               *
-      *  Misys - Lending Module                                       *
+      *  Finastra - Lending Module                                    *
       *                                                               *
       *  LECLIP5VL - Midas LE CLIP Validation - Extension             *
       *                                                               *
@@ -12,10 +12,11 @@
       *                                                               *
       *  Called By: LECLIPCTL, LECLIP2RP and LECLIPVU                 *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. AR804863           Date 10Dec12               *
-      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR804863           Date 10Dec12               *
+      *                 CLE148             Date 23Jul12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -24,6 +25,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR804863 - Details are not correctly reverted back when the  *
       *             amended transaction is rejected in WIP. Pass      *
       *             reject button to correctly revert back amended    *
@@ -894,4 +896,4 @@
       /EJECT
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2005
+(c) Finastra International Limited 2005

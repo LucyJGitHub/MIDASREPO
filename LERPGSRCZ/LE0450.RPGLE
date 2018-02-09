@@ -10,10 +10,11 @@
 0005 F*                                                               *
 0006 F*  LE0450 - CLOAN FILE UPDATE PHASE II                          *
 0007 F*                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD049078           Date 12Jan18               *
-      *  Prev Amend No. MD048557           Date 27Nov17               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD049078           Date 12Jan18               *
+      *                 MD048557           Date 27Nov17               *
       *                 MD048609           Date 22Nov17               *
       *                 MD046080           Date 21Sep17               *
       *                 MD047993           Date 23Sep17               *
@@ -380,6 +381,7 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD049078 - Wrong postings of MR and RE of PDCL loan          *
       *  MD048557 - Failing COB Component - LEC000471A                *
       *  MD048609 - Failing COB Component - LEC0000456 seq 00001   	  *
@@ -20842,7 +20844,7 @@ JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
 **   ZFMD  -  NUMBER OF DAYS IN THE MONTH
 312831303130313130313031
 ** CPY@   **      OBJECT COPYRIGHT
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 ** STAMP - Dummy timestamp                                                                    CLE034
 0001-01-01-00.00.00.000000                                                                    CLE034
 **   SVAL  -  SYSTEM VALUES ARRAY                                                             218782

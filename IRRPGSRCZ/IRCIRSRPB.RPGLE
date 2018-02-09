@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas IR Invalid cross ccy IRS browse')
@@ -13,14 +13,15 @@
       *             One display a list of invalid deals for selection,*
       *             the other picks off the selection made.           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. BUG11376           Date 11May06               *
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *  Prev Amend No. BUG11376           Date 11May06               *
+      *                 CSD027             Date 09Dec05               *
       *                 CLE031             Date 26Apr05               *
       *                 CDL038             Date 10May05               *
       *                 CAS008             Date 16Jun06               *
@@ -54,6 +55,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG11376-Remove the incorrect declaration of STDDECLARE      *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CLE031 - Lending Enhancements - Settlement Currency Recompile*
@@ -965,7 +967,7 @@
       /COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 **  Array of error messages - ErrorText                                         CAP006
 The last transaction was not applied to the database
 Deal No. 999999 successfully inserted.                                          166907

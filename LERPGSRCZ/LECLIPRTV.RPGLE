@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas LE Customer loans retr + act/loan validation')   *
@@ -15,10 +15,11 @@
       *             the database. As it does so, it validates the     *
       *             action code and loan reference                    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CLE141             Date 08Feb16               *
-      *  Prev Amend No. MD032052           Date 23Jan15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE141             Date 08Feb16               *
+      *                 MD032052           Date 23Jan15               *
       *                 MD031225           Date 10Dec14               *
       *                 MD025945           Date 19Aug14               *
       *                 MD000091           Date 09May13               *
@@ -75,6 +76,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE141 - Currency and Location Business Day Convention for   *
       *           Lending Transactions (Recompile)                    *
       *  MD032052 - Unable to authorize loan repaired from repair     *
@@ -336,7 +338,7 @@
       ** Ê Declared variables                   Ê
       ** Ê ==================                   Ê
       ** +--------------------------------------+
-
+ 
       ** Index for arrays of of error message ids etc
      D Ix              S              3P 0
       *                                                                                       CGL029
@@ -345,7 +347,7 @@
       ***  Index for arrays of of warning message ids etc                       225959
      D Wx              S              3P 0                                      225959
      D/COPY WNCPYSRC,LECLIPTD01
-
+ 
       ** SAR Indicators (on/off)                                                             BUG3760
      D CCF001          S              1                                                      BUG3760
      D CSC011          S              1                                                      BUG3760
@@ -432,7 +434,7 @@
       ** Ê ==============                       Ê
       ** +--------------------------------------+
       *****************************************************************
-
+ 
       * Rename input fields (must be included in DS CliKFilFmt)
      ICLOANCKLN
      I              RECI                        KRECI
@@ -448,7 +450,7 @@
      I              REPA                        KREPA
      I              TMST                        KTMST
       /EJECT
-
+ 
       ** +--- Start of Main processing -----------------------------------+
       ** Ê                                                                Ê
       ** Ê Initial processing is performed automatically: the *inzsr is   Ê
@@ -465,7 +467,7 @@
       ***  Initialisation
       *
      C                   EXSR      INIT
-
+ 
       ** Check whether user is a web browser user, if so overwrite              CAP084
      C                   CALL      'SFC000026'                                  CAP084
      C                   PARM      *BLANKS       USER             10            CAP084
@@ -576,13 +578,13 @@
      C     RespMode      IFEQ      'S'
      C                   EXSR      ACSSEC
      C                   END
-
+ 
       * Determine Processing type
-
+ 
      C                   EXSR      DET_PROCTYPE
-
+ 
       * Determine Loan type
-
+ 
      C                   EXSR      DET_LOANTYPE
                                                                                               CLE143
      C     DDLNRF        IFNE      *BLANKS                                                    CLE143
@@ -695,7 +697,7 @@
      C     DDACTN        IFEQ      *BLANK
      C                   MOVEL     'E'           DDACTN
      C                   END
-
+ 
       *
       ***  If the loan number is not blank, check that it is numeric.
       *
@@ -724,7 +726,7 @@
      C                   IF        (wLoanAlpha = 'N'                                        AR968606
      C                              AND (*IN98 = *OFF OR *IN99 = *OFF)                      AR968606
      C                              OR (wLoanAlpha = 'Y' AND PValid <> *BLANKS))            AR968606
-
+ 
      C                   MOVE      'N'           DDLNRFOK
      C                   ADD       1             Ix
      C                   MOVEL     'DDLNRF'      FldNameArr(Ix)
@@ -1405,9 +1407,9 @@
       *
       ***  For single branch system, check if user is authorised to the
       ***  action
-
+ 
      C                   MOVEL     *BLANKS       WWACTN            1
-
+ 
      C     DDACTN        IFEQ      '1'
      C     DDACTN        OREQ      '2'
      C     DDACTN        OREQ      '3'
@@ -1415,7 +1417,7 @@
      C                   MOVEL     DDACTN        WWACTN
      C                   MOVEL     'E'           DDACTN
      C                   END
-
+ 
      C                   Z-ADD     0             @ERR              1 0
       *
      C     BGMBIN        IFEQ      'N'
@@ -1492,7 +1494,7 @@
      C     WWACTN        IFNE      *BLANKS
      C                   MOVEL     WWACTN        DDACTN
      C                   END
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1500,7 +1502,7 @@
       * DET_PROCTYPE - Determine Loan Processing Type                 *
       *****************************************************************
      C     DET_PROCTYPE  BEGSR
-
+ 
      C     DDACTN        IFEQ      'I'
      C                   Z-ADD     61            LoanPtyp
      C                   CALL      'AOLOANR0'
@@ -1519,7 +1521,7 @@
      C                   ELSE
      C                   Z-ADD     PTYP          LoanPtyp
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1527,7 +1529,7 @@
       * DET_LOANTYPE - Determine Loan Type                            *
       *****************************************************************
      C     DET_LOANTYPE  BEGSR
-
+ 
      C                   SELECT
      C     LoanPtyp      WHENEQ    61
      C     LoanPtyp      OREQ      62
@@ -1547,7 +1549,7 @@
      C     LoanPtyp      OREQ      72
      C                   MOVEL     'PTSO'        LoanType
      C                   ENDSL
-
+ 
      C                   ENDSR
       *****************************************************************                       CLE143
       /EJECT                                                                                  CLE143
@@ -1603,15 +1605,15 @@
       ***  Parameters
       *
      C     *ENTRY        PLIST
-
+ 
       * INPUTS
-
+ 
       * Return code
      C                   PARM                    RetCodeIn
-
+ 
       * Mode = '*FRONT' (FRONT OFFICE TRANSACTION INTERFACE)
       * Mode = '      ' (NOT FRONT OFFICE TRANSACTION INTERFACE)
-
+ 
      C                   PARM                    ModeofOp          6
       * Response mode
      C                   PARM                    RespMode          1
@@ -1629,14 +1631,14 @@
                                                                                              BUG3721
       ** Switchable features                                                                 BUG3721
      C                   PARM                    CLE028            1                         BUG3721
-
+ 
       * OUTPUTS
-
+ 
       * Loan Processing Type
      C                   PARM                    LoanPtyp          2 0
       * Loan Type
      C                   PARM                    LoanType          4
-
+ 
       * (Current) Customer loan CL in file format
      C                   PARM                    CliLFilFmt
       * (Current) Customer loan CK in file format
@@ -2239,4 +2241,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2002
+(c) Finastra International Limited 2002

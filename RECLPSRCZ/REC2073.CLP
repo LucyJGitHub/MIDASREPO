@@ -8,17 +8,18 @@
 /*       REC2073 - PRE-PROCESSING FOR RETAIL II MAINTENANCE          */
 /*                (FOR SECURITY PROFILE FACILITY)                    */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. 211225             Date 09Dec02              */
+/*       Prev Amend No. 211225             Date 09Dec02              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.04 ---------------------------------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CCB002             Date 30Aug96              */
+/*                      CCB002             Date 30Aug96              */
 /*                      S01413             Date 13Apr93              */
 /*                      E22479                  18JUN90              */
 /*                      S01194                  26MAR90              */
@@ -26,6 +27,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       211225  -  Remove running of batch job REC5310. Update of   */
 /*                  PF/RESTCHPD is now processed in pgm RE0240WC.    */
 /*                  Apply fix 183776.                                */
@@ -44,7 +46,7 @@
 /*********************************************************************/
              PGM        PARM(&PGM &PGNM &MODE)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
              DCL        VAR(&PGM) TYPE(*CHAR) LEN(8)
@@ -88,5 +90,5 @@
 /**********               INLLIBL(*JOBD) MSGQ(MOPERQ)                          /*S01413*/ /*211225*/
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

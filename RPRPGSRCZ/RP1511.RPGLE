@@ -19,10 +19,11 @@
       *                                                               *
       *  Component of: RP1511 - Extract program for TRADSD            *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CLE134             Date 01Aug12               *
-      *  Prev Amend No. AR858264A          Date 16Jul12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *                 AR858264A          Date 16Jul12               *
       *                 207288             Date 11Jul12               *
       *                 AR978289           Date 23May12               *
       *                 AR970292           Date 14May12               *
@@ -58,6 +59,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  AR858264A - Compilation Issues on various RP programs        *
       *  207288 - Recompile over changes in RP1511.                   *
@@ -1524,4 +1526,4 @@
       *****************************************************************
  
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

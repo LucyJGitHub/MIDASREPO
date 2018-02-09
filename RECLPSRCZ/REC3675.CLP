@@ -7,20 +7,22 @@
 /*                                                                   */
 /*       REC3675 - Retail History Update - End Task Split            */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.03 ---------------------------------------------------*/
-/*       Last Amend No. CCB009             DATE 01Jun00              */
+/*       Prev Amend No. CCB009             Date 01Jun00              */
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CCB003  *Create    Date 30Oct96              */
+/*                      CCB003  *CREATE    Date 30Oct96              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CCB009 - Journal files throughout close of business         */
 /*       CCB003 - COB Performance Enhancements - Task Split          */
 /*                End Task Split                                     */
@@ -41,7 +43,7 @@
              DCL        VAR(&RECEIVER) TYPE(*CHAR) LEN(10)
              DCL        VAR(&MEMBER) TYPE(*CHAR) LEN(10)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /*                                                                      CCB009*/
 /* Declare variable CCB009 - flag for switchable feature                CCB009*/
@@ -145,7 +147,7 @@
              CHGJOB     SWS(XXXXXX11)
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 /*/COPY WNCPYSRC,REC3675END                                          */
  

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
      H FTRANS
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
@@ -14,10 +14,11 @@
       *             the MT101, MT103 or Cover MT202 for external      *
       *             Zero Balancing/Sweeping                           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSW215             Date 06Apr15               *
-      *  Prev Amend No. AR972805           Date 27Feb13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CSW215             Date 06Apr15               *
+      *                 AR972805           Date 27Feb13               *
       *                 AR960455           Date 25Feb13               *
       *                 CRE075             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -56,6 +57,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSW215 - SWIFT Changes 2015                                  *
       *  AR972805 - Remove equate translation as done externally.     *
       *             Recompile over FTCPYSRC,FTSWIFTRAN.               *
@@ -3364,16 +3366,16 @@
      C                   EVAL      POutParm5 = WMapLine5                                      CSW215
      C                   EVAL      WMsgType = '103'                                           CSW215
      C                   EVAL      T59MAP = 'Y'                                               CSW215
-     C                   EXSR      SROut59F                                                   CSW215 
+     C                   EXSR      SROut59F                                                   CSW215
      C                   GOTO      Proc59                                                     CSW215
      C                   ELSE                                                                 CSW215
      C                   IF        *IN71 = *OFF And                                           CSW215
-     C                             TDSDEF = 'Y'                                               CSW215 
+     C                             TDSDEF = 'Y'                                               CSW215
      C                   GOTO      Proc59                                                     CSW215
      C                   ENDIF                                                                CSW215
-     C                   ENDIF                                                                CSW215 
      C                   ENDIF                                                                CSW215
-                                                                                              CSW215     
+     C                   ENDIF                                                                CSW215
+                                                                                              CSW215
       *    Then try field :59:
      C                   Eval      KTag = ':59:'
      C                   EXSR      SRTrans

@@ -7,17 +7,19 @@
 /*                                                                   */
 /*     RPC9999 - Midas-TrOpics Interface - Start PROCEDURE AFTER IPL */
 /*                                                                   */
-/*       (C) COPYRIGHT Misys International Banking Systems sa. 2005  */
+/*       (C) COPYRIGHT Finastra International Limited 2005           */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CSD026             Date 05Apr05              */
-/*       Prev Amend No. UTROPX  *CREATE    Date 21DEC01              */
+/*       Prev Amend No. CSD026             Date 05Apr05              */
+/*                      UTROPX  *CREATE    Date 21Dec01              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CSD026 - Midas-TrOpics Interface upgrade to MidasPlus       */
 /*       UTROPX - Midas-TrOpics Interface                            */
 /*                                                                   */

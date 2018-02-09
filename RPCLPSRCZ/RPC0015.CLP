@@ -7,19 +7,21 @@
 /*                                                                   */
 /*       RPC0015 - Start Replication Subsystem - COB                 */
 /*                                                                   */
-/*       (C) COPYRIGHT Misys International Banking Systems sa. 2001  */
+/*       (C) COPYRIGHT Finastra International Limited 2001           */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CSD026             Date 05Apr05              */
+/*       Prev Amend No. CSD026             Date 05Apr05              */
 /* Midas DBA 3.02 ---------------------------------------------------*/
-/*       Prev Amend No. CRP006  *CREATE    Date 12Oct99              */
+/*                      CRP006  *CREATE    Date 12Oct99              */
 /*                      ------             Date --------             */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CSD026 - OPICS/MIDAS Interface submit Rates Upload request  */
 /*       CRP006 - Replication.                                       */
 /*                                                                   */
@@ -61,8 +63,8 @@
              DCL        VAR(&TIME) TYPE(*CHAR) LEN(8)                                     /*CSD026*/
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(C) +
-                           Copyright Misys International Banking +
-                           Systems sa. 2001')
+                           Copyright Finastra International Limited +
+                           2001')
  
 /* Global Monitor Message                                        **/
  

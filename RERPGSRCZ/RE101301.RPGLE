@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas RE I/C Zero Balancing/Sweeping Controller')
@@ -12,18 +12,20 @@
       *  Function:  This program controls input cycle zero balancing  *
       *             and sweeping.                                     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSC023             Date 28Jan04               *
-      *  Prev Amend No. 213197  *REWRITE   Date 22Jan03               *
+      *  Prev Amend No. CSC023             Date 28Jan04               *
+      *                 213197             Date 22Jan03               *
       *                 CRE008  *CREATE    Date 19Feb02               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSC023 - SBMJOB output queue must be *JOBD.                  *
       *  213197 - Rewrite of sweeping scheduling                      *
       *  CRE008 - Cash Management                                     *

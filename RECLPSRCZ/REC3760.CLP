@@ -11,10 +11,11 @@
 /*             DO NOT ADD ANY NEW PROGRAMS TO THIS CL IF IT IS NOT   */                 /*CRE083BU*/
 /*             ABLE TO RUN IN TASK SPLIT.                            */                 /*CRE083BU*/
 /*                                                                   */                 /*CRE083BU*/
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD041343           Date 15Sep16              */
-/*       Prev Amend No. MD022097           Date 30Aug13              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD041343           Date 15Sep16              */
+/*                      MD022097           Date 30Aug13              */
 /*                      AR1097467B         Date 17Apr13              */
 /*                      MD002850           Date 08Apr13              */
 /*                      CRE083BU           Date 06Aug12              */
@@ -29,6 +30,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD041343 - Undefined record type found in file SSRACJL      */
 /*       MD022097 - Low performance of REC3760T2                     */
 /*       AR1097467B - Expected 15% COB run optimization not met      */
@@ -47,7 +49,7 @@
              PGM        PARM(&CNAM &CSEQ)                                               /*CRE083BU*/
                                                                                         /*CRE083BU*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&RTCD)  TYPE(*CHAR) LEN(7) VALUE(' ')     /*CGL002*/
              DCL        VAR(&DSFDY) TYPE(*CHAR) LEN(200)              /*CGL002*/
@@ -275,7 +277,7 @@ DTAQWAIT:                                                                       
 /**/
  ENDPGM:                                                                                /*CRE083BU*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              DLTOVR     FILE(*ALL)                                                      /*MD022097*/
              MONMSG     MSGID(CPF0000)                                                  /*MD022097*/
              ENDCMTCTL                                                                  /*CRE083BU*/

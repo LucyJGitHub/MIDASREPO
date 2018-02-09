@@ -11,9 +11,10 @@
 /*              DO NOT ADD ANY NEW PROGRAMS TO THIS CL IF IT IS NOT  */                 /*CRE083AY*/
 /*              ABLE TO RUN IN TASK SPLIT.                           */                 /*CRE083AY*/
 /*                                                                   */                 /*CRE083AY*/
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CRE083AY           Date 09Aug99              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CRE083AY           Date 09Aug99              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -22,7 +23,7 @@
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.04 ---------------------------------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CPK009             Date 09Aug99              */
+/*                      CPK009             Date 09Aug99              */
 /*                      CCB003             Date 12Dec96              */
 /*                      S01408             DATE 13SEP96              */
 /*                      S01408             DATE 05MAY95              */
@@ -31,6 +32,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CRE083AY - COB Restructure - RE COB Optimisation Phase 1    */
 /*       CPK009 - Packaging for DBA3 release. STRCMTCTL values set   */
 /*                to CMTSCOPE(*JOB).                                 */
@@ -47,7 +49,7 @@
              PGM     PARM(&CNAM &CSEQ)
                                                                       /*CCB003*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /* */
 /************DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)                  CCB003*/
@@ -282,7 +284,7 @@ ENDCL:       IF         COND(%SWITCH(XXXXXX00)) THEN(DO)              /*CCB003*/
              ENDDO                                                    /*CCB003*/
                                                                       /*CCB003*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
                                                                       /*CCB003*/
 /************ENDCL:      ENDPGM                                       /*CCB003*/
 /*/COPY WNCPYSRC,REC62A006                                           */

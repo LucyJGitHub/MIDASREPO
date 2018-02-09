@@ -7,17 +7,19 @@
 /*                                                                   */
 /*       RPC1487 - MIDAS SEND LDA STATUS IN MOPERQ                   */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2003           */
+/*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Last Amend No. BG18886            Date 27May08              */
+/*       Prev Amend No. BG18886            Date 27May08              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CPB010  *CREATE    Date 16Jan03              */
+/*                      CPB010  *CREATE    Date 16Jan03              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BG18886 - Amend non-standard codes.                         */
 /*       CPB010 - Avoid DB Error by write message in Trace File      */
 /*                                                                   */
@@ -29,7 +31,7 @@
                  /* Message text sent to MRUNQ MOPERQ.  */
  
              DCL        VAR(&Cpyfld)   TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2003')
  
 /*-------------------------------------------------------------------*/
@@ -58,6 +60,6 @@
  
  ENDPGM:
              CHGVAR     VAR(&Cpyfld) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

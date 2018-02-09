@@ -14,10 +14,11 @@
       *                                                               *
       *  Component of: RP5505 - Extract program for SDCUSTPD          *
       *                                                               *
-      *  (C) COPYRIGHT Misys International Banking Systems sa. 2001   *
+      *  (C) COPYRIGHT Finastra International Limited 2001            *
       *                                                               *
-/*    *  Last Amend No. AR1057854          Date 19Nov12               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR1057854          Date 19Nov12               *
+      *                 CLE134             Date 01Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 CRE026             Date 24May06               *
@@ -26,6 +27,7 @@
       *                 UTROPX  *CREATE    Date 12Dec01               *
       *                                                               *
       *---------------------------------------------------------------*
+      *  MD046248 - Finastra Rebranding                               *
 /*    *  AR1057854 - Geneva Drop 01 Build Issues - RPG Program        *
 /*    *              Compilation Error                                *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
@@ -561,4 +563,4 @@
       /Eject
       *****************************************************************
 **  Cpy@
-(C) Copyright Misys International Banking Systems sa. 2001
+(C) Copyright Finastra International Limited 2001

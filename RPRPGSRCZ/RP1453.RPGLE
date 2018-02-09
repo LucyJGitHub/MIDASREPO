@@ -15,10 +15,11 @@
       *                                                               *
       *  Component of: RPC1453 - MM Deal Amendments take on.          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CDL094             Date 11Jun14               *
-      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -40,6 +41,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL094 - Enhance  Receive Settlement Instructions            *
       *           (Recompiled)                                        *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
@@ -882,7 +884,7 @@
      C/Eject
       *****************************************************************
 **Ctdata Cpy@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 **Ctdata ArrNarr
 All Customers Account Officer
 is responsible for

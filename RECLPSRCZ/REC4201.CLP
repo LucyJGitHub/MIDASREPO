@@ -7,23 +7,25 @@
 /*                                                                   */
 /*       REC4201 - Teller Transacion Entry Generation                */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.03 ---------------------------------------------------*/
-/*       Last Amend No. CCB009             DATE 01Jun00              */
+/*       Prev Amend No. CCB009             Date 01Jun00              */
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CPK009             Date 09Aug99              */
+/*                      CPK009             Date 09Aug99              */
 /*                      CEU025             Date 31Aug98              */
 /*                      CEU024             Date 14Jul98              */
 /*                      CRT001  *CREATE    Date 28Feb95              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CCB009 - Journal files throughout close of business         */
 /*       CPK009 - Packaging for DBA3 release. STRCMTCTL values set   */
 /*                to CMTSCOPE(*JOB).                                 */
@@ -35,7 +37,7 @@
              PGM
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&LDA)  TYPE(*CHAR)  LEN(256)
              DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(50)
@@ -237,5 +239,5 @@ ERROR:
 /**/
 ENDPGM:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

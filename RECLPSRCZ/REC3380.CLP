@@ -7,19 +7,21 @@
 /*                                                                   */
 /*       REC3380 - ACCRUED INTEREST AND CHARGES REPORT               */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. 086412             DATE 19APR95              */
-/*       PREV AMEND NO. S01408             DATE 11MAY95              */
+/*       Prev Amend No. 086412             Date 19Apr95              */
+/*                      S01408             Date 11May95              */
 /*                      S01413 *CREATE     DATE 13APR93              */
 /*                                                                   */
 /*********************************************************************/
+/*       MD046248 - Finastra Rebranding                              */
 /*       086412 - Ensure that files REAIXA,D,Z are cleared then      */
 /*                set up by calling RE0379. Also remove redundant    */
 /*                security copying of REACRA,D,Z as these are not    */
@@ -37,7 +39,7 @@
 /**/
              PGM        PARM(&CNAM &CSEQ &RSEQ &RLEV &RENT)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
              DCL        VAR(&LDA) TYPE(*CHAR) LEN(256)
@@ -99,7 +101,7 @@ END:                                                                  /*086412*/
              MONMSG     MSGID(CPF0000)                                /*086412*/
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM                                                   /*086412*/
 /**/                                                                  /*086412*/
 /************CALL       PGM(CB0160) PARM(&CNAM &CSEQ &STAT)        */ /*086412*/

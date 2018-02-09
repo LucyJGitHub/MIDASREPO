@@ -1,21 +1,23 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2005')
+     H COPYRIGHT('(c) Finastra International Limited 2005')
       *****************************************************************
       *                                                               *
       *  MidasPlus Retail Module                                      *
       *                                                               *
       *  REUPGARS - Update journal sequence number on REGARSPD        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. BUG7278 *CREATE    Date 20May05               *
+      *  Prev Amend No. BUG7278  *CREATE   Date 20May05               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG7278 - Error in initialisation of REGARSPD.               *
       *                                                               *
       *****************************************************************

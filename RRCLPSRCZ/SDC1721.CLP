@@ -7,15 +7,16 @@
 /*                                                                  */
 /*       SDC1721 RESTORE MASTER LIBRARY                             */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. BUG6521            Date 03May05              */
+/*       Prev Amend No. BUG6521            Date 03May05              */
 /* Midas Release 4.01.02 --------------------------------------------*/
-/*       Prev Amend No. 207764             Date 23Jul02              */
+/*                      207764             Date 23Jul02              */
 /* Midas Release 4.01 -----------------------------------------------*/
 /*                      CSC011             Date 18Sep01              */
 /* Midas Release 4 --------------- Base -----------------------------*/
@@ -29,6 +30,7 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BUG6521 - Change Volume ID to be unique for each zone.      */
 /*       207764 - Change all SAV* and RST* commands to print a      */
 /*                report of objects saved or restored.              */
@@ -45,7 +47,7 @@
 /********************************************************************/
              PGM        PARM(&VOL1 &LIBID)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
 /*   INITIAL PROCESSING                                             */
@@ -403,5 +405,5 @@ ABNOR:                                                                /*RT0138*/
 END:         CHGVAR     VAR(%SUBSTRING(&VOL1 1 2)) VALUE('DB')
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

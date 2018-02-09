@@ -7,14 +7,15 @@
 /*                                                                   */
 /*       RRMENUN - RESTART RECOVERY MENU                             */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CBF002             Date 04Jul11              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CBF002             Date 04Jul11              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CPK017             Date 28Oct03              */
+/*                      CPK017             Date 28Oct03              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      066989             DATE 08Apr94              */
@@ -25,6 +26,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CBF002 - BF Infrastructure: Backup and Recovery             */
 /*              - This program will be replaced by the               */
 /*                Configuration Maintenance (artf815172)             */
@@ -46,7 +48,7 @@
 /************DCL********VAR(&HBPGM) TYPE(*CHAR) LEN(8) VALUE('RR1702')/*E22987*/
 /************DCL********VAR(&HERCD) TYPE(*CHAR) LEN(80)               /*E22987*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
              DCLF       RRMENUNDF RCDFMT(RRMENUN)
@@ -95,6 +97,6 @@
 /*                                                                            */
 ENDPGM:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM     /* END CL PGM RRMENUN    */

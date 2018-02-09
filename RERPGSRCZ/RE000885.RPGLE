@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas RE Retail Advice for LE')                        *
@@ -13,10 +13,11 @@
       *             advices if Correspondence Manager is switched     *
       *             off.                                              *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CLE134             Date 01Aug12               *
-      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
       *                 CRE075             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
       *                 CER047             Date 19May08               *
@@ -38,6 +39,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  CLE148 - Alpha Loan Reference                                *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *

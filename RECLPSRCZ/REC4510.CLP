@@ -7,20 +7,22 @@
 /*                                                                   */
 /*       REC4510 - Midas Cashier TCP/IP Listener Jobs Stop/Start     */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CCB020             Date 06Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CCB020             Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
-/*       Prev Amend No. CPK014             Date 14Nov01              */
+/*                      CPK014             Date 14Nov01              */
 /* Midas DBA 3.04 ---------------------------------------------------*/
 /*                      CRT004  *CREATE    Date 30May00              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CCB020 - COB Restructure - Secondary COB Infrastracture     */
 /*       CPK014 - Submit jobs with user *JOBD                        */
 /*       CRT004 - Cashier Midas TCP/IP interface.                    */
@@ -43,7 +45,7 @@
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
              DCL        VAR(&PORT) TYPE(*CHAR) LEN(4)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCLF       FILE(SDBRCHL0)
  
@@ -175,7 +177,7 @@ ENDDBG:
                MONMSG     MSGID(CPF0000 MCH0000)
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 /*/COPY WNCPYSRC,REC4510END                                          */
  

@@ -7,14 +7,15 @@
 /*                                                                   */
 /*       SDC1755 - CONVERT BACKUP MACHINE INTO PRIMARY MACHINE       */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CSC043             Date 18Jun10              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CSC043             Date 18Jun10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. BUG9619            Date 01Feb06              */
+/*                      BUG9619            Date 01Feb06              */
 /*                      CSC018             Date 31May03              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
@@ -32,6 +33,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CSC043 - MidasPlus IASP Enablement                          */
 /*       BUG9619 - Close of business components run long if journal  */
 /*                 cache is enabled                                  */
@@ -73,7 +75,7 @@
 /*/COPY SDCPYSRC,SDSVALDCL                                           */                   /*CSC018*/
              DCL        VAR(&SUPPUPD) TYPE(*CHAR) LEN(20)                                 /*CSC018*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
 /*   Initial processing                                             */
@@ -734,6 +736,6 @@ ABNOR:       SNDPGMMSG  MSG('Convert Backup Machine to Primary Machine +
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 END:         ENDPGM
 /**/

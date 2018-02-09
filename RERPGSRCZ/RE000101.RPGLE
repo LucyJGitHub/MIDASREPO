@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2008')
+     H COPYRIGHT('(c) Finastra International Limited 2008')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas RE Initialization Program for CER048')           *
@@ -12,10 +12,11 @@
       *  Function:  This program will update 'Taxable Indicator'      *
       *             Field on ACCNTBXC                                 *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. CGL165             Date 17Feb15               *
-      *  Prev Amend No. CER070             Date 19Aug14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *                 CER070             Date 19Aug14               *
       *                 CLE134             Date 01Aug12               *
       *                 CER055             Date 06Dec10               *
       *                 AR739524           Date 04Apr11               *
@@ -26,6 +27,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CER070 - BuBa Reporting / BAIS V.1.16.0 (Recompile)          *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
@@ -378,4 +380,4 @@
       /EJECT
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2008
+(c) Finastra International Limited 2008

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas RP PB Process Remote Administration Messages')
@@ -15,19 +15,21 @@
       *             - calls the specified program if necessary        *
       *             - forwards the message to the queue if not        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.05 -----------------------------------------------*
-      *  Last Amend No. CPB002  *CREATE    Date 01Jun99               *
-      *  Prev Amend No.                    Date ddmmmyy               *
+      *  Prev Amend No. CPB002  *CREATE    Date 01Jun99               *
+      *                                    Date DDMmmYY               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CPB002 - Meridian DBA Middleware Replication Customization.  *
       *           Midas/TOF interface.                                *
       *                                                               *
@@ -429,6 +431,6 @@
      *********************************************************************
      C/EJECT
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 **CTDATA ArrErrorMsg
 No record found in RPAPCIPD or Additional Processing Flag was not set to 'Y'.

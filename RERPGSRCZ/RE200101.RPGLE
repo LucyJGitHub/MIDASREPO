@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+     H COPYRIGHT('(c) Finastra International Limited 2010')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas RE T&N Calculation of Period Start Date')
@@ -14,14 +14,16 @@
       *                                                               *
       *  Called By: REC200101                                         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *  (c) Finastra International Limited 2010                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Last Amend No. BUG27446           Date 12Apr10               *
-      *  Prev Amend No. CRE015  *CREATE    Date 18Dec09               *
+      *  Prev Amend No. BUG27446           Date 12Apr10               *
+      *                 CRE015  *CREATE    Date 18Dec09               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG27446 - Error in the default Period Start Date if the     *
       *             event being created is greater B                  *
       *  CRE015 - Retail Term and Notice Accounts                     *

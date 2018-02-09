@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2009')
+     H COPYRIGHT('(c) Finastra International Limited 2009')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('RE Stopped Cheques Screen Validation')                 *
@@ -18,10 +18,11 @@
       *  Called By: REC004245 - RE Stopped Cheques Screen Validation  *
       *                         Program                               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2009            *
+      *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. CGL165             Date 17Feb15               *
-      *  Prev Amend No. AR1096685          Date 22Mar13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *                 AR1096685          Date 22Mar13               *
       *                 AR895153           Date 31Jan12               *
       *                 CRE075             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -29,6 +30,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  AR1096685 - Replace message IDs with event codes             *
       *  AR895153 - STOPPED CHEQUE warning message is displaying      *
@@ -704,4 +706,4 @@
       *****************************************************************
  
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2009
+(c) Finastra International Limited 2009

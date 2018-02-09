@@ -7,15 +7,16 @@
 /*                                                                  */
 /*      SDC1725 - RESTORE JOURNAL RECEIVERS                         */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. CSC043             Date 18Jun10              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CSC043             Date 18Jun10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4.01.02 --------------------------------------------*/
-/*       Prev Amend No. 207764            Date 23Jul02               */
+/*                      207764             Date 23Jul02              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      CTI001            Date  01SEP97              */
@@ -29,6 +30,7 @@
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CSC043 - MidasPlus IASP Enablement                          */
 /*       207764 - Change all SAV* and RST* commands to print a      */
 /*                report of objects saved or restored.              */
@@ -56,7 +58,7 @@
 /******      PGM        PARM(&SDC01 &FLAG)                            /*S01343*/
              PGM        PARM(&SCC01 &FLAG)                            /*S01343*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
 /*   Initial processing                                             */
@@ -506,5 +508,5 @@ END:         IF         COND(%SST(&JNSTAT 106 5) *NE '00000') +
                           THEN(CALL PGM(SDC1760))
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  ENDPGM:     ENDPGM

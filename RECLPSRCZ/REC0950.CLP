@@ -6,14 +6,16 @@
 /*                                                                   */
 /*       REC0950 - Retail Interest Summary Extract                   */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2009           */
+/*       (c) Finastra International Limited 2009                     */
 /*                                                                   */
-/*       Last Amend No. CCB023             Date 06Aug12              */
-/*       Prev Amend No. CER059             Date 19Jul10              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CCB023             Date 06Aug12              */
+/*                      CER059             Date 19Jul10              */
 /*                      BUG23578 *CREATE   Date 24Mar09              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CCB023 - COB Restructure - Input Cycle Termination          */
 /*                Restructuring                                      */
 /*       CER059 - German Feature Upgrade to Delhi                    */

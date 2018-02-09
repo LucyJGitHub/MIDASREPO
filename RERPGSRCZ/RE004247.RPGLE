@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
+     H COPYRIGHT('(c) Finastra International Limited 2011')
       *****************************************************************
 /*STD *  RPGBASEBND                                                 : *
 /*EXI *  TEXT('Midas RE RATM Calculation of Penalty Amount')          *
@@ -9,13 +9,15 @@
       *                                                               *
       *  RE004247 - Midas RE RATM Calculation of Penalty Amount       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2011            *
+      *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. AR849279           Date 14Oct11               *
-      *  Prev Amend No. CRE072  *CREATE    Date 30Jun11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR849279           Date 14Oct11               *
+      *                 CRE072  *CREATE    Date 30Jun11               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR849279 - RATM Calculation does not accept Debit Account    *
       *             other than Retail Account Format                  *
       *  CRE072 - BankFusion Midas Teller Related Changes             *

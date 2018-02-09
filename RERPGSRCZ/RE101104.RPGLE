@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas RE MT101 & MT103 Translation MNT per Dest')
@@ -14,12 +14,13 @@
       *            fields to match when reconciling the Outgoing      *
       *            MT101 to the Reply MT103.                          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CSW215             Date 06Apr15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CSW215             Date 06Apr15               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. CSW207             Date 15Jun07               *
+      *                 CSW207             Date 15Jun07               *
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       *                 CSD031             Date 10Apr06               *
@@ -35,6 +36,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSW215 - SWIFT Changes 2015                                  *
       *  CSW207 - SWIFT 2007 Standard Changes                         *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *

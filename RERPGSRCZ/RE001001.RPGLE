@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2009')
+     H COPYRIGHT('(c) Finastra International Limited 2009')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas RE CRE401 Initialisation Program')
@@ -12,13 +12,15 @@
       *  Function:  This program will set all existing Sweep accounts *
       *             to 'Authorised' status.                           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2009            *
+      *  (c) Finastra International Limited 2009                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Last Amend No. CRE401  *CREATE    Date 26Nov09               *
+      *  Prev Amend No. CRE401  *CREATE    Date 26Nov09               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CRE401 - 4-Eyes Checking Gaps - Sweeps                       *
       *                                                               *
       *****************************************************************

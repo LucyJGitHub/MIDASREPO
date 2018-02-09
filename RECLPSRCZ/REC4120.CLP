@@ -7,14 +7,15 @@
 /*                                                                   */
 /*       REC4120 - Foreign Exchange Transactions                     */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. 237730             Date 12Jun06              */
-/*       Prev Amend No. CAP084             Date 08Jul03              */
+/*       Prev Amend No. 237730             Date 12Jun06              */
+/*                      CAP084             Date 08Jul03              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      CPK009             Date 09Aug99              */
@@ -26,6 +27,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       237730 - Print to corresponding teller printer.             */
 /*       CAP084 - Parameter added to ZMUSER for Java wrappers        */
 /*       CPK009 - Packaging for DBA3 release. STRCMTCTL values set   */
@@ -43,7 +45,7 @@
              PGM        PARM(&TYP &PMODE)                             /*CRT002*/
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&TYP) TYPE(*CHAR) LEN(3)
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
@@ -148,7 +150,7 @@
  
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /**/                                                                  /*CRT002*/
              IF         COND(&PMODE = 'P') THEN(DO)                   /*CRT002*/
                CHGVAR   VAR(&ACTN) VALUE('D')                         /*CRT003*/

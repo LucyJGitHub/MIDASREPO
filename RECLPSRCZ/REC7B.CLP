@@ -7,11 +7,12 @@
 /*                                                                   */
 /*       REC7B - INTEREST RATE CHANGES REPORT                        */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. AR826169           Date 12Sep11              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR826169           Date 12Sep11              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
-/*       Prev Amend No. CRE005             Date 18Jan10              */
+/*                      CRE005             Date 18Jan10              */
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /*                      BG18886            Date 28May08              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -25,6 +26,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       AR826169 - Opening debit and credit rate are                */
 /*                  zero (Child:AR826170)                            */
 /*       CRE005 - Changes to STRAN                                   */
@@ -40,7 +42,7 @@
 /*********************************************************************/
              PGM
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /************DCL     VAR(&MEM) TYPE(*CHAR) LEN(44)                   * *S01194*/
              DCL     VAR(&MEM) TYPE(*CHAR) LEN(50)                    /*S01194*/
@@ -124,5 +126,5 @@ ERROR:       IF COND(%SWITCH(XXXXXX1X)) THEN(DO)
                 ENDDO
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
       ENDPGM

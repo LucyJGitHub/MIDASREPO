@@ -18,10 +18,11 @@
       *                                                               *
       *  Component of: RP1506 - Extract program for INPAYDD           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CLE134             Date 01Aug12               *
-      *  Prev Amend No. AR983495           Date 07Jun12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *                 AR983495           Date 07Jun12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 BUG25864           Date 04Sep09               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -48,6 +49,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  AR983495 - Missing fixes in some replication trigger         *
       *             programs for TOF (Child: AR983496)                *
@@ -1110,4 +1112,4 @@
       *****************************************************************
       *
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

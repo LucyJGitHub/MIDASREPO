@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas RE Cash Management Block Request')
@@ -12,20 +12,22 @@
       *  Function: This module allows requests to be made to block    *
       *            cash management zero balancing/sweeping.           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. BG8539             Date 15Sep05               *
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *  Prev Amend No. BG8539             Date 15Sep05               *
+      *                 CSD027             Date 09Dec05               *
       *                 CGL029             Date 01Sep03               *
       *                 213910             Date 23Jan03               *
       *                 CRE008  *CREATE    Date 19Feb02               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BG8539 - Screen not dispaly properly in WebFacing            *
       *           Change the write/read order so that the last        *
       *           written format of the screen is next one to be READ *

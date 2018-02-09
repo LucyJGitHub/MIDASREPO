@@ -1,5 +1,5 @@
      h debug
-     h copyright('(c) Misys International Banking Systems Ltd. 2004')
+     h copyright('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FRS Caps,Collars and Floors Details Extract')    *
@@ -9,9 +9,9 @@
       *                                                               *
       *  RNCFCOXT   - Midas FRS Caps, Collars and Floors Extract      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       *  Prev Amend No. CGL165             Date 23Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -30,7 +30,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CDL099 - Split Value Date (Recompile)                        *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
       *           (Recompile)                                         *
@@ -1160,7 +1160,7 @@
       ********************************************************************
  
 **ctdata cpy@
-(c) Misys International Banking Systems Ltd. 2005
+(c) Finastra International Limited 2005
 **ctdata atrty
 RF     Floor
 RP     Cap

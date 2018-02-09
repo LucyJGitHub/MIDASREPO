@@ -22,10 +22,11 @@
       *                                                               *
       *  Component of: RP1520 - Extract program for HISTSAA           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CGL165             Date 15Feb17               *
-      *  Prev Amend No. CDL096             Date 22Sep14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL165             Date 15Feb17               *
+      *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 CLE134             Date 01Aug12               *
       *                 AR858264           Date 13Jul12               *
@@ -70,6 +71,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
       *           (Recompile)                                         *
@@ -1367,4 +1369,4 @@
       *****************************************************************
  
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

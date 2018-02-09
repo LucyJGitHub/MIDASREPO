@@ -15,14 +15,15 @@
       *                                                               *
       *  Component of: RPC1452 - Customer Positions take on.          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSD031             Date 10Apr06               *
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
       *                 CSE071             Date 19Jul05               *
       *                 CSW037A            Date 02May05               *
       *                 206164             Date 09Jul02               *
@@ -41,6 +42,7 @@
       *                 CPB002  *CREATE    Date 20Mar00               *
       *                                                               *
       *---------------------------------------------------------------*
+      *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CSE071 - Multiple Holidays Re Securities (recompile)         *
@@ -1622,4 +1624,4 @@ Main Customer Branch
 01000000
 10000000
 **Ctdata Cpy@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

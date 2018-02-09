@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2008')
+     H COPYRIGHT('(c) Finastra International Limited 2008')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas RE Extract Shadow Postings from RSACMTPD')       *
@@ -12,13 +12,14 @@
       *  Function:  This program writes records to new file REBNODPD  *
       *             when a record is written to RSACMTPD file         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *  (c) Finastra International Limited 2008                      *
       *                                                               *
       *  Note: Any change on this program should also be applied on   *
       *        RE000193.                                              *
       *                                                               *
-      *  Last Amend No. MD025559           Date 18Mar14               *
-      *  Prev Amend No. CRE075             Date 06Dec10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD025559           Date 18Mar14               *
+      *                 CRE075             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
       *                 BUG26106           Date 18Sep09               *
       *                 BUG26497           Date 21Oct09               *
@@ -27,6 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD025559 - A Serious Midas Error encountered when completing *
       *             a Time Deposit Deal. Increase PMQString length to *
       *             12000.                                            *

@@ -11,16 +11,18 @@
       *  Function:  This sub-file program allows the user to maintain *
       *             all outgoing messages                             *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CPB010  *CREATE    Date 16Jan03               *
+      *  Prev Amend No. CPB010  *CREATE    Date 16Jan03               *
       *                                                               *
       *-------------------------------------------------------------- *
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CPB010 - Avoid DB Error by write message in Trace File       *
       *                                                               *
       *****************************************************************
@@ -1295,4 +1297,4 @@
       /EJECT
       *================================================================
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2003
+(c) Finastra International Limited 2003

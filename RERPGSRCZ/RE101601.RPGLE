@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas RE Group A/c Shadow Posting Replication')        *
@@ -15,10 +15,11 @@
       *             account in a group a/c hierarchy, then it is      *
       *             replicated up the hierarchy.                      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. AR679670           Date 26Nov10               *
-      *  Prev Amend No. AR676213           Date 19Nov10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR679670           Date 26Nov10               *
+      *                 AR676213           Date 19Nov10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 CAP205             Date 16Mar10               *
       *                 CAP204             Date 09Feb10               *
@@ -31,6 +32,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR679670 - Apply fix 255837                                  *
       *  255837 - Fix overdraft validation.  Amend program so that    *
       *           BAIC (Balance Available ICO) of the sub/level a/c's *

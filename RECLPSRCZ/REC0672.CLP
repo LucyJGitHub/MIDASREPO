@@ -7,10 +7,11 @@
 /*                                                               */
 /*     REC0672  - Shadow Post Update                             */
 /*                                                               */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                               */
-/*       Last Amend No. MD002850           Date 08Apr13              */
-/*       Prev Amend No. CSC056             Date 06Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD002850           Date 08Apr13              */
+/*                      CSC056             Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -29,6 +30,7 @@
 /*                                                               */
 /*---------------------------------------------------------------*/
 /*                                                               */
+/*       MD046248 - Finastra Rebranding                              */
 /*     MD002850 - Correct the processing for restart of subtasks */
 /*                after failure.                                 */
 /*     CSC056 - COB Restructure - SC COB Optimisation Phase 1    */
@@ -59,7 +61,7 @@
 /* Copyright statement defination  */
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /* */
 /* Declare variables */
@@ -353,5 +355,5 @@ ENDPGM:                                                                         
              DLTOVR     FILE(RSACMTPD)                                                    /*CSC056*/
 /*/COPY WNCPYSRC,REH00042                                            */
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

@@ -11,10 +11,11 @@
 /*             DO NOT ADD ANY NEW PROGRAMS TO THIS CL IF IT IS NOT   */                 /*CRE083BE*/
 /*             ABLE TO RUN IN TASK SPLIT.                            */                 /*CRE083BE*/
 /*                                                                   */                 /*CRE083BE*/
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CRE083BK           Date 06Aug12              */
-/*       Prev Amend No. CRE083BE           Date 06Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CRE083BK           Date 06Aug12              */
+/*                      CRE083BE           Date 06Aug12              */
 /*                      CER059             Date 19Jul10              */
 /*                      BUG23276           Date 10Mar09              */
 /*                      CER044             Date 14Oct08              */
@@ -39,6 +40,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CRE083BK - COB Restructure - RE COB Optimisation Phase 1    */
 /*       CRE083BE - COB Restructure - RE COB Optimisation Phase 1    */
 /*       CER059 - German Feature Upgrade to Delhi                    */
@@ -93,7 +95,7 @@
              DCL        VAR(&CER044) TYPE(*CHAR) LEN(1) +
                           VALUE(' ')                                                      /*CER044*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
 /*/COPY WNCPYSRC,REC64ADINT                                  /*S01408*/
@@ -352,6 +354,6 @@ ENDCL:       IF         COND(%SWITCH(XXXXXX00)) THEN(DO)              /*CCB003*/
              MONMSG     MSGID(CPF0000)                                /*CCB003*/
                                                                       /*CCB003*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM                                                   /*CCB003*/

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas RE Group Account Shadow Posting Generation')     *
@@ -14,10 +14,11 @@
       *             replicate.  It then replicates that entry up the  *
       *             chain and updates MEMOS and MEMOSME accordingly.  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. AR980046           Date 25Feb13               *
-      *  Prev Amend No. AR679670           Date 26Nov10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR980046           Date 25Feb13               *
+      *                 AR679670           Date 26Nov10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 CAP205             Date 08Mar10               *
       *                 CAP204             Date 09Feb10               *
@@ -31,6 +32,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR980046 - MEMOS and RSACMTPD is not updated. Reversed       *
       *             255387 because MEMOS and RSACMTPD should be       *
       *             updated regardless of the BAIC value. Fix is      *

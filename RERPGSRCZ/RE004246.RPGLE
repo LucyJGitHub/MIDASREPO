@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+     H COPYRIGHT('(c) Finastra International Limited 2010')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas RE Cheque Proc Validation and Update Program')   *
@@ -19,10 +19,11 @@
       *  Called By: REC004246 - RE Cheque Processing Validation       *
       *                         and Update Program                    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. CGL165             Date 17Feb15               *
-      *  Prev Amend No. AR895153           Date 31Jan12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *                 AR895153           Date 31Jan12               *
       *                 AR763424           Date 01Jun11               *
       *                 CRE067             Date 05Oct10               *
       *                 CRE075             Date 06Dec10               *
@@ -31,6 +32,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  AR895153 - STOPPED CHEQUE warning message is displaying      *
       *             only letter W                                     *
@@ -1129,7 +1131,7 @@
       *****************************************************************
  
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2010
+(c) Finastra International Limited 2010
 **  @TXT - TEXT STRINGS FOR OVERRIDE
 DLTOVR     FILE(TTRANL7)
 OVRDBF     FILE(TTRANL7) MBR(XXXX) SECURE(*YES) SHARE(*NO)  SEQONLY(*NO)

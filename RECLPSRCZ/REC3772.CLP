@@ -7,10 +7,11 @@
 /*                                                                   */
 /*       REC3772 -  RETAIL ACCOUNTS BALANCES EXTRACT                 */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD036593           Date 17Dec15              */
-/*       Prev Amend No. AR1097352          Date 02Apr13              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD036593           Date 17Dec15              */
+/*                      AR1097352          Date 02Apr13              */
 /*                      CRE083BW           Date 06Aug12              */
 /*                      CRE083AF           Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
@@ -26,6 +27,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD036593 - Sort report by Customer Report Name as before.   */
 /*       AR1097352 - V_REACBLK0 and RETACOQ have diff structure thus */
 /*          causing data truncation/misalignment in RE3772 processing*/
@@ -47,7 +49,7 @@
              PGM
 /*/COPY WNCPYSRC,REC3772005                                          */
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL VAR(&MEM) TYPE(*CHAR) LEN(50)
              DCL VAR(&LDA) TYPE(*CHAR) LEN(256)
@@ -152,5 +154,5 @@
              ENDDO
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas RE Determine Destination Account')               *
@@ -13,10 +13,11 @@
       *             a currency and determines the account ID.         *
       *             It also validates the details as well.            *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD000091           Date 14May13               *
-      *  Prev Amend No. AR670009           Date 15Nov10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD000091           Date 14May13               *
+      *                 AR670009           Date 15Nov10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -35,6 +36,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD000091 - Event Codes Substitution                          *
       *  AR670009 - Apply fix 248510                                  *
       *  248510 - Error Code RE75111 due to passing of a number to    *

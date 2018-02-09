@@ -7,19 +7,21 @@
 /*                                                                  */
 /*       SDC1762 - Recover data areas to status at recover to point */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. E13205        DATE. 23/02/89                */
-/*       PREV AMEND NO. E00000        DATE. 00/00/00                */
+/*       Prev Amend No. E13205             Date . 23/02/             */
+/*                      E00000             Date . 00/00/             */
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       E13205 - Rewrite of SDC1723. RTVJRNE is CPU expensive and  */
 /*                slow. Replaced with DSPJRN to JRNEX1 member       */
 /*                DTAARA. This file is processed for updates        */
@@ -31,7 +33,7 @@
 /*********************************************************************/
              PGM        PARM(&TOPNT &LST_RCV)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
 /*   Declare Variables                                              */
@@ -173,5 +175,5 @@ CHECK:
 /**/
 END:         ENDPGM
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /**/

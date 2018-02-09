@@ -15,10 +15,11 @@
       *                                                               *
       *  Component of: RP1525 - Extract program for RPEODIPD          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. AR858264A          Date 16Jul12               *
-      *  Prev Amend No. AR970292           Date 14May12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR858264A          Date 16Jul12               *
+      *                 AR970292           Date 14May12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -30,6 +31,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR858264A - Compilation Issues on various RP programs        *
       *  AR970292 - PBS Compatibility with BankFusion Midas 2.00      *
       *             Complete CSD027 to process correctly cust. number *
@@ -783,4 +785,4 @@
       /Eject
       *****************************************************************
 **  Cpy@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

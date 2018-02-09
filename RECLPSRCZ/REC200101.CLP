@@ -7,14 +7,16 @@
 /*                                                                   */
 /*       REC200101 - Midas RE Calculation of Start Date              */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2009           */
+/*       (c) Finastra International Limited 2009                     */
 /*                                                                   */
-/*       Last Amend No. CSC043             Date 18Jun10              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CSC043             Date 18Jun10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
-/*       Prev Amend No. CRE015  *CREATE    Date 18Dec09              */
+/*                      CRE015  *CREATE    Date 18Dec09              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CSC043 - MidasPlus IASP Enablement                          */
 /*       CRE015 - Retail Term and Notice Accounts                    */
 /*                                                                   */
@@ -24,7 +26,7 @@
                              &NMPD &FREQ &DAYM &VDAT2)
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2010')
  
              DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)

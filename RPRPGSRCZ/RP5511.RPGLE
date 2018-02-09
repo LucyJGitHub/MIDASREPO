@@ -15,15 +15,17 @@
       *                                                               *
       *  Component of: RP5511 - Extract program for INTYPD            *
       *                                                               *
-/*    *  (C) COPYRIGHT Misys International Banking Systems sa. 2005   *
+/*    *  (C) COPYRIGHT Finastra International Limited 2005            *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CFF008 Create      Date 15/07/05              *
+      *  Prev Amend No. CFF008 Create      Date 15/07/05              *
       *                                                               *
       *---------------------------------------------------------------*
+      *  MD046248 - Finastra Rebranding                               *
       *  CSF008 - INT-3 FF Static data Inteface MIDAS-OPICS INTERFACE *
       *                                                               *
       *****************************************************************
@@ -557,4 +559,4 @@
       /Eject
       *****************************************************************
 **  Cpy@
-(C) Copyright Misys International Banking Systems sa. 2001
+(C) Copyright Finastra International Limited 2001

@@ -7,21 +7,23 @@
 /*                                                                   */
 /*       REC0340 - AUDIT LETTERS                                     */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. 083253             DATE 09MAR95              */
-/*       PREV AMEND NO. S01413             DATE 13APR93              */
+/*       Prev Amend No. 083253             Date 09Mar95              */
+/*                      S01413             Date 13Apr93              */
 /*                      S01117                  14FEB90              */
 /*                      14900                   13SEP88              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       083253 - Pass correct parameters                            */
 /*       S01413 - Header Box Standardised                            */
 /*       S01117 - Multibranching                                     */
@@ -37,7 +39,7 @@
 /************PGM    PARM(&RSEQ &RLEV &RENT)                /*S01117*/ /*083253*/
              PGM    PARM(&RSEQ &RLEV &RENT &PARM)                     /*083253*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL    VAR(&RSEQ) TYPE(*CHAR) LEN(5)                     /*S01117*/
              DCL    VAR(&RLEV) TYPE(*CHAR) LEN(1)                     /*S01117*/
@@ -121,5 +123,5 @@ ERROR1:      IF COND(*NOT %SWITCH(XXXXXX0X)) THEN(DO)
 /*DPGM:      ENDPGM                                                   /*S01117*/
 ENDPGM:      RCLRSC                                                   /*S01117*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM                                                   /*S01117*/

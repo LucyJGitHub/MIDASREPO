@@ -8,17 +8,19 @@
 /*       RPC5040 - Midas-TrOpics Interface - End Feeder Job and      */
 /*                                         Trigger Monitor.          */
 /*                                                                   */
-/*       (C) COPYRIGHT Misys International Banking Systems sa. 2005  */
+/*       (C) COPYRIGHT Finastra International Limited 2005           */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CSD026             Date 05Apr05              */
+/*       Prev Amend No. CSD026             Date 05Apr05              */
 /*                      UTROPX  *CREATE    Date 21DEC01              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CSD026 - Midas-TrOpics Interface upgrade to MidasPlus       */
 /*       UTROPX - Midas-TrOpics Interface                            */
 /*                                                                   */
@@ -36,8 +38,8 @@
              DCL        VAR(&WAITCOUNT) TYPE(*DEC) LEN(2 0) VALUE(0)  /*CSD026*/
              DCL        VAR(&CHLNAME)  TYPE(*CHAR) LEN(50)            /*CSD026*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(C) +
-                           Copyright Misys International Banking +
-                           Systems sa. 2001')
+                           Copyright Finastra International Limited +
+                           2001')
 /**/
 /**  Global Monitor Message                                        **/
 /**/

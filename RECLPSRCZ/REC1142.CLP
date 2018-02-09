@@ -7,10 +7,11 @@
 /*                                                                   */
 /*       REC1142 - Calculate Fixed Commission Task Split Server.     */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. AR1061944          Date 30Nov12              */
-/*       Prev Amend No. CRE083BF           Date 06Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR1061944          Date 30Nov12              */
+/*                      CRE083BF           Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -22,6 +23,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       AR1061944 - Component failed because of empty main file.    */
 /*                   Condition for *NRF return code included.        */
 /*       CRE083BF - COB Restructure - RE COB Optimisation Phase 1    */
@@ -52,7 +54,7 @@
                           VALUE('FIXCMSERVE')
              DCL        VAR(&RCVWAIT) TYPE(*DEC) LEN(5 0) VALUE(-1)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
              DCLF       FILE(TABTBRE)
@@ -194,7 +196,7 @@
              ENDDO
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 /*/COPY WNCPYSRC,REC1142END                                          */
  

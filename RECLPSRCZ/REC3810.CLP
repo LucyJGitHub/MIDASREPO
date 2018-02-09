@@ -7,14 +7,15 @@
 /*                                                                   */
 /*       REC3810 - A/C BAL. & HISTORY BAL. RECONCILIATION REPORT     */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CRE083BG           Date 06Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CRE083BG           Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. TDA103             Date 31Mar03              */
+/*                      TDA103             Date 31Mar03              */
 /*                      CGL029             Date 01Sep03              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.03 ---------------------------------------------------*/
@@ -26,6 +27,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CRE083BG - COB Restructure - RE COB Optimisation Phase 1    */
 /*       TDA103 - Renamed incorrect OPNQRYF parameter ZACDQQ         */
 /*       CGL029 - Increase Account Code to 10 digits                 */
@@ -64,7 +66,7 @@
              DCL        VAR(&FJRNRCVR) TYPE(*CHAR) LEN(10)                              /*CRE083BG*/
                                                                                         /*CRE083BG*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
              DCLF       FILE(SDRETLPD)                                /*CRE003*/
@@ -361,6 +363,6 @@
                                                                                         /*CRE083BG*/
  FINISH:                                                              /*CRE003*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

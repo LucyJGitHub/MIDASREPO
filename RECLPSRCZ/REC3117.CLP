@@ -7,8 +7,9 @@
 /*                                                                   */
 /*       REC3117 - ACCOUNT COMMISSION CALCULATION                    */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -16,11 +17,12 @@
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.04 ---------------------------------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. S01408             DATE 09MAY95              */
-/*       LAST AMEND NO. S01413 *CREATE     DATE 13APR93              */
+/*       PREV AMEND NO. S01408             DATE 09MAY95              */
+/*                      S01413 *CREATE     DATE 13APR93              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       S01408  -  Addition of core hook REC3117MP1                 */
 /*       S01413  -  Retail 3 Incorporation.                          */
 /*                                                                   */
@@ -34,7 +36,7 @@
 /**/
              PGM     PARM(&CNAM &CSEQ)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL     VAR(&DMLIB) TYPE(*CHAR) LEN(8)
              DCL     VAR(&PRE) TYPE(*CHAR) LEN(2)
@@ -152,5 +154,5 @@ EXIT2:
              ENDDO
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 ENDPGM:      ENDPGM

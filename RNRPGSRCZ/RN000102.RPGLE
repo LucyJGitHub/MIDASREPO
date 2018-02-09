@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2005')
+     H COPYRIGHT('(c) Finastra International Limited 2005')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  ALWNULL(*YES)                                                *
@@ -13,17 +13,19 @@
       *  Function:  This program will read RNAUMVPD file and print    *
       *             each record to the extraction audit report.       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. BUG10742           Date 08May06               *
-      *  Prev Amend No. CRN001  *CREATE    Date 23Sep05               *
+      *  Prev Amend No. BUG10742           Date 08May06               *
+      *                 CRN001  *CREATE    Date 23Sep05               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG10742 - AC key in files RNAUMVPD and RNXCMVPD changed to  *
       *             20A due to CDL038. Recompile is needed.           *
       *  CRN001 - FRS Regulatory Reporting Interface                  *
@@ -949,4 +951,4 @@
  
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2005
+(c) Finastra International Limited 2005

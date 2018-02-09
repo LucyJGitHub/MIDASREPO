@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas RE Cr Int Capitalised and Tax Postings Merge')
@@ -9,18 +9,20 @@
       *                                                               *
       *  RE3664A - Midas RE Int Capitalised and Tax Postings Merge    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSD027A            Date 09May06               *
-      *  Prev Amend No. 236471             Date 13Oct05               *
+      *  Prev Amend No. CSD027A            Date 09May06               *
+      *                 236471             Date 13Oct05               *
       *                 CGL031 *CREATE     Date 05Jul04               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSD027A- Conversion of cust. no. to alpha (post 103 build)   *
       *  236471 - Tax amount added on record for CR interest adj.     *
       *           instead of record for interest => EU tax posting    *
@@ -279,4 +281,4 @@
       /EJECT
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2004
+(c) Finastra International Limited 2004

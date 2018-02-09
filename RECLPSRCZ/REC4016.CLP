@@ -7,11 +7,12 @@
 /*                                                                   */
 /*       REC4016 - Midas RE T&N Rate Changes at rollover             */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2009           */
+/*       (c) Finastra International Limited 2009                     */
 /*                                                                   */
-/*       Last Amend No. CCB020             Date 06Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CCB020             Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
-/*       Prev Amend No. 231583             Date 18Dec09              */
+/*                      231583             Date 18Dec09              */
 /*                      230355             Date 18Dec09              */
 /*                      CCB009             Date 18Dec09              */
 /*                      217717             Date 18Dec09              */
@@ -20,6 +21,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CCB020 - COB Restructure - Secondary COB Infrastructure     */
 /*       231583  - Enhancements to running program in input cycle    */
 /*                 Note this program should only be run in input     */
@@ -57,7 +59,7 @@
 /**********  DCL        VAR(&MPHAS)  TYPE(*CHAR)  LEN(1)                               */ /*CCB020*/
              DCL        VAR(&BUSY) TYPE(*CHAR) LEN(1)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2009')
 /**/                                                                                      /*CCB009*/
 /**Declare*variable*CCB009*-*flag*for*switchable*feature***/                       /*CCB009 CCB020*/
@@ -428,6 +430,6 @@ BYPASS:
              DLCOBJ     OBJ((REPRPNPD *FILE *EXCLRD))
 /**********  ENDDO                                                              */ /*231583 CCB020*/
  
-             CHGVAR     VAR(&CPYFLD) VALUE('(c) Misys International +
-                          Banking Systems Ltd. 2009')
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International +
+                          Limited 2009')
              ENDPGM

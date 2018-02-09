@@ -1,5 +1,5 @@
      h debug
-     h copyright('(c) Misys International Banking Systems Ltd. 2004')
+     h copyright('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FT Account Keys Extract')                        *
@@ -9,12 +9,13 @@
       *                                                               *
       *  RNFTKYXT   - Midas FT Account Keys Extract                   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. CAP212             Date 15Sep14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CAP212             Date 15Sep14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. BUG15105A          Date 25Oct07               *
+      *                 BUG15105A          Date 25Oct07               *
       *                 BUG15105           Date 23Oct07               *
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
@@ -32,6 +33,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CAP212 - FT Nostro Transfer API (Recompile)                  *
       *  BUG15105A - Missing process for SWIFT 2007 (Reopen)          *
       *  BUG15105 - Missing process for SWIFT 2007                    *
@@ -1604,4 +1606,4 @@
       ********************************************************************
  
 **ctdata cpy@
-(c) Misys International Banking Systems Ltd. 2005
+(c) Finastra International Limited 2005

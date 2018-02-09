@@ -7,14 +7,15 @@
 /*                                                                   */
 /*       REC4214 - Daily Posting by Department Report                */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. BUG12867           Date 11Dec06              */
-/*       Prev Amend No. 228542             Date 10Aug04              */
+/*       Prev Amend No. BUG12867           Date 11Dec06              */
+/*                      228542             Date 10Aug04              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.02 ---------------------------------------------------*/
 /*                      119039             Date 21Oct99              */
@@ -23,6 +24,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BUG12867 - Introduce a parameter to be passed to RE4214 such*/
 /*                  that records extracted (POSTPD) are properly     */
 /*                  selected.                                        */
@@ -35,7 +37,7 @@
              PGM PARM(&RSEQ &RLEV &RENT)
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
@@ -115,6 +117,6 @@ ABNOR:
              MONMSG     MSGID(CPF0000 MCH0000)
  
 ENDPGM:      CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM
 /**/

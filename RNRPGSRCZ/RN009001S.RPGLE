@@ -1,5 +1,5 @@
      H DEBUG DATEDIT(*YMD)
-     h copyright('(c) Misys International Banking Systems Ltd. 2006')
+     h copyright('(c) Finastra International Limited 2006')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas RN Select Economic Sector')
@@ -12,16 +12,18 @@
       *  Function:  This program allows a user to select an Economic  *
       *             Sector                                            *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *  (c) Finastra International Limited 2006                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. BUG9233 *CREATE    Date 17Feb06               *
+      *  Prev Amend No. BUG9233  *CREATE   Date 17Feb06               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG9233 - ? Processing for Sector Class                      *
       *                                                               *
       *****************************************************************

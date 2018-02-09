@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+     H COPYRIGHT('(c) Finastra International Limited 2010')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas RE RERCHHPA Initialisation')
@@ -9,13 +9,15 @@
       *                                                               *
       *  RE4039 - Midas RE RERCHHPA Initialisation                    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *  (c) Finastra International Limited 2010                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Last Amend No. CRE005  *CREATE    Date 18Jan10               *
+      *  Prev Amend No. CRE005  *CREATE    Date 18Jan10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CRE005 - Changes to STRAN                                    *
       *                                                               *
       *****************************************************************
@@ -83,4 +85,4 @@
      C                   ENDSR
       *****************************************************************
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2010
+(c) Finastra International Limited 2010

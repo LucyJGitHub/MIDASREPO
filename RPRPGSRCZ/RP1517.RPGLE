@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas RP Extraction Module for TRANSD')                *
@@ -12,10 +12,11 @@
       *  Function:  This module only sends transactions for Private   *
       *  (I/C)      Banking Customers.                                *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR858264A          Date 16Jul12               *
-      *  Prev Amend No. AR983495           Date 04Jun12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR858264A          Date 16Jul12               *
+      *                 AR983495           Date 04Jun12               *
       *                 AR970292           Date 14May12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -40,6 +41,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR858264A - Compilation Issues on various RP programs        *
       *  AR983495 - Missing fixes in some replication trigger         *
       *             programs for TOF (Child: AR983496)                *

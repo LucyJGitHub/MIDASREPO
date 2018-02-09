@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+     H COPYRIGHT('(c) Finastra International Limited 2010')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas RE Retail Advice report for Account Transfer')
@@ -13,14 +13,16 @@
       *  Function:  This new program will print the details  from the *
       *             Account Transfer Manual Input file.               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *  (c) Finastra International Limited 2010                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Last Amend No. BUG27563           Date 27Apr10               *
-      *  Prev Amend No. CAP204  *CREATE    Date 23Feb10               *
+      *  Prev Amend No. BUG27563           Date 27Apr10               *
+      *                 CAP204  *CREATE    Date 23Feb10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG27563 - REC78 sequence 00001 ended in error.  GLHATMPD    *
       *             should be accessed by transaction reference and   *
       *             execution date.                                   *

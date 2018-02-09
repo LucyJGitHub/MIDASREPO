@@ -7,13 +7,14 @@
 /*                                                                   */
 /*       REC0880 - RETAIL ADVICES PRINT                              */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD029076           Date 03Mar15              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD029076           Date 03Mar15              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
-/*       Prev Amend No. 241672A            Date 09Jan07              */
+/*                      241672A            Date 09Jan07              */
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /*                      BUG2714            Date 25May04              */
 /*                      CSC022             Date 24Feb04              */
@@ -39,6 +40,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD029076 - REC0880 create dumps in Module GOGLOBGL calling  */
 /*                  GPGLJENHPD                                       */
 /*       241672A - REC0880 in MSGW.  Generate report to determine    */
@@ -87,7 +89,7 @@
              PGM        PARM(&BNUM &WRKSTN)
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL VAR(&MSG)   TYPE(*CHAR) LEN(50)
 /*           DCL VAR(&BNUM)  TYPE(*DEC)  LEN(3 0)                     /*E17597*/
@@ -357,5 +359,5 @@ ABNOR:                                                                /*136208*/
              RCLRSC                                                   /*S01117*/
              MONMSG     MSGID(RPG0000 CPF0000 MCH0000)                /*136208*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM                                                   /*E17597*/

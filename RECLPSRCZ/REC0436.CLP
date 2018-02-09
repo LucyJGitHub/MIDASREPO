@@ -7,17 +7,19 @@
 /*                                                                   */
 /*      REC0436 - CI Bulk Cheque Deposit Repair Queue List           */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2003           */
+/*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. DDB026        DATE  25DEC03                  */
+/*       Prev Amend No. DDB026             Date 25Dec03              */
 /*                                                                   */
 /*********************************************************************/
+/*       MD046248 - Finastra Rebranding                              */
 /*       DDB026 - Bulk Cheque Deposit                                */
 /*********************************************************************/
 /**/
@@ -33,7 +35,7 @@
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2003')
 /**/
 /* Global Monitor Message */
@@ -50,7 +52,7 @@
                           DATA AREA EQUIVALENT'))
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /**/
 /* Set-off Database Error Switches */
 /**/

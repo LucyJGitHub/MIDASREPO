@@ -7,9 +7,10 @@
 /*                                                                   */
 /*       REC3777 - ACCOUNTS TO BE TRANSFERRED TO INACTIVE STATUS     */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CRE083AV           Date 06Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CRE083AV           Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -17,13 +18,14 @@
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.02 ---------------------------------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. 116774             DATE 18FEB98              */
+/*                      116774             Date 18Feb98              */
 /*                      S01408             DATE 11MAY95              */
 /*                      069698             DATE 19APR94              */
 /*                      S01413 *CREATE     DATE 13APR93              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CRE083AV - COB Restructure - RE COB Optimisation Phase 1    */
 /*       116774  - No records selected by OPNQRYF because file       */
 /*                 SDBANKPD in QTEMP was empty                       */
@@ -38,7 +40,7 @@
              PGM        PARM(&CNAM &CSEQ &STAT &RSEQ &RLEV &RENT)
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&STAT)    TYPE(*CHAR) LEN(1)
              DCL        VAR(&MEM)     TYPE(*CHAR) LEN(50)
@@ -276,5 +278,5 @@
                                                                                         /*CRE083AV*/
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 END:         ENDPGM

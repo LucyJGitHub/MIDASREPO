@@ -1,5 +1,5 @@
      H DEBUG FTRANS
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas MT950 Messages linked to Deal Type Sub-Type')    *
@@ -12,14 +12,15 @@
       *                                                               *
       *  Close of Business                                            *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSD031             Date 10Apr06               *
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
       *                 BUG7752            Date 27Jun05               *
       *                 BUG7594            Date 17Jun05               *
       *                 BUG6174            Date 18May05               *
@@ -33,6 +34,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  BUG7752- Opening statement always Debit                      *
@@ -1557,4 +1559,4 @@
 *EQUATE   D57B6FA6
 *EQUATE   6F4F6F5F7D7960A1606D4000
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2004
+(c) Finastra International Limited 2004

@@ -7,15 +7,17 @@
 /*                                                                   */
 /*       REC3680A - Copy SoM Balances for RE Activity Extract        */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2008           */
+/*       (c) Finastra International Limited 2008                     */
 /*                                                                   */
-/*       Last Amend No. CRE083BH           Date 06Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CRE083BH           Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
-/*       Prev Amend No. CCB016  *CREATE    Date 28May08              */
+/*                      CCB016  *CREATE    Date 28May08              */
 /*      Midas Plus 1.4 Base -----------------------------------------*/
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CRE083BH - COB Restructure - RE COB Optimisation Phase 1    */
 /*       CCB016 - Allow REC3860 to run during CoB of first day of    */
 /*                the month followed by a non-working day.           */
@@ -27,7 +29,7 @@
 /*********************************************************************/
              PGM
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2008')
              DCL        VAR(&ERROR) TYPE(*CHAR) LEN(1)                                  /*CRE083BH*/
  
@@ -51,5 +53,5 @@
              ENDDO                                                                      /*CRE083BH*/
                                                                                         /*CRE083BH*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 ENDPGM:      ENDPGM

@@ -29,10 +29,11 @@
       *  Called By: REC4501 - Midas Cashier TCP/IP Communications     *
       *                        Program Ctrl                           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *
-      *  Last Amend No. CER059             Date 19Jul10               *
-      *  Prev Amend No. CER043             Date 19May08               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER059             Date 19Jul10               *
+      *                 CER043             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 BUG27243           Date 18Mar10               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -62,6 +63,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  CER043 - German Features LF041-00 New Fields and Defaulting  *
       *           (Recompiled)                                        *
@@ -7927,7 +7929,7 @@
       *****************************************************************
       /EJECT
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 **  DLY      - DELAY JOB
 DLYJOB DLY(1)
 ** MTYP Valid Messages and required ACK/NAK.

@@ -7,19 +7,21 @@
 /*                                                                   */
 /*       RMC0210 - Copy Tmark Extract to Folder (I/C)                */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Last Amend No. 094899             Date 20OCT95              */
-/*       PREV Amend No. CRM001  *CREATE    Date 06FEB95              */
+/*       Prev Amend No. 094899             Date 20OCT95              */
+/*                      CRM001  *CREATE    Date 06FEB95              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       094889 - RENAME TRADES.DAT TO CFTRADES.INT AND CHANGE       */
 /*                FOLDER NAME TO REFLECT SYSTEM ID.                  */
 /*       CRM001 - Midas/Tmark Interface                              */
@@ -28,7 +30,7 @@
              PGM
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&SYSTEM) TYPE(*CHAR) LEN(2)              /*094889*/
              DCL        VAR(&FLR) TYPE(*CHAR) LEN(12)                /*094889*/
@@ -152,5 +154,5 @@
 /**/
 /**  End of Program:                                                 */
 PGMEND:      CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

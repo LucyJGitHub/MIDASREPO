@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas RE Determine Top A/c Balance and Overdraft')     *
@@ -12,10 +12,11 @@
       *  Function:  This program gets the top a/c balance and         *
       *             overdraft for a zero balancing/sweeping hierarchy.*
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. AR976539           Date 25Feb13               *
-      *  Prev Amend No. AR679670           Date 26Nov10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR976539           Date 25Feb13               *
+      *                 AR679670           Date 26Nov10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 CAP204             Date 03Mar10               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -27,6 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR976539 - Purge request fails. CAP204 should be reversed.   *
       *             (Child:AR976540)                                  *
       *  AR679670 - Apply fix 235082                                  *

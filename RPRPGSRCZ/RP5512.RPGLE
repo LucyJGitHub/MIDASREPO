@@ -14,16 +14,18 @@
       *                                                               *
       *  Component of: RP5512 - Extract program for MKCTLD            *
       *                                                               *
-/*    *  (C) COPYRIGHT Misys International Banking Systems sa. 2005   *
+/*    *  (C) COPYRIGHT Finastra International Limited 2005            *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSD027A            Date 05May06               *
-      *  Prev Amend No. CFF008  *Create    Date 15/07/05              *
+      *  Prev Amend No. CSD027A            Date 05May06               *
+      *                 CFF008  *CREATE    Date 15/07/05              *
       *                                                               *
       *---------------------------------------------------------------*
+      *  MD046248 - Finastra Rebranding                               *
       *  CSD027A - Conversion Of Customer Number to Alpha (recompile) *
       *  CSF008 - INT-3 FF Static data Inteface MIDAS-OPICS INTERFACE *
       *                                                               *
@@ -710,4 +712,4 @@
       /Eject
       *****************************************************************
 **  Cpy@
-(C) Copyright Misys International Banking Systems sa. 2001
+(C) Copyright Finastra International Limited 2001

@@ -16,13 +16,15 @@
       *                                                               *
       *  Component of: RP1537 - Extract program for RPEOPSPD          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. AR970292           Date 14May12               *
-      *  Prev Amend No. AR213436           Date 26Jun10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR970292           Date 14May12               *
+      *                 AR213436           Date 26Jun10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR970292 - PBS Compatibility with BankFusion Midas 2.00      *
       *             Complete CSD027 to process correctly cust. number *
       *             (Child:AR970293)                                  *
@@ -1132,4 +1134,4 @@
       *****************************************************************
  
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2010
+(c) Finastra International Limited 2010

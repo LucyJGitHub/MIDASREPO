@@ -24,10 +24,11 @@
       *                                                               *
       *  Component of: RP1522 - Extract program for HISTSHP           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CLE154             Date 07Aug12               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE154             Date 07Aug12               *
+      *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 AR858264A          Date 16Jul12               *
       *                 AR970292           Date 14May12               *
@@ -57,6 +58,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE154 - Loan Repayment Schedule Enhancement (Recompile)     *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  CLE148 - Alpha Loan Reference                                *
@@ -1240,4 +1242,4 @@
       *****************************************************************
  
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

@@ -7,16 +7,17 @@
 /*                                                                   */
 /*       REC3262 - TODAY'S UNLINKED ACCOUNT                          */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. 230844             Date 17Dec04              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. 230844             Date 17Dec04              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.03 ---------------------------------------------------*/
-/*       Prev Amend No. CCB009             DATE 01Jun00              */
+/*                      CCB009             Date 01Jun00              */
 /*                      170768             DATE 12Jan00              */
 /* Midas DBA 3.02 ---------------------------------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
@@ -27,6 +28,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       230844 - There is problem with charges after unlink of      */
 /*                accounts. Applied fix 200199.                      */
 /*       CCB009 - Journal files throughout close of business         */
@@ -45,7 +47,7 @@
              PGM        PARM(&CNAM &CSEQ)
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
              DCL        VAR(&PRE) TYPE(*CHAR) LEN(2)
@@ -146,7 +148,7 @@ RETRY1:                                                               /*092891*/
                           IMAGES(*BOTH) OMTJRNE(*OPNCLO)              /*092891*/
              MONMSG     MSGID(CPF7030)                                /*092891*/
              MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(JRNFAIL))     /*092891*/
-
+ 
              STRJRNPF   FILE(*LIBL/REIACA) JRN(JREC3262) +
                           IMAGES(*BOTH) OMTJRNE(*OPNCLO)                                  /*230844*/
              MONMSG     MSGID(CPF7030)                                                    /*230844*/
@@ -202,7 +204,7 @@ BYPASS:                                                               /*092861*/
                  CHGVAR   VAR(&COUNT) VALUE(0)                        /*092891*/
  RETRY:
                  ENDJRNPF   FILE(*ALL) JRN(JREC3262)
-
+ 
                  MONMSG     MSGID(CPF9803 CPF9999) EXEC(DO)
                  CHGVAR     VAR(&COUNT) VALUE(&COUNT + 1)             /*092891*/
                  IF         COND(&COUNT *LE 6) THEN(DO)               /*092891*/
@@ -213,7 +215,7 @@ BYPASS:                                                               /*092861*/
                     GOTO       CMDLBL(ABNOR)                          /*092891*/
                  ENDDO                                                /*092891*/
                  ENDDO
-
+ 
                  DLTJRN     JRN(JREC3262)
                  CHGJOB     INQMSGRPY(*DFT)
                  DLTJRNRCV  JRNRCV(JRREC3262)
@@ -275,5 +277,5 @@ END:                                                                  /*092891*/
              ENDDO
                                                                       /*092891*/
 ENDPGM:      CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM                                                   /*092891*/

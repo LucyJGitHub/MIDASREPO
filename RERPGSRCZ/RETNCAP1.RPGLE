@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2009')
+     H COPYRIGHT('(c) Finastra International Limited 2009')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas RE Retail Term & Notice: Cap Date Calcs')        *
@@ -10,10 +10,11 @@
       *  RPG/RETNCAP1 - Calculate value, maturity and end dates for   *
       *             Midas Retail Term & Notice                        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2009            *
+      *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. CCB020             Date 06Aug12               *
-      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CCB020             Date 06Aug12               *
+      *                 CRE073             Date 06Dec10               *
       *                 CRE075             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 230355             Date 18Dec09               *
@@ -22,6 +23,7 @@
       *                 223609             Date 18Dec09               *
       *                 CRE015  *CREATE    Date 18Dec09               *
       *---------------------------------------------------------------*
+      *  MD046248 - Finastra Rebranding                               *
       *  CCB020 - COB Restructure - Secondary COB Infrastructure      *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
@@ -890,4 +892,4 @@
       *****************************************************************
  
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2009
+(c) Finastra International Limited 2009

@@ -17,20 +17,22 @@
 /*                  import filters into Meridian Replication by      */
 /*                  using Meridian menu (MMENU).                     */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. 210540             Date 11Oct02              */
+/*       Prev Amend No. 210540             Date 11Oct02              */
 /* Midas Release 4.01 -----------------------------------------------*/
-/*       Prev Amend No. 193273             Date 24Oct01              */
+/*                      193273             Date 24Oct01              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.05 ---------------------------------------------------*/
 /*                      CPB002  *CREATE    Date 01Jun99              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
+/*       MD046248 - Finastra Rebranding                              */
 /*       210540 - Due to V5 R1, the library QIWS is removed.         */
 /*                Duplicate message to internal message file.        */
 /*       193273 - Delete the repository file in QGPL if it exists    */
@@ -74,7 +76,7 @@
                  /* Midas PB User Messages.  */                         /*210540*/
                                                                         /*210540*/
              DCL        VAR(&Cpyfld)   TYPE(*CHAR) LEN(64) VALUE('(C) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /*-------------------------------------------------------------------*/
@@ -170,6 +172,6 @@ CRTPF:       CRTPF      FILE(&Lib/&File) RCDLEN(100)                      /*1932
  
  ENDPGM:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

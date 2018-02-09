@@ -1,5 +1,5 @@
      h debug
-     h copyright('(c) Misys International Banking Systems Ltd. 2005')
+     h copyright('(c) Finastra International Limited 2005')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas LE Account Keys Extract')                        *
@@ -9,10 +9,11 @@
       *                                                               *
       *  RNLEKYXT   - Midas LE Account Keys Extract                   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. AR1056323          Date 14Nov12               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR1056323          Date 14Nov12               *
+      *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -35,6 +36,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR1056323 - Revert back changes of CLE134 for LKEY1DP and    *
       *              LKEYFED (Recompile)                              *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
@@ -1559,4 +1561,4 @@
       ********************************************************************
  
 **ctdata cpy@
-(c) Misys International Banking Systems Ltd. 2005
+(c) Finastra International Limited 2005

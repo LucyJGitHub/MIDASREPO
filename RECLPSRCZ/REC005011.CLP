@@ -7,12 +7,14 @@
 /*                                                                   */
 /*       REC005011 - Mnthly Withholding Tax Reporting Control Program*/
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2015           */
+/*       (c) Finastra International Limited 2015                     */
 /*                                                                   */
-/*       Last Amend No. CGL165  *CREATE    Date 23Feb15              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CGL165  *CREATE    Date 23Feb15              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CGL165 - Dual Withholding Tax                               */
 /*                                                                   */
 /*********************************************************************/
@@ -29,7 +31,7 @@
              DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
              DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2015')
              RTVDTAARA  DTAARA(SDSTAT *ALL) RTNVAR(&SDSTAT)
 /**/
@@ -100,5 +102,5 @@
              MONMSG     MSGID(CPF0000)
 /**/
  ENDPGM:     CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

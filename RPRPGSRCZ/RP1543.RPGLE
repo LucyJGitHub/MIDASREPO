@@ -14,12 +14,14 @@
       *                                                               *
       *  Component of: RP1515 - Extract program for SDDCMTPD          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. CSD093  *CREATE    Date 01Apr13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CSD093  *CREATE    Date 01Apr13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSD093 - Document Management                                 *
       *                                                               *
       *****************************************************************
@@ -540,4 +542,4 @@
       *****************************************************************
  
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2013
+(c) Finastra International Limited 2013

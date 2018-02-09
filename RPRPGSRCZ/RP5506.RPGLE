@@ -13,18 +13,20 @@
       *                                                               *
       *  Component of: RP5506 - Extract program for SDBSRTPD          *
       *                                                               *
-/*    *  (C) COPYRIGHT Misys International Banking Systems Ltd 2005   *
+/*    *  (C) COPYRIGHT Finastra International Limited 2005            *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSD026             Date 05Apr05               *
-      *  Prev Amend No. LBW001             Date 16Sep02               *
+      *  Prev Amend No. CSD026             Date 05Apr05               *
+      *                 LBW001             Date 16Sep02               *
       *                 UTROPX  *CREATE    Date 12Dec01               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSD026 - MIDAS-TROPICS INTERFACE UPGRADE TO MIDASPLUS        *
       *  LBW001 - Midas TrOpics Interface - Base Rate(based on UTROPX)*
       *  UTROPX - Midas TrOpics Interface                             *
@@ -446,4 +448,4 @@
       /Eject
       *****************************************************************
 **  Cpy@
-(C) Copyright Misys International Banking Systems Ltd. 2002
+(C) Copyright Finastra International Limited 2002

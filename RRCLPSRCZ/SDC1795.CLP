@@ -7,21 +7,23 @@
 /*                                                                  */
 /*       SDC1795- FORWARD RECOVERY (LAST 'XX' TRANSACTIONS)         */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*      (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO.096044         DATE  29MAR96                 */
-/*       PREV AMEND NO.S01194         DATE  21FEB90                 */
+/*       PREV AMEND NO.096044         DATE  29MAR96                 */
+/*                     S01194         DATE  21FEB90                 */
 /*                     E13205         DATE  11/03/89                */
 /*                     S01179         DATE  13/09/88                */
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                             */
 /*       096044  -  Convert to AS/400 naming conventions            */
 /*       S01194  -  NEW STANDING DATA                               */
 /*       E13205  -  Delete data area RCD in QTEMP on entry          */
@@ -31,7 +33,7 @@
 /**/
         PGM    PARM(&PARM &LRTP)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
            DCL   VAR(&CNT)   TYPE(*DEC) LEN(2 0)
            DCL   VAR(&SEQN1) TYPE(*DEC) LEN(10 0)
@@ -136,5 +138,5 @@ END:    ENDPGM
 /*       C R E A T I O N     P A R A M E T E R S                     */
 /*                                                                   */
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /*********************************************************************/

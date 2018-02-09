@@ -1,5 +1,5 @@
      h debug   alwnull(*usrctl)
-     h copyright('(c) Misys International Banking Systems Ltd. 2006')
+     h copyright('(c) Finastra International Limited 2006')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FRS Update T__BOOKCNT file')
@@ -13,18 +13,20 @@
       *             INTPARRE and BOOCNTRE in each record of table     *
       *             T__BOOKCNT.                                       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *  (c) Finastra International Limited 2006                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSD027A            Date 03May06               *
-      *  Prev Amend No. BUG9715 *CREATE    Date 12Jan06               *
+      *  Prev Amend No. CSD027A            Date 03May06               *
+      *                 BUG9715  *CREATE   Date 12Jan06               *
       *                                    Date ddmmmyy               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSD027A - Conversion of customer number to alpha (post       *
       *            build 103). Recompiled.                            *
       *  BUG9715 - T_bookCNT field INTPARRE rejected by IFS.          *
@@ -183,4 +185,4 @@
       *****************************************************************
  
 **ctdata cpy@
-(c) Misys International Banking Systems Ltd. 2005
+(c) Finastra International Limited 2005

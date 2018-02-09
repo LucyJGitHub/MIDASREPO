@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+     H COPYRIGHT('(c) Finastra International Limited 2010')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas RE Block/Refer Debit/Credit fields Update')      *
@@ -17,13 +17,15 @@
       *                                                               *
       *  Called By: SCC0411                                           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. CRE073             Date 06Dec10               *
-      *  Prev Amend No. CRE075  *CREATE    Date 06Dec10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *                 CRE075  *CREATE    Date 06Dec10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  CRE075 - Effective Date for Retail Accounts                  *
       *                                                               *

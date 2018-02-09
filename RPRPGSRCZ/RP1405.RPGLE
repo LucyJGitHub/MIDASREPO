@@ -21,14 +21,15 @@
       *                                                               *
       *  Component of: RP1405 - C.O.B. Interests.                     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSD031             Date 10Apr06               *
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
       *                 CGL029             Date 01Sep03               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.05 -----------------------------------------------*
@@ -36,6 +37,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CGL029 - Increase Account Code to 10 digits                  *
@@ -614,6 +616,6 @@
      C/Eject
       *****************************************************************
 **Ctdata Cpy@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 **CTDATA TAB_DealType
 FPFSCXPISIOPOTSWIPITTDTILNCICDCLDL

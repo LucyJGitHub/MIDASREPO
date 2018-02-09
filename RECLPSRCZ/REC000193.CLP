@@ -7,13 +7,15 @@
 /*                                                                   */
 /*       REC000193 - COB Extract Shadow Postings from RSACMTPD       */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2009           */
+/*       (c) Finastra International Limited 2009                     */
 /*                                                                   */
-/*       Last Amend No. CER059             Date 19Jul10              */
-/*       Prev Amend No. BUG26106 *CREATE   Date 21Sep09              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CER059             Date 19Jul10              */
+/*                      BUG26106 *CREATE   Date 21Sep09              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CER059 - German Feature Upgrade to Delhi                    */
 /*       BUG26106 - UAT testing of German Features has shown an      */
 /*                  error with missing records on the REBNODPD file. */
@@ -23,7 +25,7 @@
  
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2009')
  
 /** Global monitor message */
@@ -60,6 +62,6 @@ ABNOR:
  
 END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*XBIA*  CRTSRCPF FILE(QTEMP/CRTOBJSQF) RCDLEN(112) MBR(CRTOBJSQL)    *
 /*XBIB*  RNMOBJ OBJ(QTEMP/CRTOBJSQF) OBJTYPE(*FILE)                   *
@@ -13,20 +13,22 @@
       *  RE000082 - Execute SQL Script for REC000082                  *
       *             Initialisation Program                            *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
       *  Function: Set F1IABC field on GLACNTQD to 'Y' only if        *
       *            retail and not nostro account                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. BG18886            Date 27May08               *
+      *  Prev Amend No. BG18886            Date 27May08               *
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CRE010 *CREATE     Date 06Sep04               *
+      *                 CRE010 *C *CREATE  Date 06Sep04               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BG18886 - Amend non-standard codes.                          *
       *  CRE010 - Retail Account Balance Check                        *
       *                                                               *

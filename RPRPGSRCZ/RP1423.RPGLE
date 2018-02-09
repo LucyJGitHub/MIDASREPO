@@ -20,14 +20,16 @@
       *                                                               *
       *  Component of: RP1423 - COB Av. Balances - Reset/Reports.     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. CRE095             Date 25Apr14               *
-      *  Prev Amend No. CRE090             Date 14Feb14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CRE095             Date 25Apr14               *
+      *                 CRE090             Date 14Feb14               *
       *                 AR1055588 *CREATE  Date 08Feb13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CRE095 - Rate Fixing for RE Accounts (Recompile)             *
       *  CRE090 - Delay Capitalisation of Interest (Recompile)        *
       *  AR1055588 - Available Balances in TOF (Child:AR1055591)      *
@@ -629,4 +631,4 @@
      C/Eject
       *****************************************************************
 **Ctdata Cpy@
-(c) Misys International Banking Systems Ltd. 2012
+(c) Finastra International Limited 2012

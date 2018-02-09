@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2009')
+     H COPYRIGHT('(c) Finastra International Limited 2009')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas RE COB Extract Shadow Postings from RSACMTPD')   *
@@ -12,17 +12,19 @@
       *  Function:  This program writes records of RSACMTPD processed *
       *             after COB to REBNODPD                             *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2009            *
+      *  (c) Finastra International Limited 2009                      *
       *                                                               *
       *  Note: Any change on this program should also be applied on   *
       *        RE000192.                                              *
       *                                                               *
-      *  Last Amend No. CRE075             Date 06Dec10               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CRE075             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
       *                 BUG26106 *CREATE   Date 18Sep09               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  BUG26106 - UAT testing of German Features has shown an error *

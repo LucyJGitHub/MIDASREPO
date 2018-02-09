@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas RE Cash Management Hierarchy Selection Prmpt')
@@ -12,14 +12,15 @@
       *  Function: This module allows selection of hierarchies to be  *
       *            made based on a link id or account present         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSD031             Date 10Apr06               *
-      *  Prev Amend No. BG8539             Date 15Sep05               *
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 BG8539             Date 15Sep05               *
       *                 CSD027             Date 09Dec05               *
       *                 BUG6979            Date 03May05               *
       *                 CSW037A            Date 02May05               *
@@ -36,6 +37,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  BG8539 - Screen not dispaly properly in WebFacing            *
       *           Change the write/read order so that the last        *

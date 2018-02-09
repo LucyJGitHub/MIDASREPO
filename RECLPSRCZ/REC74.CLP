@@ -7,10 +7,11 @@
 /*                                                                   */
 /*       REC74 - GENERATION OF BASE RATE CHANGES                     */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CRE095             Date 25Apr14              */
-/*       Prev Amend No. CRE083AU           Date 06Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CRE095             Date 25Apr14              */
+/*                      CRE083AU           Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -32,6 +33,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CRE095 - Rate Fixing for RE Accounts                        */
 /*     CRE083AU - COB Restructure - RE COB Optimisation Phase 1      */
 /*     106312 - Stopped object locking whilst copying files          */
@@ -58,7 +60,7 @@
 /********    PGM                                                      /*S01189*/
              PGM     PARM(&CNAM &CSEQ)                                /*S01189*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/                                                                                    /*CRE083AU*/
              DCL        VAR(&SEVENT) TYPE(*CHAR) LEN(15)                                /*CRE083AU*/
@@ -243,5 +245,5 @@ WRTJRN:                                                                         
 /*<< 049412 <<*/
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 ENDPGM:      ENDPGM

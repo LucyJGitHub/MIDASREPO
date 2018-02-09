@@ -7,16 +7,17 @@
 /*                                                                  */
 /*       SDC1756 - UPDATE DATABASE ON BACKUP MACHINE                */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. BUG9619            Date 01Feb06             */
+/*       Prev Amend No. BUG9619            Date 01Feb06              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. S01408               DATE 10MAY95           */
+/*                      S01408             Date 10May95              */
 /*                      S01345               DATE 06NOV91           */
 /*                      S01337               DATE 17APR91           */
 /*                      E13205               DATE 13/03/89          */
@@ -25,6 +26,7 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BUG9619 - Close of business components run long if journal  */
 /*                 cache is enabled                                  */
 /*       S01408  -  Addition of core hook SDC1756MP1                */
@@ -55,7 +57,7 @@
 /*********************************************************************/
              PGM
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
 /*   Initial processing                                             */
@@ -264,5 +266,5 @@ ABNOR:       SNDPGMMSG  MSG('Update Database on Backup Machine +
 /**/
 END:         ENDPGM
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /**/

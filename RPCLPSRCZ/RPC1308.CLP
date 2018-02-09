@@ -13,19 +13,21 @@
 /*                 It first verifies the TCP/IP connection between   */
 /*                 the AS/400 and the remote system.                 */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. 204726             Date 09Jul02              */
+/*       Prev Amend No. 204726             Date 09Jul02              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.05 ---------------------------------------------------*/
-/*       Prev Amend No. CPB002  *CREATE    Date 01Jun99              */
+/*                      CPB002  *CREATE    Date 01Jun99              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       204726 - Manage Remote MQM <> Remote Machine name           */
 /*                Workaround = supress test / remote MQ Manager      */
 /*       CPB002 - Meridian DBA Middleware Replication Customization. */
@@ -56,7 +58,7 @@
              DCL        VAR(&Msgkey)     TYPE(*CHAR) LEN(4)
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /*-------------------------------------------------------------------*/
@@ -254,7 +256,7 @@ OPNQRYF:
 /*-------------------------------------------------------------------*/
  
 ENDPGM:      CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              CLOF       OPNID(RPCHNLL2)
              MONMSG     MSGID(CPF0000 MCH0000)

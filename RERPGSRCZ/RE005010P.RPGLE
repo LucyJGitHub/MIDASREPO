@@ -14,12 +14,14 @@
       *                                                               *
       *  Called By: REC005010 - Daily Withholding Tax Reporting Ctl Pgm*
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2015            *
+      *  (c) Finastra International Limited 2015                      *
       *                                                               *
-      *  Last Amend No. CGL165  *CREATE    Date 23Feb15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL165  *CREATE    Date 23Feb15               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax                                *
       *                                                               *
       *****************************************************************
@@ -723,4 +725,4 @@
       /EJECT
       *
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2015
+(c) Finastra International Limited 2015

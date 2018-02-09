@@ -14,17 +14,19 @@
       *                                                               *
       *  Component of: RP1532 - Extract program for SDACTXPD          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSD027A            Date 05May06               *
-      *  Prev Amend No. CGL031  *CREATE    Date 05Jul04               *
+      *  Prev Amend No. CSD027A            Date 05May06               *
+      *                 CGL031  *CREATE    Date 05Jul04               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSD027A - Conversion Of Customer Number to Alpha             *
       *  CGL031 - Taxation of Savings Income                          *
       *                                                               *
@@ -700,4 +702,4 @@
       *****************************************************************
  
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2004
+(c) Finastra International Limited 2004

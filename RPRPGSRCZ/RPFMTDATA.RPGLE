@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas RP Format data from AS/400->EBCDIC text')
@@ -16,17 +16,19 @@
       *        introduced to avoid the need for non-Replication       *
       *        systems to have the Replication libraries present.     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CPK016  *CREATE    Date 22Apr03               *
-      *  Prev Amend No. xxxxxx             Date nnxxxnn               *
+      *  Prev Amend No. CPK016  *CREATE    Date 22Apr03               *
+      *                 XXXXXX             Date NNXxxNN               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CPK016 - Midas R5 packaging.                                 *
       *           - Break direct link with Replication product.       *
       *                                                               *

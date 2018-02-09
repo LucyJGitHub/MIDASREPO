@@ -8,10 +8,11 @@
 /*       REC376A -  RETAIL INTEREST AND CHARGE GENERATION            */
 /*                  RCVF TABTBRE                                     */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. AR1069713          Date 14Dec12              */
-/*       Prev Amend No. 259754             Date 27Jul12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR1069713          Date 14Dec12              */
+/*                      259754             Date 27Jul12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /*                      CCB016             Date 18Feb08              */
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -24,6 +25,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       AR1069713 - Reverse fix 259754                              */
 /*       259754 - CoB Performance Enhancements for RZB. Override     */
 /*                RECAPM with a result of QPNQRYF, it will force to  */
@@ -42,7 +44,7 @@
 /**/
              PGM
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(44)
              DCL        VAR(&LDA) TYPE(*CHAR) LEN(256)
@@ -138,5 +140,5 @@
 /**********  ENDDO                                                 */           /*259754 AR1069713*/
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 ENDCL:       ENDPGM

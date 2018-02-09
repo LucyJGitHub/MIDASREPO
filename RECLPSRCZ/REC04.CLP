@@ -7,10 +7,11 @@
 /*                                                                  */
 /*        REC04 - CUSTOMER EXCHANGES FILE CREATION                  */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD024663           Date 25Jul16              */
-/*       Prev Amend No. 253617             Date 25Jul16              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD024663           Date 25Jul16              */
+/*                      253617             Date 25Jul16              */
 /*                      MD031950           Date 17Jun15              */
 /*                      CRE041             Date 28Sep12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
@@ -24,6 +25,7 @@
 /*                      S01194              Date 09Mar90             */
 /*                                                                  */
 /********************************************************************/
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD024663 - Input Document already exist error displays on   */
 /*                  IC. Clear extension file when driving file is    */
 /*                  cleared.                                         */
@@ -43,7 +45,7 @@
              PGM
 /*/COPY WNCPYSRC,REC04002                                            */
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)                                     /*CER001*/
              DCL        VAR(&RTN) TYPE(*CHAR) LEN(7)                                      /*CER001*/
@@ -100,5 +102,5 @@
                ENDDO
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

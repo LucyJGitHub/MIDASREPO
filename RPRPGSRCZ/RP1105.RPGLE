@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas RP Midas-Plato interface pre-prc PF/SDBANKPD')
@@ -15,18 +15,20 @@
       *                                                               *
       *  SDBANKPD - Format of PF/SDBANKPD received.                   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.04 -----------------------------------------------*
-      *  Last Amend No. CPL004  *CREATE    Date 27Nov00               *
+      *  Prev Amend No. CPL004  *CREATE    Date 27Nov00               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CPL004 - Midas-Plato Interface.                              *
       *           Enhancements for Plato v4.80.                       *
       *                                                               *

@@ -7,21 +7,23 @@
 /*                                                                  */
 /*       SDC1772 - Rebuild all files read from data queue REBUILD   */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CPK016             Date 29Aug03              */
+/*       Prev Amend No. CPK016             Date 29Aug03              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. S01408             DATE  10MAY95            */
+/*                      S01408             Date 10May95              */
 /*                      E19691             DATE  12NOV89            */
 /*                      E13205             DATE  14FEB89            */
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CPK016 - Release 5 packaging.  Make data queue REBUILD      */
 /*                permanent.                                         */
 /*       S01408 - Addition of core hook SDC1772MPS                  */
@@ -36,7 +38,7 @@
 /********************************************************************/
              PGM
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
 /*           Declare variables                                       */
@@ -128,5 +130,5 @@
 END:         DLCOBJ     OBJ((SDC1772 *PGM *SHRRD))                    /*E19691*/
              MONMSG     MSGID(CPF1005)                                /*E19691*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM                                                   /*E19691*/

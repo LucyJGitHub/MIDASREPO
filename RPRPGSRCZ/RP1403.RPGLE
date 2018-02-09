@@ -17,10 +17,11 @@
       *                                                               *
       *  Component of: RP1403 - Extract COB PB Postings.              *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR1026202          Date 15Oct12               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR1026202          Date 15Oct12               *
+      *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 222414             Date 05Jun12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -43,6 +44,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR1026202 - PBS Compatibility with BankFusion Midas 2.00     *
       *              Interface "Account Transfer" in real time        *
       *              (Child:AR1026203)                                *
@@ -728,6 +730,6 @@
      C/Eject
       *****************************************************************
 **Ctdata Cpy@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 **Ctdata TabDealTypes
 FPFSCXPISIOPOTSWIPITTDTILNCICDCLDL

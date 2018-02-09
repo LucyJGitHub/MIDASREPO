@@ -7,15 +7,16 @@
 /*                                                                   */
 /*       REC4432 - CI Task Monitor (Background Job)                  */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CCB020              Date 06Aug12             */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CCB020             Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4.01.02 --------------------------------------------*/
-/*       Prev Amend No. 208846             Date 29Aug02              */
+/*                      208846             Date 29Aug02              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      CPK009             Date 09Aug99              */
@@ -26,6 +27,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CCB020 - COB Restructure - Secondary COB Infrastracture     */
 /*       208846 - Limit the submitted RE41220* jobs to a maximum     */
 /*                of 5. Reset counter to zero in this program.       */
@@ -41,7 +43,7 @@
              PGM
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&RTCD)   TYPE(*CHAR) LEN(7)   VALUE('       ')
              DCL        VAR(&OPTN)   TYPE(*CHAR) LEN(7)   VALUE('*FIRST ')
@@ -152,7 +154,7 @@
              MONMSG     MSGID(CPF0000)                                /*136943*/
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              CALL     PGM(RE4436) PARM('D' &JOB &USR &NBR)
              MONMSG   MSGID(CPF0000)                                  /*118134*/
              ENDCMTCTL

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas RE Calculate Next Fixing Rate')                  *
@@ -9,13 +9,15 @@
       *                                                               *
       *  RE009500 - Midas RE Calculate Next Fixing Rate               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD032905           Date 19Feb15               *
-      *  Prev Amend No. CRE095   *CREATE   Date 25Apr14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD032905           Date 19Feb15               *
+      *                 CRE095  *CREATE    Date 25Apr14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD032905 - Array index error due to month gt 12              *
       *  CRE095 - Rate Fixing on Retail Accounts                      *
       *                                                               *
@@ -43,16 +45,16 @@
       *
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** First DS for access programs, short Data Structure
-
+ 
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** Second DS for access programs, long Data Structure
-
+ 
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
       ** Data structure for general ledger details
-
+ 
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** Data structure for bank details
-
+ 
      D ZFMD            S              2  0 DIM(12) CTDATA PERRCD(12)
       *
      D/COPY ZSRSRC,ZDATE2Z1LE

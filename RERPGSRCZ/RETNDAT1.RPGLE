@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2009')
+     H COPYRIGHT('(c) Finastra International Limited 2009')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas RE Retail Term & Notice: Date Calculations')     *
@@ -10,11 +10,12 @@
       *  RPGLE/RETNDAT1 - Calculate value, maturity and end dates for *
       *              Midas Retail Term & Notice                       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2009            *
+      *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. CRE073             Date 06Dec10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Prev Amend No. 254071             Date 18Dec09               *
+      *                 254071             Date 18Dec09               *
       *                 250852             Date 18Dec09               *
       *                 244324             Date 18Dec09               *
       *                 230355             Date 18Dec09               *
@@ -23,6 +24,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  254071 - Ensure end of term correctly calculated for         *
       *           change of maturity date.                            *

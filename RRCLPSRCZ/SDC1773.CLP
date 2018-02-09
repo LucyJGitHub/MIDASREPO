@@ -7,14 +7,15 @@
 /*                                                                  */
 /*       SDC1773 - Send Rebuild file entries to data queue REBUILD  */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. AR1037730          Date 15Oct12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR1037730          Date 15Oct12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CPK016             Date 29Aug03              */
+/*                      CPK016             Date 29Aug03              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      S01408             DATE  10MAY95            */
@@ -23,6 +24,7 @@
 /********************************************************************/
 /*       New program overview                                       */
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       AR1037730 - SDC1774 failed in reopen (Child:AR1037731)      */
 /*       CPK016 - Release 5 packaging.  Make data queue REBUILD      */
 /*                permanent.                                         */
@@ -33,7 +35,7 @@
 /********************************************************************/
              PGM
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
 /*           Declare variables                                       */
@@ -89,7 +91,7 @@
              CHGJOB     SWS(XXXXXX1X)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /**/
 END:         ENDPGM
 /**/

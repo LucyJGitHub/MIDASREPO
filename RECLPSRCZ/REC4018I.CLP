@@ -6,14 +6,16 @@
 /*                                                                   */
 /*       REC4018I -  Midas Retail Term & Notice Account Code Check   */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2009           */
+/*       (c) Finastra International Limited 2009                     */
 /*                                                                   */
-/*       Last Amend No. CCB020             Date 06Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CCB020             Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
-/*       Prev Amend No. CRE015 *CREATE     Date 18Dec09              */
+/*                      CRE015 *C *CREATE  Date 18Dec09              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CCB020 - COB Restructure - Secondary COB Infrastructure     */
 /*       CRE015 - Retail Term & Notice Accounts                      */
 /*                                                                   */
@@ -42,7 +44,7 @@
              DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
              DCL        VAR(&BUSY) TYPE(*CHAR) LEN(1)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2009')
  
 /* Global Monitor Message */
@@ -109,6 +111,6 @@
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
              ENDDO
  
-             CHGVAR     VAR(&CPYFLD) VALUE('(c) Misys International +
-                          Banking Systems Ltd. 2009')
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International +
+                          Limited 2009')
              ENDPGM

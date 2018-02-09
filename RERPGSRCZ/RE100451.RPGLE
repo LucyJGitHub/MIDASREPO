@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas RE Cash Management Hierarchy Details Enquiry')   *
@@ -12,10 +12,11 @@
       *  Function: This module allows enquiry into Cash Management    *
       *            Hierarchy Details                                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. AR685449           Date 08Dec10               *
-      *  Prev Amend No. AR682707           Date 02Dec10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR685449           Date 08Dec10               *
+      *                 AR682707           Date 02Dec10               *
       *                 AR676213           Date 19Nov10               *
       *                 CER059             Date 19Jul10               *
       *                 CER043             Date 19May08               *
@@ -42,6 +43,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR685449 - Apply fix 225096                                  *
       *  225096 - Wrong calculation of available funds(with overdraft)*
       *  AR682707 - Full account in hierarchy links is truncated      *

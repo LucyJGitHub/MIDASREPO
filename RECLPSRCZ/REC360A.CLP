@@ -7,17 +7,18 @@
 /*                                                                   */
 /*       REC360A - TRANSFER DATA BETWEEN DTAARA'S *GDA/*LDA          */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.03 ---------------------------------------------------*/
-/*       Last Amend No. 179573             DATE 12Jun00              */
+/*       Prev Amend No. 179573             Date 12Jun00              */
 /* Midas DBA 3.02 ---------------------------------------------------*/
-/*       Prev Amend No. 153379             DATE 15Oct99              */
+/*                      153379             Date 15Oct99              */
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      094431             DATE 16OCT95              */
 /*                      S01408             DATE 09JUN95              */
@@ -25,6 +26,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       179573 - LDA and GDA are wrong way round in RTVDTAARA and   */
 /*                CHGDTAARA command.                                 */
 /*       153379 - The RECJOB group session SETANTPGM is SFC0600      */
@@ -46,7 +48,7 @@
 /**/
              PGM        PARM(&ACTION)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&ACTION) TYPE(*CHAR) LEN(1)
 /************DCL********VAR(&XFER)   TYPE(*CHAR) LEN(76)*************** 094431*/
@@ -122,5 +124,5 @@ ABNOR:       SNDUSRMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Group +
                           not available') TOMSGQ(*EXT) MSGTYPE(*INFO)
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

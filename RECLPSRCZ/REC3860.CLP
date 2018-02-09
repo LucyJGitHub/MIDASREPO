@@ -7,14 +7,15 @@
 /*                                                                   */
 /*       REC3860 -  RETAIL ACCOUNT ACTIVITY EXTRACT                  */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. 257276             Date 10Dec12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. 257276             Date 10Dec12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CSC020             Date 31Mar04              */
+/*                      CSC020             Date 31Mar04              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.03 ---------------------------------------------------*/
 /*                      CCB009             DATE 01Jun00              */
@@ -27,6 +28,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       257276 - Initialise trailer file RTZZ member RACT if        */
 /*                PF/ACCNTAB has no records. Applied Fix 217502.     */
 /*              - Applied for AR937038 (Child: AR937039)             */
@@ -49,7 +51,7 @@
              PGM        PARM(&CNAM &CSEQ)
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&JLIB) TYPE(*CHAR) LEN(6) VALUE('  JLIB')
              DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(7) VALUE('  DMLIB')
@@ -398,5 +400,5 @@ ENDPGM:
              SCWRTJREG  COMP(&CNAM) CMPSEQ(&CSEQ) FLAG('E') +
                           TEXT(&STEXT)                                                    /*CSC020*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

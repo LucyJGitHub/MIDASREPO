@@ -15,18 +15,20 @@
       *                                                               *
       *  Component of: RP5503 - Extract program for SDNOSTPD          *
       *                                                               *
-      *  (C) COPYRIGHT Misys International Banking Systems sa. 2001   *
+      *  (C) COPYRIGHT Finastra International Limited 2001            *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSD027             Date 09Dec05               *
-      *  Prev Amend No. CSD026             Date 05Apr05               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD026             Date 05Apr05               *
       *                 UTROPX  *CREATE    Date 17Dec01               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CSD026 - MIDAS-TROPICS INTERFACE UPGRADE TO MIDASPLUS        *
       *         - Change account code length for Midas plus    .      *
@@ -599,4 +601,4 @@
       /Eject
       *****************************************************************
 **  Cpy@
-(C) Copyright Misys International Banking Systems sa. 2001
+(C) Copyright Finastra International Limited 2001

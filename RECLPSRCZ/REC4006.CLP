@@ -7,11 +7,12 @@
 /*                                                                   */
 /*       REC4006 - ICI Component                                     */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2009           */
+/*       (c) Finastra International Limited 2009                     */
 /*                                                                   */
-/*       Last Amend No. CCB020             Date 06Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CCB020             Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
-/*       Prev Amend No. 237781             Date 18Dec09              */
+/*                      237781             Date 18Dec09              */
 /*                      237976             Date 18Dec09              */
 /*                      234686             Date 18Dec09              */
 /*                      230517             Date 18Dec09              */
@@ -20,6 +21,7 @@
 /*                      BUG27460           Date 18Dec09              */
 /*                      CRE015 *CREATE     Date 18Dec09              */
 /*-------------------------------------------------------------------*/
+/*       MD046248 - Finastra Rebranding                              */
 /*       CCB020 - COB Restructure - Secondary COB Infrastructure     */
 /*       237781 - No interest capitalisation on some T&N accounts.   */
 /*       237976 - Ensure next cap dates on ACCNTAB match REPRPNPD    */
@@ -53,7 +55,7 @@
              DCL        VAR(&BACKUP) TYPE(*CHAR) LEN(1) VALUE(' ')
 /**********  DCL        VAR(&MPHAS)  TYPE(*CHAR) LEN(1) VALUE(' ')                     */ /*CCB020*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2009')
  
 /*********************************************************************/

@@ -7,17 +7,19 @@
 /*                                                                   */
 /*       REC0015 - RE Initialisation CLP for Feature CRT005          */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4.01 -----------------------------------------------*/
-/*       Last Amend No. CRT005  *CREATE    Date 09Aug01              */
+/*       Prev Amend No. CRT005  *CREATE    Date 09Aug01              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CRT005 - Cashier Enhancement for Cash In/Cash Out           */
 /*                                                                   */
 /*********************************************************************/
@@ -30,7 +32,7 @@
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
              DCL        VAR(&PREF)  TYPE(*CHAR) LEN(2)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /** Global monitor message */
@@ -71,6 +73,6 @@
  
  END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

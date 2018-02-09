@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas RE Failed Standing Orders Report')               *
@@ -14,14 +14,15 @@
       *                                                               *
       *  Called By: REC0733 - Failed Standing Orders Report Control   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. AR786413           Date 09Jun11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR786413           Date 09Jun11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD031             Date 10Apr06               *
       *                 BUG8188            Date 25Apr05               *
       *                 CSD027             Date 09Dec05               *
       *                 CGL029             Date 23Mar04               *
@@ -29,6 +30,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR786413 - REC0733 00001 - Printer overflow                  *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  BUG8188 - I/O error CPF5004 was detected in file RE0733P1    *

@@ -7,20 +7,22 @@
 /*                                                                  */
 /*       SDC1763 - Display DSPDBR and then create MBRLIST for lgl's */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. E13205             DATE  14/02/89           */
-/*       PREV AMEND NO. E00000             DATE  00/00/00           */
+/*       Prev Amend No. E13205             Date 14/02/89             */
+/*                      E00000             Date 00/00/00             */
 /*                                                                  */
 /********************************************************************/
 /*       New program overview                                       */
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       E13205 - For each Logical file in list add all its         */
 /*                members to file MBRLIST member MBRLIST            */
 /*                                                                  */
@@ -31,7 +33,7 @@
 /*********************************************************************/
              PGM        PARM(&PARM)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
 /*           Declare variables                                       */
@@ -103,5 +105,5 @@
 /**/
 END:         ENDPGM
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /**/

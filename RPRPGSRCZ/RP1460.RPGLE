@@ -15,19 +15,21 @@
       *                                                               *
       *  Component of: RPC1460 - Portfolio Positions take on.         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSD027A            Date 05May06               *
-      *  Prev Amend No. CER001             Date 25Aug05
+      *  Prev Amend No. CSD027A            Date 05May06               *
+      *                 CER001             Date 25Aug05               *
       *                 UPG402             Date 04Oct04               *
       *                 CPB002  *CREATE    Date 01Jun99               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSD027A - Conversion Of Customer Number to Alpha             *
       *  CER001 - LUX Upgrade to MidasPlus                            *
       *  UPG402 - Recompile due to R4.02 upgrade                      *
@@ -859,7 +861,7 @@
      C/Eject
       *****************************************************************
 **Ctdata Cpy@
-(c) Misys International Banking Systems Ltd. 2005
+(c) Finastra International Limited 2005
 **Ctdata ArrNarr
 All Customers Account Officer
 is responsible for

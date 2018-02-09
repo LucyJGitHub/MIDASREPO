@@ -13,12 +13,13 @@
       *                                                               *
       *  Component of: RP1431 - Get FT full settlement account        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CRE075             Date 06Dec10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CRE075             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. BUG15105C          Date 06Nov07               *
+      *                 BUG15105C          Date 06Nov07               *
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       *                 BUG15105A          Date 25Oct07               *
@@ -31,6 +32,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
       *  BUG15105C - Missing Process for SWIFT 2007 (Reopen)          *
       *  BUG15105A - Missing Process for SWIFT 2007 (Reopen)          *
@@ -768,4 +770,4 @@
       *****************************************************************
       *
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

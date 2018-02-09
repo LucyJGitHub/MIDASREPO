@@ -25,10 +25,11 @@
       *             expense a/cs are positioned correctly in the      *
       *             hierarchy.
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD000091           Date 15May13               *
-      *  Prev Amend No. AR676213           Date 19Nov10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD000091           Date 15May13               *
+      *                 AR676213           Date 19Nov10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -40,6 +41,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD000091 - Event Codes Substitution                          *
       *  AR676213 - Incorrect definition of CLGLAI field (Recompile)  *
       *  CSD027 - Conversion Of Customer Number to Alpha              *

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas RE Write to Zero-Balancing Stops files')         *
@@ -12,19 +12,21 @@
       *  Function:  This program is given link details and posting    *
       *             details and writes to files REZSTDPD and REZSTIPD.*
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. BUG28077           Date 26Aug10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. BUG28077           Date 26Aug10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD027             Date 09Dec05               *
       *                 CGL029             Date 01Sep03               *
       *                 CRE008  *CREATE    Date 19Feb02               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG28077 - Parent account code field was not updated to 10S. *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CGL029 - Increase Account Code to 10 digits                  *

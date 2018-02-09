@@ -7,19 +7,21 @@
 /*                                                                   */
 /*       RPC1060 - Start Midas-Plato Replication Channels.           */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.04 ---------------------------------------------------*/
-/*       Last Amend No. CPL004  *CREATE    Date 08Nov00              */
-/*       Prev Amend No. ______             Date ddmmmyy              */
+/*       Prev Amend No. CPL004  *CREATE    Date 08Nov00              */
+/*                      ______             Date DDMmmYY              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CPL004 - Midas-Plato Interface.                             */
 /*                Enhancements for Plato v4.80.                      */
 /*                                                                   */
@@ -31,7 +33,7 @@
              DCL        VAR(&UNIT) TYPE(*CHAR) LEN(3)                                     /*173248*/
              DCL        VAR(&MQCN) TYPE(*CHAR) LEN(20)                                    /*173248*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
              DCLF       FILE(X4PF)
@@ -92,5 +94,5 @@ TAG998:
 /* End of Program:                                                 */
 TAG999:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

@@ -7,12 +7,14 @@
 /*                                                                   */
 /*       RPC1472 - Available Balances Take On                        */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2013           */
+/*       (c) Finastra International Limited 2013                     */
 /*                                                                   */
-/*       Last Amend No. AR1055588 *CREATE  Date 08Feb13              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR1055588 *CREATE  Date 08Feb13              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       AR1055588 - Available Balances in TOF (Child:AR1055591)     */
 /*                                                                   */
 /*********************************************************************/
@@ -23,7 +25,7 @@
 /*-------------------------------------------------------------------*/
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2012')
  
 /*-------------------------------------------------------------------*/
@@ -95,6 +97,6 @@
  
  ENDPGM:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

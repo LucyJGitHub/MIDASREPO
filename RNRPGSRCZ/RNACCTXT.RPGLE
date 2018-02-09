@@ -1,6 +1,6 @@
      h debug   alwnull(*usrctl)
      h fixnbr(*zoned : *inputpacked)
-     h copyright('(c) Misys International Banking Systems Ltd. 2005')
+     h copyright('(c) Finastra International Limited 2005')
  
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
@@ -11,14 +11,15 @@
       *                                                               *
       *  RNACCTXT   - Midas FRS General Ledger (Account) extract      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. CRE075             Date 06Dec10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CRE075             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. BUG11372           Date 13Jun06               *
+      *                 BUG11372           Date 13Jun06               *
       *                 BUG11435           Date 06Jun06               *
       *                 BUG11350           Date 15May06               *
       *                 CSD027A            Date 09May06               *
@@ -33,6 +34,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
       *  BUG11372 - Get interest rates for tiered and threshold types.*
       *  BUG11435 - Follow up issue 21. Add more mapping for INDACOBA.*
@@ -2087,4 +2089,4 @@
       *****************************************************************
  
 **ctdata cpy@
-(c) Misys International Banking Systems Ltd. 2005
+(c) Finastra International Limited 2005

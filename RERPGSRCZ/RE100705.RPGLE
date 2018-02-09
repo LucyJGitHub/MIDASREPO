@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas RE Cash Management Balances Purge')              *
@@ -12,10 +12,11 @@
       *  Function: This module purges value date balances on          *
       *            zero balancing accounts.                           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. 232111             Date 25Feb13               *
-      *  Prev Amend No. AR676213           Date 19Nov10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. 232111             Date 25Feb13               *
+      *                 AR676213           Date 19Nov10               *
       *                 CER059             Date 19Jul10               *
       *                 CER043             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -35,6 +36,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  232111 - Balance purge is incomplete if previous balance     *
       *           purge request was not executed.  Amended program    *
       *           to include in the purge amount the historic balance *

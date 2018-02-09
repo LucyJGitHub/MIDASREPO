@@ -7,18 +7,20 @@
 /*                                                                   */
 /*       REC3700 - Expired Interest Rate Review Dates Control        */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Last Amend No. CRE001 *CREATE     Date 18Feb97              */
+/*       Prev Amend No. CRE001 *CREATE     Date 18Feb97              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CRE001 - Overdraft Interest Calculations                    */
 /*                                                                   */
 /*********************************************************************/
@@ -26,7 +28,7 @@
  
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
              DCL        VAR(&SEQ) TYPE(*CHAR) LEN(5)
@@ -59,5 +61,5 @@ ABNOR:          RTVDTAARA  DTAARA(LDA (134 50)) RTNVAR(&MEM)
                 MONMSG     MSGID(CPF0000 MCH0000)
  
 FINISH:      CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

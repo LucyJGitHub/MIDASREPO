@@ -8,15 +8,16 @@
 /*       REC3131 - Commission Capitalisation - Task Split Server     */
 /*                 ANWD Version                                      */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CRE083BD           Date 06Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CRE083BD           Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4.01.02 --------------------------------------------*/
-/*       Prev Amend No. 204111             Date 25Mar02              */
+/*                      204111             Date 25Mar02              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      CPK009             Date 09Aug99              */
@@ -24,6 +25,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CRE083BD - COB Restructure - RE COB Optimisation Phase 1    */
 /*       204111 - Correct coding in IF statement                     */
 /*              - Applied fix 185958.                                */
@@ -54,7 +56,7 @@
                           VALUE('COMMCSERVE')
              DCL        VAR(&RCVWAIT) TYPE(*DEC) LEN(5 0) VALUE(-1)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
              DCLF       FILE(TABTBRE)
@@ -194,7 +196,7 @@
              CHGJOB     SWS(XXXXXX11)
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 /*/COPY WNCPYSRC,REC3131END                                          */
  

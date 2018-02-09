@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
+     H COPYRIGHT('(c) Finastra International Limited 2011')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas RE Proj Insufficient Funds Report')              *
@@ -21,15 +21,17 @@
       *                 are inactive, have bad debt, are liquidated,  *
       *                 or are referred for the sign of the posting.  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2011            *
+      *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. AR1005246          Date 30Jul12               *
-      *  Prev Amend No. AR737480A          Date 03Jun11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR1005246          Date 30Jul12               *
+      *                 AR737480A          Date 03Jun11               *
       *                 AR737480           Date 28Mar11               *
       *                 CAP207   *CREATE   Date 10Feb11               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR1005246 - Program RE004244AU receiver too small to hold    *
       *              result.                                          *
 /*    *  AR737480A - REC0004243 00001                                 *
@@ -1112,4 +1114,4 @@
  
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2011
+(c) Finastra International Limited 2011

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+     H COPYRIGHT('(c) Finastra International Limited 2010')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas RE Account Balance Check Data File Triggers')    *
@@ -14,14 +14,16 @@
       *             to and can be amended to handle update of records *
       *             in RSACMTPD.                                      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. AR958145           Date 26Apr12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR958145           Date 26Apr12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Prev Amend No. CAP205  *CREATE    Date 15Feb10               *
+      *                 CAP205  *CREATE    Date 15Feb10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR958145 - ABC First day processing enhancement              *
       *           - Applied fix for AR975746                          *
       *  CAP205 - Teller Related APIs - Account Balance Check         *

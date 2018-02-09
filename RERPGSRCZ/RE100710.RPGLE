@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas RE Determine ZB/Swep Hierarchy Relationships')   *
@@ -16,20 +16,22 @@
       *             zero balancing/sweeping hierarchies in the 'Live' *
       *             Cash Management Hierarchy files.                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. AR676213           Date 19Nov10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR676213           Date 19Nov10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD027             Date 09Dec05               *
       *                 213198             Date 11Feb03               *
       *                 214360             Date 03Feb03               *
       *                 CRE008  *CREATE    Date 19Feb02               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR676213 - Incorrect definition of CLGLAI field (Recompile)  *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  213198 - Sweeps in multi-level hierarchy not swept in COB    *

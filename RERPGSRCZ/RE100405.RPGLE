@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas RE Cash Management Live Back End Hier Update')   *
@@ -22,14 +22,15 @@
       *             REACCHPD, REACCMPD, REZSHXPD, REZSMXPD            *
       *             REGAHXPD, REGAMXPD                                *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. AR676213           Date 19Nov10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR676213           Date 19Nov10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD027             Date 09Dec05               *
       *                 214360             Date 03Feb03               *
       *                 212840             Date 10Jan03               *
       *                 212466             Date 10Jan03               *
@@ -37,6 +38,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR676213 - Incorrect definition of CLGLAI field (Recompile)  *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  214360 - Cash Management Deferred Posting                    *

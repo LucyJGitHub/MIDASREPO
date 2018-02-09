@@ -18,18 +18,20 @@
       *                                                               *
       *  Component of: RP5501 - Extract program for FWDRTFE           *
       *                                                               *
-      *  (C) COPYRIGHT Misys International Banking Systems sa. 2001   *
+      *  (C) COPYRIGHT Finastra International Limited 2001            *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSD026             Date 05Apr05               *
-      *  Prev Amend No. LON006             Date 24May02               *
+      *  Prev Amend No. CSD026             Date 05Apr05               *
+      *                 LON006             Date 24May02               *
       *                 UTROPX  *CREATE    Date 12Dec01               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSD026 - MIDAS-TROPICS INTERFACE UPGRADE TO MIDASPLUS        *
       *  MISFIX - Add M/D indicator                                   *
       *  LON006 - Add ISO currency code to FWDRTFE message            *
@@ -559,4 +561,4 @@
       /Eject
       *****************************************************************
 **  Cpy@
-(C) Copyright Misys International Banking Systems sa. 2001
+(C) Copyright Finastra International Limited 2001

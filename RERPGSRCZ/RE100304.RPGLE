@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas RE Cash Management Member Validation')           *
@@ -12,19 +12,21 @@
       *  Function:  This program validates the 'front end' cash       *
       *             management member record.                         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD000091           Date 14May13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD000091           Date 14May13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD027             Date 09Dec05               *
       *                 CGL029             Date 01Sep03               *
       *                 CRE008  *CREATE    Date 06Mar02               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD000091 - Event Codes Substitution                          *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CGL029 - Increase Account Code to 10 digits                  *

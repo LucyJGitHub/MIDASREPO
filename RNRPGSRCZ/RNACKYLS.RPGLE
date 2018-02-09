@@ -9,17 +9,19 @@
       *                                                               *
       *  RNACKYLS   - Suppressed Account Keys Lookup Function         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *  (c) Finastra International Limited 2006                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. BUG10742           Date 03May06               *
-      *  Prev Amend No. BUG9792 *Create    Date 16Mar06               *
+      *  Prev Amend No. BUG10742           Date 03May06               *
+      *                 BUG9792  *CREATE   Date 16Mar06               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG10742 - Include checking wildcard for extended subtype.   *
       *  BUG9792  - Created for looking up if the account key is      *
       *             suppressed for extraction.                        *

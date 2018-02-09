@@ -2,7 +2,7 @@
      h fixnbr(*zoned : *inputpacked)
      h bnddir('QC2LE')
      h dftactgrp(*no) actgrp(*caller)
-     h copyright('(c) misys international banking systems ltd. 2005')
+     h copyright('(c) Finastra International Limited 2005')
  
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
@@ -13,17 +13,19 @@
       *                                                               *
       *  RNCVTCSV   - Convert Extract File to CSV Format.             *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. BUG10593           Date 15Feb06               *
-      *  Prev Amend No. CRN001  *Create    Date ddMmmyy               *
+      *  Prev Amend No. BUG10593           Date 15Feb06               *
+      *                 CRN001  *CREATE    Date DDMmmYY               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG10593 - Program needs to handle special cases where       *
       *             numeric value is zero, but null is required.      *
       *             £Note that this program cannot read in nulls      *

@@ -7,15 +7,16 @@
 /*                                                                   */
 /*       REC3650 - RETAIL ACCOUNT POSTINGS MERGE - DAILY POSTINGS    */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CER049             Date 06Dec10              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CER049             Date 06Dec10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
-/*       Prev Amend No. CSD008             Date 05Feb01              */
+/*                      CSD008             Date 05Feb01              */
 /* Midas DBA 3.04 ---------------------------------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      CPM005             Date 05Aug96              */
@@ -27,6 +28,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CER049 - Stamp Tax                                          */
 /*       CSD008 - Customer Service Fees Enhancement                  */
 /*       CPM005 - Private Banking Phase 2                            */
@@ -48,7 +50,7 @@
 /*********************************************************************/
              PGM
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(44)
              DCL        VAR(&MMOD) TYPE(*CHAR) LEN(256)
@@ -255,7 +257,7 @@ EXIT3:
                           found - REC3650')
              SNDPGMMSG  MSG(&MEM) TOMSGQ(MRUNQ MOPERQ)
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 ENDCL:
 /**/
              ENDPGM

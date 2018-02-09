@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas RE Cash Management Balance Purge Request')       *
@@ -12,10 +12,11 @@
       *  Function: This module allows requests to be made to do       *
       *            cash management balance purging.                   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. AR976539           Date 25Feb13               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR976539           Date 25Feb13               *
+      *                 CER059             Date 19Jul10               *
       *                 CER043             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -31,6 +32,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR976539 - Purge request fails. CGL029 changes missing.      *
       *             Updated expected ACOD length from 4 to 10.        *
       *             (Child:AR976540)                                  *

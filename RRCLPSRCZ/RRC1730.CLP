@@ -8,17 +8,18 @@
 /*       RRC1730 - Setup journalling file ready for conversion       */
 /*                 to PF/JRNFIL format.                              */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.01 ---------------------------------------------------*/
-/*       Last Amend No. CPB001             Date 15Jun99              */
+/*       Prev Amend No. CPB001             Date 15Jun99              */
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CPL002             DATE 08MAR99              */
+/*                      CPL002             Date 08Mar99              */
 /*                      S01408             DATE 08SEP93              */
 /*                      087083             DATE 04MAY95              */
 /*                      082565             DATE 01FEB95              */
@@ -35,6 +36,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CPB001 - Private Banking Module                             */
 /*       CPL002 - MIDAS-PLATO INTERFACE                              */
 /*       S01408 - Core Hook Added - RRC1730001                       */
@@ -71,7 +73,7 @@
              PGM
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&COUNT) TYPE(*DEC) LEN(3 0)
              DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7) VALUE(' ')
@@ -760,5 +762,5 @@
              CALL       PGM(RR1730)
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

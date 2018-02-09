@@ -7,16 +7,18 @@
 /*                                                                   */
 /*       RPC1491 - Midas RP Manage Outgoing Messages to Repair       */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2003           */
+/*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CPB010  *CREATE    Date 16Jan03              */
+/*       Prev Amend No. CPB010  *CREATE    Date 16Jan03              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CPB010 - Avoid DB Error by write message in Trace File      */
 /*                                                                   */
 /*********************************************************************/
@@ -31,7 +33,7 @@
              DCL        VAR(&Return)   TYPE(*CHAR) LEN(10)
  
              DCL        VAR(&Cpyfld)   TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2003')
  
 /*-------------------------------------------------------------------*/
@@ -117,6 +119,6 @@
  
  ENDPGM:
              CHGVAR     VAR(&Cpyfld) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

@@ -11,10 +11,11 @@
       *  Function:  This program constructs a chain of accounts from  *
       *             a supplie link up to the top of the hierarchy.    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. AR679670           Date 26Nov10               *
-      *  Prev Amend No. AR676213           Date 19Nov10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR679670           Date 26Nov10               *
+      *                 AR676213           Date 19Nov10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -26,6 +27,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR679670 - Apply fix 255837                                  *
       *  255837 - Fix overdraft validation.  Updated cleared balance  *
       *           not returned.  Set on LR indicator so that eveytime *

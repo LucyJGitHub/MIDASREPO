@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas RE Cash Mgt Chk for Sweep/Top Exceptions')       *
@@ -35,10 +35,11 @@
       *             8.   Date must not be before backvalue date       *
       *                  or over forward value date                   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CRE075             Date 06Dec10               *
-      *  Prev Amend No. AR676213           Date 19Nov10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CRE075             Date 06Dec10               *
+      *                 AR676213           Date 19Nov10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 BUG24998           Date 17Jul09               *
       *                 CSW209             Date 01Apr09               *
@@ -53,6 +54,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
       *  AR676213 - Incorrect definition of CLGLAI field (Recompile)  *
       *             (Child: AR676229)                                 *

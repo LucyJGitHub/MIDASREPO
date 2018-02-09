@@ -15,10 +15,11 @@
       *                                                               *
       *  Component of: RP1515 - Extract program for SDSECSPD          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR1057854          Date 21Nov12               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR1057854          Date 21Nov12               *
+      *                 CLE134             Date 01Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -38,6 +39,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR1057854 - Geneva Drop 01 Build Issues - RPG Program        *
       *              Compilation Error                                *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
@@ -751,4 +753,4 @@
       *****************************************************************
  
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

@@ -11,18 +11,20 @@
       *  Function:  This program determines a child account category  *
       *             for a cash management hierarchy link.             *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. B07232             Date 01Aug05               *
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *  Prev Amend No. B07232             Date 01Aug05               *
+      *                 CSD027             Date 09Dec05               *
       *                 CRE008  *CREATE    Date 19Feb02               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  B07232 - Account codes not 10 long.                          *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CRE008 - Cash Management                                     *

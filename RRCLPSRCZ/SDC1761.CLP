@@ -7,22 +7,24 @@
 /*                                                                  */
 /*       SDC1761 - Check that Input Cycle Initiation was complete   */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. 086140             DATE  29MAR95            */
-/*       PREV AMEND NO. S01343             DATE  15AUG91            */
+/*       Prev Amend No. 086140             Date 29Mar95              */
+/*                      S01343             Date 15Aug91              */
 /*                      E13205             DATE  14/02/89           */
 /*                      E00000             DATE  00/00/00           */
 /*                                                                  */
 /********************************************************************/
 /*       New program overview                                       */
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       086140 - Look for BJ entry from program ICIFINISH          */
 /*       S01343 - SC/RR/SD MODULE RENAME PROJECT.                   */
 /*                - SCC01 RENAMED FROM SDC01                        */
@@ -36,7 +38,7 @@
 /*********************************************************************/
              PGM        PARM(&SEQN)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
 /*           Declare variables                                       */
@@ -109,5 +111,5 @@
 /**/
 END:         ENDPGM
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /**/

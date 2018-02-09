@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas RE Cheques Presented Today Report')
@@ -20,18 +20,20 @@
       *             3.) the cheque numbers result in an account       *
       *                 balance exceeding its overdraft limit.        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSD031             Date 10Apr06               *
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
       *                 CRE019   *CREATE   Date 12Jan04               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CRE019 - Cheque Processing and Maintenance                   *
@@ -730,4 +732,4 @@
  
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2004
+(c) Finastra International Limited 2004

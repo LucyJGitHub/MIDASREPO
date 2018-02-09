@@ -7,20 +7,22 @@
 /*                                                                   */
 /*       REC3762 - INTEREST STATEMENT PRINT - CONSOLIDATED           */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. S01408             DATE 25JUL96              */
-/*       PREV AMEND NO. S01408             DATE 01APY96              */
+/*       Prev Amend No. S01408             Date 25Jul96              */
+/*                      S01408             Date 01Apy96              */
 /*                      S01413 *CREATE     DATE 13APR93              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       S01408 -  Addition of core hook REC3762MPE                  */
 /*       S01408  - Addition of core hook REC3762INT                  */
 /*                 Addition of core hook REC3762MPS                  */
@@ -37,7 +39,7 @@
 /*/COPY WNCPYSRC,REC3762INT                                          */
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
              DCL        VAR(&MSGF) TYPE(*CHAR) LEN(10)
@@ -73,5 +75,5 @@
              DLTOVR     FILE(*ALL)
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 ENDCL:       ENDPGM

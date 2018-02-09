@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2008')
+     H COPYRIGHT('(c) Finastra International Limited 2008')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas RE AWV Extract Program')                         *
@@ -16,10 +16,11 @@
       *                                                               *
       *  Component of: RE3664B                                        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. MD021155           Date 09Jul13               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD021155           Date 09Jul13               *
+      *                 CER059             Date 19Jul10               *
       *                 BUG24437           Date 26Jun09               *
       *                 BUG24334           Date 19Jun09               *
       *                 BUG24131A          Date 01Jun09               *
@@ -29,6 +30,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD021155 - COB Restructure Phase 1 Remnants                  *
       *           - Not changed at all - RE COB Optimisation Phase 1  *
       *  CER059 - German Feature Upgrade to Delhi                     *

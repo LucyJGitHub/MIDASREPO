@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
+     H COPYRIGHT('(c) Finastra International Limited 2011')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas RE Initialise Passbk Printing Journal Seq No')   *
@@ -11,12 +11,14 @@
       *                                                               *
       *  Called By: REC004248 - Initialisation program for CRE072     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2011            *
+      *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. CRE072 *CREATE     Date 30Jun11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CRE072 *CREATE     Date 30Jun11               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CRE072 - BankFusion Midas Teller Related Changes             *
       *                                                               *
       *****************************************************************

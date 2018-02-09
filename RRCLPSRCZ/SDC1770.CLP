@@ -7,19 +7,21 @@
 /*                                                                  */
 /*       SDC1770  - REMOVE MEMBERS FROM MULTI MEMBER FILES          */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*      (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. S01319             DATE 20SEP91             */
-/*       PREV AMEND NO. S01179            DATE 13/09/88             */
+/*       PREV AMEND NO. S01319             DATE 20SEP91             */
+/*                      S01179            DATE 13/09/88             */
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*      MD046248 - Finastra Rebranding                              */
 /*      S01319  -  Remove redundant processing                      */
 /*      S01179  -  AS400 CONVERSION                                 */
 /*                                                                  */
@@ -30,7 +32,7 @@
 PGM
 /**********  DCLDTAARA  DTAARA(MMOD)                                *  *S01179*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&MMOD) TYPE(*CHAR) LEN(256)               /*S01179*/
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO ABNOR)
@@ -67,6 +69,6 @@ PGM
              CHGJOB     SWS(XXXXXX1X)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /**/
 END:          ENDPGM

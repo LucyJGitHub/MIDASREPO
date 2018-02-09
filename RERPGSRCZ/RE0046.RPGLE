@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+     H COPYRIGHT('(c) Finastra International Limited 2010')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas RE Account Transfer Extract')                    *
@@ -14,10 +14,11 @@
       *             what should be reported by the Retail Advice      *
       *             function.                                         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. AR1075388          Date 21Nov13               *
-      *  Prev Amend No. AR845655           Date 06Oct11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR1075388          Date 21Nov13               *
+      *                 AR845655           Date 06Oct11               *
       *                 CRE067             Date 05Oct10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 BUG27563           Date 27Apr10               *
@@ -27,6 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR1075388 - Account transfer fees - net (Child:AR1075389)    *
       *              Applied for MD-23536 (Recompile)                 *
       *  AR845655 - Update datatype of Paying Bank to Alphanumeric    *

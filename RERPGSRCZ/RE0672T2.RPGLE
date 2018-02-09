@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
+     H COPYRIGHT('(c) Finastra International Limited 2011')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas RE Shadow Post Update - Copy Records')           *
@@ -9,12 +9,14 @@
       *                                                               *
       *  RE0672T2 - Midas RE Shadow Post Update - Copy Records        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. CSC056  *CREATE    Date 06Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CSC056  *CREATE    Date 06Aug12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSC056 - COB Restructure - SC COB Optimisation Phase 1       *
       *                                                               *
       *****************************************************************

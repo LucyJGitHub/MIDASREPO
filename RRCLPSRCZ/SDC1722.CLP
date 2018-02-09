@@ -7,16 +7,17 @@
 /*                                                                  */
 /*       SDC1722 - APPLY JOURNAL CHANGES TO THE DATABASE            */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Last Amend No. BG18886       DATE   23May08                */
+/*       Prev Amend No. BG18886            Date 23May08              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. E24168        DATE   3FEB92                 */
+/*                      E24168             Date 3FEb92               */
 /*                      E20839        DATE  28FEB90                 */
 /*                      E16249        DATE  25NOV89                 */
 /*                      E13205        DATE  14/02/89                */
@@ -25,6 +26,7 @@
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BG18886 - Amend non-standard codes.                        */
 /*       E24168 - WHEN CPF7067 OR CPF7049 OCCURS, THE PROGRAM       */
 /*                SHOULD GO TO ABNOR, NOT CONTINUE PROCESSING.      */
@@ -55,7 +57,7 @@
 /*   INITIAL PROCESSING                                             */
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&FRPNT) TYPE(*DEC) LEN(10 0)
              DCL        VAR(&TOPNT) TYPE(*DEC) LEN(10 0)
@@ -374,7 +376,7 @@ ABNOR:       SNDPGMMSG  MSG('PROGRAM - Apply Journal Changes to the Database +
              CHGJOB     SWS(XXXXXX1X)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /**/
 END:         ENDPGM
 /**/

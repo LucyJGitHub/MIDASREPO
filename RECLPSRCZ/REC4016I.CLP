@@ -7,13 +7,15 @@
 /*                                                                   */
 /*       REC4016I- Midas RE T&N Rate Changes at rollover             */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2009           */
+/*       (c) Finastra International Limited 2009                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
-/*       Last Amend No. CRE015 *CREATE     Date 18Dec09              */
+/*       Prev Amend No. CRE015 *CREATE     Date 18Dec09              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CRE015  - Retail Term & Notice Accounts                     */
 /*                                                                   */
 /*********************************************************************/
@@ -45,7 +47,7 @@
              DCL        VAR(&CMTCTL) TYPE(*CHAR) LEN(1)
              DCL        VAR(&ZERR) TYPE(*CHAR) LEN(7)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2009')
 /**/
 /* Global Monitor Message */
@@ -155,7 +157,7 @@ DATAERR:
              CHGJOB     SWS(XXXXXX00)
  
  
-             CHGVAR     VAR(&CPYFLD) VALUE('(c) Misys International +
-                          Banking Systems Ltd. 2009' )
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International +
+                          Limited 2009' )
  
              ENDPGM

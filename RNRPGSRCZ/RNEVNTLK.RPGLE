@@ -9,17 +9,19 @@
       *                                                               *
       *  RNEVTLKP   - Event Lookup function                           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. BUG9792            Date 04Apr06               *
-      *  Prev Amend No. BUG10439           Date 14Feb06               *
+      *  Prev Amend No. BUG9792            Date 04Apr06               *
+      *                 BUG10439           Date 14Feb06               *
       *                 BUG10017           Date 20Jan06               *
       *                 CRN001  *Create    Date ddMmmyy               *
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *---------------------------------------------------------------*
       *  BUG9792  -  Event rule validation enhancement: apply         *
       *              suppression rules first.                         *

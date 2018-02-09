@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas RE ABC Data Queue Recovery')                     *
@@ -16,12 +16,14 @@
       *                                                               *
       *  Called By: REC001501 - Account Balance Check Update job      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. AR1089591 *CREATE  Date 05Apr13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR1089591 *CREATE  Date 05Apr13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR1089591 - ABC Data Queue Recovery Process                  *
       *              (Child:AR1089593)                                *
       *            - Applied for MD019899                             *

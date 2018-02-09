@@ -7,10 +7,11 @@
 /*                                                                   */
 /*       REC4202 - Teller/Batch Transaction Journal Print            */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD045831           Date 02Jun17              */
-/*       Prev Amend No. CCB023             Date 06Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD045831           Date 02Jun17              */
+/*                      CCB023             Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /*                      BG18886            Date 28May08              */
@@ -25,6 +26,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD045831 - Report shows all teller transaction even though  */
 /*                  single teller is specified in selection criteria */
 /*       CCB023 - COB Restructure - Input Cycle Termination          */
@@ -44,7 +46,7 @@
              PGM PARM(&RSEQ &RLEV &RENT &RPARM)
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL       VAR(&LDA)   TYPE(*CHAR)  LEN(256) VALUE(' ')
 /**/
@@ -208,7 +210,7 @@ ABNOR:
 /**/
 /**/
 ENDPGM:      CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              IF         COND(&ATBID *NE ' ') THEN(DO)                                     /*CCB023*/
              SCRUNSQL   SQL('DROP ALIAS' *BCAT &ATBID)                                    /*CCB023*/
              ENDDO                                                                        /*CCB023*/

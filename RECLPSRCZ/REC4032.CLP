@@ -7,16 +7,17 @@
 /*                                                                   */
 /*       REC4032 - Savings A/C Passbook Print/Update                 */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. BUG8085            Date 26Aug05              */
+/*       Prev Amend No. BUG8085            Date 26Aug05              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CPK009             Date 09Aug99              */
+/*                      CPK009             Date 09Aug99              */
 /*                      148202             Date 19NOV98              */
 /*                      118134             Date 02Jun97              */
 /*                      CRT003             Date 22JUL96              */
@@ -26,6 +27,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BUG8085 - Print to teller printer, change Standard Parameter*/
 /*       CPK009 - Packaging for DBA3 release. STRCMTCTL values set   */
 /*                to CMTSCOPE(*JOB).                                 */
@@ -43,7 +45,7 @@
              PGM        PARM(&AUTH &PMODE)                            /*CRT002*/
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&AUTH) TYPE(*CHAR) LEN(1)
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
@@ -143,7 +145,7 @@
              MONMSG     MSGID(CPF0000 MCH0000)
 /**/
 ENDPGM:      CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /**/                                                                  /*CRT002*/
              IF         COND(&PMODE = 'P') THEN(DO)                   /*CRT002*/
                CHGVAR   VAR(&ACTN) VALUE('D')                         /*CRT003*/

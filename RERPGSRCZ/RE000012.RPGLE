@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c)Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas RE Account Balance Check Warning Report')        *
@@ -15,10 +15,11 @@
       *             case, it will identify and print all the move-    *
       *             ments on that particular account.                 *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c)Finastra International Limited 2004                       *
       *                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
-      *  Prev Amend No. CRE095             Date 25Apr14               *
+      *  Last Amend No. MD046248           Date 05Feb18               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CRE095             Date 25Apr14               *
       *                 CGL165             Date 15Feb17               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -44,6 +45,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CRE095 - Rate Fixing for RE Accounts (Recompile)             *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -74,49 +76,49 @@
      FRE000012AUO    E             PRINTER
      F                                     INFDS(SPOOLU)
       ** RPT: Account Balance Checking Warnings Report - Audit
- 
+
      FRE000012P1O    E             PRINTER USROPN
      F                                     INFDS(SPOOL1)
       ** RPT: Account Balance Checking Warnings Report
- 
+
      FRSACMTL8  IF   E           K DISK
       ** Account Movements by BRCA/CUSN/CCYD/ACDE/ASNC
                                                                                               CRE010
      FFFACMV3   IF   E           K DISK                                                       CRE010
       ** Account Movements by BRCA/CUSN/CCYD/ACDE/ASNC/VUDT (Futures&Options)                 CRE010
- 
+
      FACCNTJ1   IF   E           K DISK    INFSR(*PSSR)
       ** Joined ACCNTAB/GLACNTQD by BRCA/CNUM/CCY/ACOD/ACSQ (RECI = 'D' & ATYP = 'R')
- 
+
      FMEMOSL2   IF   E           K DISK
       ** Shadow balances by retail a/c number
- 
+
      FFXDEALLL  IF   E           K DISK
       ** FX Deals File
- 
+
      FMMDEALLL  IF   E           K DISK
       ** MM Deals File                                                                        CRE010
       ***FX*Deals*File                                                                        CRE010
                                                                                               CRE010
      FDLDLDGLE  IF   E           K DISK                                                       CRE010
       ** FRA/IRS Deals                                                                        CRE010
- 
+
      FDEAMSD    IF   E           K DISK
       ** Deal Amendments File
- 
+
      FLOAMSOM4  IF   E           K DISK
       ** Loan Amendments File
- 
+
      FSETRADL3  IF   E           K DISK
       ** Trades File
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
      D CPY@            S             80    DIM(1) CTDATA PERRCD(1)
       ** Array containing Copyright statement
      D TArr            S             30    DIM(50) CTDATA PERRCD(1)
- 
+
       /SPACE 3
      D LDA           E DS           256    EXTNAME(LDA)
       *
@@ -129,56 +131,56 @@
       **                                    171 180 DBPGM
       **                                    181 1830DBASE
       *
- 
+
      D RUNDAT        E DS                  EXTNAME(RUNDAT)
       ** Data Area giving Installation Control Details
- 
+
      D PSDS           SDS
       ** Program Status Data Structure
      D  PGM              *PROC
      D  WSID                 244    253
      D  USER                 254    263
- 
+
      D SPOOL1          DS
       ** File Information Data Structure for RE000012P1
      D  SFILE1                83     92
      D  SFNUM1               123    124B 0
      D  OFLLN1               188    189B 0
      D  PRTLN1               367    368B 0
- 
+
      D SPOOLU          DS
       ***  File Information Data Structure for RE000012AU
      D  SFILEU                83     92
      D  SFNUMU               123    124B 0
- 
+
       ***  Dummy Data Structures used by Access Programs.
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ***  External data structures for Bank Details
- 
+
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
       ***  External data structures for Branch Details
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ***  External data structures for Currency Details
- 
+
      D SDNOST        E DS                  EXTNAME(SDNOSTPD)
       ***  External data structures for Nostro Details
       *                                                                                       CAP204
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CAP204
       ** Switcable Features file                                                              CAP204
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ***  Short data structures for Access Objects
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** Long data structure for access objects
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D                 DS
      D  R1PSTA                 1     21
      D  WkAmt                  1     19
@@ -254,7 +256,7 @@
      D WkAvBalX        S             15  0                                                   BUG4596
      D R1CLBL          S             21                                                      BUG4596
      D CLE134          S              1                                                       CLE134
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -262,7 +264,7 @@
                                                                                               CRE010
      IFFACMVDF                                                                                CRE010
      I              NRTC                        NRTCX                                         CRE010
- 
+
       *****************************************************************
       /SPACE 3
       *****************************************************************
@@ -270,10 +272,10 @@
       *================================================================
       *  P R O G R A M   S T A R T                                    *
       *================================================================
- 
+
       ** Perform Detail Processing.
      C                   EXSR      SRProcess
- 
+
       ** Output Audit Report and End Program.
      C                   EXSR      SRAudit
       *
@@ -287,15 +289,15 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
       ** Set up copyright parameter
      C                   MOVEA     CPY@          ACT@             80
- 
+
       ** Receive Parameter List.
      C     *ENTRY        PLIST
      C                   PARM                    PSequ
      C                   PARM                    PEnty
- 
+
       ** Receive Parameter List.
      C     KAccnt        KLIST
      C                   KFLD                    BRCA
@@ -303,13 +305,13 @@
      C                   KFLD                    CCY
      C                   KFLD                    ACOD
      C                   KFLD                    ACSQ
- 
+
       ** Initialise LDA field.
      C     *DTAARA       DEFINE                  LDA
      C     *LOCK         IN        LDA
      C                   MOVEL     'RE000012'    DBPGM
      C                   OUT       LDA
- 
+
      C
       ** Call Access Program for Bank Details - Title, Run Date and
       ** Run Day Number.
@@ -317,7 +319,7 @@
      C                   PARM      '*MSG   '     PRtCd
      C                   PARM      '*FIRST '     POptn
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Handle Database Error.
      C                   IF        PRtCd <> *BLANKS
      C     *LOCK         IN        LDA
@@ -327,12 +329,12 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Check System Date Format, DDMMYY (*IN98 off) ; MMDDYY (*IN98 on)
      C                   IF        BJDFIN = 'M'
      C                   MOVE      *ON           *IN98
      C                   ENDIF
- 
+
       ***Call*Access Program for System Values                                               BUG4596
      C**********         EVAL      PValK1 = 'CheckMinimumBalance'                            BUG4596
      C**********         CALL      'AOSVALR0'                                                BUG4596
@@ -406,28 +408,28 @@
      C                   ELSE                                                                 CLE134
      C                   EVAL      CLE134 = 'N'                                               CLE134
      C                   ENDIF                                                                CLE134
- 
+
       ** Access RUNDAT for multibranching indicator
      C     *DTAARA       DEFINE                  RUNDAT
      C                   IN        RUNDAT
- 
+
      C                   IF        AGMBIN = 'Y'
      C                   MOVE      *ON           *IN37
      C                   ENDIF
- 
+
       ** Ensure Audit Spool File recorded by RCF.
      C                   MOVEL     SFILEU        PSFile
      C                   Z-ADD     SFNUMU        PZSNum
- 
+
      C                   EXSR      SRRCFProc
- 
+
       ** Report Work fields.
      C                   Z-ADD     0             RQDLN1
      C                   Z-ADD     0             DIFLN1
- 
+
       ** Initialise report fields
      C                   EXSR      SRInitFld
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -437,57 +439,57 @@
       *                                                               *
       *****************************************************************
      C     SRProcess     BEGSR
- 
+
       ** Check If Only a Single Branch is to be Reported
      C                   IF        PEnty <> 'ALL' AND PEnty <> '   '
      C     PEnty         SETLL     ACCNTJ1
      C                   ENDIF
- 
+
       ** Read first record from File.
      C                   READ      ACCNTJ1                                89
- 
+
       ** Do While not End of File
      C                   DOW       *IN89 = *OFF AND PEnty <> 'ALL' AND
      C                             PEnty <> '   ' AND PEnty = BRCA OR
      C                             *IN89 = *OFF AND PEnty = 'ALL' OR
      C                             *IN89 = *OFF AND PEnty = '   '
- 
+
       ** Check if Nostro
      C                   EXSR      SRChkIfNost
- 
+
      C                   IF        WkNostro = 'N' AND F1IABC = 'Y'
- 
+
       ** Check if Overdrawn for the day
       ** or below minimum balance                                                            BUG4596
      C                   EXSR      SRChkIfOvrD
- 
+
       ** If Overdrawn, report
      C                   IF        WkOvrDrw = 'Y'
      C                             OR WkBlwMnm = 'Y'                                         BUG4596
- 
+
       ** Process Report Lines.
      C                   EXSR      SRReport
- 
+
       ** Count records read.
      C                   ADD       1             RCOUNT
- 
+
       ** Endif for If overdrawn
      C                   ENDIF
- 
+
       ** Endif for If nostro
      C                   ENDIF
- 
+
       ** Read next record.
      C                   READ      ACCNTJ1                                89
- 
+
       ** End of Do Until End of Valid Records.
      C                   ENDDO
- 
+
       ** Write End of Report.
      C                   IF        WkOpen = *ON
      C                   EXSR      SRWriteEnd
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -498,13 +500,13 @@
       *                                                               *
       *****************************************************************
      C     SRChkIfNost   BEGSR
- 
+
      C                   MOVE      BRCA          PBrCd
      C                   MOVE      CNUM          PCNum
      C                   MOVE      CCY           PCcy
      C                   MOVE      ACOD          PAcCd
      C                   MOVE      ACSQ          PAcSq
- 
+
      C                   CALL      'AONOSTR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*VERIFY'     POptn
@@ -517,7 +519,7 @@
      C                   PARM      *BLANKS       PCsSn
      C                   PARM      *BLANKS       PPNoI
      C     SDNOST        PARM      *BLANKS       DSFDY
- 
+
      C                   IF        PRtCd <> *BLANKS AND PRtCd <> '*NRF   '
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SDNOSTPD'
@@ -545,12 +547,12 @@
       *                                                               *
       *****************************************************************
      C     SRChkIfOvrD   BEGSR
- 
+
      C                   EVAL      WkOvrDrw = 'N'
      C                   EVAL      WkBlwMnm = 'N'                                            BUG4596
- 
+
      C     ACNO          CHAIN     MEMOSL2                            90
- 
+
      C                   IF        *IN90 = *OFF
      C                   Z-SUB     CLBLN         WkCLBLN
      C                   Z-SUB     CLBL          WkCLBL
@@ -561,7 +563,7 @@
      C                   EVAL      WkAvBalM = WkCLBLN - HELD - BCOA
      C                   EVAL      WkAvBalA = WkCLBL  - HELD - BCOA
      C                   EVAL      WkAvBalX = WkCLBLN - WkMINB                               BUG4596
- 
+
      C**********         IF        ODED >= BJRDNB AND ODLN <> *ZERO                          BUG4596
      C**********         ADD       ODLN          WkAvBalM                                    BUG4596
      C**********         ADD       ODLN          WkAvBalA                                    BUG4596
@@ -574,7 +576,7 @@
      C                   ADD       WkODLN        WkAvBalM                                    BUG4596
      C                   ADD       WkODLN        WkAvBalA                                    BUG4596
      C                   ENDIF
- 
+
      C                   IF        WkAvBalX < *ZERO AND MINB <> 0                            BUG4596
      C                   EVAL      WkBlwMnm = 'Y'                                            BUG4596
      C                   ENDIF                                                               BUG4596
@@ -582,9 +584,9 @@
      C                   IF        WkAvBalM < *ZERO
      C                   EVAL      WkOvrDrw = 'Y'
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -594,54 +596,54 @@
       *                                                               *
       *****************************************************************
      C     SRReport      BEGSR
- 
+
       ** Branch Level Break
      C                   IF        BRCA <> A8BRCD
- 
+
      C                   IF        WkOpen = *ON
       ** Check that sufficient lines remain for the Format. If not,
       ** write out the Main Headings on a new page.
      C                   Z-ADD     4             RQDLN1
      C                   EVAL      DIFLN1 = OFLLN1 - PRTLN1
- 
+
      C                   IF        DIFLN1 <= RQDLN1
      C                   WRITE     RE000012R0
      C                   EXSR      SRWriteAccD
      C                   ENDIF
- 
+
      C                   WRITE     RE000012R4
      C                   CLOSE     RE000012P1
      C                   ENDIF
- 
+
       ** Open RE000012P1 and register in RCF
      C                   OPEN      RE000012P1
      C                   MOVE      *ON           WkOpen
- 
+
       ** Ensure Report Spool File recorded by RCF.
      C                   MOVE      SFILE1        PSFile
      C                   Z-ADD     SFNUM1        PZSNum
- 
+
      C                   EXSR      SRRCFProc
- 
+
      C                   MOVEL     BRCA          A8BRCD
      C                   EVAL      PBrca = BRCA
      C                   EXSR      SRGetBrchD
- 
+
       ** Write out the Header
      C                   WRITE     RE000012R0
      C                   ENDIF
- 
+
      C                   EXSR      SRWriteAccD
- 
+
       ** Set report detail fields
      C                   EXSR      SRReadRSAC
                                                                                               CRE010
       ** Set report detail fields for records read from FFACMVD                               CRE010
      C                   EXSR      SRReadFFAC                                                 CRE010
- 
+
       ** Initialize Report Fields
      C                   EXSR      SRInitFld
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -651,15 +653,15 @@
       *                                                               *
       *****************************************************************
      C     SRReadRSAC    BEGSR
- 
+
      C     KAccnt        SETLL     RSACMTL8
      C     KAccnt        READE     RSACMTL8
- 
+
      C                   IF        NOT(%EOF(RSACMTL8)) AND VUDT <= BJRDNB
      C                   EXSR      SRWriteTrnH
      C                   EVAL      WkRSAC = 'Y'                                               CRE010
      C                   ENDIF
- 
+
      C                   DOW       NOT(%EOF(RSACMTL8)) AND VUDT <= BJRDNB
                                                                                               CLE134
       ** Process auto-settle = 'C' the same way as 'N', therefore movement in shadow          CLE134
@@ -682,7 +684,7 @@
      C                   EXSR      SRWriteTrnD
      C     KAccnt        READE     RSACMTL8
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************                       CRE010
       /EJECT                                                                                  CRE010
@@ -716,7 +718,7 @@
       *                                                               *
       *****************************************************************
      C     SRInitFld     BEGSR
- 
+
      C                   EVAL      R1ACNO = *BLANKS
      C                   EVAL      R1CURR = *BLANKS
      C                   EVAL      R1CLBL = *BLANKS
@@ -737,7 +739,7 @@
      C                   EVAL      WkAvBalX = *ZEROS                                         BUG4596
      C                   EVAL      WkRSAC = 'N'                                               CRE010
      C                   EVAL      WkFrACMV = 'N'                                             CRE010
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -748,10 +750,10 @@
       *                                                               *
       *****************************************************************
      C     SRSetRTrnD    BEGSR
- 
+
       ** Determine Transaction Types
      C                   MOVEL     TNMR          WkTNMR                                       CRE010
- 
+
      C**********         SELECT                                                               CRE010
       **********                                                                              CRE010
       ***Common*                                                                              CRE010
@@ -1036,7 +1038,7 @@
      C                   IF        R1TYPE = *BLANKS                                           CRE010
      C                   EVAL      R1TYPE = TArr(26)                                          CRE010
      C                   ENDIF                                                                CRE010
- 
+
      C                   IF        FUND <> *BLANKS
      C                   MOVEL     FUND          R1REFR
      C                   ELSE
@@ -1046,7 +1048,7 @@
      C                   MOVEL     TNMR          R1REFR
      C                   ENDIF                                                                CAP204
      C                   ENDIF
- 
+
       ** Format Movement Amount
      C                   EVAL      PFld15 = MVAM
      C                   EXSR      SRFmtAmt
@@ -1056,20 +1058,20 @@
      C                   ELSE
      C                   EVAL      WkInd = 'DR'
      C                   ENDIF
- 
+
      C                   MOVEL     NRTD          R1NARR
- 
+
       ** Compute and Format Project Available Amount
      C                   IF        DORC = 1
      C                   ADD       MVAM          WkAvBalA
      C                   ELSE
      C                   SUB       MVAM          WkAvBalA
      C                   ENDIF
- 
+
      C                   EVAL      PFld15 = WkAvBalA
      C                   EXSR      SRFmtAmt
      C                   EVAL      R1PROJ = ZOut21
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1136,11 +1138,11 @@
       *                                                               *
       *****************************************************************
      C     SRSetRAccD    BEGSR
- 
+
      C                   MOVE      ACNO          R1ACNO
- 
+
      C                   EVAL      R1CURR = CCY
- 
+
       ** Format Cleared Balance
      C                   EVAL      PCcy = CCY
      C                   EXSR      SRGetCurrD
@@ -1158,28 +1160,28 @@
      C                   MOVE      'C'           R1CLBL                                      BUG4596
      C                   EVAL      R1CLBLX = R1CLBL + 'R'                                    BUG4596
      C                   ENDIF                                                               BUG4596
- 
+
       ** Format Overdraft Expiry Date
      C                   EVAL      PDayNo = ODED
      C                   EXSR      SRFmtDate
      C                   MOVE      PDateN        R1OVEX
- 
+
       ** Format Overdraft Amount
      C**********         EVAL      PFld15 = ODLN                                             BUG4596
      C                   EVAL      PFld15 = WkODLN                                           BUG4596
      C                   EXSR      SRFmtAmt
      C                   EVAL      R1OVAM = ZOut21
- 
+
       ** Format Held Amount
      C                   EVAL      PFld15 = HELD
      C                   EXSR      SRFmtAmt
      C                   EVAL      R1HELD = ZOut21
- 
+
       ** Format Blocked Collateral Amount
      C                   EVAL      PFld15 = BCOA
      C                   EXSR      SRFmtAmt
      C                   EVAL      R1BCOA = ZOut21
- 
+
       ** Format Available Balance
      C                   EVAL      PFld15 = WkAvBalA
      C                   EXSR      SRFmtAmt
@@ -1189,7 +1191,7 @@
      C                   EVAL      PFld15 = WkMINB                                           BUG4596
      C                   EXSR      SRFmtAmt                                                  BUG4596
      C                   EVAL      R1MINB = ZOut21                                           BUG4596
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1199,13 +1201,13 @@
       *                                                               *
       *****************************************************************
      C     SRFmtAmt      BEGSR
- 
+
      C                   CALL      'ZSEDIT'
      C                   PARM                    PFld15
      C                   PARM                    PDecs
      C                   PARM      'J'           PECode
      C                   PARM      *BLANKS       Zout21
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1215,13 +1217,13 @@
       *                                                               *
       *****************************************************************
      C     SRFmtDate     BEGSR
- 
+
      C                   CALL      'ZDATE2'
      C                   PARM                    PDayNo
      C                   PARM                    BJDFIN
      C                   PARM      *ZERO         PDateN
      C                   PARM      *BLANKS       PDateA
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1231,14 +1233,14 @@
       *                                                               *
       *****************************************************************
      C     SRGetBrchD    BEGSR
- 
+
       ** Call Access Program for Branch Details.
      C                   CALL      'AOBRCHR1'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*KEY   '     POptn
      C                   PARM                    PBrca
      C     SDBRCH        PARM      SDBRCH        DSSDY
- 
+
       ** Handle Database Error.
      C                   IF        PRtCd <> *BLANKS
      C     *LOCK         IN        LDA
@@ -1248,7 +1250,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       *
@@ -1260,13 +1262,13 @@
       *                                                               *
       *****************************************************************
      C     SRGetCurrD    BEGSR
- 
+
      C                   CALL      'AOCURRR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*KEY   '     POptn
      C                   PARM                    PCcy
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C                   IF        PRtCd <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SDCURRPD'
@@ -1275,7 +1277,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1286,7 +1288,7 @@
       *                                                               *
       *****************************************************************
      C     SRWriteTrnH   BEGSR
- 
+
       ** Check that sufficient lines remain for the Format. If not,
       ** write out the Main Headings on a new page.
      C                   Z-ADD     3             RQDLN1
@@ -1295,10 +1297,10 @@
      C                   WRITE     RE000012R0
      C                   EXSR      SRWriteAccD
      C                   ENDIF
- 
+
       ** Write out Detail Record.
      C                   WRITE     RE000012R2
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1309,7 +1311,7 @@
       *                                                               *
       *****************************************************************
      C     SRWriteAccD   BEGSR
- 
+
       ** Check that sufficient lines remain for the Format. If not,
       ** write out the Main Headings on a new page.
      C**********         Z-ADD     1             RQDLN1                                      BUG4596
@@ -1318,11 +1320,11 @@
      C                   IF        DIFLN1 <= RQDLN1
      C                   WRITE     RE000012R0
      C                   ENDIF
- 
+
       ** Write out Detail Record.
      C                   EXSR      SRSetRAccD
      C                   WRITE     RE000012R1
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1333,7 +1335,7 @@
       *                                                               *
       *****************************************************************
      C     SRWriteTrnD   BEGSR
- 
+
       ** Check that sufficient lines remain for the Format. If not,
       ** write out the Main Headings on a new page.
      C                   Z-ADD     1             RQDLN1
@@ -1343,11 +1345,11 @@
      C                   EXSR      SRWriteAccD
      C                   EXSR      SRWriteTrnH
      C                   ENDIF
- 
+
       ** Write out Detail Record.
      C                   EXSR      SRSetRTrnD
      C                   WRITE     RE000012R3
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1357,7 +1359,7 @@
       *                                                               *
       *****************************************************************
      C     SRWriteEnd    BEGSR
- 
+
       ** Check that sufficient lines remain for the Format. If not,
       ** write out the Main Headings on a new page.
      C**********         Z-ADD     6             RQDLN1                                      BUG4596
@@ -1368,10 +1370,10 @@
      C                   WRITE     RE000012R1
      C                   WRITE     RE000012R2
      C                   ENDIF
- 
+
       ** Write out Total Format.
      C                   WRITE     RE000012R4
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1384,28 +1386,28 @@
       *                                                               *
       *****************************************************************
      C     SRAudit       BEGSR
- 
+
       ** Output Report Header and File Controls.
      C                   WRITE     HEADAU
      C                   WRITE     CONTROL
- 
+
       ** If there is a DB Error, Output the DB Error Information.
      C                   IF        *INU7 = *ON
      C                   WRITE     DBERROR
      C                   ELSE
- 
+
       ** Or, if no records read, Output "No Details" message.
      C     RCOUNT        IFEQ      0
      C                   WRITE     NODTLS
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** End Program and Return.
      C                   MOVE      *ON           *INLR
- 
+
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1415,7 +1417,7 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
       ** Check to see that *PSSR has not already been called.
      C                   IF        WRun = *BLANKS
      C                   EVAL      WRun = 'Y'
@@ -1425,13 +1427,13 @@
      C                   DUMP
      C                   EXSR      SRAudit
      C                   ENDIF
- 
+
       ** If *PSSR already run, then just end the program here.
      C                   MOVE      *ON           *INU7
      C                   MOVE      *ON           *INU8
      C                   MOVE      *ON           *INLR
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1441,14 +1443,14 @@
       *                                                               *
       *****************************************************************
      C     SRRCFProc     BEGSR
- 
+
      C                   CALL      'ZSFILE'
      C                   PARM                    PSequ
      C                   PARM                    PEnty
      C                   PARM                    PSFile
      C                   PARM                    PZSNum
      C                   PARM      *BLANKS       PZSErr
- 
+
       ** If Error occurs during ZSFILE processing, then return to the
       ** Calling Program.
      C                   IF        PZSErr = 'Y'
@@ -1457,11 +1459,11 @@
      C                   MOVE      *ON           *INLR
      C                   RETURN
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2004
+(c)Finastra International Limited 2004
 **  TArr
 Journal Entries
 Repos/Pledge Dep./Bond Lend.                                                                  CRE010

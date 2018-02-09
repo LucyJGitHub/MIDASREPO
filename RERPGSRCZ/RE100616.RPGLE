@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas RE Determine Today's Debit Totals')              *
@@ -12,11 +12,12 @@
       *  Function:  This program determines the count and value       *
       *             of debits made to an account today.               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. AR976539           Date 25Feb13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR976539           Date 25Feb13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Prev Amend No. CAP204             Date 03Mar10               *
+      *                 CAP204             Date 03Mar10               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       *                 245968             Date 26Feb07               *
@@ -27,6 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR976539 - Purge request fails. CAP204 should be reversed.   *
       *             (Child:AR976540)                                  *
       *  CAP204 - Retail Account Transfer                             *

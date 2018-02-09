@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2001')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas RP Midas-Plato interface pre-proc PF/DEALSDC')   *
@@ -22,10 +22,11 @@
       * --                                                            *
       *  DEALSDC  - Format of PF/DEALSDC joined with Ins/Amd Ind="A"  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
-      *  Prev Amend No. CGL165             Date 15Feb17               *
+      *  Last Amend No. MD046248           Date 05Feb18               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CGL165             Date 15Feb17               *
       *                 CDL096             Date 22Sep14               *
       *                 MD030364           Date 10Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -46,6 +47,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
@@ -81,66 +83,66 @@
      FDEALS     IF   E           K DISK    PREFIX(D)                            177415
      FDEAMS     IF   E           K DISK    IGNORE(DEAMSDHF:DEAMSDJF)
      F                                     PREFIX(A)
- 
+
       /EJECT
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
       ** +--------------------------------------+
- 
+
       * Following /COPY is the procedure prototype for the Format routine
       /COPY RPCPYSRC,RPFMTPPF
- 
+
       ** The following /COPY contains various standard declares
      C***/COPY*RPCPYSRC,Std_Dcl                                                             MD030364
      C/COPY RPCPYSRC,STD_DCL                                                                MD030364
- 
+
       ** The following /COPY contains the layout of the Meridian header as
       ** a data structure
      C***/COPY*RPCPYSRC,Mdn_Hd_DS                                                           MD030364
      C/COPY RPCPYSRC,MDN_HD_DS                                                              MD030364
- 
+
       **   Composite Data
      D CompData        S                   LIKE(TransData) INZ(*BLANKS)
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       **   Format for PF/DEALSDC
      D DEALSDCds     E DS                  EXTNAME(DEALSDC)
      D                                     PREFIX(D)
- 
+
       **   Format for PF/DEAMSDI
      D DEAMSDIds     E DS                  EXTNAME(DEAMSDI)
      D                                     PREFIX(A)
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       **   Key to PF/DEAMSDI.
      D@KDEAMSds        DS
      D @KDLNOA                 1      6A
      D @KDLNO                  1      6S 0
      D @KVDAT          S                   LIKE(AVDAT)
- 
+
       ** Parameters
       **   Parameters for ProcFormat
      D   InData        S                   LIKE(TransData) INZ(*Blanks)
@@ -149,130 +151,130 @@
      D   InShwPosSn    S              1A   INZ('N')
       **   Output queue name
      D OutQueue2       S                   LIKE(MQSQueue)
- 
+
      DOutParms         DS
      D   OutData                           LIKE(TransData) INZ(*BLANKS)
      D   OutLen                       4S 0 INZ(*ZERO)
- 
+
      DSavParms         DS
      D   SavData                           LIKE(TransData) INZ(*BLANKS)
      D   SavLen                            LIKE(OutLen) INZ(*ZERO)
- 
+
      DWrkParms         DS
      D   WrkData                           LIKE(TransData) INZ(*BLANKS)
      D   WrkLen                            LIKE(OutLen) INZ(*ZERO)
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
       *****************************************************************
       /EJECT
- 
+
       ** +--------------------------------------+
       ** ¦ Start F-specs                        ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
      C* Output a message for the record format received for PF/DEALSDC,
      C*  joined to an "Insert/Amend Indicator" set to "I".
- 
+
      C* Extract the Deal Number from the data input.
- 
+
      C                   Eval      @KDLNOA = %subst(TransData:24:6)
- 
+
      C* Access original record on PF/DEALSDC.
- 
+
      C     @KDLNO        Chain     DEALSDCF                           90
- 
+
       ** If error then perform any special processing and exit
      C                   If        *IN90 <> '0'
      C                   Exsr      *PSSR
      C                   EndIf
- 
+
      C* Access the latest Deal Amendment to get the Value Date.
      C                   Eval      @KDLNO   = DDLNO
      C                   Eval      @KVDAT   = *HIVAL
      C     @KDEAMS       SetGt     DEAMSDIF
      C                   ReadP     DEAMSDIF                               90
- 
+
      C* If record found for deal, set the Deal Amendment Value Date to be
      C*  the latest date, rather than the first date.
      C     *IN90         IfEq      '0'
      C     ADLNO         AndEq     @KDLNO
      C                   Eval      DDAVD    = AVDAT
      C                   EndIf
- 
+
      C* Format the data from PF/DEALSDC for Meridian.
- 
+
      C                   Eval      InData   = DEALSDCds
      C                   Eval      InDBFile = 'DEALSDC   '
      C                   Eval      OutParms = ProcFormat(InData:InDBFile:
      C                                                   InDecSep:InShwPosSn)
- 
+
      C* Save the formatted record from DEALSDC.
- 
+
      C                   Eval      SavParms = OutParms
- 
+
      C* Append the Action Code indicator at the end of the record.
- 
+
      C                   Reset                   WrkData
      C                   Eval      WrkData  = OutData
      C                   Eval      %subst(WrkData:OutLen) = 'I'
- 
+
      C* Send the message for DEALSDC.
- 
+
      C                   Eval      RAMSGTYPE=('DEALSDC_A')
      C                   Exsr      #SNDMSG
- 
+
      C* Read all Deal Amendments for the deal being processed.
- 
+
      C     @KDLNO        SetLL     DEAMSDIF
      C     @KDLNO        ReadE     DEAMSDIF                               80
- 
+
      C     *IN80         DowEq     '0'
- 
+
      C* Format the data from PF/DEAMSDI for Meridian.
- 
+
      C                   Eval      InData   = DEAMSDIds
      C                   Eval      InDBFile = 'DEAMSDI   '
      C                   Eval      OutParms = ProcFormat(InData:InDBFile:
      C                                                   InDecSep:InShwPosSn)
- 
+
      C* Output a message for the record format for PF/DEAMSDI, joined
      C* with the record format received for PF/DEALSDC.
- 
+
      C                   Reset                   WrkData
      C                   Eval      WrkData  = SavData
      C                   Eval      %subst(WrkData:SavLen) = OutData
- 
+
      C* Send the message for DLAMDDLC.
- 
+
      C                   Eval      RAMSGTYPE=('DLAMDDLC_A')
      C                   Exsr      #SNDMSG
- 
+
      C     @KDLNO        ReadE     DEAMS                                  80
      C                   EndDo
- 
+
      C* Output a message for the record format received for PF/DEALSDC,
      C*  joined to an "Insert/Amend Indicator" set to "A".
      C* Append the Action Code indicator at the end of the record.
- 
+
      C                   Reset                   WrkData
      C                   Eval      WrkData  = SavData
      C                   Eval      %subst(WrkData:SavLen) = 'A'
- 
+
      C* Send the message for DEALSDC.
- 
+
      C                   Eval      RAMSGTYPE=('DEALSDC_A')
      C                   Exsr      #SNDMSG
- 
+
      C* Return control at the end of the processing for the message.
- 
+
      C                   Commit
      C**********         Seton                                        LR        177415
      C                   Return
- 
+
       *****************************************************************
       /EJECT
       **********************************************************************
@@ -294,14 +296,14 @@
       **   message queue. If error, dump program.                         **
       **                                                                  **
       **********************************************************************
- 
+
      C     #SNDMSG       Begsr
- 
+
      C* Set up the Operation and Table fields on the message.
- 
+
      C                   Eval      CompData =  %subst(TransData:1:20)
      C                   Eval      %subst(CompData:21) = WrkData
- 
+
      C* Call a standard routine to actually send the message
      C                   CallB     'RPSNDMSG'
      C                   Parm      OutQueue1     OutQueue2
@@ -309,14 +311,14 @@
      C                   Parm                    CompData
      C                   Parm                    CommitCtl
      C                   Parm                    ReturnCode
- 
+
       ** If error then perform any special processing and exit
      C                   If        ReturnCode <> *blank
      C                   Exsr      *PSSR
      C                   EndIf
- 
+
      C     #SNDMSGEnd    Endsr
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -334,20 +336,20 @@
       *****************************************************************
       *
      C     *PSSR         Begsr
- 
+
       ** If error in RP1120, set Return Code accordingly.
      C                   If        ReturnCode = *blank
      C                   Eval      ReturnCode = ('ErrRP1120')
      C                   EndIf
- 
+
      C     @RUN          IfEq      *BLANK
      C                   Move      'Y'           @RUN              1
      C                   Dump
      C                   EndIf
- 
+
      C                   SetOn                                        U7U8LR
      C                   Return
- 
+
      C                   Endsr
       *
       ********************************************************************
@@ -357,9 +359,9 @@
       * *INZSR - Program Initialisation routine                       *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       * MQSeries queue to write to - this parameter IS used in this module
      C                   PARM                    OutQueue1        48
@@ -371,9 +373,9 @@
      C                   PARM                    CommitCtl
       * Return Code
      C                   PARM                    ReturnCode
- 
+
      C                   ENDSR
- 
+
       ** Key List to LF/DEAMS.
      C     @KDEAMS       KLIST
      C                   KFLD                    @KDLNO

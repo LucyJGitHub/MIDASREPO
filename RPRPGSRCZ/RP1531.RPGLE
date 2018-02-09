@@ -13,10 +13,11 @@
       *                                                               *
       *  Component of: RP1531 - Extract program for SDACUSPD          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. AR1071929          Date 08Feb13               *
-      *  Prev Amend No. AR1057854          Date 21Nov12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR1071929          Date 08Feb13               *
+      *                 AR1057854          Date 21Nov12               *
       *                 CLE134             Date 01Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -29,6 +30,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR1071929 - Insert of additional customer details should be  *
       *              sent to TOF + resolve compilation issues (/COPY  *
       *              changed from lowercase to uppercase)             *
@@ -744,4 +746,4 @@
       *****************************************************************
  
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2004
+(c) Finastra International Limited 2004

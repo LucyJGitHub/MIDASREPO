@@ -15,12 +15,14 @@
       *                                                               *
       *  Component of: RP1542 - Extract program for GLACNTQD/RPACNTQD *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. AR1055588 *CREATE   Date 08Feb13              *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR1055588 *CREATE  Date 08Feb13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR1055588 - Available balances in TOF (Child:AR1055591)      *
       *                                                               *
       *****************************************************************
@@ -784,4 +786,4 @@
       /Eject
       *****************************************************************
 **  Cpy@
-(c) Misys International Banking Systems Ltd. 2012
+(c) Finastra International Limited 2012

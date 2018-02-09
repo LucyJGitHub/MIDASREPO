@@ -14,18 +14,20 @@
       *                                                               *
       *  Component of: RP1450 - Transactions/Positions take on.       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.05 -----------------------------------------------*
-      *  Last Amend No. CPB002  *CREATE    Date 01Jun99               *
+      *  Prev Amend No. CPB002  *CREATE    Date 01Jun99               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CPB002 - Meridian DBA Middleware Replication Customization.  *
       *                                                               *
       *****************************************************************
@@ -984,7 +986,7 @@
       /Eject
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 **  TabMsgId
 RP00001Transactions/Positions take on
 RP00004PB Customers selection for take on

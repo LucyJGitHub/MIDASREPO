@@ -8,14 +8,15 @@
 /*       RRRECOVER - INPUT CYCLE RESTORE OR FORWARD RECOVERY IN      */
 /*                   PROGRESS                                        */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. BUG9619            Date 01Feb06              */
-/*       Prev Amend No. BUG2381            Date 13May04              */
+/*       Prev Amend No. BUG9619            Date 01Feb06              */
+/*                      BUG2381            Date 13May04              */
 /*                      CRE020             Date 20Jan04              */
 /*                      CSC023             Date 30Jan04              */
 /*                      CPK017             Date 28Oct03              */
@@ -55,6 +56,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BUG9619 - Close of business components run long if journal  */
 /*                 cache is enabled                                  */
 /*       BUG2381 - Batch submit of confirmations programs            */
@@ -124,7 +126,7 @@
 /*/COPY WNCPYSRC,RRRECOVINT                                   */      /*S01408*/
 /**/                                                                  /*S01408*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /*                                                                            */
              DCL        &FLAG         TYPE(*CHAR)  LEN(1)
@@ -613,5 +615,5 @@ ABNORMAL:
                           CMTSCOPE(*JOB)                              /*CPK009*/
              MONMSG     MSGID(CPF8351)                                /*E13205*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  ENDPGM:     ENDPGM     /* END CL PGM */

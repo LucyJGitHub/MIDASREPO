@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas RE Determine Sweeping Schedule')                 *
@@ -13,10 +13,11 @@
       *             and a currency and determines the next sweep date.*
       *             It also validates the details as well.            *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD000091           Date 14May13               *
-      *  Prev Amend No. CCB020             Date 06Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD000091           Date 14May13               *
+      *                 CCB020             Date 06Aug12               *
       *                 AR702741           Date 02Feb11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -29,6 +30,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD000091 - Event Codes Substitution                          *
       *  CCB020 - COB Restructure - Secondary COB Infrastracture      *
       *  AR702741 - Include location as parameter in ZFREQB to        *

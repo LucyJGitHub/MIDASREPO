@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+     H COPYRIGHT('(c) Finastra International Limited 2010')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas RE Accounts becoming effective today report')    *
@@ -13,11 +13,13 @@
       *             in close of business showing details of retail    *
       *             accounts becoming effective today.                *
       *                                                               *
-      *  Last Amend No. AR762866           Date 26May11               *
-      *  Prev Amend No. CRE075  *CREATE    Date 06Dec10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR762866           Date 26May11               *
+      *                 CRE075  *CREATE    Date 06Dec10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR762866 - Incorrect account codes in the report (Recompile) *
       *  CRE075 - Effective Date for Retail Accounts                  *
       *                                                               *

@@ -7,14 +7,15 @@
 /*                                                                   */
 /*       REC3260 - LINKED ACCOUNTS PROCESSING                        */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. AR707236           Date 19Aug14              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR707236           Date 19Aug14              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. 219121             Date 26May06              */
+/*                      219121             Date 26May06              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /*                      CPK014             Date 06Nov01              */
 /* Midas DBA 3.03 ---------------------------------------------------*/
@@ -24,6 +25,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       AR707236 - REC3260 COB error. Clear workfile TREEODPF if    */
 /*                  there are no linked account movements.           */
 /*                  (Child: AR707237)                                */
@@ -37,7 +39,7 @@
              PGM
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
              DCL        VAR(&PRE) TYPE(*CHAR) LEN(2)
@@ -136,5 +138,5 @@ STEP4:
              ENDDO
  /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  ENDPGM:     ENDPGM

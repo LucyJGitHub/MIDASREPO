@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
+     H COPYRIGHT('(c) Finastra International Limited 2011')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas RE Proj Insufficient Funds Extract')             *
@@ -9,17 +9,19 @@
       *                                                               *
       *  RE004243 - Proj Insufficient Funds Extract                   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2011            *
+      *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. MD034451C          Date 02Mar16               *      
-      *  Prev Amend No. AR1095876          Date 30Sep13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD034451C          Date 02Mar16               *
+      *                 AR1095876          Date 30Sep13               *
       *                 AR753294           Date 03May11               *
       *                 CAP207  *CREATE    Date 10Feb11               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD034451C - API: Repeated Held Item reversals are allowed.   *
-      *              Recompiled due to changed PF/HELDIHB.            *      
+      *              Recompiled due to changed PF/HELDIHB.            *
       *  AR1095876- ABC - Forward Days 1 should = DNWD-1, not just    *
       *             RUND (Child: AR1095877) (Recompile)               *
       *  AR753294 - Projected Insufficient Funds Report_value of      *
@@ -709,4 +711,4 @@
  
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2011
+(c) Finastra International Limited 2011

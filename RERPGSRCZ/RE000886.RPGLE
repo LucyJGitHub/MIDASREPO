@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas RE Retail Advice for SE')                        *
@@ -13,11 +13,12 @@
       *             advices if Correspondence Manager is switched     *
       *             off.                                              *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CRE075             Date 06Dec10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CRE075             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Prev Amend No. CAP204             Date 09Feb10               *
+      *                 CAP204             Date 09Feb10               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
@@ -32,6 +33,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
       *  CAP204 - Teller Related APIs - Account Transfer (Recompile)  *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *

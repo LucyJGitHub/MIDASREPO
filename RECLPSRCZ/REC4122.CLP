@@ -7,14 +7,15 @@
 /*                                                                   */
 /*       REC4122 - RE CI Teller Cross/Treasury Cash In/Cash Out      */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. 237730             Date 12Jun06              */
-/*       Prev Amend No. CAP084             Date 08Jul03              */
+/*       Prev Amend No. 237730             Date 12Jun06              */
+/*                      CAP084             Date 08Jul03              */
 /* Midas Release 4.01.02 --------------------------------------------*/
 /*                      208846             Date 29Aug02              */
 /* Midas Release 4.01 -----------------------------------------------*/
@@ -22,6 +23,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       237730 - Print to corresponding teller printer.             */
 /*       CAP084 - Parameter added to ZMUSER for Java wrappers        */
 /*       208846 - Limit the submitted RE41220* jobs to a maximum     */
@@ -55,8 +57,8 @@
              DCL        VAR(&JOBSRUN0F) TYPE(*DEC) LEN(3 0)                               /*208846*/
              DCL        VAR(&ZMUSER) TYPE(*CHAR) LEN(10)                                  /*CAP084*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Copyright Misys International Banking Syst+
-                          ems Ltd. 2001')
+                          Copyright Finastra International Limited +
+                          2001')
              DCL        VAR(&OUTQ)   TYPE(*CHAR) LEN(10)                                  /*237730*/
              DCL        VAR(&OUTQLIB) TYPE(*CHAR) LEN(10)                                 /*237730*/
 /*/COPY WNCPYSRC,REH00293                                            */
@@ -169,8 +171,8 @@
                           TOPGMQ(*EXT) TOMSGQ(MOPERQ)
              MONMSG     MSGID(CPF0000 MCH0000)
  
-ENDPGM:      CHGVAR     VAR(&CPYFLD) VALUE('Copyright Misys Interna+
-                          tional Banking Systems Ltd.')
+ENDPGM:      CHGVAR     VAR(&CPYFLD) VALUE('Copyright Finastra +
+                          International Limited')
  
              IF         COND(&PMODE = 'P') THEN(DO)
                CHGVAR   VAR(&ACTN) VALUE('D')

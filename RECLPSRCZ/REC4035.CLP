@@ -7,21 +7,23 @@
 /*                                                                   */
 /*       REC4035 - Passbook Cover Printing                           */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Last Amend No. CPK009             Date 09Aug99              */
-/*       Prev amend no. 118134             Date 02Jun97              */
+/*       Prev Amend No. CPK009             Date 09Aug99              */
+/*                      118134             Date 02Jun97              */
 /*                      CRT003             Date 22Jul96              */
 /*                      CRT002  *CREATE    Date  1Dec95              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CPK009 - Packaging for DBA3 release. STRCMTCTL values set   */
 /*                to CMTSCOPE(*JOB).                                 */
 /*       118134 - Correct ABNOR processing to ensure termination.    */
@@ -47,7 +49,7 @@
              DCL        VAR(&NBR)    TYPE(*CHAR) LEN(6)               /*CRT003*/
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /* Global monitor message */
@@ -102,7 +104,7 @@ ABNOR:
              MONMSG     MSGID(CPF0000 MCH0000)
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              CHGVAR   VAR(&ACTN) VALUE('D')                           /*CRT003*/
              CALL     PGM(RE4436) PARM(&ACTN &JOB &USR &NBR)          /*CRT003*/

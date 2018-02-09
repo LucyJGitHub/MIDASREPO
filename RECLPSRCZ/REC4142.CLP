@@ -7,23 +7,25 @@
 /*                                                                   */
 /*       REC4142  - RE CASH Reconciliation - Event Analysis          */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4.01 -----------------------------------------------*/
-/*       Last Amend No. CPK015             Date 26Feb02              */
+/*       Prev Amend No. CPK015             Date 26Feb02              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. 148202             Date 19NOV98              */
+/*                      148202             Date 19Nov98              */
 /*                      CCI001             Date 10NOV98              */
 /*                      122060             Date 21Aug97              */
 /*                      CRT002 *CREATE     Date  1Dec95              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CPK015 - Move data queues fom XLIB to DPLIB.                */
 /*       148202 - Message should no longer be sent as it fills MRUNQ */
 /*       CCI001 - Midas Cashier Enhancements - dtaq RECASH in XLIB   */
@@ -37,7 +39,7 @@
 /* Copyright statement definition  */
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /* */
 /* Declare variables */
@@ -75,7 +77,7 @@
 /*           Copyright statement definition - at runtime             */
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /* */
 /**Send*Message*to*MRUNQ**/
 /* */

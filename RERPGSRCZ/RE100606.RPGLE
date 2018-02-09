@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas RE Group Account Entry Generation')              *
@@ -13,10 +13,11 @@
       *             and an entry to replicate. It then replicates that*
       *             entry up the chain.                               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. AR679670           Date 26Nov10               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR679670           Date 26Nov10               *
+      *                 CER059             Date 19Jul10               *
       *                 CER043             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -30,6 +31,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR679670 - Component REC100816 00002 failed                  *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  CER043 - German Features LF041-00 New Fields and Defaulting  *

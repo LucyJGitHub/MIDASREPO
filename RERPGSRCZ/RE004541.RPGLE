@@ -1,5 +1,5 @@
      H NoMain   debug
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas RE Cashier TCP/IP socket service program')
@@ -12,21 +12,23 @@
       *  Function:  This service program contains a set of functions  *
       *             required for the TCP/IP communication process     *
       *  Author: Alain Differdange                                    *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CRT012             Date 26NOV02               *
+      *  Prev Amend No. CRT012             Date 26Nov02               *
       * Midas Release 4.01.02 ----------------------------------------*
-      *  Prev Amend No. 206776             Date 20Sep02               *
+      *                 206776             Date 20Sep02               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.04 -----------------------------------------------*
       *                 CRT004  *CREATE    Date 02JUN00               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CRT012 - Recompile over changed TTRANPD                      *
       *  206776 - Change Internal Job ID structure for 15 May 02 fix. *
       *           Very intermittent problem at all sites.             *

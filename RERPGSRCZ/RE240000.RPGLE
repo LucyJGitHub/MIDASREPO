@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+     H COPYRIGHT('(c) Finastra International Limited 2010')
       *****************************************************************
 /*STD *  RPGBASEBNC                                                   *
 /*EXI *  TEXT('Midas RE retail account balance extract - COB')        *
@@ -14,10 +14,11 @@
       *                                                               *
       *  Called By: REC240000                                         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. CRE095             Date 25Apr14               *
-      *  Prev Amend No. AR1095876          Date 30Sep13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CRE095             Date 25Apr14               *
+      *                 AR1095876          Date 30Sep13               *
       *                 AR1089939          Date 22Feb13               *
       *                 AR1005261          Date 30Jul12               *
       *                 CLE064             Date 06Dec10               *
@@ -33,6 +34,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CRE095 - Rate Fixing for RE Accounts (Recompile)             *
       *  AR1095876 - ABC - Forward Days 1 should = DNWD-1, not just   *
       *              RUND (Child: AR1095877) (Recompile)              *

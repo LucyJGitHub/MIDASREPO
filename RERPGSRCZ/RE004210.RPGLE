@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas RE Cheque Book Charges Posting Generation')
@@ -16,12 +16,13 @@
       *             reached or during the first COB if the issued     *
       *             date has been entered today as back-valued date.  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CGL154             Date 13Oct14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL154             Date 13Oct14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. BUG14211D          Date 19Sep07               *
+      *                 BUG14211D          Date 19Sep07               *
       *                 BUG14838           Date 15Sep07               *
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
@@ -32,6 +33,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL154 - FATCA Reporting (Recompile)                         *
       *  BUG14211D - Component GLC30 failed                           *
       *  BUG14838 - REC004210 Failed when CRT001 or CRT002 is OFF     *
@@ -923,4 +925,4 @@
  
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2004
+(c) Finastra International Limited 2004

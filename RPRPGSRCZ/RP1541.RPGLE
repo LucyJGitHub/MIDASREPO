@@ -18,12 +18,14 @@
       *                                                               *
       *  Component of: RP1541 - Extract program for GLATMIPD          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. AR1026202 *CREATE  Date 15Oct12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR1026202 *CREATE  Date 15Oct12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR1026202 - PBS Compatibility with BankFusion Midas 2.00     *
       *              Interface "Account Transfer" in real time        *
       *              (Child:AR1026203)                                *
@@ -1374,4 +1376,4 @@
       /Eject
       *****************************************************************
 **  Cpy@
-(c) Misys International Banking Systems Ltd. 2012
+(c) Finastra International Limited 2012

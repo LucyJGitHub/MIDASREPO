@@ -7,23 +7,25 @@
 /*                                                                   */
 /*       REC24 - Test for Hierarchies Validity                       */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2003           */
+/*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. 214254  *CREATE    DATE 21Feb03              */
+/*       Prev Amend No. 214254  *CREATE    Date 21Feb03              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       214254 - Cash Management falls over in COB (CRE008 FIX)     */
 /*                                                                   */
 /*********************************************************************/
              PGM
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2003')
  
              DCLF       FILE(RECMVEPD)
@@ -46,5 +48,5 @@
  
  END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

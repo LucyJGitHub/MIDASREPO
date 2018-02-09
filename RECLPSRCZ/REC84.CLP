@@ -7,16 +7,17 @@
 /*                                                                   */
 /*       REC84 - RETAIL ICD BY CURRENCY AUDIT REPORT                 */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. S01408             DATE 10MAY95              */
-/*       PREV AMEND NO. S01413             DATE 13APR93              */
+/*       Prev Amend No. S01408             Date 10May95              */
+/*                      S01413             Date 13Apr93              */
 /*                      S01337                  17APR91              */
 /*                      BHF982                  19FEB91              */
 /*                      S01189                  20APR90              */
@@ -27,6 +28,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       S01408 - Addition of core hook REC84MP1                     */
 /*       S01413  -  Retail 3 Incorporation                           */
 /*       S01337  -  SPLIT 'D' LIBRARY INTO 'DP' AND 'DV' LIBRARIES   */
@@ -48,7 +50,7 @@
              DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)                /*S01189*/
              DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5 0)                /*S01189*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&STAT) TYPE(*CHAR) LEN(1) VALUE(' ')      /*S01189*/
 /*           DCLDTAARA  DTAARA(LDA)   */                              /*S01179*/
@@ -214,5 +216,5 @@
                 ENDDO
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

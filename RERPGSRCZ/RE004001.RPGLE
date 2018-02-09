@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
+     H COPYRIGHT('(c) Finastra International Limited 2011')
       *****************************************************************
 /*XBIA*  OVRDBF FILE(REPPJSPDN) TOFILE(REPPJSPD) SHARE(*NO)           *
 /*STD *  RPGBASEMOD                                                   *
@@ -10,12 +10,14 @@
       *                                                               *
       *  RE004001 - On-Line Synch. of RSACMTPD, APOSTPD & GLACPHPD    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2011            *
+      *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. CRE072  *CREATE    Date 30Jun11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CRE072  *CREATE    Date 30Jun11               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CRE072 - BankFusion Midas Teller Related Changes             *
       *                                                               *
       *****************************************************************
@@ -536,4 +538,4 @@
       *
      C                   ENDSR
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2011
+(c) Finastra International Limited 2011

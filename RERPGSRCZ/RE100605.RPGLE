@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas RE Shadow Post an Entry in Transit')
@@ -15,11 +15,12 @@
       *  Called By:                                                   *
       *  I/C and CoB                                                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Last Amend No. CAP205             Date 08Mar10               *
-      *  Prev Amend No. CAP204             Date 09Feb10               *
+      *  Prev Amend No. CAP205             Date 08Mar10               *
+      *                 CAP204             Date 09Feb10               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 CRE026             Date 24May06               *
       * Midas Plus 1.3 ----------- Base ------------------------------*
@@ -33,6 +34,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CAP205 - Teller Related APIs - Account Balance Check         *
       *  CAP204 - Teller Related APIs - Account Transfer (Recompile)  *
       *  CRE026 - Consumer Banking                                    *

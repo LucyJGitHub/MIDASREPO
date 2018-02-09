@@ -18,10 +18,11 @@
       *                                                               *
       *  Component of: RP1592 - Filter Refused of Invalid Transactions*
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CSD092             Date 01May13               *
-      *  Prev Amend No. CSD093             Date 01Apr13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CSD092             Date 01May13               *
+      *                 CSD093             Date 01Apr13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -32,6 +33,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSD092 - Account Review                                      *
       *  CSD093 - Document Management                                 *
       *  CGL031 - Taxation of Savings Income                          *
@@ -718,4 +720,4 @@
       *****************************************************************
  
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2003
+(c) Finastra International Limited 2003

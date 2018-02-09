@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2009')
+     H COPYRIGHT('(c) Finastra International Limited 2009')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas RE T&N Accounts - Account Action Routine API')   *
@@ -14,15 +14,17 @@
       *             on the period and penalty interest details to the *
       *             standard debit and credit details of the account  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2009            *
+      *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. CRE073             Date 06Dec10               *
-      *  Prev Amend No. CER055             Date 06Dec10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *                 CER055             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 CRE015 *CREATE     Date 18Dec09               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  CER055 - Penalty Interest on Exceeding Overdraft Limit       *
       *           (Recompile)                                         *

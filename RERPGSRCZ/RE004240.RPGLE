@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas RE Cheque Books Issued/Reversed Today Report')
@@ -13,20 +13,22 @@
       *  business showing details of all cheque books issued and      *
       *  cancelled/reversed today.                                    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. 242474             Date 22Sep06               *
-      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. 242474             Date 22Sep06               *
+      *                 CSD031             Date 10Apr06               *
       *                 BUG9011            Date 19Oct05               *
       *                 CSD027             Date 09Dec05               *
       *                 CRE019  *CREATE    Date 12Jan04               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  242474 - Change default Rqd line counter to prevent printer  *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  BUG9011- Increase field size of No. of Cheques to avoid      *
@@ -728,4 +730,4 @@
       /EJECT
       ****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2004
+(c) Finastra International Limited 2004

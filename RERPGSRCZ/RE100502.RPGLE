@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas RE Zero-Balancing Stops List')                   *
@@ -11,14 +11,15 @@
       *                                                               *
       *  Function: This module lists the Zero Balancing Stops.        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. BUG28077           Date 26Aug10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. BUG28077           Date 26Aug10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD031             Date 10Apr06               *
       *                 CSD027             Date 09Dec05               *
       *                 CGL029             Date 01Sep03               *
       *                 212349             Date 07Jan03               *
@@ -27,6 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG28077 - Parent account code field was not updated to 10S. *
       *             (Recompile)                                       *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *

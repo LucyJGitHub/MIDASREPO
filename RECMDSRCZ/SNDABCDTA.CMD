@@ -9,12 +9,14 @@
 /*                                                                   */
 /*       SNDABCDTA - Midas RE Send ABC message to CREABCQ            */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2013           */
+/*       (c) Finastra International Limited 2013                     */
 /*                                                                   */
-/*       Last Amend No. AR1089591 *CREATE  Date 05Apr13              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR1089591 *CREATE  Date 05Apr13              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       AR1089591 - ABC Data Queue Recovery Process                 */
 /*                   (Child:AR1089593)                               */
 /*                 - Applied for MD-19899                            */

@@ -7,11 +7,12 @@
 /*                                                                   */
 /*       REC376 - RETAIL INTEREST AND CHARGE GENERATION RCVF RECAPM  */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CRE083AD           Date 06Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CRE083AD           Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
-/*       Prev Amend No. CCB016             Date 18Feb08              */
+/*                      CCB016             Date 18Feb08              */
 /*                      CGL061             Date 27Jun06              */
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -22,6 +23,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CRE083AD - COB Restructure - RE COB Optimisation Phase 1    */
 /*       CCB016 - CoB Performance Enhancements.                      */
 /*                Split REC376 and REC376A to allow REC376A to       */
@@ -55,7 +57,7 @@
              DCL        VAR(&RESTART) TYPE(*CHAR) LEN(1)              /*CGL061*/
              DCL        VAR(&STAT) TYPE(*CHAR) LEN(1)                 /*CGL061*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&LDA) TYPE(*CHAR) LEN(256)
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(44)
@@ -100,5 +102,5 @@
              ENDDO
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 ENDCL:       ENDPGM

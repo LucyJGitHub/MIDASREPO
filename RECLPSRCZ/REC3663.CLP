@@ -7,10 +7,11 @@
 /*                                                                   */
 /*       REC3663 - DROP OUT-OF-DATE HISTORY PROCESSING               */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD043389           Date 10Jan17              */
-/*       Prev Amend No. AR1096378          Date 20Mar13              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD043389           Date 10Jan17              */
+/*                      AR1096378          Date 20Mar13              */
 /*                      CRE083AH           Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -27,6 +28,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD043389 - Component failed with parameter mismatch. Re-    */
 /*                  introduced entry parameters removed by AR1096378.*/
 /*       AR1096378 - NWDC issues encountered during link testing.    */
@@ -50,7 +52,7 @@
 /**********  PGM                                                     */       /*AR1096378 MD043389*/
              PGM        PARM(&RSEQ &RLEV &RENT)                                         /*MD043389*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&PRE) TYPE(*CHAR) LEN(2)
              DCL        VAR(&SDSTAT) TYPE(*CHAR) LEN(256)
@@ -512,6 +514,6 @@ ENDPGM:                                                                         
                   SCWRTJREG  EVENT(&SEVENT) COMP(&CNAM) CMPSEQ(&CSEQ) +
                              FLAG('E') TEXT(&STEXT)                                     /*CRE083AH*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM                                                                     /*CRE083AH*/
 /***ENDPGM:      ENDPGM */                                                              /*CRE083AH*/

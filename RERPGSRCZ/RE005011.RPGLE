@@ -13,12 +13,14 @@
       *                                                               *
       *  Called By: RE005011 - Monthly Withholding Tax Update         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2015            *
+      *  (c) Finastra International Limited 2015                      *
       *                                                               *
-      *  Last Amend No. CGL165  *CREATE    Date 23Feb15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL165  *CREATE    Date 23Feb15               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax                                *
       *                                                               *
       *****************************************************************
@@ -263,4 +265,4 @@
      C                   ENDSR
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2015
+(c) Finastra International Limited 2015

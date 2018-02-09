@@ -13,12 +13,14 @@
       *                                                               *
       *  Called By: RE3666T1                                          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. CRE093   *CREATE   Date 06Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CRE093  *CREATE    Date 06Aug12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CRE093 - Tactical COB changes REC3666                        *
       *                                                               *
       *****************************************************************
@@ -132,4 +134,4 @@
       /EJECT
       *****************************************************************
 ** CPY@ - Object copyright
-(c) Misys International Banking Systems Ltd. 2012
+(c) Finastra International Limited 2012

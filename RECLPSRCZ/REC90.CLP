@@ -7,10 +7,11 @@
 /*                                                                  */
 /*     REC90  -  RETAIL II FILE REORGANISATIONS                     */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. MD030959           Date 17Jun15              */
-/*       Prev Amend No. AR1097467          Date 01Apr13              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD030959           Date 17Jun15              */
+/*                      AR1097467          Date 01Apr13              */
 /*                      BUG27667           Date 14May10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /*                      CAP187             Date 21Aug09              */
@@ -36,6 +37,7 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*     MD030959 - Recompiled due to changed PF/HELDIHC.              */
 /*     AR1097467 - Expected 15% COB run optimization not met        */
 /*     BUG27667 - Incorrect computation of held amount.             */
@@ -81,7 +83,7 @@
 /*/COPY WNCPYSRC,REC90INT                                             /*S01408*/
 /* */                                                                 /*S01408*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL VAR(&STAT) TYPE(*CHAR) LEN(5)
              DCL        VAR(&MSG) TYPE(*CHAR) LEN(50)
@@ -847,5 +849,5 @@ ERROR:       IF COND(%SWITCH(XXXXXX01)) THEN(DO)                      /*S01117*/
              ENDDO
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

@@ -15,17 +15,19 @@
       *                                                               *
       *  Component of: RP1527 - Extract program for SDCURRPD          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CPB010             Date 16Jan03               *
-      *  Prev Amend No. CPB008  *CREATE    Date 15Oct02               *
+      *  Prev Amend No. CPB010             Date 16Jan03               *
+      *                 CPB008  *CREATE    Date 15Oct02               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CPB010 - Avoid DB Error by write message in Repair File      *
       *           Execute Subroutine Repair instead of *Pssr in case  *
       *              of database error.                               *
@@ -605,4 +607,4 @@
       /Eject
       *****************************************************************
 **  Cpy@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

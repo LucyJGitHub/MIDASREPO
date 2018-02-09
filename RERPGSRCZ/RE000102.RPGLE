@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+     H COPYRIGHT('(c) Finastra International Limited 2012')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas RE ABC Calculation Initialization')              *
@@ -14,21 +14,23 @@
       *                                                               *
       *  Called By: REC000102                                         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD034451C          Date 02Mar16               *      
-      *  Prev Amend No. MD030959           Date 17Jun15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD034451C          Date 02Mar16               *
+      *                 MD030959           Date 17Jun15               *
       *                 CRE095             Date 25Apr14               *
       *                 CRE090             Date 14Feb14               *
-      *                 AR1095876A         Date 30Sep13               *     
+      *                 AR1095876A         Date 30Sep13               *
       *                 AR1095876          Date 30Sep13               *
       *                 CLE148             Date 23Jul12               *
       *                 AR958145 *CREATE   Date 26Apr12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD034451C - API: Repeated Held Item reversals are allowed.   *
-      *              Recompiled due to changed pf/HELDIHB.            *      
+      *              Recompiled due to changed pf/HELDIHB.            *
       *  MD030959 - Recompiled due to changed PF/HELDIHC.             *
       *  CRE095 - Rate Fixing for RE Accounts (Recompile)             *
       *  CRE090 - Delay Capitalisation of Interest (Recompile)        *

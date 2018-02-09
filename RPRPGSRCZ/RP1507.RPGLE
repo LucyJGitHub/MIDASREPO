@@ -19,10 +19,11 @@
       *                                                               *
       *  Component of: RP1507 - Extract program for LOAMSDK           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CLE134             Date 01Aug12               *
-      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
       *                 AR858264A          Date 16Jul12               *
       *                 AR970292           Date 14May12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -51,6 +52,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing                       *
       *  CLE148 - Alpha Loan Reference                                *
       *  AR858264A - Compilation Issues on various RP programs        *
@@ -1518,4 +1520,4 @@
       *****************************************************************
  
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

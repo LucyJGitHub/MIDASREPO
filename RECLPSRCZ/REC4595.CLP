@@ -7,18 +7,20 @@
 /*                                                                   */
 /*       REC4595 - Midas Cashier TCP/IP Heartbeat Job.               */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CCB020             Date 06Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CCB020             Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4.01 -----------------------------------------------*/
-/*       Prev Amend No. CRT007  *CREATE    Date 14Jan02              */
+/*                      CRT007  *CREATE    Date 14Jan02              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CCB020 - COB Restructure - Secondary COB Infrastructure     */
 /*       CRT007 - PING Server for Communication check.               */
 /*                Set Branch Off-Line if fail when open.             */

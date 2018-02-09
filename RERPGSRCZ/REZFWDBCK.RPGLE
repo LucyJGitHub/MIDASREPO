@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas RE Determine Forward and Back Value Dates')
@@ -12,18 +12,20 @@
       *  Function:  This program is given forward and back dating     *
       *             codes and converts them into days.                *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. 212467             Date 10Jan03               *
-      *  Prev Amend No. 212908             Date 07Jan03               *
+      *  Prev Amend No. 212467             Date 10Jan03               *
+      *                 212908             Date 07Jan03               *
       *                 CRE008  *CREATE    Date 19Feb02               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  212467 - External Forward and Back Value Sweeping details    *
       *           must be constrained by the ICD.                     *
       *  212908 - Back valued entries swept with wrong value date     *

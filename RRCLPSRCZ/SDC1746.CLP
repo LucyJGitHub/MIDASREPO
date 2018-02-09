@@ -8,16 +8,20 @@
 /*     SDC1746 - SET UP RECOVERY AREAS FOR A MARKET                  */
 /*               ON BACKUP MACHINE                                   */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*     LAST AMEND NO. 00                 DATE 00/00/00               */
+/*     PREV AMEND NO. 00                 DATE 00/00/00               */
 /*                                                                   */
+/*-------------------------------------------------------------------*/
+/*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*********************************************************************/
 /**/
 /*       C R E A T I O N     P A R A M E T E R S                     */
@@ -25,7 +29,7 @@
 /*********************************************************************/
              PGM        PARM(&MRKT &SEQN1 &SEQN2 &LRCV)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
              DCL        VAR(&MRKT) TYPE(*CHAR) LEN(2)
@@ -69,5 +73,5 @@
 /**/
 END:         ENDPGM
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)

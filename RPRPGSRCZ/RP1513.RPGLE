@@ -16,10 +16,11 @@
       *                                                               *
       *  Component of: RP1513 - Extract program for ACCNTAB           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR1095876          Date 30Sep13               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR1095876          Date 30Sep13               *
+      *                 CLE134             Date 01Aug12               *
       *                 AR858264A          Date 16Jul12               *
       *                 AR970292           Date 14May12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -45,6 +46,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR1095876- ABC - Forward Days 1 should = DNWD-1, not just    *
       *             RUND (Child: AR1095877) (Recompile)               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
@@ -1381,4 +1383,4 @@
       *****************************************************************
  
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

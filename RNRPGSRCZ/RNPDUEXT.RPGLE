@@ -1,6 +1,6 @@
      h debug   alwnull(*usrctl)
      h fixnbr(*zoned : *inputpacked)
-     h copyright('(c) Misys International Banking Systems Ltd. 2005')
+     h copyright('(c) Finastra International Limited 2005')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FRS Lending Past Due Events extract')            *
@@ -10,14 +10,15 @@
       *                                                               *
       *  RNPDUEXT   - Midas FRS Lending Past Due Events extract       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. CLE148             Date 23Jul12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE148             Date 23Jul12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027A            Date 10May06               *
+      *                 CSD027A            Date 10May06               *
       *                 BUG9792            Date 04Apr06               *
       *                 BUG10804           Date 10Mar06               *
       *                 BUG10560           Date 06Mar06               *
@@ -27,6 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE148 - Alpha Loan Reference                                *
       *  CSD027A- Conversion of cust. no. to alpha (post 103 build)   *
       *  BUG9792  - Event rule validation enhancement: apply          *
@@ -627,4 +629,4 @@
       *****************************************************************
  
 **ctdata cpy@
-(c) Misys International Banking Systems Ltd. 2005
+(c) Finastra International Limited 2005

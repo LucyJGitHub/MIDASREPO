@@ -7,21 +7,23 @@
 /*                                                                   */
 /*       REC4141  - RE CASH Reconciliation Control                   */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Last Amend No. CAP006             Date 10MAY99              */
-/*       Prev Amend No. 122060             Date 21Aug97              */
+/*       Prev Amend No. CAP006             Date 10May99              */
+/*                      122060             Date 21Aug97              */
 /*                      CRT003             Date 22Jul96              */
 /*                      CRT002 *CREATE     Date  1DEC95              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CAP006 - APIs Phase IV                                      */
 /*                Scope commitment control to the job rather than    */
 /*                the activation group                               */
@@ -35,7 +37,7 @@
 /* Copyright statement defination  */
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /* */
 /* Declare variables */
@@ -55,7 +57,7 @@
 /*           Copyright statement definition - at runtime             */
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /* */
 /* Send Message to MRUNQ */
 /* */

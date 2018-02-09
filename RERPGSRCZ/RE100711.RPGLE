@@ -13,10 +13,11 @@
       *             have occurred due to the take-on of the 'live'    *
       *             hierarchy detail and link files.                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. CRE073             Date 06Dec10               *
-      *  Prev Amend No. CRE075             Date 06Dec10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CRE073             Date 06Dec10               *
+      *                 CRE075             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
       *                 CER047             Date 19May08               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -30,6 +31,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
       *  CER059 - German Feature Upgrade to Delhi                     *

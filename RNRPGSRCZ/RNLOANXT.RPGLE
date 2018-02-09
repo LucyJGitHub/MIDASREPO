@@ -1,6 +1,6 @@
      H debug   alwnull(*usrctl)
      H fixnbr(*zoned : *inputpacked)
-     H copyright('(c) Misys International Banking Systems Ltd. 2005')
+     H copyright('(c) Finastra International Limited 2005')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas FRS Customer Loan Extract')                      *
@@ -10,10 +10,11 @@
       *                                                               *
       *  RNLOANXT   - Midas Customer Loan Extract                     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. CLE134             Date 01Aug12               *
-      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -33,6 +34,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  CLE148 - Alpha Loan Reference                                *
       *  242286 - Enhance calculation of interest for calc basis 6.   *
@@ -1489,7 +1491,7 @@
       *****************************************************************
  
 **ctdata CPY@
-(c) Misys International Banking Systems Ltd. 2004
+(c) Finastra International Limited 2004
 **ctdata aTrty
 IT     Fixed       MM Interbank Taking
 IP     Fixed       MM Interbank Placing

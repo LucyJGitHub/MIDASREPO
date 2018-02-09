@@ -11,16 +11,18 @@
       *  Function:    This module receive message and put this one    *
       *            to a specific queue.                               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CPB010  *CREATE    Date 17Jan03               *
+      *  Prev Amend No. CPB010  *CREATE    Date 17Jan03               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CPB010 - Avoid DB Error by write message in Trace File       *
       *                                                               *
       *****************************************************************
@@ -383,4 +385,4 @@
       /Eject
       *****************************************************************
 **  Cpy@
-(c) Misys International Banking Systems Ltd. 2003
+(c) Finastra International Limited 2003

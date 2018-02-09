@@ -7,15 +7,16 @@
 /*                                                                   */
 /*       REC4143  - Submit RE CASH Reconciliation                    */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CSC023             Date 30Jan04              */
+/*       Prev Amend No. CSC023             Date 30Jan04              */
 /* Midas Release 4.01 -----------------------------------------------*/
-/*       Prev Amend No. CPK015             Date 26Feb02              */
+/*                      CPK015             Date 26Feb02              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /*                      CPK014             Date 14Nov01              */
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
@@ -25,6 +26,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CSC023 - MidasPlus additional packaging.  SBMJOB change.    */
 /*                OUTQ must always be *JOBD.                         */
 /*       CPK015 - Move data queues fom XLIB to DPLIB.                */
@@ -40,7 +42,7 @@
 /* Copyright statement defination  */
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /* */
 /* Declare variables */
@@ -69,7 +71,7 @@
 /*           Copyright statement definition - at runtime             */
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /* */
 /* Send Message to MRUNQ */
 /* */

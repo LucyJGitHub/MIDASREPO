@@ -14,12 +14,14 @@
       *                                                               *
       *  Component of: RP0762                                         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. 240771  *CREATE    Date 16Jul12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. 240771  *CREATE    Date 16Jul12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  240771 - To take in account Replication V3R6M0 changes and   *
       *           more specially new Feeder Sequence Number file.     *
       *           Applied fix for AR995681.                           *
@@ -209,4 +211,4 @@
  
       *****************************************************************
 **Ctdata Cpy@
-(c) Misys International Banking Systems Ltd. 2012
+(c) Finastra International Limited 2012

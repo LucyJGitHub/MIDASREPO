@@ -7,16 +7,17 @@
 /*                                                                  */
 /*       SDC1790 FORWARD RECOVERY REPORTING                         */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. E22987          DATE 26JUL90                */
-/*       PREV AMEND NO. S01194          DATE 21FEB90                */
+/*       Prev Amend No. E22987             Date 26Jul90              */
+/*                      S01194             Date 21Feb90              */
 /*                      E13205          DATE 10/03/89               */
 /*                      S01179          DATE 13/09/88               */
 /*                      S01127          DATE 02/06/88               */
@@ -24,6 +25,7 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       E22987 - REMOVE OLD HELP PROCESSING                        */
 /*       S01194 - NEW STANDING DATA                                 * /*S01194*/
 /*       E13205 - a)Allow copy from JRNEX1 to cope with an empty    * /*E13205*/
@@ -62,7 +64,7 @@
              DCL        VAR(&TOTM) TYPE(*CHAR) LEN(6)
              DCL        VAR(&TODT) TYPE(*CHAR) LEN(6)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
 /*           GLOBAL MONITOR MESSAGE                                  */
@@ -301,6 +303,6 @@ ABNOR:       SNDPGMMSG  TOMSGQ(MOPERQ MRUNQ) TOPGMQ(*EXT) +
 /**/
 END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

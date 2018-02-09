@@ -7,20 +7,22 @@
 /*                                                                   */
 /*       REC376B - REFFERAL REPORT - BOTH VERSIONS                   */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CER055             Date 06Dec10              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CER055             Date 06Dec10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CGL002             Date 28OCT96              */
+/*                      CGL002             Date 28Oct96              */
 /*                      S01413 *CREATE     Date 13APR93              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CER055 - Penalty Interest on Exceeding Overdraft Limit      */
 /*       CGL002 - Block GL Accounts in Journal Entry Input           */
 /*       S01413 - Retail 3 Incorporation                             */
@@ -31,7 +33,7 @@
 /*********************************************************************/
              PGM
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&MMOD) TYPE(*CHAR) LEN(128)               /*CGL002*/
 /**/                                                                  /*CGL002*/
@@ -63,5 +65,5 @@
              CALL       PGM(RE0761) PARM('2')
              DLTOVR     FILE(*ALL)
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

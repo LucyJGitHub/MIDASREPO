@@ -7,23 +7,25 @@
 /*                                                                   */
 /*       REC0733 - Standing Orders Exception Report Control          */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2003           */
+/*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CRE013  *CREATE    Date 29Jul03              */
+/*       Prev Amend No. CRE013  *CREATE    Date 29Jul03              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CRE013 - Report of Failed Standing Orders                   */
 /*                                                                   */
 /*********************************************************************/
              PGM
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2003')
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
 /**/
@@ -108,6 +110,6 @@ ABNOR:
  
 END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

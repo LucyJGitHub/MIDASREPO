@@ -7,10 +7,11 @@
 /*                                                                   */
 /*       REC3065 - RETAIL ACCOUNT POSTINGS MERGE - DAILY POSTINGS    */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. AR1012196          Date 14Jan13              */
-/*       Prev Amend No. CER049             Date 06Dec10              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR1012196          Date 14Jan13              */
+/*                      CER049             Date 06Dec10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /*                      BUG27658           Date 13May10              */
 /*                      BUG27433           Date 20Apr10              */
@@ -37,6 +38,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       AR1012196 - GE-TX postings is not included in postings      */
 /*                   file merge. Reverse BUG27658. (CHILD:AR1012197) */
 /*       CER049 - Stamp Tax                                          */
@@ -75,7 +77,7 @@
              PGM
 /*/COPY WNCPYSRC,REC3065002                                          */
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(44)
              DCL        VAR(&MMOD) TYPE(*CHAR) LEN(256)
@@ -452,7 +454,7 @@ EXIT3:
                           found - REC3065')
              SNDPGMMSG  MSG(&MEM) TOMSGQ(MRUNQ MOPERQ)
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 ENDCL:
 /**/
              ENDPGM

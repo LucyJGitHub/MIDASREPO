@@ -16,10 +16,11 @@
       *                                                               *
       *  Component of: RP1505 - Extract program for GLJENHPD          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD027587           Date 19Jun14               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD027587           Date 19Jun14               *
+      *                 CLE134             Date 01Aug12               *
       *                 AR858264A          Date 16Jul12               *
       *                 AR970292           Date 14May12               *
       *                 CER059             Date 19Jul10               *
@@ -46,6 +47,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD027587 - Unable to used the C for Copy and T for Template  *
       *             (Recompile)                                       *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
@@ -981,4 +983,4 @@
       /Eject
       *****************************************************************
 **  Cpy@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

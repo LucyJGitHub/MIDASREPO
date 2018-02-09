@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas RP Midas-Plato interface pre-proc PF/CLOANCL')   *
@@ -23,10 +23,11 @@
       * --                                                            *
       *  LELNLLNK - Format of PF/CLOANCLK joined with Ins/Amd Ind.    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CLE154             Date 07Aug12               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE154             Date 07Aug12               *
+      *                 CLE134             Date 01Aug12               *
       *                 AR858264           Date 23Jul12               *
       *                 CLE148             Date 23Jul12               *
       *                 CER059             Date 19Jul10               *
@@ -52,6 +53,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE154 - Loan Repayment Schedule Enhancement (Recompile)     *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  AR858264 - Compilation issues on RP Program                  *
@@ -91,42 +93,42 @@
      F                                     PREFIX(H)
      FPLLOAML0  IF   E           K DISK
      F                                     PREFIX(A)
-
+ 
       /EJECT
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
       ** +--------------------------------------+
-
+ 
       * Following /COPY is the procedure prototype for the Format routine
       /COPY RPCPYSRC,RPFMTPPF
-
+ 
       ** The following /COPY contains various standard declares
      C*/COPY RPCPYSRC,Std_Dcl                                                               AR858264
      C/COPY RPCPYSRC,STD_DCL                                                                AR858264
-
+ 
       ** The following /COPY contains the layout of the Meridian header as
       ** a data structure
      C*COPY RPCPYSRC,Mdn_Hd_DS                                                              AR858264
      C/COPY RPCPYSRC,MDN_HD_DS                                                              AR858264
-
+ 
       **   Composite Data
      D CompData        S                   LIKE(TransData) INZ(*BLANKS)
-
+ 
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
-
+ 
       **   Format for PF/CLOANCL
      D CLOANCLds     E DS                  EXTNAME(CLOANCL)
      D                                     PREFIX(L)
@@ -267,17 +269,17 @@
       **   Format for Information DS for LF/PLHISTL0
      D PLHISTds        DS
      D   @KFormat            261    270
-
+ 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
-
+ 
       ** Parameters
       **   Parameters for ProcFormat
      D   InData        S                   LIKE(TransData) INZ(*Blanks)
@@ -298,7 +300,7 @@
      D WrkInsAmd       S              1A   INZ(*Blanks)
       **   Output queue name
      D OutQueue2       S                   LIKE(MQSQueue)
-
+ 
      DOutParms         DS
      D   OutData                           LIKE(TransData) INZ(*BLANKS)
      D   OutLen                       4S 0 INZ(*ZERO)
@@ -308,7 +310,7 @@
      DWrkParms         DS
      D   WrkData                           LIKE(TransData) INZ(*BLANKS)
      D   WrkLen                            LIKE(OutLen) INZ(*ZERO)
-
+ 
      D CPL005          S              1A                                                      CPL005
      D @Op_Code        S              1A                                                      CPL005
      D @SARD           S              6A                                                      CPL005
@@ -320,7 +322,7 @@
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
       *****************************************************************
-
+ 
      ICLOANCLF
      I              RECI                        LRECI1
      I              LNRF                        LLNRF1
@@ -330,7 +332,7 @@
      I              LCD                         LLCD1
      I              CHTP                        LCHTP1
      I              TNLU                        LTNLU1
-
+ 
      ICLOANCKF
      I              RECI                        LRECI2
      I              LNRF                        LLNRF2
@@ -340,7 +342,7 @@
      I              LCD                         LLCD2
      I              CHTP                        LCHTP2
      I              TNLU                        LTNLU2
-
+ 
      IHISTSHMF
      I              RECI                        HRECI1
      I              RCDT                        HRCDT1
@@ -362,7 +364,7 @@
      I              RTSP                        HRTSP1
      I              SPIN                        HSPIN1
      I              CALC                        HCALC1
-
+ 
      IHISTSHPF
      I              RECI                        HRECI2
      I              RCDT                        HRCDT2
@@ -388,7 +390,7 @@
      I              INTR                        HINTR2
      I              AIAP                        HAIAP2
      I              IPRD                        HIPRD2
-
+ 
      IHISTSHQF
      I              RECI                        HRECI3
      I              RCDT                        HRCDT3
@@ -421,95 +423,95 @@
      I              IPRD                        HIPRD3
      I              MNSG                        HMNSG3
       /EJECT
-
+ 
       ** +--------------------------------------+
       ** ¦ Start F-specs                        ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
-
+ 
      C* Reset Message parameters
      C                   Reset                   OutParms
      C                   Reset                   WrkParms
      C                   Reset                   LonParms
-
+ 
      C* Extract the Loan Number from the data input.
-
+ 
      C                   Eval      @KLNRFA = %subst(TransData:24:6)
      C                   Eval      @KRCDT  = 'A'
-
+ 
      C* Access original record on PF/CLOANCL.
-
+ 
      C     @KCLOAN       Chain     CLOANCLF                           90
-
+ 
       ** If error then perform any special processing and exit
      C                   If        *IN90 <> '0'
      C                   Exsr      *PSSR
      C                   EndIf
-
+ 
      C* Format the data from PF/CLOANCL for Meridian.
-
+ 
      C                   Eval      InData   = CLOANCLds
      C                   Eval      InDBFile = 'CLOANCL   '
      C                   Eval      OutParms = ProcFormat(InData:InDBFile:
      C                                                   InDecSep:InShwPosSn)
-
+ 
      C* Contruct the compound message format.
-
+ 
      C                   Eval      LonParms = OutParms
-
+ 
      C* Access original record on PF/CLOANCK.
-
+ 
      C                   Eval      @KRCDT  = 'B'
-
+ 
      C* Access original record on PF/CLOANCK.
-
+ 
      C     @KCLOAN       Chain     CLOANCKF                           90
-
+ 
       ** If error then perform any special processing and exit
      C                   If        *IN90 <> '0'
      C                   Exsr      *PSSR
      C                   EndIf
-
+ 
      C* Access history record for original principal amount on loan, or last
      C*   principal amount for currency if there has been a multi-currency
      C*   rollover.
-
+ 
      C* If there has not be a multi-currency rollover, access the start date
      C*   history record.
      C                   If        (LLMCD = 0) Or (LLMCD = LVDAT)
-
+ 
      C                   Eval      @KPRSQ = 06
      C                   Eval      @KVDAT = LVDAT
-
+ 
      C     @KPLHIST      Chain     HISTSHMF                           90
-
+ 
      C* If the history record is not found, use the current principal.
      C                   If        *IN90 <> '0'
      C                   If        LOPAM = 0
      C                   Eval      LOPAM = LCPAM
      C                   EndIf
      C                   Else
-
+ 
      C* Override the Original Principal Amount to the amount on the history.
      C                   Eval      LOPAM  = HPRAM1
      C                   EndIf
-
+ 
      C* Otherwise, access the last multi-currency rollover history record.
      C                   Else
-
+ 
      C                   Eval      @KPRSQ = 25
      C                   Eval      @KVDAT = *Hival
-
+ 
      C     @KPLHIST      SetGt     HISTSHQF
      C                   ReadP     HISTSHQF                               90
-
+ 
      C* If the history record is not found, use the current principal.
      C                   If        (*IN90 <> '0') Or (HLNRF3 > @KLNRF)
      C                   If        LOPAM = 0
      C                   Eval      LOPAM = LCPAM
      C                   EndIf
      C                   Else
-
+ 
      C* Override the Original Principal Amount to the amount on the history.
      C                   Select
      C     HPRINRO       WhenNe    *Zero
@@ -519,48 +521,48 @@
      C                   Other
      C                   Eval      LOPAM  = HCPAM3
      C                   EndSl
-
+ 
      C                   EndIf
-
+ 
      C                   EndIf
-
+ 
      C* Format the data from PF/CLOANCK for Meridian.
-
+ 
      C                   Eval      InData   = CLOANCKds
      C                   Eval      InDBFile = 'CLOANCK   '
      C                   Eval      OutParms = ProcFormat(InData:InDBFile:
      C                                                   InDecSep:InShwPosSn)
-
+ 
      C* Contruct the compound message format.
-
+ 
      C                   Eval      %subst(LonData:LonLen) = OutData
      C                   Eval      LonLen = LonLen + OutLen
-
+ 
      C* Check to see whether loan is "Past Due".
      C                   Eval      @KAMTP = 'PD'
      C     @KPLLOAM      SetLl     LOAMSDKF                               90
-
+ 
      C                   If        *IN90 = '1'
      C                   Eval      WrkPdueIn = 'Y'
      C                   Else
      C                   Eval      WrkPdueIn = 'N'
      C                   EndIf
-
+ 
      C* Contruct the compound message format.
      C                   Eval      LonLen = LonLen - 1
      C                   Eval      %subst(LonData:LonLen) = WrkPdueIn
      C                   Eval      LonLen = LonLen + 1
-
+ 
      C* Set Insert/Amend Indicator to "I" for "Insert".
      C                   Eval      WrkInsAmd = 'I'
-
+ 
      C* Contruct the compound message format.
      C                   Eval      %subst(LonData:LonLen) = WrkInsAmd
-
+ 
      C                   Eval      WrkData  = LonData
-
+ 
      C* Send the message for LELNLLNK.
-
+ 
      C                   Eval      RAMSGTYPE=('LELNLLNK_A')
      C                   Exsr      #SNDMSG
       *                                                                                       CPL005
@@ -573,40 +575,40 @@
      C                   IF        CPL005 = 'N' OR                                            CPL005
      C                             (CPL005 = 'Y' and                                          CPL005
      C                             (@Op_Code = 'I' or @Op_Code = 'A'))                        CPL005
-
+ 
      C* Read all Loan Amendments from LF/PLLOAML0.
-
+ 
      C     @KLNRF        SetLl     LOAMSDKF
      C     @KLNRF        ReadE     LOAMSDKF                               80
-
+ 
      C     *IN80         DowEq     '0'
-
+ 
      C                   Eval      InData   = LOAMSDKds
      C                   Eval      InDBFile = 'LOAMSDK   '
      C                   Eval      OutParms = ProcFormat(InData:InDBFile:
      C                                                   InDecSep:InShwPosSn)
-
+ 
      C* Output a message for the compound message format.
-
+ 
      C                   Reset                   WrkData
      C                   Eval      WrkData  = OutData
      C                   Eval      %subst(WrkData:OutLen) = LonData
-
+ 
      C* Send the message for LEAMDLON.
-
+ 
      C                   Eval      RAMSGTYPE=('LEAMDLON_A')
      C                   Exsr      #SNDMSG
-
+ 
      C     @KLNRF        ReadE     LOAMSDKF                               80
      C                   EndDo
-
+ 
      C* Read all Loan History from LF/PLHISTL0.
-
+ 
      C     @KLNRF        SetLl     PLHISTL0
      C     @KLNRF        ReadE     PLHISTL0                               80
-
+ 
      C     *IN80         DowEq     '0'
-
+ 
      C     @KFormat      IfEq      'HISTSHPF  '
      C                   Eval      InData   = HISTSHPds
      C                   Eval      InDBFile = 'HISTSHP   '
@@ -614,7 +616,7 @@
      C                                                   InDecSep:InShwPosSn)
      C                   Eval      RAMSGTYPE=('LEHSPLON_A')
      C                   EndIf
-
+ 
      C     @KFormat      IfEq      'HISTSHQF  '
      C                   Eval      InData   = HISTSHQds
      C                   Eval      InDBFile = 'HISTSHQ   '
@@ -622,46 +624,46 @@
      C                                                   InDecSep:InShwPosSn)
      C                   Eval      RAMSGTYPE=('LEHSQLON_A')
      C                   EndIf
-
+ 
      C     @KFormat      IfEq      'HISTSHPF  '
      C     @KFormat      OrEq      'HISTSHQF  '
-
+ 
      C* Output a message for the compound message format.
-
+ 
      C                   Reset                   WrkData
      C                   Eval      WrkData  = OutData
      C                   Eval      %subst(WrkData:OutLen) = LonData
-
+ 
      C* Send the message for LEHSPLON or LEHSQLON.
-
+ 
      C                   Exsr      #SNDMSG
-
+ 
      C                   EndIf
-
+ 
      C     @KLNRF        ReadE     PLHISTL0                               80
      C                   EndDo
-
+ 
      C* Set Insert/Amend Indicator to "A" for "Amend".
      C                   Eval      WrkInsAmd = 'A'
-
+ 
      C* Contruct the compound message format.
      C                   Eval      %subst(LonData:(LonLen)) = WrkInsAmd
-
+ 
      C                   Eval      WrkData  = LonData
-
+ 
      C* Send the message for LELNLLNK.
-
+ 
      C                   Eval      RAMSGTYPE=('LELNLLNK_A')
      C                   Exsr      #SNDMSG
                                                                                               CPL005
      C                   ENDIF                                                                CPL005
-
+ 
      C* Return control at the end of the processing for the message.
-
+ 
      C                   Commit
      C**********         Seton                                        LR        177415
      C                   Return
-
+ 
       *****************************************************************
       /EJECT
       **********************************************************************
@@ -683,14 +685,14 @@
       **   message queue. If error, dump program.                         **
       **                                                                  **
       **********************************************************************
-
+ 
      C     #SNDMSG       Begsr
-
+ 
      C* Set up the Operation and Table fields on the message.
-
+ 
      C                   Eval      CompData =  %subst(TransData:1:20)
      C                   Eval      %subst(CompData:21) = WrkData
-
+ 
      C* Call a standard routine to actually send the message
      C                   CallB     'RPSNDMSG'
      C                   Parm      OutQueue1     OutQueue2
@@ -698,14 +700,14 @@
      C                   Parm                    CompData
      C                   Parm                    CommitCtl
      C                   Parm                    ReturnCode
-
+ 
       ** If error then perform any special processing and exit
      C                   If        ReturnCode <> *blank
      C                   Exsr      *PSSR
      C                   EndIf
-
+ 
      C     #SNDMSGEnd    Endsr
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -723,20 +725,20 @@
       *****************************************************************
       *
      C     *PSSR         Begsr
-
+ 
       ** If error in RP1155, set Return Code accordingly.
      C                   If        ReturnCode = *blank
      C                   Eval      ReturnCode = ('ErrRP1155')
      C                   EndIf
-
+ 
      C     @RUN          IfEq      *BLANK
      C                   Move      'Y'           @RUN              1
      C                   Dump
      C                   EndIf
-
+ 
      C                   SetOn                                        U7U8LR
      C                   Return
-
+ 
      C                   Endsr
       *
       ********************************************************************
@@ -746,9 +748,9 @@
       * *INZSR - Program Initialisation routine                       *
       *                                                               *
       *****************************************************************
-
+ 
      C     *INZSR        BEGSR
-
+ 
      C     *ENTRY        PLIST
       * MQSeries queue to write to - this parameter IS used in this module
      C                   PARM                    OutQueue1        48
@@ -760,18 +762,18 @@
      C                   PARM                    CommitCtl
       * Return Code
      C                   PARM                    ReturnCode
-
+ 
      C* Key list for LF/INVTP.
      C     @KCLOAN       KLIST
      C                   KFLD                    @KLNRF
      C                   KFLD                    @KRCDT
-
+ 
      C* Key list for LF/PLHISTL0
      C     @KPLHIST      KLIST
      C                   KFLD                    @KLNRF
      C                   KFLD                    @KPRSQ
      C                   KFLD                    @KVDAT
-
+ 
      C* Key list for LF/PLLOAML0
      C     @KPLLOAM      KLIST
      C                   KFLD                    @KLNRF
@@ -789,6 +791,6 @@
      C                   ELSE                                                                 CPL005
      C                   MOVE      'N'           CPL005                                       CPL005
      C                   ENDIF                                                                CPL005
-
+ 
      C                   ENDSR
       *****************************************************************

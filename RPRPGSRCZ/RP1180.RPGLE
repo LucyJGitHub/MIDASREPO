@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2001')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas RP Additional processing for deal amendments')   *
@@ -18,7 +18,7 @@
       *   process for the deal itself, which will include processing  *
       *   of the deal amendment.                                      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *  Last Amend No. CDL099             Date 06Oct17               *
       *  Prev Amend No. CGL165             Date 15Feb17               *
@@ -53,6 +53,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
@@ -96,88 +97,88 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FDEALS     UF   E           K DISK
- 
+
       /EJECT
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
       ** +--------------------------------------+
- 
+
       ** The following /COPY contains various standard declares
      C**********/COPY RPCPYSRC,Std_Dcl                                                      AR858264
      C/COPY RPCPYSRC,STD_DCL                                                                AR858264
- 
+
       ** The following /COPY contains the layout of the Meridian header as
       ** a data structure
      C**********/COPY RPCPYSRC,Mdn_Hd_DS                                                    AR858264
      C/COPY RPCPYSRC,MDN_HD_DS                                                              AR858264
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       **   Key to PF/DEAMSDI.
      D@KDEAMSds        DS
      D @KDLNOA                 1      6A
      D @KDLNO                  1      6S 0
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
       *****************************************************************
       /EJECT
- 
+
       ** +--------------------------------------+
       ** ¦ Start F-specs                        ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** Extract the Deal Number from the data input.
- 
+
      C                   Eval      @KDLNOA = %subst(TransData:24:6)
- 
+
       ** Access original record on PF/DEALSDC.
- 
+
      C     @KDLNO        Chain     DEALS                              90
- 
+
       ** If error then perform any special processing and exit
- 
+
      C                   If        *IN90 <> '0'
      C                   Exsr      *PSSR
      C                   EndIf
- 
+
      C                   EVAL      TNLU = TNLU + 1
- 
+
      C                   UPDATE    DEALSDCF
- 
+
       ** Return control at the end of the processing for the message.
- 
+
      C                   Return
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -193,25 +194,25 @@
       *                                                               *
       *                                                               *
       *****************************************************************
- 
+
      C     *PSSR         Begsr
- 
+
       ** If error in RP1110, set Return Code accordingly.
- 
+
      C                   If        ReturnCode = *blank
      C                   Eval      ReturnCode = ('ErrRP1180')
      C                   EndIf
- 
+
      C     @RUN          IfEq      *BLANK
      C                   Move      'Y'           @RUN              1
      C                   Dump
      C                   EndIf
- 
+
      C                   SetOn                                        U7U8LR
      C                   Return
- 
+
      C                   Endsr
- 
+
       ********************************************************************
       /EJECT
       *****************************************************************
@@ -219,15 +220,15 @@
       * *INZSR - Program Initialisation routine                       *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       ** Transaction Data
      C                   PARM                    TransData
       ** Return Code
      C                   PARM                    ReturnCode
- 
+
      C                   ENDSR
- 
+
       *****************************************************************

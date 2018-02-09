@@ -6,10 +6,11 @@
 /*                                                                   */
 /*       REC3667 - History Update For Overdraft Interest             */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CGL165             Date 17Feb15              */
-/*       Prev Amend No. MD021155           Date 03Jul13              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CGL165             Date 17Feb15              */
+/*                      MD021155           Date 03Jul13              */
 /*                      CRE083BN           Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -25,6 +26,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CGL165 - Dual Withholding Tax (Recompile)                   */
 /*       MD021155 - COB Restructure Phase 1 remnants                 */
 /*                - End processing may cause loop (not introduced    */
@@ -41,7 +43,7 @@
              PGM        PARM(&CNAM &CSEQ)
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
              DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
@@ -341,7 +343,7 @@ ENDPGM:
              SCWRTJREG  COMP(&CNAM) CMPSEQ(&CSEQ) FLAG('E') +
                           TEXT(&STEXT)                                                    /*CSC020*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 ENDPGM2:                                                                                /*MD021155*/
              ENDPGM

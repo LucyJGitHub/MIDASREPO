@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2001')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas RP Midas-Plato interface pre-proc PF/DEALSDG')   *
@@ -22,10 +22,11 @@
       *¦ IRPRCSWP - Format of PF/DLPCSCPD joined with PF/DEALSDG.     *
       * --                                                            *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
-      *  Prev Amend No. CGL165             Date 15Feb17               *
+      *  Last Amend No. MD046248           Date 05Feb18               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CGL165             Date 15Feb17               *
       *                 CDL096             Date 22Sep14               *
       *                 MD030364           Date 10Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -51,6 +52,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
@@ -96,16 +98,16 @@
      F                                     PREFIX(S)
      FDLDTSCL0  IF   E           K DISK    RENAME(DLDTSCD0:DLDTSCR0)            CPL004
      FDLCFSCL0  IF   E           K DISK    RENAME(DLCFSCD0:DLCFSCR0)            CPL004
- 
+
       /EJECT
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
       ** +--------------------------------------+
- 
+
       * Following /COPY is the procedure prototype for the Format routine
       /COPY RPCPYSRC,RPFMTPPF
- 
+
       ** The following /COPY contains various standard declares
      C***/COPY*RPCPYSRC,Std_Dcl
      C/COPY RPCPYSRC,STD_DCL                                                                MD030364
@@ -114,24 +116,24 @@
       ** a data structure
      C***/COPY*RPCPYSRC,Mdn_Hd_DS                                                           MD030364
      C/COPY RPCPYSRC,MDN_HD_DS                                                              MD030364
- 
+
       **   Composite Data
      D CompData        S                   LIKE(TransData) INZ(*BLANKS)
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       **   Format for PF/DEALSDG
      D DEALSDGds     E DS                  EXTNAME(DEALSDG)
      D                                     PREFIX(D)
@@ -162,17 +164,17 @@
       **   Format for Information DS for LF/DLDETUL0
      D DLDETds         DS
      D   @KFormat            261    270
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Parameters
       **   Parameters for ProcFormat
      D   InData        S                   LIKE(TransData) INZ(*Blanks)
@@ -194,7 +196,7 @@
      D @KCOTIN                             LIKE(SOTIN2)                         CPL004
       **   Output queue name
      D OutQueue2       S                   LIKE(MQSQueue)
- 
+
      DOutParms         DS
      D   OutData                           LIKE(TransData) INZ(*BLANKS)
      D   OutLen                       4S 0 INZ(*ZERO)
@@ -204,27 +206,27 @@
      DWrkParms         DS
      D   WrkData                           LIKE(TransData) INZ(*BLANKS)
      D   WrkLen                            LIKE(OutLen) INZ(*ZERO)
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
       *****************************************************************
- 
+
      IDLDTSCD0
      I              DLNO                        SDLNO1
      I              OTIN                        SOTIN1
      I              PRDT                        SPRDT1
      I              COHO                        SCOHO1
      I              DTPR                        SDTPR1
- 
+
      IDLCFSCD0
      I              DLNO                        SDLNO2
      I              OTIN                        SOTIN2
      I              PRDT                        SPRDT2
      I              COHO                        SCOHO2
      I              DTPR                        SDTPR2
- 
+
      IDLPCSCD0
      I              DLNO                        SDLNO3
      I              OTIN                        SOTIN3
@@ -232,55 +234,55 @@
      I              COHO                        SCOHO3
      I              DTPR                        SDTPR3
       /EJECT
- 
+
       ** +--------------------------------------+
       ** ¦ Start F-specs                        ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
      C* Extract the Deal Number from the data input.
- 
+
      C                   Eval      @KDLNOA = %subst(TransData:24:6)
- 
+
      C* Access original record on PF/DEALSDG.
- 
+
      C     @KDLNO        Chain     DEALSDGF                           90
- 
+
       ** If error then perform any special processing and exit
      C                   If        *IN90 <> '0'
      C                   Exsr      *PSSR
      C                   EndIf
- 
+
      C* Check the Frequency Codes.                                              CPL004
                                                                                 CPL004
      C                   Exsr      #CHKFRQ                                      CPL004
                                                                                 CPL004
      C* Format the data from PF/DEALSDG for Meridian.
- 
+
      C                   Eval      InData   = DEALSDGds
      C                   Eval      InDBFile = 'DEALSDG   '
      C                   Eval      OutParms = ProcFormat(InData:InDBFile:
      C                                                   InDecSep:InShwPosSn)
- 
+
      C* Output a message for the record format for PF/DEALSDG.
- 
+
      C                   Eval      WrkData  = OutData
      C                   Eval      RAMSGTYPE=('DEALSDG_A ')
      C                   Exsr      #SNDMSG
- 
+
      C* Contruct the compound message format.
- 
+
      C                   Eval      DlgParms = OutParms
- 
+
      C* Read all Swap Schedule entries for the Swap being processed.
- 
+
      C     @KDLNO        SetLL     DLDETUL0
      C     @KDLNO        ReadE     DLDETUL0                               80
- 
+
      C     *IN80         DowEq     '0'
- 
+
      C* Format the data from PF/DLDTSCPD for Meridian.
- 
+
      C     @KFormat      IfEq      'DLDTSCD0  '
      C                   Eval      InData   = DLDTSCPDds
      C                   Eval      InDBFile = 'DLDTSCPD  '
@@ -288,9 +290,9 @@
      C                                                   InDecSep:InShwPosSn)
      C                   Eval      RAMSGTYPE=('IRDATSWP_A')
      C                   EndIf
- 
+
      C* Format the data from PF/DLCFSCPD for Meridian.
- 
+
      C     @KFormat      IfEq      'DLCFSCD0  '
      C                   Eval      InData   = DLCFSCPDds
      C                   Eval      InDBFile = 'DLCFSCPD  '
@@ -298,9 +300,9 @@
      C                                                   InDecSep:InShwPosSn)
      C                   Eval      RAMSGTYPE=('IRCFLSWP_A')
      C                   EndIf
- 
+
      C* Format the data from PF/DLPCSCPD for Meridian.
- 
+
      C     @KFormat      IfEq      'DLPCSCD0  '
      C                   Eval      InData   = DLPCSCPDds
      C                   Eval      InDBFile = 'DLPCSCPD  '
@@ -308,23 +310,23 @@
      C                                                   InDecSep:InShwPosSn)
      C                   Eval      RAMSGTYPE=('IRPRCSWP_A')
      C                   EndIf
- 
+
      C* Output a message for the compound message format.
- 
+
      C                   Reset                   WrkData
      C                   Eval      WrkData  = OutData
      C                   Eval      %subst(WrkData:OutLen) = DlgData
- 
+
      C* Send the message for IRDATSWP, IRCFLSWP or IRPRCSWP.
- 
+
      C                   Exsr      #SNDMSG
- 
+
      C     @KDLNO        ReadE     DLDETUL0                               80
      C                   EndDo
- 
- 
+
+
      C* Return control at the end of the processing for the message.
- 
+
      C                   Commit
      C**********         Seton                                        LR        177415
      C                   Return
@@ -463,14 +465,14 @@
       **   message queue. If error, dump program.                         **
       **                                                                  **
       **********************************************************************
- 
+
      C     #SNDMSG       Begsr
- 
+
      C* Set up the Operation and Table fields on the message.
- 
+
      C                   Eval      CompData =  %subst(TransData:1:20)
      C                   Eval      %subst(CompData:21) = WrkData
- 
+
      C* Call a standard routine to actually send the message
      C                   CallB     'RPSNDMSG'
      C                   Parm      OutQueue1     OutQueue2
@@ -478,14 +480,14 @@
      C                   Parm                    CompData
      C                   Parm                    CommitCtl
      C                   Parm                    ReturnCode
- 
+
       ** If error then perform any special processing and exit
      C                   If        ReturnCode <> *blank
      C                   Exsr      *PSSR
      C                   EndIf
- 
+
      C     #SNDMSGEnd    Endsr
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -503,20 +505,20 @@
       *****************************************************************
       *
      C     *PSSR         Begsr
- 
+
       ** If error in RP1145, set Return Code accordingly.
      C                   If        ReturnCode = *blank
      C                   Eval      ReturnCode = ('ErrRP1145')
      C                   EndIf
- 
+
      C     @RUN          IfEq      *BLANK
      C                   Move      'Y'           @RUN              1
      C                   Dump
      C                   EndIf
- 
+
      C                   SetOn                                        U7U8LR
      C                   Return
- 
+
      C                   Endsr
       *
       ********************************************************************
@@ -526,9 +528,9 @@
       * *INZSR - Program Initialisation routine                       *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       * MQSeries queue to write to - this parameter IS used in this module
      C                   PARM                    OutQueue1        48
@@ -540,7 +542,7 @@
      C                   PARM                    CommitCtl
       * Return Code
      C                   PARM                    ReturnCode
- 
+
       *
       ** Key List for LF/DLDTSCL0.                                              CPL004
      C     @KDTSL        KLIST                                                  CPL004
@@ -551,6 +553,6 @@
      C     @KCFSL        KLIST                                                  CPL004
      C                   KFLD                    @KCDLNO                        CPL004
      C                   KFLD                    @KCOTIN                        CPL004
- 
+
      C                   ENDSR
       *****************************************************************

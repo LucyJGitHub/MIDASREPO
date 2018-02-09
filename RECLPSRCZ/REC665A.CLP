@@ -7,22 +7,24 @@
 /*                                                                   */
 /*       REC665A - CALCULATE TEG FOR ALTERNATIVE A/C'S               */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CSC020             Date 31Mar04              */
+/*       Prev Amend No. CSC020             Date 31Mar04              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.03 ---------------------------------------------------*/
-/*       Prev Amend No. CCB009             DATE 01Jun00              */
+/*                      CCB009             Date 01Jun00              */
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      S01408             DATE 09MAY95              */
 /*                      S01413 *CREATE     DATE 13APR93              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CSC020 - Journaling changes for MidasPlus.                  */
 /*       CCB009 - Journal files throughout close of business         */
 /*       S01408 - Addition of core hook REC665AMPS                   */
@@ -39,7 +41,7 @@
 /************PGM                                                        CCB009*/
              PGM        PARM(&CNAM &CSEQ)                             /*CCB009*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(8)
              DCL        VAR(&PRE) TYPE(*CHAR) LEN(2)
@@ -352,7 +354,7 @@ EXIT2:
                           ENDDO
 /* */
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /*ENDPGM:******ENDPGM***********************************************************************CSC020*/
 ENDPGM:                                                                                   /*CSC020*/
 /*                                                                                        /*CSC020*/

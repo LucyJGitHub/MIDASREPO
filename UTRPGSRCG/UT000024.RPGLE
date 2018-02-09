@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+     H COPYRIGHT('(c) Finastra International Limited 2010')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas UT Perform SQL for SCRAMBLE')                    *
@@ -9,13 +9,15 @@
       *                                                               *
       *  UT000024 - Perform SQL for SCRAMBLE                          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. BUG27787  *CREATE  Date 15Jul10               *
-      *  Prev Amend No. xxxxxx             Date ddMmmyy               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. BUG27787 *CREATE   Date 15Jul10               *
+      *                 XXXXXX             Date DDMmmYY               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG27787 - New version of SCRAMBLE utility                   *
       *                                                               *
       *****************************************************************

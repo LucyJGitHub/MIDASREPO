@@ -1,6 +1,6 @@
       *****************************************************************
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+     H COPYRIGHT('(c) Finastra International Limited 2010')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas UT Extract Validation List entries')             *
@@ -13,13 +13,15 @@
       *  Function:  This program extracts all validation list         *
       *             entries and saves it to an outout file            *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. CUT007             Date 02Dec10               *
-      *  Prev Amend No. BUG27989*CREATE    Date 08Aug10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CUT007             Date 02Dec10               *
+      *                 BUG27989 *CREATE   Date 08Aug10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CUT007 - Make utility file-driven.                           *
       *  BUG27989 - HATS should run with/without LDAP                 *
       *                                                               *

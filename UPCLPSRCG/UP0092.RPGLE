@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*S*D ***RPGBASEMOD****************************************************                       CPK019
 /*STD *  RPGBASEBND                                                   *                       CPK019
@@ -13,7 +13,7 @@
       *  Function:  This module ensures priorities are correct for    *
       *             shared files and that all files are delivered.    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *  Last Amend No. CUP040             Date 09Aug13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*

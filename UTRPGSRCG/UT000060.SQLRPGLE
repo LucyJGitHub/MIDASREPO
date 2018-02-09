@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2015')
+     H COPYRIGHT('(c) Finastra International Limited 2015')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas UT Retrieve member text from source')            *
@@ -9,12 +9,14 @@
       *                                                               *
       *  UT000060 - Retrieve member text from source                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2015            *
+      *  (c) Finastra International Limited 2015                      *
       *                                                               *
-      *  Last Amend No. CUP042  *CREATE    Date 27May15               *
+      *  Last Amend No. MD046248           Date 05Feb18               *
+      *  Prev Amend No. CUP042  *CREATE    Date 27May15               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CUP042 - Retrieve member text from source                    *
       *                                                               *
       *****************************************************************

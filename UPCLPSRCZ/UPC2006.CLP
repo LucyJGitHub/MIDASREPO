@@ -7,12 +7,13 @@
 /*                                                                   */
 /*       UPC2006 - Shell for copy of DTALIB action files             */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CUP021             Date 04Feb11              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CUP021             Date 04Feb11              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Prev Amend No. CUP033             Date 18Sep06              */
+/*                      CUP033             Date 18Sep06              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /*                      CSM005             Date 21Sep05              */
@@ -26,6 +27,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CUP021 - Rewrite of Action File processing.                 */
 /*       CUP033 - Removal of System Value /COPYs.                    */
 /*       CSM005 - Changes to /COPYs.  Recompile.                     */
@@ -51,7 +53,7 @@
              DCL        VAR(&RETURN) TYPE(*CHAR) LEN(1)
 /**********  DCL        VAR(&TOLIB) TYPE(*CHAR) LEN(10)                     */ /*CPK018*/ /*CUP021*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /************DCLF       FILE(UPUICDPD)                                                 */ /*CUP024*/
@@ -175,6 +177,6 @@ VALIDATE:                                                                       
              MONMSG     MSGID(CPF0000 MCH0000)                                            /*CPK015*/
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

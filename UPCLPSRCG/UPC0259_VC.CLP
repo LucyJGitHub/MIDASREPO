@@ -7,7 +7,7 @@
 /*                                                                   */
 /*       UPC0259_VC - Validity checker for CPYDBLIB                  */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -56,7 +56,7 @@
              DCL        VAR(&STARTTYP) TYPE(*DEC) LEN(3 0)                                /*CPK015*/
              DCL        VAR(&ERROR) TYPE(*CHAR) LEN(1)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /* Global monitor message */
@@ -187,5 +187,5 @@ LOOP1:                                                                          
                           MSGTYPE(*ESCAPE))
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

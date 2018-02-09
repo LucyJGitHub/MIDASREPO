@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*O*R****CRTSRCPF***FILE(QTEMP/UTSQLEXC)*RCDLEN(92)********************                       CUT008
 /*XBI *  CRTSRCPF   FILE(QTEMP/UTSQLEXC) RCDLEN(112)                  *                       CUT008
@@ -13,14 +13,15 @@
       *                                                               *
       *  Component of: UTC000007                                      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CUT008             Date 24Jan11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CUT008             Date 24Jan11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CPK022             Date 10Aug05               *
+      *                 CPK022             Date 10Aug05               *
       *                 CPK019             Date 24Jun04               *
       *                 CPK018  *MOVED     Date 30Jan04               *
       *                 CAP084             Date 28Oct03               *
@@ -28,6 +29,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CUT008 - CRTOBJ rewrite.                                     *
       *           Change record length of UTSQLEXC to 112.            *
       *  CPK022 - Change CALLB UTC000008 to CALL UTC000008.           *
@@ -370,4 +372,4 @@
       /EJECT                                                                                  CPK018
       ********************************************************************                    CPK018
 **  CPY@                                                                                      CPK018
-(c) Misys International Banking Systems Ltd. 2003                                             CPK018
+(c) Finastra International Limited 2003                                                       CPK018

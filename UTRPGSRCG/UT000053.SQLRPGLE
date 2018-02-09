@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+     H COPYRIGHT('(c)Finastra International Limited 2012')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas UT FNDUPDSRC retrieve scan data')
@@ -9,13 +9,15 @@
       *                                                               *
       *  UT000053 - Retrieve scan data                                *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c)Finastra International Limited 2012                       *
       *                                                               *
-      *  Last Amend No. CUT015   *CREATE   Date 19Apr12               *
-      *  Prev Amend No. xxxxxxxx           Date ddMmmyy               *
+      *  Last Amend No. MD046248           Date 05Feb18               *
+      *  Prev Amend No. CUT015   *CREATE   Date 19Apr12               *
+      *                 xxxxxxxx           Date ddMmmyy               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CUT015 - New utility to replace UPDSRC.                      *
       *                                                               *
       *****************************************************************

@@ -1,6 +1,6 @@
       *****************************************************************
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+     H COPYRIGHT('(c) Finastra International Limited 2010')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas UT Validation List entries maintenance')
@@ -13,14 +13,16 @@
       *  Function:  This program display the entries contained        *
       *             within a given validation list                    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. CUT007 *REWRITE    Date 02Dec10               *
-      *  Prev Amend No. BUG28082           Date 31Aug10               *
+      *  Last Amend No. MD046248           Date 05Feb18               *
+      *  Prev Amend No. CUT007 *REWRITE    Date 02Dec10               *
+      *                 BUG28082           Date 31Aug10               *
       *                 BUG27989*CREATE    Date 08Aug10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CUT007 - Make utility file-driven.                           *
       *  BUG28082 - Unable to display the correct information in the  *
       *             screen. (Recompile)                               *
@@ -51,12 +53,12 @@
       *  *INZSR    - Initialise                                       *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       * Validation list entries maintenance display file.
      FUT000031DFCF   E             WORKSTN SFILE(UT000031S0:RRN0)
      F                                     INFDS(SCRDS)
@@ -67,12 +69,12 @@
       *
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ D-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      DPSDS            SDS
      D PSExcpType             40     42
       *  Exception number.
@@ -83,7 +85,7 @@
      D PSUser                254    263
       *
      D IndPointer      S               *   Inz(%ADDR(*IN))
- 
+
       * Indicator data structure.
      D Indicators      DS                  BASED(IndPointer)
      D  Exit                  03     03
@@ -104,7 +106,7 @@
      D  ErrPas2               51     51
      D  ErrPas3               52     52
      D  SetCursor             55     55
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
@@ -120,7 +122,7 @@
      D ACT_Modify      C                   CONST('A')
      D ACT_View        C                   CONST('E')
      D ACT_Delete      C                   CONST('D')
- 
+
       *
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
@@ -131,7 +133,7 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       * Logical conditions.
      D True            C                   *ON
      D False           C                   *OFF
@@ -790,7 +792,7 @@
       *
      C                   EXSR      SrprSfl
      C                   EXSR      SrBldsfl
- 
+
      C                   OTHER
       *
       * Process the subfile.

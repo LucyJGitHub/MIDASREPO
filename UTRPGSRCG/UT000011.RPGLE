@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2007')
+     H COPYRIGHT('(c) Finastra International Limited 2007')
       *****************************************************************
 /*XBIA*  OVRDBF FILE(UTC000001C) TOFILE(UPMBRLTPD)                    *
 /*STD *  RPGBASEBND                                                   *
@@ -10,13 +10,15 @@
       *                                                               *
       *  UT000001 - Check if member exists and return library name    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2007            *
+      *  (c) Finastra International Limited 2007                      *
       *                                                               *
-      *  Last Amend No. BUG22137 *CREATE   Date 13Jan09               *
-      *  Prev Amend No. CUT010             Date 10May07               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. BUG22137 *CREATE   Date 13Jan09               *
+      *                 CUT010             Date 10May07               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG22137 - Bridge/Utility Changes.                           *
       *          - UT000001 renamed to UT000011.                      *
       *  CUT010 - New utility.                                        *

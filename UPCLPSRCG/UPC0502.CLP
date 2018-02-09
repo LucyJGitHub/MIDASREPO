@@ -7,7 +7,7 @@
 /*                                                                   */
 /*       UPC0502 - CPP for command UPGCOMP                           */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -61,7 +61,7 @@
              DCL        VAR(&MSG) TYPE(*CHAR) LEN(132)
              DCL        VAR(&LEN) TYPE(*DEC) LEN(3 0)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
              DCLF       FILE(QADSPOBJ)
@@ -234,5 +234,5 @@ D:              CALL       PGM(UP0418) PARM(&MBRA &FILEA &TEXT)
  
 ENDPGM:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

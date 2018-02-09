@@ -7,19 +7,21 @@
 /*                                                                   */
 /*       UTC0023 - Check /COPY for Omit Processing.                  */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CPK018  *MOVED     Date 26Apr04              */
+/*       Prev Amend No. CPK018             Date 26Apr04              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. 082942             Date 07Feb95              */
+/*                      082942             Date 07Feb95              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CPK018 - MidasPlus packaging.  Moved to global layer.       */
 /*       082942 - New program to check a /COPY for /OMITSTART or     */
 /*                /OMITEND statements.                               */
@@ -31,7 +33,7 @@
              DCL        VAR(&COPYMBR) TYPE(*CHAR) LEN(10)
              DCL        VAR(&RTNCODE) TYPE(*CHAR) LEN(5)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCLF       FILE(*LIBL/STDCRTPARM)
  
@@ -69,5 +71,5 @@
  ABNOR:
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

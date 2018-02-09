@@ -8,7 +8,7 @@
 /*                                                                   */
 /*       UPC0259 - Copy data from one library to another             */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
 /*********************************************************************/
 /* This program monitors for a large and specific set of messages    */
@@ -107,7 +107,7 @@
              DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(100)
              DCL        VAR(&IN01) TYPE(*LGL)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
              DCLF       FILE(CPYDTA)
@@ -902,6 +902,6 @@ ENDPGM:
                 RMVLIBLE   LIB(&LIBF)                                                     /*CPK015*/
              ENDDO                                                                        /*CPK015*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              RCLRSC
              ENDPGM

@@ -7,12 +7,13 @@
 /*                                                                   */
 /*       UTC0350 - CPP for CHGCCSIDS (Change CCSIDs) command         */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Last Amend No. BG19128            Date 19May08              */
-/*       Prev Amend No. BG18582            Date 11Apr08              */
+/*       Prev Amend No. BG19128            Date 19May08              */
+/*                      BG18582            Date 11Apr08              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /*                      CPK022             Date 29Jul05              */
@@ -25,6 +26,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BG19128 - Handle single file only.                          */
 /*       BG18582 - Enhancements to changing CCSIDs.                  */
 /*       CPK022 - Should not use zone /COPYs.                        */
@@ -96,7 +98,7 @@
              DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /***COPY*UTCPYSRC,DCL_MSG                                             */                  /*CPK022*/
@@ -304,7 +306,7 @@ ALL_READ:
 /*/COPY GPCPYSRCG,STDERR                                              */                  /*CPK022*/
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 /*/COPY WNCPYSRC,UTC0350END                                          */
  

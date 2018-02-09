@@ -8,13 +8,15 @@
 /*                                                                   */
 /*       FNDUPDSRC - Scan and replace source                         */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2012           */
+/*       (c) Finastra International Limited 2012                     */
 /*                                                                   */
-/*       Last Amend No. CUT015 *CREATE     Date 03Jan12              */
-/*       Prev Amend No. xxxxxx             Date ddMmmyy              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CUT015 *CREATE     Date 03Jan12              */
+/*                      xxxxxx             Date ddMmmyy              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CUT015 - New utility to replace UPDSRC.                     */
 /*                                                                   */
 /*********************************************************************/

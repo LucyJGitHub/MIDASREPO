@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*XBI *  CRTPF FILE(QTEMP/UPERRMQT) RCDLEN(100)                       *
 /*STD *  RPGBASEBND                                                   *
@@ -10,10 +10,11 @@
       *                                                               *
       *  UP008010 - Write error messages and produce report           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. AR725021           Date 14Mar11               *
-      *  Prev Amend No. BUG27884           Date 08Jul10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR725021           Date 14Mar11               *
+      *                 BUG27884           Date 08Jul10               *
       *                 243463             Date 18Nov06               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -23,6 +24,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR725021 - Reversal of applied 243463 fix (Child: AR725022)  *
       *  BUG27884 - Applied 243463.                                   *
       *  243463 - Seton U7 and U8 to fail component after reporting   *

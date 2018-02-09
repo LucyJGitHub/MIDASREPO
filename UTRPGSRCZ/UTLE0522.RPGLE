@@ -10,13 +10,15 @@
       *             delete (duplicate) IH record and trigger          *
       *             history file recalculation.                       *
       *                                                               *
-      *  (C) Misys Banking Systems 2016                               *
+      *  (C) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. AR545781 *Create   Date 24Aug16               *
-      *  Prev Amend No. Xnnnnnnn           Date ddmmmyy               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR545781 *CREATE   Date 24Aug16               *
+      *                 XNNNNNNN           Date DDMmmYY               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR545781 - Missing/Multiple IH on history file. Provide a    *
       *             datapatch utility to update loan                  *
       *             History file based from loan event history.       *
@@ -871,4 +873,4 @@
      C                   ENDSR
       *****************************************************************
 **  CPY@
-(c) Misys Banking Systems Ltd. 2016
+(c) Finastra International Limited 2016

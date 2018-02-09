@@ -7,19 +7,21 @@
 /*                                                                   */
 /*       UPC8005 - Change system references                          */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2003           */
+/*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
-/*       Last Amend No. BUG27793           Date 08Jun10              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. BUG27793           Date 08Jun10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CPK016             Date 07Oct03              */
+/*                      CPK016             Date 07Oct03              */
 /* Midas Release 4.01.03 --------------------------------------------*/
 /*                      CUP020  *CREATE    Date 03Jan03              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BUG27793 - Make migration multi-streamed.                   */
 /*       CPK016 - Release 5 packaging.  Add overrides.               */
 /*       CUP020 - New utility for changing system IDs                */
@@ -41,7 +43,7 @@
              DCL        VAR(&RPTRG) TYPE(*CHAR) LEN(256)
              DCL        VAR(&RECURSIVE) TYPE(*CHAR) LEN(1) VALUE('N')                   /*BUG27793*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2003')
  
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
@@ -131,6 +133,6 @@ ERROR:
  
 ENDPGM:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

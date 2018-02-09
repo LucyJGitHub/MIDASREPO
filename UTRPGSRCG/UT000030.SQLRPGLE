@@ -1,6 +1,6 @@
       *****************************************************************
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+     H COPYRIGHT('(c) Finastra International Limited 2010')
       *****************************************************************
 /*XBI *  OVRDBF FILE(UTC000030F) TOFILE(UPOBJDTPD)                    *
 /*STD *  RPGSQLBND                                                    *
@@ -14,15 +14,17 @@
       *  Function:  This program display the list of all validation   *
       *             list objects for a particular library             *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. CUT007  *REWRITE   Date 15Dec10               *
-      *  Prev Amend No. BUG28082           Date 31Aug10               *
+      *  Last Amend No. MD046248           Date 05Feb18               *
+      *  Past Amend No. CUT007  *REWRITE   Date 15Dec10               *
+      *                 BUG28082           Date 31Aug10               *
       *                 BUG27989A          Date 12Aug10               *
       *                 BUG27989*CREATE    Date 08Aug10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CUT007 - Rewrite of UTWRKDLVL.                               *
       *  BUG28082 - Unable to display the correct information in the  *
       *             screen. (Recompile)                               *
@@ -48,22 +50,22 @@
       *  *INZSR    - Initialise                                       *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       * Validation List Objects Maintenance File
      FUT000030DFCF   E             WORKSTN SFILE(UT000030S0:RRN0)
- 
+
       * Validation List Objects Output File (DSPOBJ)
      FUTC000030FIF   E           K DISK
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ D-specs                              ¦
       ** ¦ =======                              ¦
@@ -74,19 +76,19 @@
      D PSJobName             244    253
       * User name.
      D PSUser                254    263
- 
+
      D VLDL          E DS                  EXTNAME(UTVLDJW0)
       *
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** Action Codes
      D ACT_ENQ         C                   CONST('E')
      D ACT_VIEW        C                   CONST('12')
      D SflPag          C                   CONST(14)
- 
+
       ** Logical conditions
      D True            C                   *ON
      D False           C                   *OFF
@@ -95,7 +97,7 @@
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Indicator Data Structure
      D Indicators      DS                  BASED(IndPointer)
      D  Exit                  03     03
@@ -107,7 +109,7 @@
      D  NoData                20     20
      D  ActnErr               35     35
      D  ErrOptn               48     48
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦

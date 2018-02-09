@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2005')
+     H COPYRIGHT('(c) Finastra International Limited 2005')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas UP Error Messages in Sections Report')
@@ -14,15 +14,17 @@
       *            *WRTDTL respectively.  It will generate report     *
       *            UP008020P1 when passed in mode is *REPORT.         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. 256038  *CREATE    Date 24FEB05               *
-      *  Prev Amend No. xxxxxx             Date ddmmmyy               *
+      *  Prev Amend No. 256038  *CREATE    Date 24Feb05               *
+      *                 XXXXXX             Date DDMmmYY               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  256038 - Reporting of error messages in sections.            *
       *                                                               *
       *****************************************************************

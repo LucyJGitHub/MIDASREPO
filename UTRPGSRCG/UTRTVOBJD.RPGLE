@@ -8,13 +8,15 @@
       *                                                               *
       *  UTRTVOBJD - Retrieve object description details              *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2015            *
+      *  (c) Finastra International Limited 2015                      *
       *                                                               *
-      *  Last Amend No. CUP042  *CREATE    Date 23Feb15               *
-      *  Prev Amend No. xxxxxx             Date ddmmmyy               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CUP042  *CREATE    Date 23Feb15               *
+      *                 XXXXXX             Date DDMmmYY               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CUP042 - New utility.                                        *
       *                                                               *
       *****************************************************************

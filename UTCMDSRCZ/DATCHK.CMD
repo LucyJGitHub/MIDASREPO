@@ -10,17 +10,19 @@
 /*                                                                   */
 /*       DATCHK - Date Check Command                                 */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
-/*       Last Amend No. CPK009  *CREATE    Date 07Jul99              */
+/*       Prev Amend No. CPK009  *CREATE    Date 07Jul99              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CPK009 - Packaging for DBA3                                 */
 /*                - Moved to main Midas libraries from SYSLIB400.    */
 /*                                                                   */

@@ -7,13 +7,15 @@
 /*                                                                   */
 /*       UTC218328 - CL Program of Datapatch program UT218328        */
 /*                                                                   */
-/*       (C) Copyright Misys Banking Systems, Ltd. 2010              */
+/*       (C) Copyright Finastra International Limited 2010           */
 /*                                                                   */
-/*       Last Amend No. AR218328 *CREATE   Date 24Mar10              */
-/*       Prev Amend No. xxxxxx             Date ddmmmyy              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR218328 *CREATE   Date 24Mar10              */
+/*                      XXXXXX             Date DDMmmYY              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       AR218328 - Populate DLDTSCPD COHO if date is a holiday.     */
 /*                                                                   */
 /*********************************************************************/
@@ -25,7 +27,7 @@
              DCL        VAR(&PREF) TYPE(*CHAR) LEN(2)
              DCL        VAR(&RUNP) TYPE(*CHAR) LEN(3) VALUE('NO')
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(C) +
-                          Copyright Misys Banking Systems, Ltd. +
+                          Copyright Finastra International Limited +
                           2010')
 /**/
 /** Global monitor message **/
@@ -134,6 +136,6 @@ ABNOR:       IF         COND((&MODE *EQ 'U') *OR (&MODE *EQ 'u')) +
              ENDDO
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(C) Copyright +
-                          Misys Banking Systems, Ltd. 2010')
+                          Finastra International Limited 2010')
              SNDPGMMSG  MSG('End of UT218328') TOMSGQ(MRUNQ MOPERQ)
              ENDPGM

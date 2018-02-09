@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+     H COPYRIGHT('(c) Finastra International Limited 2012')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Check/update invalid PRTO and NDEC')                   *
@@ -17,15 +17,17 @@
       *             FIXNBR was not specified in the creation          *
       *             parameters.                                       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c) Finastra International Limited 2012                      *
       *                                                               *
       *  Called By : UTC9008                                          *
       *                                                               *
-      *  Last Amend No. AR1076145          Date 22Jan13               *
-      *  Prev Amend No. AR317764 *CREATE   Date 22Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR1076145          Date 22Jan13               *
+      *                 AR317764 *CREATE   Date 22Aug12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR1076145 - Convert to PGMA - audit and update as one.       *
       *              Will convert bad data to 0 value                 *
       *  AR317764 - Unable to extract data from some fields of RUDWH  *
@@ -396,4 +398,4 @@
       *
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2012
+(c) Finastra International Limited 2012

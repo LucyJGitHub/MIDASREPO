@@ -9,17 +9,19 @@
 /*                                                                   */
 /*       BRIDGECOMP - On-screen source compare                       */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2005           */
+/*       (c) Finastra International Limited 2005                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CSM005  *CREATE    Date 07Sep05              */
-/*       Prev Amend No. xxxxxx             Date ddMmmyy              */
+/*       Prev Amend No. CSM005  *CREATE    Date 07Sep05              */
+/*                      XXXXXX             Date DDMmmYY              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CSM005 - New command to control Bridge on-screen compares.  */
 /*                                                                   */
 /*********************************************************************/

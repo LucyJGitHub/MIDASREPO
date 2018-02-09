@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2007')
+     H COPYRIGHT('(c) Finastra International Limited 2007')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas UT Report on source object cross checks')
@@ -9,15 +9,17 @@
       *                                                               *
       *  UT000312 - Report on source/object cross reference problems  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2007            *
+      *  (c) Finastra International Limited 2007                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. CUT011  *CREATE    Date 12Dec07               *
-      *  Prev Amend No. xxxxxx             Date ddMmmyy               *
+      *  Prev Amend No. CUT011  *CREATE    Date 12Dec07               *
+      *                 XXXXXX             Date DDMmmYY               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CUT011 - Rewrite of command.  Make it more flexible and      *
       *           easier to maintain.                                 *
       *                                                               *

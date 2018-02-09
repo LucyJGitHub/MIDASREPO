@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2006')
+     H COPYRIGHT('(c) Finastra International Limited 2006')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas UT Utility to update invalid data')
@@ -10,17 +10,19 @@
       *  UTGP0001 - Utility to update invalid data in Customer and    *
       *             Branch file                                       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *  (c) Finastra International Limited 2006                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CPK026             Date 01Jan07               *
-      *  Prev Amend No. BG12468  *CREATE   Date 07Nov06               *
+      *  Prev Amend No. CPK026             Date 01Jan07               *
+      *                 BG12468 *CREATE    Date 07Nov06               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CPK026 - Remove references to objects in zone layer.         *
       *  BG12468 - Update invalid data in Customer and Branch file    *
       *                                                               *

@@ -7,17 +7,19 @@
 /*                                                                   */
 /*       UTCGL022 - Alternate Account Record Update                  */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2004           */
+/*       (c) Finastra International Limited 2004                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. 237346             Date 16FEB06              */
-/*       PREV Amend No. 230815             Date 06Dec04              */
+/*       Prev Amend No. 237346             Date 16Feb06              */
+/*                      230815             Date 06Dec04              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       237346 - TO USE UTILITY CREATED FOR 230815                  */
 /*       230815 - Utility to check Alternate Account records for     */
 /*                discrepancies with other files.                    */
@@ -25,7 +27,7 @@
 /*********************************************************************/
              PGM        PARM(&MODE)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2004')
              DCL        VAR(&MODE) TYPE(*CHAR) LEN(1)
              DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(8)
@@ -142,6 +144,6 @@ ABNORMAL:
  ENDCLPGM:   RCLRSC     LVL(*)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
              ENDPGM

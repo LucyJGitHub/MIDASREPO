@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
+     H COPYRIGHT('(c) Finastra International Limited 2011')
       *****************************************************************
 /*XBI *  OVRDBF FILE(AFCPL01) TOFILE(UPAFCPL0) SHARE(*NO)             *
 /*STD *  RPGBASEBND                                                   *
@@ -10,13 +10,15 @@
       *                                                               *
       *  UP009000 - Action File details - browse                      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2011            *
+      *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. A1084804           Date 29Jan13               *
-      *  Prev Amend No. CUP021  *CREATE    Date 11Jan11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. A1084804           Date 29Jan13               *
+      *                 CUP021  *CREATE    Date 11Jan11               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  A1084804 - Add 'Go to' option.                               *
       *  CUP021 - Rewrite of Action File processing                   *
       *                                                               *

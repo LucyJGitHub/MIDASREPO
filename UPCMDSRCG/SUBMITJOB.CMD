@@ -9,18 +9,20 @@
 /*                                                                   */
 /*       SUBMITJOB - Submit job?                                     */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2002           */
+/*       (c) Finastra International Limited 2002                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4.01 -----------------------------------------------*/
-/*       Last Amend No. CPK015 *CREATE     Date 23Mar02              */
-/*       Prev Amend No. xxxxxx             Date ddmmmyy              */
+/*       Prev Amend No. CPK015 *CREATE     Date 23Mar02              */
+/*                      xxxxxx             Date ddmmmyy              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CPK015 - 4.01 packaging.                                    */
 /*                                                                   */
 /*********************************************************************/

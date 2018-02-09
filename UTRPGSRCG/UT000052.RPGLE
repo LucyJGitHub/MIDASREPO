@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+     H COPYRIGHT('(c) Finastra International Limited 2012')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas UT FNDUPDSRC update multiple sources')           *
@@ -9,13 +9,15 @@
       *                                                               *
       *  UT000052 - Update multiple sources                           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. CUT015   *CREATE   Date 20Apr12               *
-      *  Prev Amend No. xxxxxxxx           Date ddMmmyy               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CUT015  *CREATE    Date 20Apr12               *
+      *                 XXXXXXXX           Date DDMmmYY               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CUT015 - New utility to replace UPDSRC.                      *
       *                                                               *
       *****************************************************************

@@ -15,21 +15,23 @@
 /*      Note further that the validity checking is carried out in    */
 /*      this program, not in a separate validity cheker.             */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Last Amend No. BG19128            Date 06Jun08              */
+/*       Prev Amend No. BG19128            Date 06Jun08              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.03 ---------------------------------------------------*/
-/*       Prev Amend No. CUP008             Date 04Jul00              */
+/*                      CUP008             Date 04Jul00              */
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      CAA002 *CREATE     Date 31OCT95              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BG19128 - Spool file number can be 6 long.  Recompile.      */
 /*       CUP008 - Change processing for 'NOLINE' option.             */
 /*       CAA002 - Development of utility to save, edit and restore   */
@@ -76,7 +78,7 @@
                           /* Error occurred during update of +
                           control record. */
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
  
@@ -255,6 +257,6 @@
                           MSGDTA(&MSGDTA) MSGTYPE(*ESCAPE)
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

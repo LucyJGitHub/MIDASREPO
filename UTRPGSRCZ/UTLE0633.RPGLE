@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys Banking Systems 2016')
+     H COPYRIGHT('(c) Finastra International Limited 2016')
      H FIXNBR(*NOINPUTPACKED)
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
@@ -22,13 +22,15 @@
       *                                                               *
       *  Called By: UTCLE0633 - CL program                            *
       *                                                               *
-      *  (c) Misys Banking Systems 2016                               *
+      *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. AR806351 *CREATE   Date 03Oct16               *
-      *  Prev Amend No. Xxxxxxxx           Date ddmmmyy               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR806351 *CREATE   Date 03Oct16               *
+      *                 XXXXXXXX           Date DDMmmYY               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR806351 - PDCLs with type Y/Z and FAMU = N have records in  *
       *             FACHISA. Delete invalid records in file and tag   *
       *             facility for recalculation. (Child: AR806352)     *
@@ -736,4 +738,4 @@
       /EJECT
       *****************************************************************
 **  CPY@
-(c) Misys Banking Systems 2016
+(c) Finastra International Limited 2016

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas TI Incoming message processing')
@@ -13,14 +13,15 @@
       *                                                               *
       *  Called By: TIC0210 - TI Incoming Message Processing          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSD027             Date 09Dec05               *
-      *  Prev Amend No. CDL038             Date 10May05               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CDL038             Date 10May05               *
       *                 BUG4892            Date 22Nov04               *
       * Midas Release 4.01.02 ----------------------------------------*
       *                 210825             Date 31Oct02               *
@@ -34,6 +35,7 @@
       *                 CTI001  *CREATE    Date 07Jul97               *
       *                                                               *
       *---------------------------------------------------------------*
+      *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CDL038 - Extended Deal Sub Type (Recompile)                  *
       *  BUG4892 - TRNO is not unique for messages received into TI   *
@@ -377,4 +379,4 @@
      OMSIXI2D0  E
      O                       LSTS
 ** CPY@   Object Copyright
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

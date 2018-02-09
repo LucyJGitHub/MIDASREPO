@@ -10,14 +10,16 @@
 /*                                                                   */
 /*       LIBENDJRN - End journaling for all objects in a library     */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2006           */
+/*       (c) Finastra International Limited 2006                     */
 /*                                                                   */
-/*       Last Amend No. BUG27135           Date 10Mar10              */
-/*       Prev Amend No. CUP036  *CREATE    Date 22Nov06              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. BUG27135           Date 10Mar10              */
+/*                      CUP036  *CREATE    Date 22Nov06              */
 /*                      xxxxxx             Date ddMmmyy              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BUG27135- Rename ENDJRNLIB to LIBENDJRN                     */
 /*       CUP036 - Add automated refreshing for test systems.         */
 /*                                                                   */

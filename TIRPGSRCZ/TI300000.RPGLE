@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas TI Update MX Files for Trade Finance')           *
@@ -9,15 +9,17 @@
       *                                                               *
       *  TI300000 - Midas TI Update MX Files for Trade Finance        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD031372           Date 21Nov14               *
-      *  Prev Amend No. MD031150           Date 29Oct14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD031372           Date 21Nov14               *
+      *                 MD031150           Date 29Oct14               *
       *                 MD030926           Date 08Oct14               *
       *                 CTI006  *CREATE    Date 31Mar14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD031372 - Changes in Account Types export. New format       *
       *             TISDACOD3 created for special delete when A5TOIN  *
       *             is changed from N to Y.                           *
@@ -593,4 +595,4 @@
       /EJECT
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2014
+(c) Finastra International Limited 2014

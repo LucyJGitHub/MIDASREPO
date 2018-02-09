@@ -9,19 +9,21 @@
 /*                                                                   */
 /*       USERNAME - Enter User Name and Description                  */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2002           */
+/*       (c) Finastra International Limited 2002                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4.01.03 --------------------------------------------*/
 /* Midas Release 4.01.02 --------------------------------------------*/
-/*       Last Amend No. CSM002 *CREATE     DATE 30Oct02              */
-/*       Prev Amend No. xxxxxx             Date ddmmmyy              */
+/*       Prev Amend No. CSM002 *CREATE     DATE 30Oct02              */
+/*                      xxxxxx             Date ddmmmyy              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CSM002 - Allow rename of old users and description in       */
 /*                migration.                                         */
 /*                                                                   */

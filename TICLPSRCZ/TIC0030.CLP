@@ -7,7 +7,7 @@
 /*                                                                   */
 /*       TIC0030 - TI Stop/Start SD Replication in TI/CSCS           */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
 /*       This component controls the continuous download SD on-line  */
 /*       download to TI by sending a message to th TI/CSCS to inform */
@@ -23,17 +23,19 @@
 /*       For the stop message alone, a reply is expected from the    */
 /*       TI/CSCS confirming that the SD replicator is stopped.       */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST Amend No. CTI001  *CREATE    Date 28JUL97              */
+/*       Prev Amend No. CTI001  *CREATE    Date 28Jul97              */
 /*            Amend No. Xnnnnn             Date ddmmmyy              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CTI001 - Midas / Trade Innovation Interface Phase 1         */
 /*                Program created.                                   */
 /*                                                                   */
@@ -48,7 +50,7 @@
              DCL        VAR(&RESPONSE) TYPE(*CHAR) LEN(80)
              DCL        VAR(&FIRSTRUN) TYPE(*CHAR) LEN(1)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /* Global monitor message */
@@ -102,5 +104,5 @@
              MONMSG     MSGID(CPF0000 MCH0000)
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

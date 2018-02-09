@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
+     H COPYRIGHT('(c) Finastra International Limited 2011')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas UT Retrieve service program information')        *
@@ -9,13 +9,15 @@
       *                                                               *
       *  UT000036 - Display service program information to files      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2011            *
+      *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. CUT008  *CREATE    Date 21Dec10               *
-      *  Prev Amend No. xxxxxx             Date ddMmmyy               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CUT008  *CREATE    Date 21Dec10               *
+      *                 XXXXXX             Date DDMmmYY               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CUT008 - Rewrite of CRTOBJ.                                  *
       *                                                               *
       *****************************************************************

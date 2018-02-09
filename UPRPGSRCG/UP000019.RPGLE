@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*XBI *  OVRDBF FILE(UPSFMTQT) TOFILE(UPSFMTPD)                       *
 /*STD *  RPGBASEBND                                                   *
@@ -10,17 +10,19 @@
       *                                                               *
       *  UP000019 - Work out priorities for SQL views                 *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CPK021  *CREATE    Date 22Sep04               *
-      *  Prev Amend No. xxxxxx             Date ddMmmyy               *
+      *  Prev Amend No. CPK021  *CREATE    Date 22Sep04               *
+      *                 XXXXXX             Date DDMmmYY               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CPK021 - New utility to work out priorities for SQL views.   *
       *                                                               *
       *****************************************************************

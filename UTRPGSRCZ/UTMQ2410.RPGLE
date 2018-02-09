@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+     H COPYRIGHT('(c) Finastra International Limited 2012')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas UT Utility to update invalid data')              *
@@ -11,12 +11,14 @@
       *               LEPDUFPD which don't have a related record on   *
       *               LEFEED/CLOANCL.                                 *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. AR574425 *CREATE   Date 01Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR574425 *CREATE   Date 01Aug12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR574425 - Housekeeping of uncessary records from LEPDUEPD   *
       *             and LEPDUFPD. (Child:AR574426)                    *
       *                                                               *

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas UP Generate module & program X-check report')
@@ -21,18 +21,20 @@
       *                                                               *
       *  Calls:     UPC000141                                         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CPK025             Date 10Oct05               *
-      *  Prev Amend No. CPK022             Date 29Jul05               *
+      *  Prev Amend No. CPK025             Date 10Oct05               *
+      *                 CPK022             Date 29Jul05               *
       *                 CUP029  *CREATE    Date 30Sep04               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CPK025 - Added exception file UPMPXCPD                       *
       *  CPK022 - Should not use zone /COPYs.                         *
       *  CUP029 - Utility to cross check module and program sources   *

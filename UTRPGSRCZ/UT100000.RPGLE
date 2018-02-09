@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas UT Utility to Set QNAME for New MX Format')      *
@@ -9,12 +9,14 @@
       *                                                               *
       *  UT100000 - Midas UT Utility to Set QNAME for New MX Format   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD031372 *CREATE   Date 21Nov14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD031372 *CREATE   Date 21Nov14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD031372 - Update MXEXFDPD.EXMSGQ field with the queue name  *
       *             setup for static data.                            *
       *                                                               *
@@ -128,4 +130,4 @@
       /EJECT
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2014
+(c) Finastra International Limited 2014

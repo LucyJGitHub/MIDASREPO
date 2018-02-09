@@ -8,15 +8,17 @@
 /*                                                                   */
 /*       CHOBJINF - Change object information                        */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2008           */
+/*       (c) Finastra International Limited 2008                     */
 /*                                                                   */
-/*       Last Amend No. BUG27980           Date 05Aug10              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. BUG27980           Date 05Aug10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
-/*       Prev Amend No. BUG27133 *CREATE   Date 04Feb08              */
+/*                      BUG27133 *CREATE   Date 04Feb08              */
 /*                      xxxxxx             Date ddMmmyy              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BUG27980 - Remove DBGVIEW (Recompile).                      */
 /*       BUG27133 - CHGOBJINF utility - delivery to core.            */
 /*                                                                   */

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys Banking Systems 2016')
+     H COPYRIGHT('(c) Finastra International Limited 2016')
      H FIXNBR(*NOINPUTPACKED)
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
@@ -22,13 +22,15 @@
       *                                                               *
       *  Called By: UTCLE0793 - CL program                            *
       *                                                               *
-      *  (c) Misys Banking Systems 2016                               *
+      *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. MD022057 *CREATE   Date 08Nov16               *
-      *  Prev Amend No. Xxxxxxxx           Date ddmmmyy               *
+      *  Last Amend No. MD046248           Date 05Feb18               *
+      *  Prev Amend No. MD022057 *CREATE   Date 08Nov16               *
+      *                 Xxxxxxxx           Date ddmmmyy               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD022057 - Recalculate facilities in LETFHAPD.               *
       *                                                               *
       *****************************************************************
@@ -36,7 +38,7 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FUTLE0793PDIF   E           K DISK    INFSR(*PSSR)
      FLETFHAPD  IF   E           K DISK    INFSR(*PSSR)
      FFCLTYL1   IF   E           K DISK    INFSR(*PSSR)
@@ -55,7 +57,7 @@
      F                                     IGNORE(HISACTF)
      F                                     PREFIX(F2_)
      FUTLE0793P1O    E             PRINTER OFLIND(*IN89)
- 
+
       *****************************************************************
       *                                                               *
       *  F U N C T I O N  O F  I N D I C A T O R S                    *
@@ -89,100 +91,100 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the LE standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /SPACE 5
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** Rundate data structure.
- 
+
      D RUNDAT        E DS                  EXTNAME(RUNDAT)
- 
+
       ** Data structure for Currency details.
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** General Ledger Details.
- 
+
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
- 
+
       ** Bank Details.
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** Data structure for Access Program.
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D FacUpdate       S              1A   INZ(*blanks)
      D WFCLTY          S              5A   INZ(*blanks)
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
- 
+
       *****************************************************************
       /SPACE 5
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *inzsr is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
      C                   WRITE     HEADER1
       *
       ** Check all LIVE facilities.
@@ -447,4 +449,4 @@
       /EJECT
       *****************************************************************
 **  CPY@
-(c) Misys Banking Systems 2016
+(c) Finastra International Limited 2016

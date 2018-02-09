@@ -8,15 +8,16 @@
 /*                                                                   */
 /*       UPC0120 - Change subsystem routing entries                  */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CPK017             Date 13Jun03              */
+/*       Prev Amend No. CPK017             Date 13Jun03              */
 /* Midas Release 4.01.03 --------------------------------------------*/
-/*       Prev Amend No. CUP016             Date 30Dec02              */
+/*                      CUP016             Date 30Dec02              */
 /* Midas Release 4.01 -----------------------------------------------*/
 /*                      CPK015             Date 04Apr02              */
 /* Midas Release 4 --------------- Base -----------------------------*/
@@ -30,6 +31,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CPK017 - Release 5 packaging.  Check subsystem has been     */
 /*                renamed.                                           */
 /*       CUP016 - Add implementation software to core.               */
@@ -57,7 +59,7 @@
 /************DCL        VAR(&REPLY1) TYPE(*CHAR) LEN(1)                                */ /*CUP013*/
              DCL        VAR(&RECURSIVE) TYPE(*CHAR) LEN(1) VALUE('N')
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /************DCLF       FILE(UPUICDPD)                                      */ /*CUP011*/ /*CUP016*/
@@ -137,6 +139,6 @@
              CHGJOB     SWS(XXXXXX11)                                                     /*CUP016*/
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

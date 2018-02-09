@@ -8,18 +8,20 @@
 /*       TIC0040 - Prompt for Status of Midas/TI Link during         */
 /*                 Maintenance                                       */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Last Amend     CTI001  *CREATE    Date 06AUG97              */
+/*       Prev Amend     CTI001  *CREATE    Date 06AUG97              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CTI001 - Midas / Trade Innovation Interface Phase 1         */
 /*                                                                   */
 /*********************************************************************/
@@ -30,7 +32,7 @@
              DCL        VAR(&SYSNM) TYPE(*CHAR) LEN(8)
              DCL        VAR(&USERID) TYPE(*CHAR) LEN(10)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&MSG) TYPE(*CHAR) LEN(132)
  
@@ -105,5 +107,5 @@ SNDRCVF:     SNDRCVF
              MONMSG     MSGID(CPF0000 MCH0000)
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

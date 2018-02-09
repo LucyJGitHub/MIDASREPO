@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas UP Write UPSVPSMPD rec for each SVP modules')
@@ -10,19 +10,21 @@
       *  UP000139 - Add records to UPSVPSMPD for each module listed   *
       *             in header box of a service program                *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
       *  Called By: UPC000139                                         *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CPK022             Date 29Jul05               *
-      *  Prev Amend No. CUP029 *CREATE     Date 29Sep04               *
+      *  Prev Amend No. CPK022             Date 29Jul05               *
+      *                 CUP029 *C *CREATE  Date 29Sep04               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CPK022 - Should not use zone /COPYs.                         *
       *  CUP029 - Utility to cross check module and program sources   *
       *           in a library.                                       *

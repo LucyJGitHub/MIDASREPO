@@ -9,12 +9,14 @@
 /*                                                                   */
 /*       CFGSQLSEQ - Configure SQL sequence (data area)              */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2011           */
+/*       (c) Finastra International Limited 2011                     */
 /*                                                                   */
-/*       Last Amend No. AR663527 *CREATE   Date 10Jan11              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR663527 *CREATE   Date 10Jan11              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       AR663527 - RAT Transaction reference number should be a     */
 /*                  daily incremental number (Child: AR663528)       */
 /*                                                                   */

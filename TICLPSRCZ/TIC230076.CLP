@@ -7,16 +7,18 @@
 /*                                                                   */
 /*       TIC230076 - CL program to call TI230076                     */
 /*                                                                   */
-/*       (c) Copyright Misys International Banking Systems 2005      */
+/*       (c) Copyright Finastra International Limited 2005           */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. BUG6597 *Create    Date 10May05              */
+/*       Prev Amend No. BUG6597  *CREATE   Date 10May05              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BUG6597 - Duplicate TI number and suffix for branch         */
 /*                 customer.  Applied fix 230076.                    */
 /*                                                                   */
@@ -29,7 +31,7 @@
              DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&PREF) TYPE(*CHAR) LEN(2)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(C) +
-                          Copyright Misys Intl Banking System +
+                          Copyright Finastra International Limited +
                           2005')
  
 /* Global monitor message */
@@ -139,6 +141,6 @@
                           ended') TOMSGQ(MRUNQ)
              SNDUSRMSG  MSG('Program TIC230076 succefully ended.') +
                           MSGTYPE(*INFO)
-             CHGVAR     VAR(&CPYFLD) VALUE('(c) Copyright Misys +
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Copyright Finastra +
                           International Banking Systems 2005')
  ENDPGM:     ENDPGM

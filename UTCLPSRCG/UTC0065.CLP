@@ -7,20 +7,22 @@
 /*                                                                   */
 /*       CHKLIBLE - Check no. of libraries that added to library list*/
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CPK018  *MOVED     Date 26Apr04              */
-/*       Prev Amend No. CSC017             Date 14Feb03              */
+/*       Prev Amend No. CPK018             Date 26Apr04              */
+/*                      CSC017             Date 14Feb03              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      CUP001  *CREATE    Date 18Dec98              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CPK018 - MidasPlus packaging.  Moved to global layer.       */
 /*       CSC017 - Change to 250 library list.                        */
 /*       CUP001 - Introduction of BRIDGE                             */
@@ -61,7 +63,7 @@
              DCL        VAR(&LIBL25) TYPE(*CHAR) LEN(1) VALUE(N)                          /*CSC017*/
              DCL        VAR(&LIBNBRFLAG) TYPE(*CHAR) LEN(1)                               /*CSC017*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /* Global monitor message */
@@ -226,6 +228,6 @@ ABNOR:
                           please check joblog') TOPGMQ(*EXT)
 ENDPGM:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

@@ -9,14 +9,15 @@
 /*                                                                   */
 /*       CRTDLVLST - Create Deliverables List                        */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CUP042             Date 28Apr15              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CUP042             Date 28Apr15              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CPK020             Date 28Jul04              */
+/*                      CPK020             Date 28Jul04              */
 /*                      CPK018             Date 16Apr04              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
@@ -24,6 +25,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CUP042 - Reworking of command to simplify it.               */
 /*       CPK020 - Handle deliverable data.                           */
 /*       CPK018 - MidasPlus packaging.  Take out '*NONE' option.     */

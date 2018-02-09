@@ -9,13 +9,15 @@
 /*                                                                   */
 /*       CMPFMNT - Maintain template file for CMPFMNT                */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2010           */
+/*       (c) Finastra International Limited 2010                     */
 /*                                                                   */
-/*       Last Amend No. BUG27790  *CREATE  Date 22Jun10              */
-/*       Prev Amend No. xxxxxx             Date ddmmmyy              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. BUG27790 *CREATE   Date 22Jun10              */
+/*                      XXXXXX             Date DDMmmYY              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BUG27790 - New utility                                      */
 /*                                                                   */
 /*********************************************************************/

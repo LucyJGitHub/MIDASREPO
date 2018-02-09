@@ -13,13 +13,15 @@
       *             update RE history files accordingly, based on     *
       *             int. details found in REIACD.                     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD023799A          Date 09Jan13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD023799A          Date 09Jan13               *
       *                 AR1055719 *CREATE  Date 26Nov13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD023799A - Amended the utility so that those account inser- *
       *              ted and those account with rate movement on      *
       *              rundate will not be processed.                   *

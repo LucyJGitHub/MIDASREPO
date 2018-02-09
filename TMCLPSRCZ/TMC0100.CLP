@@ -25,20 +25,22 @@
 /*                  TMC0210 - MM Takeon                              */
 /*                  TMC0310 - AB Takeon                              */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Last Amend No. CPK009             Date 09Aug99              */
-/*       Prev Amend No. E35511            DATE  05FEB92              */
+/*       Prev Amend No. CPK009             Date 09Aug99              */
+/*                      E35511             Date 05Feb92              */
 /*                                                                   */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CPK009 - Packaging for DBA3 release. STRCMTCTL values set   */
 /*                to CMTSCOPE(*JOB).                                 */
 /*       E35511 - Two files not journalled which are required for    */
@@ -59,7 +61,7 @@
              DCL        VAR(&LOGTYPE) TYPE(*CHAR) LEN(10)
              DCL        VAR(&LOGCLPGM) TYPE(*CHAR) LEN(10)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /*   Monitor messages                                                */
@@ -204,7 +206,7 @@
  SDAFMT:     SNDPGMMSG  MSGID(SDA2006) MSGF(QSDAMSG)
  
 SDAEND:      CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              CHGJOB     LOG(&LOGLVL &LOGSEV &LOGTYPE) +
                           LOGCLPGM(&LOGCLPGM)
              MONMSG     MSGID(CPF0000)

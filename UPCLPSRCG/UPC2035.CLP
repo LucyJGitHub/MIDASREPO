@@ -7,7 +7,7 @@
 /*                                                                   */
 /*       UPC2035 - Copy /COPYs to specified location                 */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /*       Last Amend No. BUG27240           Date 12Mar10              */
@@ -51,7 +51,7 @@
 /**********  DCL        VAR(&TOLIB) TYPE(*CHAR) LEN(10)                                */ /*CUP033*/
              DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /************DCLF       FILE(UPUICDPD)                                                 */ /*CUP024*/
@@ -128,6 +128,6 @@ VALIDATE:                                                                       
              MONMSG     MSGID(CPF0000 MCH0000)                                            /*CPK015*/
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

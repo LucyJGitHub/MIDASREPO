@@ -7,14 +7,16 @@
 /*                                                                   */
 /*       UTRTNDTAQD - Return DTAQ Description Command                */
 /*                                                                   */
-/*       (C) COPYRIGHT MISYS-WBS Ltd. 2004                           */
+/*       (C) COPYRIGHT FINASTR-WBS Ltd. 2004                         */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Last Amend No. 231490  *Create    Date 21Jan05              */
+/*       Prev Amend No. 231490  *CREATE    Date 21Jan05              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       231490 - Applied fix 225515. Re-occurred MEC0710 is stuck.  */
 /*                Do not wait for Meridian when all messages have    */
 /*                been processed (= queue empty).                    */

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SP Retrun Password from Validation List')        *
@@ -9,13 +9,15 @@
       *                                                               *
       *  UT00001PR - Transaction validate and update adoption         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD033895           Date 16Apr15               *
-      *  Prev Amend No. MD021423 *CREATE   Date 21Aug13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD033895           Date 16Apr15               *
+      *                 MD021423 *CREATE   Date 21Aug13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD033895 - Correct parameters for UT000033.                  *
       *  MD021423 - Abnormally long run of PDCL/MAPY processing       *
       *             components                                        *
@@ -31,26 +33,26 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **---------------------------------------------------------------
-
+ 
       **---------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **---------------------------------------------------------------
-
+ 
       **---------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the
       ** error arrays, including the named constant giving the size of
       ** the arrays.
      D/COPY ZACPYSRC,FVAL_ARRAY
       **---------------------------------------------------------------
-
+ 
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
-
+ 
       ** System Value Parameter
      D POP01           S             20A
      D PVL01           S            200A
@@ -72,7 +74,7 @@
      D PVL09           S            200A
      D POP10           S             20A
      D PVL10           S            200A
-
+ 
       ** Entry parameters
      D   UserName      S             10
      D   Password      S             10
@@ -91,29 +93,29 @@
      D PPassword2      S            600A                                                    MD033895
      D PDescrptn       S           1000A                                                    MD033895
      D GlobalPref      S              2A
-
+ 
      D Jobd            DS            20
      D JobDName                1     10    INZ('MIDASIC   ')
      D System                 11     12
      D XLib                   13     20    INZ('XLIB    ')
-
+ 
      DValidList        C                   CONST('GPLDAPVL')
-
+ 
      D Parm            DS          3200
      D OffSetB               361    364B 0
      D LibCountB             365    368B 0
-
+ 
      D Len             S              4B 0 INZ(3200)
-
-
+ 
+ 
       * If this Message array needs to increase a separate parameter will need to be added
      D MsgArrOut       S           9999    INZ(*BLANKS)
-
+ 
      D OffLen          S              9  0
      D OffSet          S              9  0
      D InLibl          S           2750
      D Command         S           2764
-
+ 
       * Error message format for retrieve jobd libl
      DQUSEC            DS
       *                                             Qus EC
@@ -129,20 +131,20 @@
       *                                             Varying length
      D QUSExcData             17     46
       *                                             Varying length field Exception Data
-
+ 
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
-
+ 
      C     *ENTRY        PLIST
      C     System        PARM                    Sys               2
      C                   PARM                    ReturnCode
      C                   PARM                    UserName
      C                   PARM                    Password
-
+ 
      C                   Eval      ReturnCode = *BLANKS
       *
       * Set up job description library list
@@ -168,15 +170,15 @@
      C                   Eval      InLibl = %SubSt(Parm:OffSet:OffLen)
      C                   Eval      Command = ('CHGLIBL LIBL(' +
      C                             InLibl + ')')
-
+ 
      C                   Call      'QCMDEXC'                              92
      C                   Parm                    Command
      C                   Parm      2764          Length           15 5
-
+ 
      C                   EVAL      @RTCD = *BLANKS
      C                   EVAL      POP01 = 'GlobalSystemPrefix'
      C                   EVAL      PVL01 = *BLANKS
-
+ 
      C                   CALL      'AOSVALR0'
      C                   PARM                    @RTCD
      C                   PARM                    POP01
@@ -199,7 +201,7 @@
      C                   PARM      *BLANKS       PVL09
      C                   PARM      *BLANKS       POP10
      C                   PARM      *BLANKS       PVL10
-
+ 
      C                   IF        @RTCD = *BLANKS
      C                   MOVEL     PVL01         GlobalPref
      C                   ENDIF
@@ -224,9 +226,9 @@
      C                   EVAL      DBASE = 001
      C                   EXSR      *PSSR
      C                   ENDIF
-
+ 
      C                   EVAL      Password = PPassword1
-
+ 
      C                   SETON                                        LR
      C                   RETURN
       **********************************************************************
@@ -235,13 +237,13 @@
       *  Initialisation                                              *
       ****************************************************************
      C     *INZSR        BEGSR
-
+ 
       **--------------------------------------------------------------
       ** The following /COPY sets the values of program, module and
       ** procedure names for database error processing.
      C/COPY ZACPYSRC,DBFIELDS
       **--------------------------------------------------------------
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -260,4 +262,4 @@
      C                   ENDSR
       ****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2013
+(c) Finastra International Limited 2013

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys Banking Systems 2012')
+     H COPYRIGHT('(c) Finastra International Limited 2012')
      H FIXNBR (*NOZONED:*NOINPUTPACKED)
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
@@ -15,13 +15,15 @@
       *                                                               *
       *  Called By: UTCLE0668 - CL program                            *
       *                                                               *
-      *  (c) Misys Banking Systems 2012                               *
+      *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. AR1036834 *CREATE  Date 03Oct16               *
-      *  Prev Amend No. Xxxxxxxxx          Date ddmmmyy               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR1036834 *CREATE  Date 03Oct16               *
+      *                 XXXXXXXXX          Date DDMmmYY               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR1036834 - Missing PDCL repayments in facility history.     *
       *              Search and add all missing PDCL repayments.      *
       *              (Child: AR1036835)                               *
@@ -998,4 +1000,4 @@
      C                   ENDSR
       ********************************************************************
 **  CPY@
-(c) Misys Banking Systems 2012
+(c) Finastra International Limited 2012

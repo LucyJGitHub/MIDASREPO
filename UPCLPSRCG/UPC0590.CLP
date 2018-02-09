@@ -7,7 +7,7 @@
 /*                                                                   */
 /*       UPC0590  - Shell for UPC0600 (according to source length)   */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -40,7 +40,7 @@
              DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)
              DCL        VAR(&MSG) TYPE(*CHAR) LEN(132)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /* Global monitor message */
@@ -103,5 +103,5 @@ ENDPGM:
              DLTOVR     FILE(UPFFDSTPD) LVL(*JOB)                                         /*CUP033*/
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000)                                   /*BUG8856*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

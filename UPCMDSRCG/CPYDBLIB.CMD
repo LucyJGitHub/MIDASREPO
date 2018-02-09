@@ -9,21 +9,23 @@
 /*                                                                   */
 /*       CPYDBLIB - Copy from one database library to another        */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CPK024             Date 13Feb06              */
+/*       Prev Amend No. CPK024             Date 13Feb06              */
 /* Midas Release 4.01 -----------------------------------------------*/
-/*       Prev Amend No. CPK015             DATE 13Feb02              */
+/*                      CPK015             Date 13Feb02              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.01 ---------------------------------------------------*/
 /*                      CPK009 *CREATE     DATE 08Jul99              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CPK024 - Moved source from UPPNLSRCZ for MP1.2.1 release    */
 /*                packaging.                                         */
 /*       CPK015 - 4.01 packaging.  Improvements to CPYDBLIB.         */

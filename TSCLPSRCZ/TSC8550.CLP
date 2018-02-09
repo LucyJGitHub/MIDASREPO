@@ -7,14 +7,15 @@
 /*                                                                   */
 /*       TSC8550 - Real Time MDI Controller                          */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CCB020             Date 06Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CCB020             Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CSC020             Date 31Mar04              */
+/*                      CSC020             Date 31Mar04              */
 /*                      CSC018             DATE 31May03              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.05 ---------------------------------------------------*/
@@ -36,6 +37,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*  CCB020 - COB Restructure - Secondary COB Infrastructure          */
 /*       CSC020 - Journaling changes for MidasPlus.                  */
 /*  CSC018 - Journal options for high availability. ICJRN sequence   */
@@ -143,7 +145,7 @@
              DCL        VAR(&CNTSE6) TYPE(*CHAR) LEN(1)                                   /*CSC018*/
              DCL        VAR(&STRRCV) TYPE(*CHAR) LEN(10)                                  /*CSC020*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
  
@@ -826,5 +828,5 @@ PC that it can take extracted data now. */
  END:        ENDCMTCTL
              MONMSG     MSGID(CPF0000)
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

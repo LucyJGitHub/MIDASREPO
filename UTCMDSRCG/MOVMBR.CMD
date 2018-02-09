@@ -8,14 +8,15 @@
 /*                                                                   */
 /*       MOVMBR - Move file members                                  */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. BUG27989           Date 08Aug10              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. BUG27989           Date 08Aug10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CPK017             Date 21Jan04              */
+/*                      CPK017             Date 21Jan04              */
 /* Midas Release 4.01 -----------------------------------------------*/
 /*                      CPK015             Date 22May02              */
 /* Midas Release 4 --------------- Base -----------------------------*/
@@ -24,6 +25,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BUG27989 - HATS should run with/without LDAP                */
 /*       CPK018 - Release 5 packaging.  Allow for member type of     */
 /*                MOVED and SQL types.                               */

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2008')
+     H COPYRIGHT('(c) Finastra International Limited 2008')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas UP Check if object is to be journaled')
@@ -9,15 +9,17 @@
       *                                                               *
       *  UP000001 - Check if object is to be journaled.               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *  (c) Finastra International Limited 2008                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. 256038  *CREATE    Date 06Sep08               *
-      *  Prev Amend No. xxxxxx             Date ddmmmyy               *
+      *  Prev Amend No. 256038  *CREATE    Date 06Sep08               *
+      *                 XXXXXX             Date DDMmmYY               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  256038 - Handle triggering of files.                         *
       *                                                               *
       *****************************************************************

@@ -10,19 +10,21 @@
 /*                                                                   */
 /*       RESYNCHTI - SEND "RESYNCH" message to TI                    */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.05 ---------------------------------------------------*/
-/*       Last Amend No. CTI003 *CREATE     Date 01Mar01              */
-/*       Prev Amend No. nnnnnn             Date ddmmmyy              */
+/*       Prev Amend No. CTI003 *CREATE     Date 01Mar01              */
+/*                      nnnnnn             Date ddmmmyy              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CTI003 - Midas/TI Interface CoB                             */
 /*                                                                   */
 /*********************************************************************/

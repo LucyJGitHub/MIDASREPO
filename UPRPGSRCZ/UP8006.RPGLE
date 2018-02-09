@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas UP Update System ID for MSSENDPD')
@@ -9,18 +9,20 @@
       *                                                               *
       *  UP8006 - Update System ID on MSSENDPD                        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4.01.03 ----------------------------------------*
-      *  Last Amend No. CUP020 *CREATE     Date 08Jan03               *
-      *  Prev Amend No. xxxxxx             Date ddmmmyy               *
+      *  Prev Amend No. CUP020 *CREATE     Date 08Jan03               *
+      *                 xxxxxx             Date ddmmmyy               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CUP020 - Update System IDs when copying libraries.           *
       *                                                               *
       *****************************************************************

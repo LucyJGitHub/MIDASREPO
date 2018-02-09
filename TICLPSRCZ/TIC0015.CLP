@@ -8,15 +8,16 @@
 /*                                                                   */
 /*       TIC0015 - Check links to TI                                 */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
 /*    *************************************************************  */
 /*    * Please note: for compilation purposes file T2PF currently *  */
 /*    * exists in library MBASETI.                                *  */
 /*    *************************************************************  */
 /*                                                                   */
-/*       Last Amend No. MD030956*REINSTATE Date 09Oct14              */
-/*       Prev Amend No. MD029775*REDUNDANT Date 19Aug14              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD030956           Date 09Oct14              */
+/*                      MD029775           Date 19Aug14              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -29,6 +30,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD030956 - Additional changes to BFM-TI enhancement.        */
 /*                  Reinstated for future use in case of downgrade.  */
 /*       MD029775 - TI/Midas EOD sync will no longer be used by TI   */
@@ -55,7 +57,7 @@
 /*/COPY MLCPYSRC,MLCOVRDCL                                         */
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
              DCLF       FILE(T2PF)
@@ -237,5 +239,5 @@ END:
              ENDDO
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

@@ -9,13 +9,15 @@
 /*                                                                   */
 /*       SNDSPLF - Send spool file to e-mail                         */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2010           */
+/*       (c) Finastra International Limited 2010                     */
 /*                                                                   */
-/*       Last Amend No. CUP039  *CREATE    Date 15Nov10              */
-/*       Prev Amend No. xxxxxx             Date ddMmmyy              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CUP039  *CREATE    Date 15Nov10              */
+/*                      XXXXXX             Date DDMmmYY              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CUP039 - New utility.                                       */
 /*                                                                   */
 /*********************************************************************/

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2009')
+     H COPYRIGHT('(c) Finastra International Limited 2009')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas UT Compare members after RMVSRCHEX')             *
@@ -9,13 +9,15 @@
       *                                                               *
       *  UT000012 - Remove invalid hex values from source.            *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 20067           *
+      *  (c) Finastra International Limited 2007                      *
       *                                                               *
-      *  Last Amend No. CUT015  *CREATE    Date 10May07               *
-      *  Prev Amend No. xxxxxx             Date ddMmmyy               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CUT015  *CREATE    Date 10May07               *
+      *                 XXXXXX             Date DDMmmYY               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CUT015 - New utility.  Part of take on of ClearCase.         *
       *                                                               *
       *****************************************************************

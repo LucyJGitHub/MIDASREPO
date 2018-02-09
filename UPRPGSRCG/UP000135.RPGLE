@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*XBIA*  OVRDBF FILE(UPALLSPD) TOFILE(QADSPOBJ)                        *
 /*STD *  RPGBASEBND                                                   *
@@ -10,19 +10,21 @@
       *                                                               *
       *  UP000135 - Load module and program source file               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
       *  Called By: UPC000135                                         *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CPK022             Date 29Jul05               *
-      *  Prev Amend No. CUP029 *CREATE     Date 22Sep04               *
+      *  Prev Amend No. CPK022             Date 29Jul05               *
+      *                 CUP029 *C *CREATE  Date 22Sep04               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CPK022 - Should not use zone /COPYs.                         *
       *  CUP029 - Utility to cross check module and program sources   *
       *           in a library.                                       *

@@ -8,13 +8,15 @@
 /*                                                                   */
 /*       CHKSRCHEX - Check results of RMVSRCHEX                      */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2009           */
+/*       (c) Finastra International Limited 2009                     */
 /*                                                                   */
-/*       Last Amend No. CUT015  *CREATE    Date 15Sep09              */
-/*       Prev Amend No. xxxxxx             Date ddMmmyy              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CUT015  *CREATE    Date 15Sep09              */
+/*                      XXXXXX             Date DDMmmYY              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CUT015 - New utility.                                       */
 /*                                                                   */
 /*********************************************************************/

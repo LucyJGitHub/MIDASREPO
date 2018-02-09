@@ -9,14 +9,15 @@
 /*                                                                   */
 /*       CRTOBJ - Create objects for Midas                           */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CUT008  *REWRITE   Date 15Nov10              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CUT008             Date 15Nov10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CPK022             Date 28Jul05              */
+/*                      CPK022             Date 28Jul05              */
 /*                      CPK018  *MOVED     Date 21Nov03              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.04 ---------------------------------------------------*/
@@ -37,6 +38,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CUT008 - CRTOBJ rewrite                                     */
 /*                Remove keyword SUBM, add keywords DEBUG, RVKAUT.   */
 /*                Object name can be entered.                        */

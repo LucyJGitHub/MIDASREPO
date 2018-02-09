@@ -9,12 +9,14 @@
 /*       GENEMSTK - Error Messages References Stack Generation       */
 /*                  Launcher                                         */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CBF011  *CREATE    Date 04Jul11              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CBF011  *CREATE    Date 04Jul11              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CBF011 - BF Infrastructure: Error Message Handling          */
 /*                                                                   */
 /*********************************************************************/

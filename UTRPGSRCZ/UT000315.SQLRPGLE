@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c)Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas Data correction for GPAMADPD')
@@ -11,18 +11,19 @@
       *                                                               *
       *  Function: Synchronizes the zone's SDCUSTPD to GPAMADPD       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c)Finastra International Limited 2014                       *
       *                                                               *
       *  Last Amend No. MD026387  *CREATE  Date 15Apr14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD026387 - Reconciliation issue with GPAMADPD                *
       *                                                               *
       *****************************************************************
- 
+
      ** For CGCSSN
- 
+
      C/EXEC SQL
      C+ Update GPAMADPD A
      C+ set A.CGCSSN = (Select BBCSSN from SDCUSTPD B
@@ -34,9 +35,9 @@
      C                   IF        SQLCODE <> 0 AND SQLCODE <> 100
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      ** For CGRNM
- 
+
      C/EXEC SQL
      C+ Update GPAMADPD A
      C+ set A.CGRNM = (Select BBCRNM from SDCUSTPD B
@@ -48,9 +49,9 @@
      C                   IF        SQLCODE <> 0 AND SQLCODE <> 100
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      ** For CGRTN
- 
+
      C/EXEC SQL
      C+ Update GPAMADPD A
      C+ set A.CGRTN = (Select BBCRTN from SDCUSTPD B
@@ -62,9 +63,9 @@
      C                   IF        SQLCODE <> 0 AND SQLCODE <> 100
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      ** For CGCNCZ
- 
+
      C/EXEC SQL
      C+ Update GPAMADPD A
      C+ set A.CGCNCZ = (Select BBCNCZ from SDCUSTPD B
@@ -76,9 +77,9 @@
      C                   IF        SQLCODE <> 0 AND SQLCODE <> 100
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      ** For CGCOLC
- 
+
      C/EXEC SQL
      C+ Update GPAMADPD A
      C+ set A.CGCOLC = (Select BBCOLC from SDCUSTPD B
@@ -90,9 +91,9 @@
      C                   IF        SQLCODE <> 0 AND SQLCODE <> 100
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      ** For CGBRCD
- 
+
      C/EXEC SQL
      C+ Update GPAMADPD A
      C+ set A.CGBRCD = (Select BBBRCD from SDCUSTPD B
@@ -104,9 +105,9 @@
      C                   IF        SQLCODE <> 0 AND SQLCODE <> 100
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      ** For CGCUST
- 
+
      C/EXEC SQL
      C+ Update GPAMADPD A
      C+ set A.CGCUST = (Select BBCUST from SDCUSTPD B
@@ -118,9 +119,9 @@
      C                   IF        SQLCODE <> 0 AND SQLCODE <> 100
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      ** For CGZONE
- 
+
      C/EXEC SQL
      C+ Update GPAMADPD A
      C+ set A.CGZONE = 'MOSCOW'
@@ -129,9 +130,9 @@
      C                   IF        SQLCODE <> 0 AND SQLCODE <> 100
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      ** For CGACO
- 
+
      C/EXEC SQL
      C+ Update GPAMADPD A
      C+ set A.CGACO = (Select BBACOC from SDCUSTPD B
@@ -143,9 +144,9 @@
      C                   IF        SQLCODE <> 0 AND SQLCODE <> 100
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      ** For CGGLOB
- 
+
      C/EXEC SQL
      C+ Update GPAMADPD A
      C+ set A.CGGLOB = (Select CONCAT(CONCAT(BBBRCD,'-'),BBCUST)
@@ -154,14 +155,14 @@
      C                   IF        SQLCODE <> 0 AND SQLCODE <> 100
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EVAL      *INLR = '1'
      C                   RETURN
       *****************************************************************
       *    *PSSR                                                      *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
      C                   EVAL      *INU7 = '1'
      C                   EVAL      *INU8 = '1'
      C                   DUMP

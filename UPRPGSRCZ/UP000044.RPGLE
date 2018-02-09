@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2015')
+     H COPYRIGHT('(c) Finastra International Limited 2015')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas UP Take-On program for CGL176 enhancement')
@@ -15,13 +15,15 @@
       *                                                               *
       *  Called By: SCOFMENU                                          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2015            *
+      *  (c) Finastra International Limited 2015                      *
       *                                                               *
-      *  Last Amend No. MD036147 *Create  Date 12Oct15               *
-      *  Prev Amend No.                    Date                       *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD036147 *CREATE   Date 12Oct15               *
+      *                                    Date                       *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD036147 - New take-on pgm to initialise CQQ006 on all zone  *
       *                                                               *
       *****************************************************************

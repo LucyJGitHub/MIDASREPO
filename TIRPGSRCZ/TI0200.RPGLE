@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas TI Outgoing message processing')                 *
@@ -18,13 +18,14 @@
       *                                                               *
       *  Called By: mmCnnnn - (program name)                          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 247160             Date 05Jul07               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. 247160             Date 05Jul07               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
-      *  Prev Amend No. 243504             Date 18Jan07               *
+      *                 243504             Date 18Jan07               *
       *                 235778             Date 18Jan07               *
       * Midas Plus 1.3 ----------- Base ------------------------------*
       *                 BUG11679           Date 05Jul06               *
@@ -57,6 +58,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  247160 - Increase sequence number field to 999. TI swift     *
       *           messages cannot be transmitted to Midas because     *
       *           there were more than 98 swift messages created for  *
@@ -1124,4 +1126,4 @@
      C                   ENDSR
       *****************************************************************
 ** CPY@   Object Copyright
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

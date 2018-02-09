@@ -11,21 +11,23 @@
 /*                                                                   */
 /*       FETCH - Fetch latest source member                          */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CUT015             Date 19Jun12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CUT015             Date 19Jun12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.02 ---------------------------------------------------*/
-/*       Prev Amend No. CPK010             Date 08Nov99              */
+/*                      CPK010             Date 08Nov99              */
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      S01516             DATE 02NOV94              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CUT015 - Rewrite for Midas Plus naming conventions.         */
 /*       CPK010 - MDB3 Alpha site enhancements                       */
 /*                - Standardisation of creation parameters           */

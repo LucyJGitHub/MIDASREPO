@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys Banking Systems 2012')
+     H COPYRIGHT('(c) Finastra International Limited 2012')
      H FIXNBR(*NOINPUTPACKED)
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
@@ -13,12 +13,14 @@
       *  Function: This program updates records in History files      *
       *            that have invalid data in some fields.             *
       *                                                               *
-      *  (c) Misys Banking Systems 2012                               *
+      *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. AR316215 *CREATE   Date 01Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR316215 *CREATE   Date 01Aug12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR316218 - Unable to extract some fields of RUDWH library    *
       *             tables due to corrupted data.                     *
       *             Patch all records with invalid data. As CAS005 is *
@@ -631,4 +633,4 @@
      C                   ENDSR
       ********************************************************************
 **  CPY@
-(c) Misys Banking Systems 2012
+(c) Finastra International Limited 2012

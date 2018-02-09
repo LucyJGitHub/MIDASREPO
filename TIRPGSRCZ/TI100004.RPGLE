@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas TI Bulk Export Control Screen')                  *
@@ -12,13 +12,15 @@
       *  Function:  This program is called as a control confirmation  *
       *             screen for starting bulk export program.          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD031150           Date 29Oct14               *
-      *  Prev Amend No. CTI006  *CREATE    Date 31Mar14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD031150           Date 29Oct14               *
+      *                 CTI006  *CREATE    Date 31Mar14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD031150 - Changes to Export of Base Rates                   *
       *  CTI006 - Trade Finance BF Midas 2.2 Interface                *
       *                                                               *

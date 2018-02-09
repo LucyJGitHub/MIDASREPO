@@ -9,17 +9,19 @@
 /*                                                                   */
 /*       RSTLIBL - Restore Saved Library List                        */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2003           */
+/*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CPK018  *MOVED     Date 23Apr04              */
-/*       Prev Amend No. CSC017  *CREATE    Date 19Feb03              */
+/*       Prev Amend No. CPK018             Date 23Apr04              */
+/*                      CSC017  *CREATE    Date 19Feb03              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CPK018 - MidasPlus packaging.  Moved to global layer.       */
 /*       CSC017 - Change to 250 library list.                        */
 /*                                                                   */

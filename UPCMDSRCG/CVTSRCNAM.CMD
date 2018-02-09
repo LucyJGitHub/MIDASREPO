@@ -9,17 +9,19 @@
 /*                                                                   */
 /*       CVTSRCNAM - Convert source name for MidasPlus               */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2004           */
+/*       (c) Finastra International Limited 2004                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CPK018  *CREATE    Date 07Jun04              */
-/*       Prev Amend No. xxxxxx             Date ddmmmyy              */
+/*       Prev Amend No. CPK018  *CREATE    Date 07Jun04              */
+/*                      XXXXXX             Date DDMmmYY              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CPK018 - MidasPlus packaging.  New utility.                 */
 /*                                                                   */
 /*********************************************************************/

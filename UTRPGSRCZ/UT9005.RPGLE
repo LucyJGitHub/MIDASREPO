@@ -1,6 +1,6 @@
       *****************************************************************
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas UT CPP for UPDGENFLD')
@@ -12,17 +12,19 @@
       *           API definition files that define a particular API.  *
       *           Field numbers are generated from this by GENFLDNOS. *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4.01.03 ----------------------------------------*
-      *  Last Amend No. CUP021  *CREATE    Date 12Jan03               *
+      *  Prev Amend No. CUP021  *CREATE    Date 12Jan03               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CUP021 - Creation of UPDGENFLD command.  This is part of a   *
       *           re-write of GENFLDNOS, to make it file driven.      *
       *                                                               *

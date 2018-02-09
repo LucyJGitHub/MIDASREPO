@@ -9,19 +9,21 @@
 /*                                                                   */
 /*       RNMMBR - Command to Rename Members                          */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CPK018  *MOVED     Date 26Apr04              */
+/*       Prev Amend No. CPK018  *MOVED     Date 26Apr04              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. 084651  *CREATE    Date 13Mar95              */
+/*                      084651  *CREATE    Date 13Mar95              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CPK018   MidasPlus packaging.  Moved to global layer.       */
 /*       084651 - Command to rename members.                         */
 /*                                                                   */

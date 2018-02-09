@@ -7,7 +7,7 @@
 /*                                                                   */
 /*       UPC0520  - Put compares to screen                           */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -56,7 +56,7 @@
              DCL        VAR(&UPP02Y) TYPE(*CHAR) LEN(10)
              DCL        VAR(&UPP02) TYPE(*CHAR) LEN(10)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /************DCLF       FILE(UPUICDPD)                                                 */ /*CUP024*/
@@ -183,6 +183,6 @@ TAG001:
              RETURN
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

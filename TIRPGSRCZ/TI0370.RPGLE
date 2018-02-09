@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas TI COB Shadow posting of TI postings')           *
@@ -9,11 +9,12 @@
      F*                                                               *
      F*  TI0370 - COB Shadow Posting of forward dated TI postings     *
      F*                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
      F*                                                               *
-      *  Last Amend No. CRE075             Date 06Dec10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CRE075             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Prev Amend No. BUG27045A          Date 13Apr10               *
+      *                 BUG27045A          Date 13Apr10               *
       *                 BUG27045           Date 18Feb10               *
       *                 CAP205             Date 16Mar10               *
       *                 CAP204             Date 09Feb10               *
@@ -37,6 +38,7 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
       *  BUG27045A - Override the fix of Bug 27045 (Recompile)        *
       *  BUG27045 - Amend via SOAP removes Document Linkage           *
@@ -491,4 +493,4 @@
      C*
      C********************************************************************
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

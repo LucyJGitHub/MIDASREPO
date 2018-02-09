@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2005')
+     H COPYRIGHT('(c) Finastra International Limited 2005')
       *****************************************************************
 /*XBI *  OVRDBF FILE(UPP02P) TOFILE(UPP02APD)                         *
 /*STD *  RPGBASEBND                                                   *
@@ -10,19 +10,21 @@
       *                                                               *
       *  UP000540 - Compare screen handling                           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSM005  *REWRITE   Date 18Aug05               *
-      *  Prev Amend No. CPK016             Date 16Apr03               *
+      *  Prev Amend No. CSM005             Date 18Aug05               *
+      *                 CPK016             Date 16Apr03               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.00 ---------------- Base -------------------------*
       *                 CUP001 *CREATE     Date 23Dec98               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSM005 - Rewrite of UP0540 and moved to global layer.        *
       *  CPK016 - UPP02P renamed to UPP02APD.                         *
       *  CUP001 - Introduction of BRIDGE                              *

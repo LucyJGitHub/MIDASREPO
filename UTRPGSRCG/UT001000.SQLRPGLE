@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas UT Populate UTQHSTTD from QHST log')
@@ -9,12 +9,14 @@
       *                                                               *
       *  UT001000 - Populate UTQHSTTD from QHST log                   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. CPK030   *CREATE    Date 19Feb14              *
+      *  Last Amend No. MD046248           Date 05Feb18               *
+      *  Prev Amend No. CPK030   *CREATE    Date 19Feb14              *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CPK030 - New utility to store start and end data of jobs     *
       *                                                               *
       *****************************************************************

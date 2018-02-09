@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*XBIA*  OVRDBF FILE(GMUL1) TOFILE(UPGMULTPD)                         *
 /*XBIB*  OVRDBF FILE(GMUL2) TOFILE(UPGMULTPD)                         *
@@ -14,17 +14,19 @@
       *                                                               *
       *  UP1725 - Build Action File for T_GRMENUL                     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CPK025             Date 25Aug06               *
-      *  Prev Amend No. CUP031 *CREATE     Date 11Jan05               *
+      *  Prev Amend No. CPK025             Date 25Aug06               *
+      *                 CUP031 *C *CREATE  Date 11Jan05               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CPK025 - MidasPlus 1.3 packaging.  Sometimes the CMPPFM puts *
       *           out a wrong result so it needs to be cross checked. *
       *  CUP031 - Creation of new set of Action File utilities.       *

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
+     H COPYRIGHT('(c) Finastra International Limited 2011')
       *****************************************************************
 /*XBI *  OVRDBF FILE(CFFDL02) TOFILE(UPCFFDL0) SHARE(*NO)             *
 /*STD *  RPGBASEBND                                                   *
@@ -10,13 +10,15 @@
       *                                                               *
       *  UP009004 - Create file fields definition                     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2011            *
+      *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. AR859322           Date 09Nov11               *
-      *  Prev Amend No. CUP021  *CREATE    Date 20Jan11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR859322           Date 09Nov11               *
+      *                 CUP021  *CREATE    Date 20Jan11               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR859322 - Ensure AFCOID field has correct value.            *
       *  CUP021 - Rewrite of Action File processing                   *
       *                                                               *

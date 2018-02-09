@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
+     H COPYRIGHT('(c) Finastra International Limited 2011')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas UP Update unique numbers for CB* files')         *
@@ -9,13 +9,15 @@
       *                                                               *
       *  UP009008 - Update unique numbers for CB* files               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2011            *
+      *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. AR967496           Date 10May12               *
-      *  Prev Amend No. CUP021  *CREATE    Date 02Feb11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR967496           Date 10May12               *
+      *                 CUP021  *CREATE    Date 02Feb11               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR967496 - CBMEXCPD Sequencing error                         *
       *             Allow for more than 99 or 999 inserts.            *
       *  CUP021 - Rewrite of Action File processing                   *

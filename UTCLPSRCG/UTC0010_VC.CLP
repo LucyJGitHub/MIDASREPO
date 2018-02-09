@@ -7,19 +7,21 @@
 /*                                                                   */
 /*       UTC0010_VC - Validity checker for CHGOBJ command            */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CUT008             Date 18Jan11              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CUT008             Date 18Jan11              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CPK018  *MOVED     Date 26Apr04              */
+/*                      CPK018             Date 26Apr04              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /*                      CPK014 *CREATE     Date 23Nov01              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CUT008 - CRTOBJ rewrite.                                    */
 /*                Allow change of source member name to an object.   */
 /*                Source file, library need not to be specified.     */
@@ -57,7 +59,7 @@
              DCL        VAR(&REM) TYPE(*CHAR) LEN(2)
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /* Extract variables from parameter                               */
@@ -175,5 +177,5 @@ DATECHK:
             SNDPGMMSG  MSGID(CPF0002) MSGF(QCPFMSG) MSGTYPE(*ESCAPE))
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

@@ -9,16 +9,18 @@
 /*                                                                   */
 /*       RESETMAXID - Reset values for auto-generated fields         */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2004           */
+/*       (c) Finastra International Limited 2004                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CUP030  *CREATE    Date 16Dec04              */
+/*       Prev Amend No. CUP030  *CREATE    Date 16Dec04              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CUP030 - New utility for MidasPlus                          */
 /*                                                                   */
 /*********************************************************************/

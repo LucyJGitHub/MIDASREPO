@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas UP Check if Midas system ID is valid')
@@ -11,19 +11,21 @@
       *             - Midas system prefix                             *
       *             - Global layer prefix                             *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CPK025  *MOVED     Date 16May06               *
-      *  Prev Amend No. CUP099             Date 30May05               *
+      *  Prev Amend No. CPK025             Date 16May06               *
+      *                 CUP099             Date 30May05               *
       *                 CPK018             Date 25Feb04               *
       *                 CUP024  *CREATE    Date 29Sep03               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CPK025 - Handle 'Old' system prefixes and move to global     *
       *           layer.                                              *
       *  CUP099 - New system value for old zone (used for migration). *

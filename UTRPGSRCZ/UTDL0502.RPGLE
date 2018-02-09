@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+     H COPYRIGHT('(c) Finastra International Limited 2012')
       *****************************************************************
 /*C*T****CRTBNDRPG*****************************************************                       CDL099
 /*C*T****PGM(**********/**********)************************************                       CDL099
@@ -16,15 +16,17 @@
       *  Function:  This program will check corrupted FSRRAT field    *
       *  (I/C)      in DLBHISPD, DLCHISPD and DLDHISPD.               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c) Finastra International Limited 2012                      *
       *                                                               *
       *  Called By : UTCDL0502                                        *
       *                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
-      *  Prev Amend No. AR317892 *Create   Date 26Jul12               *
+      *  Last Amend No. MD046248           Date 05Feb18               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 AR317892 *Create   Date 26Jul12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  AR317892 - Utility that will check corrupted FSRRAT fields   *
       *             in DLBHISPD, DLCHISPD and DLDHISPD.               *
@@ -391,4 +393,4 @@
      C                   ENDSR
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2012
+(c) Finastra International Limited 2012

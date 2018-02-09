@@ -1,7 +1,7 @@
       *****************************************************************
      H DEBUG
      H DFTACTGRP (*NO)
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+     H COPYRIGHT('(c) Finastra International Limited 2010')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas UT Validation List Maintenance')                 *
@@ -16,12 +16,14 @@
       *             It uses DSM API's which displays the input        *
       *             fields dynamically based on length passed.        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. CUT007  *CREATE    Date 22Nov10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CUT007  *CREATE    Date 22Nov10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CUT007 - Make utility file-driven.                           *
       *                                                               *
       *****************************************************************

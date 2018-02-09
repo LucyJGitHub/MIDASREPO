@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2007')
+     H COPYRIGHT('(c) Finastra International Limited 2007')
       *****************************************************************
 /*XBIA*  CRTPF FILE(QTEMP/CMPSRCOF) RCDLEN(220)                       *
 /*XBIB*  OVRDBF FILE(CMPSRCQT) TOFILE(CMPSRCOF)                       *
@@ -11,14 +11,16 @@
       *                                                               *
       *  UT000003 - Remove extraneous lines                           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2007            *
+      *  (c) Finastra International Limited 2007                      *
       *                                                               *
-      *  Last Amend No. CUP007             Date 10Nov10               *
-      *  Prev Amend No. BUG27884 *CREATE   Date 08Jul10               *
+      *  Last Amend No. MD046248           Date 05Feb18               *
+      *  Prev Amend No. CUP007             Date 10Nov10               *
+      *                 BUG27884 *CREATE   Date 08Jul10               *
       *                 CUT010             Date 15May07               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CUP007 - New utility.                                        *
       *  BUG27884 - Applied CUT010.                                   *
       *  CUT010 - New utility.                                        *

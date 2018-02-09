@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2007')
+     H COPYRIGHT('(c) Finastra International Limited 2007')
       *****************************************************************
 /*XBI *  OVRDBF FILE(UTC00311FB) TOFILE(UPOBJDTPD)                    *
 /*STD *  RPGBASEBND                                                   *
@@ -10,15 +10,17 @@
       *                                                               *
       *  UT000311 - Manipulate DSPOBJD outfile for src/obj x-ref      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2007            *
+      *  (c) Finastra International Limited 2007                      *
       *                                                               *
-      *  Last Amend No. BUG27989           Date 08Aug10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. BUG27989           Date 08Aug10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. CUT011  *CREATE    Date 12Dec07               *
+      *                 CUT011  *CREATE    Date 12Dec07               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG27989 - HATS should run with/without LDAP                 *
       *  CUT011 - Rewrite of command.  Make it more flexible and      *
       *           easier to maintain.                                 *

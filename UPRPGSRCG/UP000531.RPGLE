@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2005')
+     H COPYRIGHT('(c) Finastra International Limited 2005')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas UP Compare job maintenance')
@@ -9,12 +9,13 @@
       *                                                               *
       *  UP000531 - Compare Job Maintenance                           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2007            *
+      *  (c) Finastra International Limited 2007                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. CUP034  *RENAME    Date 16Jan07               *
-      *  Prev Amend No. CSM005  *REWRITE   Date 18Aug05               *
+      *  Prev Amend No. CUP034             Date 16Jan07               *
+      *                 CSM005             Date 18Aug05               *
       *                 CUP028             Date 02Sep04               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.00 ---------------- Base -------------------------*
@@ -23,6 +24,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CUP034 - Renamed because UP000030 was overwritten by a new   *
       *           program for CMPDBA.                                 *
       *  CSM005 - Rewrite of UP0030 and moved to global layer.        *

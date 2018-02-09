@@ -9,19 +9,21 @@
 /*                                                                   */
 /*       CMPOUTQ - Compare contents of two ouput queues              */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.04 ---------------------------------------------------*/
-/*       Last Amend No. CUP009 *CREATE     Date 07Aug00              */
-/*       Prev Amend No. nnnnnn             Date ddmmmyy              */
+/*       Prev Amend No. CUP009 *CREATE     Date 07Aug00              */
+/*                      nnnnnn             Date ddmmmyy              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CUP009 - Creation of CMPOUTQ command.  This is a re-write   */
 /*                 of CMPCOB.                                        */
 /*                                                                   */

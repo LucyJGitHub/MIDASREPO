@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys Banking Systems 2016')
+     H COPYRIGHT('(c) Finastra International Limited 2016')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Facility history wrong sequence number')               *
@@ -14,13 +14,15 @@
       *                                                               *
       *  Called By: UTCLE0793A - CL program                           *
       *                                                               *
-      *  (c) Misys Banking Systems 2016                               *
+      *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. MD022057  *Create  Date 08Nov16               *
-      *  Prev Amend No. Xxxxxxxx           Date ddmmmyy               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD022057 *CREATE   Date 08Nov16               *
+      *                 XXXXXXXX           Date DDMmmYY               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD022057 - Resequence the records after correcting the zero  *
       *             value dates.                                      *
       *                                                               *
@@ -737,7 +739,7 @@
       /TITLE SR/ZDATE2
      C/COPY ZSRSRC,ZDATE2Z2LE
 **  CPY@
-(C) Copyright Misys Banking System Ltd. 2013
+(C) Copyright Finastra International Limited 2013
 **   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
 0366073110961461
 **   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR

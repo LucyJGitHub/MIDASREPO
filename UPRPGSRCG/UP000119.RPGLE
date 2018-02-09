@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*XBI *  CRTPF FILE(QTEMP/UPSBSD) RCDLEN(132)                         *
 /*STD *  RPGBASEBND                                                   *
@@ -10,17 +10,19 @@
       *                                                               *
       *  UP000119 - Change subsystem routing entries                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CUP041             Date 01Jun14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CUP041             Date 01Jun14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CUP025  *CREATE    Date 01Dec03               *
+      *                 CUP025  *CREATE    Date 01Dec03               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CUP041 - New Bridge methodology to combine menu options      *
       *  CUP025 - MidasPlus Bridge changes                            *
       *                                                               *

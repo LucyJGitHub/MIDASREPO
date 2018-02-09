@@ -8,17 +8,19 @@
 /*       UTC0043_VC - Apply library list from a job description to   */
 /*                     current job validity checker                  */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2003           */
+/*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CSC017  *CREATE    Date 14Feb03              */
-/*       Prev Amend No. Xnnnnn             Date ddmmmyy              */
+/*       Prev Amend No. CSC017  *CREATE    Date 14Feb03              */
+/*                      XNNNNN             Date DDMmmYY              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CSC017 - Change to 250 library list.                        */
 /*                                                                   */
 /*********************************************************************/
@@ -29,7 +31,7 @@
              DCL        VAR(&JOBDLB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&MSG) TYPE(*CHAR) LEN(256)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2003')
  
 /*/COPY UTCPYSRC,DCL_EXIST                                        */
@@ -89,6 +91,6 @@
  
  END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

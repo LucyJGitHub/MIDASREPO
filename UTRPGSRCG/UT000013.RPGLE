@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2007')
+     H COPYRIGHT('(c) Finastra International Limited 2007')
       *****************************************************************
 /*XBIA*  OVRDBF FILE(UTC131) TOFILE(UPMBRLTPD)                        *
 /*XBIB*  OVRDBF FILE(UTC132) TOFILE(UPMBRLTPD)                        *
@@ -11,13 +11,15 @@
       *                                                               *
       *  UT000013 - Check list of members for CHKSRCHEX.              *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2009            *
+      *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. CUT015  *CREATE    Date 15Sep09               *
-      *  Prev Amend No. xxxxxx             Date ddMmmyy               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CUT015  *CREATE    Date 15Sep09               *
+      *                 XXXXXX             Date DDMmmYY               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CUT015 - New utility.                                        *
       *                                                               *
       *****************************************************************

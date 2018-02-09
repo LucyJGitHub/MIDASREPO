@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas UT Recreate T_DLAAQD Records Based on STRANF')   *
@@ -14,14 +14,16 @@
       *  (I/C)      with Transaction Number and Front of Office ID    *
       *             based on STRANF file records                      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
       *  Called By : UTC019950                                        *
       *                                                               *
-      *  Last Amend No. MD019950 *CREATE   Date 10Apr13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD019950 *CREATE   Date 10Apr13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD019950 - Transaction Number already exists encountered     *
       *             in SOAP                                           *
       *                                                               *
@@ -268,4 +270,4 @@
       *
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2013
+(c) Finastra International Limited 2013

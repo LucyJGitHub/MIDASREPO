@@ -9,20 +9,22 @@
 /*                                                                   */
 /*       SRCOBJXCHK - Cross check source and objects                 */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Last Amend No. CUT011  *REWRITE   Date 12Dec07              */
+/*       Prev Amend No. CUT011             Date 12Dec07              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CPK019  *MOVED     Date 08Jul04              */
+/*                      CPK019             Date 08Jul04              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.02 ---------------------------------------------------*/
 /*                      CUP006 *CREATE     Date 10Jan00              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CUT011 - Rewrite of command.  Make it more flexible and     */
 /*                easier to maintain.                                */
 /*       CPK019 - Handle global layer.                               */

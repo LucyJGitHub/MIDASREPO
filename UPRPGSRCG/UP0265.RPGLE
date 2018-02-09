@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*OVR *  OVRDBF FILE(FILEMULMBR) TOFILE(*LIBL/QAFDMBR)                *
 /*STD *  RPGBASEBND                                                   *
@@ -11,15 +11,16 @@
       *  UP0265 - Add logical file members back to file               *
       *                                                               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CPK020  *MOVED     Date 28Jul04               *
+      *  Prev Amend No. CPK020             Date 28Jul04               *
       * Midas Release 4.01.03 ----------------------------------------*
-      *  Prev Amend No. CUP019             Date 06Feb03               *
+      *                 CUP019             Date 06Feb03               *
       * Midas Release 4.01 -------------------------------------------*
       *                 CPK015             Date 19Jun02               *
       * Midas Release 4 --------------- Base -------------------------*
@@ -31,6 +32,7 @@
       *                 CUP001  *CREATE    Date 23Mar98               *
       *                                                               *
       *---------------------------------------------------------------*
+      *  MD046248 - Finastra Rebranding                               *
       *  CPK020 - Move to global layer.                               *
       *  CUP019 - In some circumstances the LF does not exist in the  *
       *           'to' library and so the library field on FILEMULMBR *
@@ -220,4 +222,4 @@
      C                   RETURN
       ********************************************************************
 **CTDATA cpy@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

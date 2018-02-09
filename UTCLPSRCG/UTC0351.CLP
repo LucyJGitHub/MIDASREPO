@@ -8,14 +8,15 @@
 /*       UTC0351 - Validity checker for CHGCCSIDS (Change CCSIDs)    */
 /*                 command                                           */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CPK022             Date 28Jul05              */
-/*       Prev Amend No. CPK018  *MOVED     Date 26Apr04              */
+/*       Prev Amend No. CPK022             Date 28Jul05              */
+/*                      CPK018             Date 26Apr04              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.03 ---------------------------------------------------*/
 /*                      113280             Date 10Aug00              */
@@ -24,6 +25,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CPK022 - Should not use zone /COPYs.                        */
 /*       CPK018 - MidasPlus packaging.  Moved to global layer.       */
 /*       113280 - Fails because command parameter is decimal and     */
@@ -55,7 +57,7 @@
 /** Standard fields **/
              DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /**COPY UTCPYSRC,DCL_EXIST                                           */                   /*CPK022*/
@@ -165,7 +167,7 @@ ERROR:
 /*/COPY GPCPYSRCG,STDERR                                             */                   /*CPK022*/
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 /*/COPY WNCPYSRC,UTC0351END                                          */
  

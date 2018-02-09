@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas TI COB accrual suspense postings reporting')     *
@@ -13,20 +13,22 @@
       *             reports for all the suspense postings and for     *
       *             all currencies with unbalanced suspense postings. *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CAP207             Date 10Feb11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CAP207             Date 10Feb11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.05 -----------------------------------------------*
-      *  Prev Amend No. CTI003  *CREATE    Date 06Feb01               *
+      *                 CTI003  *CREATE    Date 06Feb01               *
       *                                    Date ddmmmyy               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CAP207 - Account Balance Check extended to other APIs        *
       *           (Recompile)                                         *
       *  CTI003 - Accrual postings enhancements.                      *

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas UP set unique field to blank in GPTRIGPD')
@@ -9,17 +9,19 @@
       *                                                               *
       *  UP001509 - Set unique id in GPTRIGPD to blank.               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CUP029  *CREATE    Date 21Oct04               *
-      *  Prev Amend No.                    Date ddmmmyy               *
+      *  Prev Amend No. CUP029  *CREATE    Date 21Oct04               *
+      *                                    Date DDMmmYY               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CUP029 - Not to use 'Unique id' field as key.                *
       *                                                               *
       *****************************************************************

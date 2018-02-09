@@ -9,10 +9,11 @@
 /*                                                                   */
 /*       ACTIONFILE - Action File handler                            */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2004           */
+/*       (c) Finastra International Limited 2004                     */
 /*                                                                   */
-/*       Last Amend No. CUP040             Date 22Feb13              */
-/*       Prev Amend No. A1084804           Date 30Jan13              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CUP040             Date 22Feb13              */
+/*                      A1084804           Date 30Jan13              */
 /*                      CUP021 *REWRITE    Date 24Jan11              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -23,6 +24,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CUP040 - New deliverable data methodology.                  */
 /*              - Add 'original file' parameter.                     */
 /*       A1084804 - New *MRG option.                                 */

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2007')
+     H COPYRIGHT('(c) Finastra International Limited 2007')
       *****************************************************************
 /*XBIA*  OVRDBF FILE(UTC000001R) TOFILE(UPMBRLTPD)                    *
 /*XBIB*  OVRDBF FILE(UTC000001C) TOFILE(UPMBRLTPD)                    *
@@ -11,14 +11,16 @@
       *                                                               *
       *  UT000004 - Create summary file about compares.               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 20067           *
+      *  (c) Finastra International Limited 2007                      *
       *                                                               *
-      *  Last Amend No. BUG27884 *CREATE   Date 08Jul10               *
-      *  Prev Amend No. CUT010             Date 10May07               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. BUG27884 *CREATE   Date 08Jul10               *
+      *                 CUT010             Date 10May07               *
       *                 xxxxxx             Date ddMmmyy               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG27884 - Applied CUT010.                                   *
       *  CUT010 - New utility.                                        *
       *                                                               *

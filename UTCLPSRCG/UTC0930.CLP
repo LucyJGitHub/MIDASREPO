@@ -7,15 +7,16 @@
 /*                                                                   */
 /*       UTC0930 - Program Control Midas UT Utilities Menu System    */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CUP024             Date 29Sep03              */
+/*       Prev Amend No. CUP024             Date 29Sep03              */
 /* Midas Release 4.01.03 --------------------------------------------*/
-/*       Prev Amend No. CPK015             Date 27Feb03              */
+/*                      CPK015             Date 27Feb03              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.03 ---------------------------------------------------*/
 /*                      CUP007             Date 15May00              */
@@ -27,6 +28,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CUP024 - Replace UPUICDPD with System Values.               */
 /*       CPK015 - Missing override.                                  */
 /*       CUP007 - Remove override to UPUICDPD if it exists.          */
@@ -41,7 +43,7 @@
              DCL        VAR(&PREFIX) TYPE(*CHAR) LEN(2)                                   /*CUP006*/
              DCL        VAR(&ERROR) TYPE(*DEC) LEN(1 0) VALUE(0)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
@@ -114,6 +116,6 @@
              MONMSG     MSGID(CPF0000 MCH0000)                                            /*CUP024*/
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

@@ -10,13 +10,14 @@
 /*       CRTALLOBJ - Create all objects from a library containing    */
 /*                     a set of Midas source files.                  */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Last Amend No. CUT011  *REWRITE   Date 18Oct07              */
+/*       Prev Amend No. CUT011             Date 18Oct07              */
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CPK018  *MOVED     Date 06Jan04              */
+/*                      CPK018             Date 06Jan04              */
 /* Midas Release 4.01 -----------------------------------------------*/
 /*                      CSC011             Date 23May02              */
 /* Midas Release 4 --------------- Base -----------------------------*/
@@ -28,6 +29,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CUT011 - Rewrite of command.  Make it more flexible and     */
 /*                easier to maintain.                                */
 /*       CPK018 - MidasPlus packaging.  Create global layer.         */

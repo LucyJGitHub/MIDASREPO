@@ -15,14 +15,15 @@
 /*                                                                  */
 /*       Calls :  TI0340 or TI0341                                  */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Last Amend No. BG18886            Date 06Jun08              */
+/*       Prev Amend No. BG18886            Date 06Jun08              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. BUG3604            Date 23Jul04              */
+/*                      BUG3604            Date 23Jul04              */
 /* Midas Release 4.01.03 --------------------------------------------*/
 /*                      173172             Date 16Jan03              */
 /* Midas Release 4 --------------- Base -----------------------------*/
@@ -39,6 +40,7 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BG18886 - Replace non-standard codes.                      */
 /*       BUG3604 - Send message when F7 fails in TI0505 because     */
 /*                 background TIJRNENT is already running.          */
@@ -62,7 +64,7 @@
 /* Copyright statement definition */
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /* Other declarations */
@@ -123,7 +125,7 @@
 /* Copyright statement definition - at runtime */
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              CHGVAR     VAR(&MSG) VALUE('TIC0340 - TI I/C Journal +
                           Entry Generation of TI Posting')
  

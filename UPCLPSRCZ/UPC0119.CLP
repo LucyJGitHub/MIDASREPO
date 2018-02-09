@@ -7,12 +7,13 @@
 /*                                                                   */
 /*       UPC0119 - Change subsystem routing entries - shell          */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2002           */
+/*       (c) Finastra International Limited 2002                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
-/*       Last Amend No. BUG27240           Date 12Mar10              */
+/*       Prev Amend No. BUG27240           Date 12Mar10              */
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Prev Amend No. CUP033             Date 18Sep06              */
+/*                      CUP033             Date 18Sep06              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /*                      CPK023             Date 06Dec05              */
@@ -24,6 +25,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BUG27240- Applied CPK029 file locking fix                   */
 /*       CPK029 - Stop lock on file.                                 */
 /*       CUP033 - Removal of System Value /COPYs.                    */
@@ -48,7 +50,7 @@
              DCL        VAR(&SC24X7) TYPE(*CHAR) LEN(256)                                 /*CPK016*/
              DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2002')
  
 /************DCLF       FILE(UPUICDPD)                                                 */ /*CUP024*/
@@ -156,6 +158,6 @@ ABNOR:
  
 END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

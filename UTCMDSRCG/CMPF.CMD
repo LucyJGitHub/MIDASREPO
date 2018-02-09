@@ -9,14 +9,16 @@
 /*                                                                   */
 /*       CMPF - Compare two database files                           */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2010           */
+/*       (c) Finastra International Limited 2010                     */
 /*                                                                   */
-/*       Last Amend No. MD021155           Date 03Jun13              */
-/*       Prev Amend No. A1076141           Date 11Jan13              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD021155           Date 03Jun13              */
+/*                      A1076141           Date 11Jan13              */
 /*                      BUG27790  *CREATE  Date 17Jun10              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD021155 - COB Restructure Phase 1 remnants                 */
 /*                - Allow compare where there is no unique key.      */
 /*       A1076141 - Parameters rearranged to make entry mandatory.   */

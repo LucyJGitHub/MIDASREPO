@@ -8,19 +8,21 @@
 /*                                                                   */
 /*       UTC0031 - Clear data areas and data queues from library     */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2002           */
+/*       (c) Finastra International Limited 2002                     */
 /*                                                                   */
-/*       Last Amend No. AR796253           Date 30Jun11              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR796253           Date 30Jun11              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CPK018  *MOVED     Date 31Mar04              */
+/*                      CPK018             Date 31Mar04              */
 /* Midas Release 4.01.02 --------------------------------------------*/
 /*                      CSM002 *CREATE     Date 22Nov02              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       AR796253 - Handle SQL sequences.                            */
 /*       CPK018 - MidasPlus packaging.  Additional monitoring.       */
 /*       CSM002 - Refresh options from the Bridge.                   */
@@ -32,7 +34,7 @@
  
              DCL        VAR(&FOUND) TYPE(*CHAR) LEN(1)                                  /*AR796253*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2002')
  
              DCLF       FILE(CLRDBLIBAQ)
@@ -89,6 +91,6 @@ ERROR:
  
 ENDPGM:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

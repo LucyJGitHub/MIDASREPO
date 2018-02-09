@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2005')
+     H COPYRIGHT('(c) Finastra International Limited 2005')
       *****************************************************************
 /*XBIA*  OVRDBF FILE(UPP02P) TOFILE(UPP02BPD)                         *
 /*XBIB*  OVRDBF FILE(UPP03P) TOFILE(UPP03PPD)                         *
@@ -11,20 +11,22 @@
       *                                                               *
       *  UP000530B - Compare screen handling                          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSM005  *REWRITE   Date 18Aug05               *
-      *  Prev Amend No. CPK016             Date 16Apr03               *
+      *  Prev Amend No. CSM005             Date 18Aug05               *
+      *                 CPK016             Date 16Apr03               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.00 ---------------- Base -------------------------*
       *                 CUP001 *CREATE     Date 07Mar97               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSM005 - Rewrite of UP0530B and moved to global layer.       *
       *  CPK016 - UPP0* files renamed.                                *
       *  CUP001 - Introduction of BRIDGE                              *

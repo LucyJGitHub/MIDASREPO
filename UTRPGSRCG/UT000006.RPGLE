@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*XBI *  OVRDBF FILE(UTC000002F) TOFILE(UPFDCSTPD)                    *
 /*STD *  RPGBASEBND                                                   *
@@ -10,15 +10,17 @@
       *                                                               *
       *  UT000006 - Change constraint names in outfile                *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. BUG27980           Date 05Aug10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. BUG27980           Date 05Aug10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. BG18582  *CREATE   Date 11Apr08               *
+      *                 BG18582 *CREATE    Date 11Apr08               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG27980 - Remove DBGVIEW (Recompile).                       *
       *  BG18582 - Enhancements to changing CCSIDs.                   *
       *                                                               *

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
+     H COPYRIGHT('(c) Finastra International Limited 2011')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas UT Exceptions File - duplicate error codes')     *
@@ -13,12 +13,14 @@
       *             error ID is used in multiple message files and    *
       *             write it UTEREXPD (Input Cycle)                   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2011            *
+      *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. CBF011  *CREATE    Date 04Jul11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CBF011  *CREATE    Date 04Jul11               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CBF011 - BF Infrastructure: Error Message Handling           *
       *                                                               *
       *****************************************************************

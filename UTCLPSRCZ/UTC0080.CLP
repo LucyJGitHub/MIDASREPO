@@ -7,19 +7,21 @@
 /*                                                                   */
 /*       UTC0080 - CVTSRCLEN pre-processor                           */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Last Amend No. CUP002             Date 12Jul99              */
-/*       Prev Amend No. CUP001 *CREATE     Date 21Dec98              */
+/*       Prev Amend No. CUP002             Date 12Jul99              */
+/*                      CUP001 *C *CREATE  Date 21Dec98              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CUP002 - Changed from UP to UT module                       */
 /*       CUP001 - Introduction of BRIDGE                             */
 /*                                                                   */
@@ -40,7 +42,7 @@
              DCL        VAR(&ERR) TYPE(*CHAR) LEN(1) VALUE('0')
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /* Global monitor message */
@@ -109,6 +111,6 @@ ABNOR2:
                           MSGDTA(&MSGDTA) MSGTYPE(*ESCAPE)
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              RCLRSC
              ENDPGM

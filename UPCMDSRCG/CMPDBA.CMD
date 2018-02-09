@@ -9,17 +9,19 @@
 /*                                                                   */
 /*       CMPDBA - Compare database attributes                        */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2006           */
+/*       (c) Finastra International Limited 2006                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CPK025 *CREATE     Date 25Jan06              */
-/*       Prev Amend No. xxxxxx             Date ddmmmyy              */
+/*       Prev Amend No. CPK025 *CREATE     Date 25Jan06              */
+/*                      xxxxxx             Date ddmmmyy              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CPK025 - New utility (replacement for CMPDBATR).            */
 /*                                                                   */
 /*********************************************************************/

@@ -1,6 +1,6 @@
       *****************************************************************
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2005')
+     H COPYRIGHT('(c) Finastra International Limited 2005')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  ALWNULL(*USRCTL)                                             *
@@ -11,15 +11,17 @@
       *                                                               *
       *  UP1729 - Data validation of T_GRMENU* files                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. 256038 *CREATE     Date 23Feb05               *
-      *  Prev Amend No. xxxxxx             Date ddmmmyy               *
+      *  Prev Amend No. 256038 *CREATE     Date 23Feb05               *
+      *                 xxxxxx             Date ddmmmyy               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  256038 - This program will check validity of data in         *
       *           T_GRMENU* files.  Also delete the shortname from    *
       *           T_USERMENU if it does not exist on T_GRMENUH.       *

@@ -9,24 +9,26 @@
 /*                                                                   */
 /*       RTVMBRTXT - Retrieve member text from source                */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2015           */
+/*       (c) Finastra International Limited 2015                     */
 /*                                                                   */
-/*       Last Amend No. CUP042             Date 27May15              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CUP042             Date 27May15              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CUP042 - New utility                                        */
 /*                                                                   */
 /*********************************************************************/
              CMD        PROMPT('Retrieve member text from src.')
-
+ 
              PARM       KWD(SRC) TYPE(QUAL1) MIN(1) PROMPT('Source +
                           file')
-
+ 
              PARM       KWD(OVRTXT) TYPE(*CHAR) LEN(4) RSTD(*YES) DFT(*NO) +
                           VALUES(*NO *YES) MIN(0) PROMPT('Overwrite text?')
-
+ 
  QUAL1:      QUAL       TYPE(*GENERIC) LEN(10) SPCVAL((*ALL)) MIN(1)
              QUAL       TYPE(*NAME) LEN(10) PROMPT('Library')
-
-
+ 
+ 

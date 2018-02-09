@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*XBI *  OVRDBF FILE(UPFDAPOF) TOFILE(QAFDACCP)                       *
 /*STD *  RPGBASEBND                                                   *
@@ -13,19 +13,21 @@
       *                                                               *
       *  Called By: UPC000108                                         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. 256038             Date 21Jun08               *
+      *  Prev Amend No. 256038             Date 21Jun08               *
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CUP028             Date 13Sep04               *
+      *                 CUP028             Date 13Sep04               *
       *                 CPK021             Date 08Sep04               *
       *                 CUP027 *CREATE     Date 25Mar04               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  256038 - Utility was not picking up LFs compiled over wrong  *
       *           physicals.                                          *
       *  CUP028 - Amend so that this program can be used for both     *

@@ -10,20 +10,22 @@
 /*                                                                   */
 /*       CPYCPYSRC - Copy /COPYs to specified location               */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CPK018             Date 03Mar04              */
-/*       Prev Amend No. CPK016             Date 16Jun03              */
+/*       Prev Amend No. CPK018             Date 03Mar04              */
+/*                      CPK016             Date 16Jun03              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      CUP002 *CREATE     Date 16Apr99              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CPK018 - MidasPlus packaging.  Handle Global layer.         */
 /*       CPK016 - Release 5 packaging.  Make command more generic.   */
 /*       CUP002 - Introduction of BRIDGE utility                     */

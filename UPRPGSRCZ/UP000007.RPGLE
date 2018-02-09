@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+     H COPYRIGHT('(c) Finastra International Limited 2010')
       *****************************************************************
 /*XBIA*  OVRDBF FILE(POST1) TOFILE(UPPOSTPD)                          *
 /*XBIB*  OVRDBF FILE(POST2) TOFILE(UPPOSTPD)                          *
@@ -11,13 +11,15 @@
       *                                                               *
       *  UP000007 - Cross check postings from EODPOPD                 *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. BUG27788  *CREATE  Date 24May10               *
-      *  Prev Amend No. xxxxxx             Date ddMmmyy               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. BUG27788 *CREATE   Date 24May10               *
+      *                 XXXXXX             Date DDMmmYY               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG27788 - Postings reconciliation utility                   *
       *                                                               *
       *****************************************************************

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  ALWNULL(*USRCTL)                                             *
@@ -13,18 +13,20 @@
       *  Function:  This program compares the differences between     *
       *             Action file delivered and the system.             *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. CUP021             Date 16Feb11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CUP021             Date 16Feb11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CUP031  *CREATE    Date 14Jan05               *
+      *                 CUP031  *CREATE    Date 14Jan05               *
       *                                                               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CUP021 - Rewrite of Action File processing                   *
       *  CUP031 - Creation of new set of Action File utilities.       *
       *                                                               *

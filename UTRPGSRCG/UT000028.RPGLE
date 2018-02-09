@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+     H COPYRIGHT('(c) Finastra International Limited 2010')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas UT Check if MIDASBNDDR is in BNDDIR list')       *
@@ -10,13 +10,15 @@
       *  UT000028 - Check if MIDASBNDDR is specified in the BNDDIR    *
       *             list for creation parameter for CRTOBJ            *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. CUT008  *CREATE    Date 21Dec10               *
-      *  Prev Amend No. xxxxxx             Date ddMmmyy               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CUT008  *CREATE    Date 21Dec10               *
+      *                 XXXXXX             Date DDMmmYY               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CUT008 - Rewrite of CRTOBJ.                                  *
       *                                                               *
       *****************************************************************

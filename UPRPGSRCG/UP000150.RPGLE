@@ -1,6 +1,6 @@
       *****************************************************************
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2005')
+     H COPYRIGHT('(c) Finastra International Limited 2005')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  ALWNULL(*USRCTL)                                             *
@@ -13,15 +13,17 @@
       *             GPMENUPD, GZSFMENUPD, GPMTXTPD and T_GRMENUL.     *
       *             UP008020P1 will list any discrepancies.           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. 256038  *CREATE    Date 21Mar05               *
-      *  Prev Amend No. xxxxxx             Date ddmmmyy               *
+      *  Prev Amend No. 256038  *CREATE    Date 21Mar05               *
+      *                 XXXXXX             Date DDMmmYY               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  256038 - This program will cross check the menu item unique  *
       *           codes in the menu files (GPMTXTPD, GZSFMENUPD,      *
       *           GPMENUPD and T_GRMENUL).  The check of the unique   *

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*X*I ***OVRDBF*FILE(CPYDTA)*TOFILE(QADSPOBJ)**************************                       CPK025
 /*XBI *  OVRDBF FILE(CPYDTA) TOFILE(UPOBJDTPD)                        *                       CPK025
@@ -13,18 +13,20 @@
       *                                                               *
       *  Called By: UPC0259                                           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CPK025  *MOVED     Date 04Aug06               *
+      *  Prev Amend No. CPK025             Date 04Aug06               *
       * Midas Release 4.01 -------------------------------------------*
-      *  Prev Amend No. CPK015  *CREATE    Date 13Mar02               *
+      *                 CPK015  *CREATE    Date 13Mar02               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CPK025 - MidasPlus 1.3 packaging.  Moved to global layer.    *
       *  CPK015 - 4.01 packaging.  Improvements to CPYDBLIB.          *
       *                                                               *

@@ -7,13 +7,15 @@
 /*                                                                   */
 /*       UTCLE0522 - CL program to call datapatch PGM/UTLE0522       */
 /*                                                                   */
-/*       (C) Misys Banking Systems Ltd. 2016                         */
+/*       (C) Finastra International Limited 2016                     */
 /*                                                                   */
-/*       Last Amend No. AR545781 *CREATE   Date 24Aug16              */
-/*       Prev Amend No. Xnnnnnnn           Date mmdddyy              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR545781 *CREATE   Date 24Aug16              */
+/*                      XNNNNNNN           Date MMDddYY              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       AR545781 - Missing/Multiple IH on history file.             */
 /*                  Provide datapatch utility to correct principal   */
 /*                  and interest values on history file.             */
@@ -26,7 +28,7 @@
              DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(8)
              DCL        VAR(&PREF) TYPE(*CHAR) LEN(2)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys Banking Systems Ltd. 2016')
+                          Finastra International Limited 2016')
 /**/
              DCL VAR(&RUNCHG) TYPE(*DEC) LEN(5 0)
              DCL VAR(&RUNDAT) TYPE(*CHAR) LEN(5)
@@ -196,6 +198,6 @@
                            TOPGMQ(*EXT) TOMSGQ(MOPERQ MRUNQ)
               GOTO       CMDLBL(END)
  
- END:        CHGVAR     VAR(&CPYFLD) VALUE('(c) Misys Banking +
+ END:        CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International +
                           Systems Ltd. 2016')
              ENDPGM

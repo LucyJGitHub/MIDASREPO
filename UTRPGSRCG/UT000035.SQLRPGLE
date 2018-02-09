@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
+     H COPYRIGHT('(c) Finastra International Limited 2011')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas UT Check if data area is an SQL sequence')
@@ -9,14 +9,16 @@
       *                                                               *
       *  UT000035 - Check if data area is an SQL sequence             *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2011            *
+      *  (c) Finastra International Limited 2011                      *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  Last Amend No. AR796253 *CREATE   Date 30Jun11               *
+      *  Last Amend No. MD046248           Date 05Feb18               *
+      *  Prev Amend No. AR796253 *CREATE   Date 30Jun11               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR796253 - Check if a data area is actually an SQL sequence. *
       *                                                               *
       *****************************************************************

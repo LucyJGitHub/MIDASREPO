@@ -7,7 +7,7 @@
 /*                                                                   */
 /*       UPC0263 - Copy data for submitted job                       */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2002           */
+/*       (c) Finastra International Limited 2002                     */
 /*                                                                   */
 /*********************************************************************/
 /* This program monitors for a large and specific set of messages    */
@@ -60,7 +60,7 @@
              DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(100)
              DCL        VAR(&IN01) TYPE(*LGL)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2002')
  
 /* Global monitor message */
@@ -378,5 +378,5 @@ ENDPGM:
              CALL       PGM(UP008010) PARM('*REPORT' 'UPC0263' ' ')                       /*CPK025*/
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

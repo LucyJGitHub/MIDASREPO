@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas TI I/c JEG of TI with total trans postings')     *
@@ -16,10 +16,11 @@
       *                                                               *
       *  Component of: TI0341                                         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CGL182             Date 11May17               *
-      *  Prev Amend No. CGL154             Date 13Oct14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL182             Date 11May17               *
+      *                 CGL154             Date 13Oct14               *
       *                 MD027587           Date 19Jun14               *
       *                 TI010329           Date 28May13               *
       *                 CAP207             Date 10Feb11               *
@@ -76,8 +77,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL182 - Journal Entry via the Interface File - Java Version *
-      *           (Recompile)                                         *      
+      *           (Recompile)                                         *
       *  CGL154 - FATCA Reporting (Recompile)                         *
       *  MD027587 - Unable to used the C for Copy and T for Template  *
       *             (Recompile)                                       *

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas TI A/c Transfer Selected Accounts Extract')      *
@@ -13,12 +13,14 @@
       *  Function: This program creates Standing Data Driver File     *
       *             Update for TI Account Branch Change               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. CTI006  *CREATE    Date 31Mar14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CTI006  *CREATE    Date 31Mar14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CTI006 - Trade Finance BF Midas 2.2 Interface                *
       *                                                               *
       *****************************************************************
@@ -234,4 +236,4 @@
       /EJECT
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2014
+(c) Finastra International Limited 2014

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas UP Compare file without key')
@@ -9,8 +9,9 @@
       *                                                               *
       *  UT000054 - Compare file without key                          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 05Feb18               *
       *  Last Amend No. MD021155 *CREATE   Date 13May13               *
       *                                                               *
       *---------------------------------------------------------------*

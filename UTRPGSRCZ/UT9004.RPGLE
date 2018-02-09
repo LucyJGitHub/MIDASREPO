@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas UT Generate field numbers from field names')
@@ -15,15 +15,16 @@
       *                                                               *
       *  Component of: GENFLDNOS command                              *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CPK016             Date 10Jul03               *
+      *  Prev Amend No. CPK016             Date 10Jul03               *
       * Midas Release 4.01.03 ----------------------------------------*
-      *  Prev Amend No. CUP021             Date 12Nov02               *
+      *                 CUP021             Date 12Nov02               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.03 -----------------------------------------------*
       *                 174858             Date 20Jan00               *
@@ -34,6 +35,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CPK016 - Release 5 packaging.  Change of IBM APIs at 5.2.    *
       *  CUP021 - Re-write of GENFLDNOS command, to make it file      *
       *           driven and to allow existing members to be extended *
@@ -439,4 +441,4 @@
      C                   ENDSR                                                                CUP021
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

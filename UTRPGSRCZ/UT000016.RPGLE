@@ -1,7 +1,7 @@
   ******************************************************************
      H DEBUG
      H DFTACTGRP(*NO)
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2015')
+     H COPYRIGHT('(c) Finastra International Limited 2015')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas UT Convert Spool Files to PDF')                  *
@@ -14,28 +14,30 @@
       *  Function:  This program converts an iSeries spooled file     *
       *               to PDF.                                         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2015            *
+      *  (c) Finastra International Limited 2015                      *
       *                                                               *
-      *  Last Amend No. CUT016  *Create    Date 10Apr15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CUT016  *CREATE    Date 10Apr15               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CUT016 - iSeries Spooled Files conversion                    *
       *                                                               *
       *****************************************************************
-
+ 
       * Work files
-
+ 
      FUTSPLFTD  IF   F  382        DISK
-
+ 
      FUTTOOPTD  UF A F  378        DISK
-
+ 
       * Program parameter - report title
-
+ 
      D paTitle         S             50A
-
+ 
       * Program parameter - spooled file information returned by API
-
+ 
      D SplInfo         DS
      D  saReturned                   10I 0
      D  saAvailabl                   10I 0
@@ -151,25 +153,25 @@
      D  saSystem                      8A
      D  saOrigId                      8A
      D  saCreator                    10A
-
+ 
       * Program parameter - bookmark option
-
+ 
      D paBookmark      S              7A
-
+ 
       * Program parameter - page format
-
+ 
      D PageFmt         S             11A
-
+ 
       * Program parameter - bookmark *POS option parameters
-
+ 
      D BMarkPos        DS
      D   siPosCount                   5I 0
      D   snPosLine                    3P 0
      D   snPosChar                    3P 0
      D   snPosLen                     3P 0
-
+ 
       * Program parameter - bookmark *KEY option parameters
-
+ 
      D BMarkKey        DS
      D   siKeyCount                   5I 0
      D   siLen                        5I 0
@@ -177,93 +179,93 @@
      D   snKeyOccur                   3P 0
      D   snKeyOff                     3P 0
      D   snKeyLen                     3P 0
-
+ 
       * PDF 'object' array
-
+ 
      D aiObject        S             10I 0 DIM(32767)
-
+ 
       * Start position of PDF options
-
+ 
      D aaStart         S             10A   DIM(32767)
-
+ 
       * Current object number
-
+ 
      D wiObject        S             10I 0
-
+ 
       * Current count of bytes written
-
+ 
      D wiChrCount      S             10I 0
-
+ 
       * Current page number
-
+ 
      D wiPage          S             10I 0
-
+ 
       * Start position of text
-
+ 
      D wiStart         S             10I 0
-
+ 
       * Bookmark text
-
+ 
      D waBookmark      S            378A
-
+ 
       * Count of occurrences of the bookmark key
-
+ 
      D wiOccurs        S              5I 0
-
+ 
       * Input spooled file data including control characters
-
+ 
      D InputData       DS
      D   saSkipLine                   3A
      D   ssSkipLine                   3S 0 OVERLAY(saSkipLine:1)
      D   saSpceLine                   1A
      D   ssSpceLine                   1S 0 OVERLAY(saSpceLine:1)
      D   saInput                    378A
-
+ 
       * Output PDF-format data
-
+ 
      D OutputData      DS
      D   saOutput                   378A
-
+ 
       * Procedure prototypes
-
+ 
      D WritePDF        PR
      D   iaOutput                   378A   CONST OPTIONS(*VARSIZE)
-
+ 
      D AddEscape       PR           378A
      D   iaInput                    378A
-
+ 
      D PDFHeader       PR
-
+ 
      D PDFPages        PR
-
+ 
      D PDFTrailer      PR
-
+ 
      D NewPage         PR
-
+ 
      D EndPage         PR
-
+ 
      D NumToText       PR            10A
      D    iiNum                      10I 0 CONST
-
+ 
      D NewObject       PR
-
-
+ 
+ 
       ** ---------------
       ** MAIN PROCESSING
       ** ---------------
-
+ 
       * Output a PDF header
-
+ 
      C                   CALLP     PDFHeader
-
+ 
       * Create PDF page 'objects'
-
+ 
      C                   CALLP     PDFPages
-
+ 
       * Output a PDF trailer
-
+ 
      C                   CALLP     PDFTrailer
-
+ 
      C                   RETURN
       *****************************************************************
       /EJECT
@@ -278,9 +280,9 @@
       *****************************************************************
       *
      C     *INZSR        BEGSR
-
+ 
       * Program parameters
-
+ 
      C     *ENTRY        PLIST
      C                   PARM                    paTitle
      C                   PARM                    SplInfo
@@ -290,20 +292,20 @@
      C                   PARM                    PageFmt
       *
      C     EINZSR        ENDSR
-
+ 
       **********************************************************************
       * Procedure to create a PDF 'header'                                 *
       **********************************************************************
-
+ 
      P PDFHeader       B
-
+ 
      D PDFHeader       PI
-
+ 
      D liPage          S             10I 0
      D liPageObj       S             10I 0
-
+ 
       * Create catalog object
-
+ 
      C                   CALLP     WritePDF('%PDF-1.0')
      C                   CALLP     WritePDF('%????')
      C                   CALLP     NewObject
@@ -315,9 +317,9 @@
      C                   CALLP     WritePDF('/PageMode /UseOutlines')
      C                   CALLP     WritePDF('>>')
      C                   CALLP     WritePDF('endobj')
-
+ 
       * Create outlines object
-
+ 
      C                   CALLP     NewObject
      C                   CALLP     WritePDF(%trim(NumToText(wiObject))+' 0 obj')
      C                   CALLP     WritePDF('<<')
@@ -330,16 +332,16 @@
      C                                      + ' 0 R')
      C                   CALLP     WritePDF('>>')
      C                   CALLP     WritePDF('endobj')
-
+ 
       * Create procedures object
-
+ 
      C                   CALLP     NewObject
      C                   CALLP     WritePDF(%trim(NumToText(wiObject))+' 0 obj')
      C                   CALLP     WritePDF('[/PDF /Text]')
      C                   CALLP     WritePDF('endobj')
-
+ 
       * Create fonts object
-
+ 
      C                   CALLP     NewObject
      C                   CALLP     WritePDF(%trim(NumToText(wiObject))+' 0 obj')
      C                   CALLP     WritePDF('<<')
@@ -350,23 +352,23 @@
      C                   CALLP     WritePDF ('/Encoding /WinAnsiEncoding')
      C                   CALLP     WritePDF ('>>')
      C                   CALLP     WritePDF ('endobj')
-
+ 
       * Create pages object
-
+ 
      C                   CALLP     NewObject
      C                   CALLP     WritePDF(%trim(NumToText(wiObject))+' 0 obj')
      C                   CALLP     WritePDF ('<<')
      C                   CALLP     WritePDF ('/Type /Pages')
      C                   CALLP     WritePDF('/Count '+%trim(NumToText(siPages)))
-
+ 
       * Write list of child pages
-
+ 
      C                   EVAL      liPage    = wiObject + 1
      C                   EVAL      liPageObj = liPage
      C                   CALLP     WritePDF (  '/Kids ['
      C                                       + %trim(NumToText(liPage))
      C                                       + ' 0 R')
-
+ 
      C                   DOW       liPage < siPages + wiObject
      C                   EVAL      liPage = liPage + 1
      C                   EVAL      liPageObj = liPageObj + 4
@@ -374,39 +376,39 @@
      C                                       + %trim(NumToText(liPageObj))
      C                                       + ' 0 R')
      C                   ENDDO
-
+ 
      C                   CALLP     WritePDF ('       ]')
-
+ 
      C                   CALLP     WritePDF ('>>')
      C                   CALLP     WritePDF ('endobj')
-
+ 
      P PDFHeader       E
-
+ 
       **********************************************************************
       * Procedure to create PDF pages                                      *
       **********************************************************************
-
+ 
      P PDFPages        B
-
+ 
      D liLine          S             10I 0
      D liLength        S              5I 0
      D liChar          S              5I 0
      D liX             S              5I 0
      D liY             S              5I 0
-
+ 
       * Create page object for first page
-
+ 
      C                   EVAL      wiPage = 0
      C                   EVAL      liX = 0
-
+ 
       * Read spooled file data from input work file
-
+ 
      C                   READ      UTSPLFTD      InputData                LR
-
+ 
      C                   DOW       *INLR = *OFF
-
+ 
       * Skip to a line if specified, handling page throw if it occurs
-
+ 
      C                   IF        saSkipLine <> *BLANKS
      C                   IF        ssSkipLine < liLine or liLine = 0
      C                   IF        wiPage <> 0
@@ -432,9 +434,9 @@
      C                   EVAL      liLine = ssSkipLine
      C                   ENDIF
      C                   ENDIF
-
+ 
       * Space a number of lines if specified
-
+ 
      C                   IF        saSpceLine <> *BLANKS
      C                   EVAL      liLine = liLine + ssSpceLine
      C                   IF        PageFmt = '*LANDSCAPE'
@@ -445,9 +447,9 @@
      C                             = -((792/siPageLen) * ssSpceLine)
      C                   Endif
      C                   ENDIF
-
+ 
       * Set up bookmark if position option specified
-
+ 
      C                   IF        paBookmark = '*POS'
      C                   IF        liLine = snPosLine and waBookmark = *BLANKS
      C                   EVAL      waBookmark = %trim(%subst(saInput  :
@@ -455,9 +457,9 @@
      C                                                       snPosLen ))
      C                   ENDIF
      C                   ENDIF
-
+ 
       * Set up bookmark if key option specified
-
+ 
      C                   IF        paBookmark = '*KEY'
      C     saKeyStr:siLenSCAN      saInput:1     liChar
      C                   IF        liChar > 0
@@ -479,42 +481,42 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
-
+ 
       * Add escape character before special characters \, ( and )
-
+ 
      C                   EVAL      saInput = AddEscape(saInput)
-
+ 
       * Output the line of text
-
+ 
      C                   CALLP     WritePDF(  %trim(NumToText(liX))
      C                                      + ' '
      C                                      + %trim(NumToText(liY))
      C                                      + ' Td ('
      C                                      + %trimr(saInput)
      C                                      + ') Tj')
-
+ 
      C                   READ      UTSPLFTD      InputData                LR
-
+ 
      C                   ENDDO
-
+ 
      C                   CALLP     EndPage
-
+ 
      P PDFPages        E
-
+ 
       **********************************************************************
       * Procedure to create a PDF trailer                                  *
       **********************************************************************
-
+ 
      P PDFTrailer      B
-
+ 
      D PDFTrailer      PI
-
+ 
      D laDateTime      S             14A
      D i               S             10I 0
      D liXRef          S             10I 0
-
+ 
       * Create information object
-
+ 
      C                   CALLP     NewObject
      C                   CALLP     WritePDF(%trim(NumToText(wiObject))+' 0 obj')
      C                   CALLP     WritePDF('<<')
@@ -544,20 +546,20 @@
      C                                      + ')' )
      C                   CALLP     WritePDF('>>')
      C                   CALLP     WritePDF('endobj')
-
+ 
       * Create cross-reference
-
+ 
      C                   EVAL      liXref = wiChrCount - 1
      C                   CALLP     WritePDF('xref 0 '
      C                                      + %trim(NumToText(wiObject+1)) )
      C                   CALLP     WritePDF('0000000000 65535 f')
-
+ 
      C                   DO        wiObject      i
      C                   CALLP     WritePDF(aaStart(i) + ' 00000 n')
      C                   ENDDO
-
+ 
       * Write trailer
-
+ 
      C                   CALLP     WritePDF('trailer')
      C                   CALLP     WritePDF('<<')
      C                   CALLP     WritePDF('/Size '
@@ -570,67 +572,67 @@
      C                   CALLP     WritePDF('startxref')
      C                   CALLP     WritePDF(%trim(NumToText(liXref)))
      C                   CALLP     WritePDF('%%EOF')
-
+ 
      P PDFTrailer      E
-
+ 
       **********************************************************************
       * Procedure to create a new PDF 'object'                             *
       **********************************************************************
      P NewObject       B
-
+ 
      D NewObject       PI
-
+ 
      D lsDataLen       S             10S 0
      D i               S             10I 0
-
+ 
      C                   EVAL      wiObject = wiObject + 1
      C                   EVAL      i = wiObject
      C                   EVAL      lsDataLen = wiChrCount
      C                   MOVE      lsDataLen     aaStart(i)
-
+ 
      P NewObject       E
-
+ 
       **********************************************************************
       * Procedure to output PDF data
       **********************************************************************
-
+ 
      P WritePDF        B
-
+ 
      D WritePDF        PI
      D   iaOutput                   378A   CONST OPTIONS(*VARSIZE)
-
+ 
      D liLength        S              5I 0
-
+ 
       * Update byte count with length of data to be written
-
+ 
      C     ' '           CHECKR    iaOutput      liLength
      C                   EVAL      wiChrCount= wiChrCount + liLength + 2
-
+ 
       * Output data to work file
-
+ 
      C                   EVAL      saOutput = %trimr(iaOutput)
      C                   WRITE     UTTOOPTD      OutputData
-
+ 
      P WritePDF        E
-
+ 
       **********************************************************************
       * Procedure to convert a number to text                              *
       **********************************************************************
-
+ 
      P NumToText       B
-
+ 
      D NumToText       PI            10A
      D    iiNum                      10I 0 CONST
-
+ 
      D laSign          S              1A
      D laInput         S             10A
      D laOutput        S             10A
      D liIn            S              5I 0
      D liOut           S              5I 0
      D liNum           S             10I 0
-
+ 
       * Set up sign if and make number positive if number is negative
-
+ 
      C                   IF        iiNum < 0
      C                   EVAL      laSign = '-'
      C                   EVAL      liNum = -iiNum
@@ -638,22 +640,22 @@
      C                   EVAL      laSign = ' '
      C                   EVAL      liNum = iiNum
      C                   ENDIF
-
+ 
       * Number number to work character variable
-
+ 
      C                   MOVE      liNum         laInput
-
+ 
       * Skip over leading zeros
-
+ 
      C                   EVAL      liIn  = 1
      C                   EVAL      liOut = 1
      C                   DOW           liIn < %size(laInput)
      C                             and %subst(laInput:liIn:1) = '0'
      C                   EVAL      liIn = liIn + 1
      C                   ENDDO
-
+ 
       * Move digits to output area
-
+ 
      C                   DOW           liIn  <= %size(laInput)
      C                             and liOut <= %size(laOutput)
      C                   EVAL        %subst(laOutput:liOut:1)
@@ -661,44 +663,44 @@
      C                   EVAL      liIn  = liIn  + 1
      C                   EVAL      liOut = liOut + 1
      C                   ENDDO
-
+ 
       * Add sign
-
+ 
      C                   IF        laSign = '-'
      C                   EVAL      laOutput = laSign + laOutput
      C                   ENDIF
-
+ 
       * Return number in text format
-
+ 
      C                   RETURN    laOutput
-
+ 
      P NumToText       E
-
+ 
       **********************************************************************
       * Procedure to add an escape character before special characters     *
       **********************************************************************
-
+ 
      P AddEscape       B
-
+ 
      D AddEscape       PI           378A
      D   iaInput                    378A
-
+ 
      D laOutput        S            378A
      D laChar          S              1A
      D i               S              5I 0
      D o               S              5I 0
      D liLength        S              5I 0
-
+ 
       * Determine length of input data
-
+ 
      C     ' '           CHECKR    iaInput       liLength
-
+ 
       * Work through input data and prefix special characters with escape
-
+ 
      C                   EVAL      i = 1
      C                   EVAL      o = 0
      C                   DOW       i <= liLength
-
+ 
      C                   EVAL      laChar = %subst(iaInput:i:1)
      C                   IF        laChar = '\' or laChar = '(' or laChar = ')'
      C                   EVAL      o = o + 1
@@ -708,24 +710,24 @@
      C                   EVAL      %subst(laOutput:o:1) = laChar
      C                   EVAL      i = i + 1
      C                   ENDDO
-
+ 
      C                   RETURN    laOutput
-
+ 
      P AddEscape       E
-
+ 
       **********************************************************************
       * Procedure to create a new page object                              *
       **********************************************************************
-
+ 
      P NewPage         B
-
+ 
      D NewPage         PI
-
+ 
       * Create a page object
-
+ 
      C                   EVAL      wiPage = wiPage + 1
      C                   CALLP     NewObject
-
+ 
      C                   CALLP     WritePDF(%trim(NumToText(wiObject))+' 0 obj')
      C                   CALLP     WritePDF('<<')
      C                   CALLP     WritePDF('/Type /Page')
@@ -743,9 +745,9 @@
      C                                      + ' 0 R')
      C                   CALLP     WritePDF('>>')
      C                   CALLP     WritePDF('endobj')
-
+ 
       * Set up bookmark if *PAGNBR option specified
-
+ 
      C                   IF        paBookmark = '*PAGNBR'
      C                   EVAL      waBookmark = 'Page '
      C                                        + %trim(NumToText(wiPage))
@@ -753,11 +755,11 @@
      C                   EVAL      waBookmark = *BLANKS
      C                   EVAL      wiOccurs   = 0
      C                   ENDIF
-
+ 
       * Create a stream object
-
+ 
      C                   CALLP     NewObject
-
+ 
      C                   CALLP     WritePDF(%trim(NumToText(wiObject))+' 0 obj')
      C                   CALLP     WritePDF(  '<< /Length '
      C                                      + %trim(NumToText(wiObject+1))
@@ -765,9 +767,9 @@
      C                   CALLP     WritePDF('stream')
      C                   EVAL      wiStart = wiChrCount
      C                   CALLP     WritePDF('BT')
-
+ 
       **Determine*font*size*to*use*from*Characters*per*inch*setting*********
-
+ 
      C**********         SELECT
      C**********         WHEN      siCPI = 50
      C**********         CALLP     WritePDF('/F1 20 Tf')
@@ -798,35 +800,35 @@
      C                   CALLP     WritePDF('/F1 5.6 Tf')
      C                   ENDSL
      C                   Endif
-
+ 
      P NewPage         E
-
+ 
       **********************************************************************
       * Procedure to finish a page object                                  *
       **********************************************************************
-
+ 
      P EndPage         B
-
+ 
      D EndPage         PI
-
+ 
      D liLength        S             10I 0
-
+ 
       * End text stream
-
+ 
      C                   CALLP     WritePDF('ET')
      C                   EVAL      liLength = wiChrCount- wiStart
      C                   CALLP     WritePDF('endstream')
      C                   CALLP     WritePDF('endobj')
-
+ 
       * Create indirect length object for stream
-
+ 
      C                   CALLP     NewObject
      C                   CALLP     WritePDF(%trim(NumToText(wiObject))+' 0 obj')
      C                   CALLP     WritePDF(%trim(NumToText(liLength)))
      C                   CALLP     WritePDF('endobj')
-
+ 
       * Create outline object
-
+ 
      C                   EVAL      waBookmark = AddEscape(waBookMark)
      C                   CALLP     NewObject
      C                   CALLP     WritePDF(%trim(NumToText(wiObject))+' 0 obj')
@@ -849,5 +851,5 @@
      C                                      + ' 0 R /XYZ 0 792 0]')
      C                   CALLP     WritePDF('>>')
      C                   CALLP     WritePDF('endobj')
-
+ 
      P EndPage         E

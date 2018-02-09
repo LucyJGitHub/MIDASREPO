@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas UT Copy data queue - copy data queue')
@@ -13,18 +13,20 @@
       *                                                               *
       *  Called By: UTC0073                                           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CPK018  *MOVED     Date 24May04               *
+      *  Prev Amend No. CPK018             Date 24May04               *
       * Midas Release 4.01 -------------------------------------------*
-      *  Prev Amend No. CPK015  *CREATE    Date 04Mar02               *
+      *                 CPK015  *CREATE    Date 04Mar02               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CPK018 - MidasPlus packaging.  Moved to global layer.        *
       *  CPK015 - 4.01 packaging.  New utility.                       *
       *                                                               *

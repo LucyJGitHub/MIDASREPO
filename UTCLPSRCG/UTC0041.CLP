@@ -7,18 +7,20 @@
 /*                                                                   */
 /*       UTC0041 - Save Library List                                 */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2003           */
+/*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CPK019             Date 13Jul04              */
-/*       Prev Amend No. CPK018  *MOVED     Date 23Apr04              */
+/*       Prev Amend No. CPK019             Date 13Jul04              */
+/*                      CPK018             Date 23Apr04              */
 /*                      CSC017 *CREATE     Date 14Feb03              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CPK019 - Stop logging CL commands to lessen job log.        */
 /*       CPK018 - MidasPlus packaging.  Moved to global layer.       */
 /*       CSC017 - Program re-written to allow it to work in both the */
@@ -45,7 +47,7 @@
              DCL        VAR(&LIBNAME) TYPE(*CHAR) LEN(10)
              DCL        VAR(&LOGCLPGM) TYPE(*CHAR) LEN(10)                                /*CPK019*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2003')
  
              MONMSG     MSGID(CPF0000 MCH0000) EXEC(GOTO CMDLBL(ABNOR))

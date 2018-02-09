@@ -9,10 +9,11 @@
 /*                                                                   */
 /*       UPT_WIPCF - Initialise T_WIPCF for All Zones.               */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2004           */
+/*       (c) Finastra International Limited 2004                     */
 /*                                                                   */
-/*       Last Amend No. BUG27884           Date 08Jul10              */
-/*       Prev Amend No. BUG15756           Date 05Feb08              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. BUG27884           Date 08Jul10              */
+/*                      BUG15756           Date 05Feb08              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -21,6 +22,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BUG27884 - Applied 15756. (Recompile)                       */
 /*       BUG15756 - To retain 'GLOBAL' value in WC_ZONE.             */
 /*       BG4033 - New command for T_WIPCF data initialisation.       */

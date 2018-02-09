@@ -8,40 +8,42 @@
 /*                                                                   */
 /*       UTC000023 - Retrieve member text from source                */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2015           */
+/*       (c) Finastra International Limited 2015                     */
 /*                                                                   */
-/*       Last Amend No. CUP042  *CREATE    Date 27May15              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CUP042  *CREATE    Date 27May15              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CUP042 - New utility to retrieve member text from source    */
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&SRC &OVRTXT)
-
+ 
              DCL        VAR(&SRC) TYPE(*CHAR) LEN(20)
              DCL        VAR(&OVRTXT) TYPE(*CHAR) LEN(4)
-
+ 
              DCL        VAR(&SRCFILE) TYPE(*CHAR) STG(*DEFINED) +
                           LEN(10) DEFVAR(&SRC)
              DCL        VAR(&SRCLIB) TYPE(*CHAR) STG(*DEFINED) +
                           LEN(10) DEFVAR(&SRC 11)
              DCL        VAR(&FILETYPE) TYPE(*CHAR) LEN(5)
              DCL        VAR(&TEXT) TYPE(*CHAR) LEN(50)
-
+ 
              DCL        VAR(&RECURSIVE) TYPE(*CHAR) LEN(1) VALUE('N')
              DCL        VAR(&MSGID) TYPE(*CHAR) LEN(7)
              DCL        VAR(&MSGF) TYPE(*CHAR) LEN(10)
              DCL        VAR(&MSGFLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&MSGDTA) TYPE(*CHAR) LEN(100)
-
+ 
              DCLF       FILE(UTC000023F)
-
-             COPYRIGHT TEXT('(c) Misys International Banking Systems Ltd. +
+ 
+             COPYRIGHT TEXT('(c) Finastra International Limited +
                           2015')
-
+ 
              MONMSG     MSGID(CPF0000 MCH0000) EXEC(GOTO CMDLBL(ERROR))
-
+ 
 /* Build up list of source. */
              DLTF       FILE(QTEMP/UTC000023F)
              MONMSG     MSGID(CPF0000)
@@ -54,29 +56,29 @@
              CPYF       FROMFILE(UTC000023O) +
                           TOFILE(QTEMP/UTC000023F) MBROPT(*REPLACE) +
                           FMTOPT(*MAP *DROP)
-
+ 
 /* Read list of source members. */
 READNEXT:
              RCVF
              MONMSG     MSGID(CPF0864) EXEC(DO)
                 GOTO       CMDLBL(ENDPGM)
              ENDDO
-
+ 
 /* If the text is not blank then do not process. */
              IF         COND(&OVRTXT *EQ '*NO') THEN(DO)
                 IF         COND(&MLMTXT *NE ' ') THEN(DO)
                    GOTO       CMDLBL(READNEXT)
                 ENDDO
              ENDDO
-
+ 
 /* Retrieve member description and check that the file is a source file. */
              RTVMBRD    FILE(&MLLIB/&MLFILE) MBR(&MLNAME) +
                           FILETYPE(&FILETYPE)
-
+ 
              IF         COND(&FILETYPE *NE '*SRC') THEN(DO)
                 GOTO       CMDLBL(READNEXT)
              ENDDO
-
+ 
 /* Ignore skeleton source. */
              IF         COND(%SST(&MLFILE 1 2) *EQ 'SK') THEN(DO)
                 GOTO       CMDLBL(READNEXT)
@@ -105,7 +107,7 @@ READNEXT:
              IF         COND(%SST(&MLFILE 3 3) *EQ 'TBL') THEN(DO)
                 GOTO       CMDLBL(READNEXT)
              ENDDO
-
+ 
              OVRDBF     FILE(INPSRC) TOFILE(&MLLIB/&MLFILE) +
                           MBR(&MLNAME)
 /* If member is SQL type then go to its own processing. */
@@ -117,13 +119,13 @@ READNEXT:
                 CALL       PGM(UT000060) PARM('RPG' &TEXT)
              ENDDO
              DLTOVR     FILE(INPSRC)
-
+ 
              CHGPFM     FILE(&MLLIB/&MLFILE) MBR(&MLNAME) TEXT(&TEXT)
-
+ 
              GOTO       CMDLBL(READNEXT)
-
+ 
              GOTO       CMDLBL(ENDPGM)
-
+ 
 ERROR:
              IF         COND(&RECURSIVE *EQ 'N') THEN(DO)
                 CHGVAR     VAR(&RECURSIVE) VALUE('Y')
@@ -140,6 +142,6 @@ RCVMSG:
                 SNDPGMMSG  MSGID(&MSGID) MSGF(&MSGFLIB/&MSGF) +
                              MSGDTA(&MSGDTA) MSGTYPE(*ESCAPE)
              ENDDO
-
+ 
 ENDPGM:
              ENDPGM

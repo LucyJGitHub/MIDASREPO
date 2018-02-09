@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*XBI *  CRTPF FILE(QTEMP/UPCMPSOF) RCDLEN(220)                       *
 /*STD *  RPGBASEBND                                                   *
@@ -11,18 +11,20 @@
       *  UP0401 - Report on differences between spool files           *
       *                                                               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CUP039             Date 25Mar11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CUP039             Date 25Mar11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.04 -----------------------------------------------*
-      *  Prev Amend No. CUP009  *CREATE    Date 14Aug00               *
+      *                 CUP009  *CREATE    Date 14Aug00               *
       *                                                               *
       *---------------------------------------------------------------*
+      *  MD046248 - Finastra Rebranding                               *
       *  CUP039 - Spool file number changed from length 4 to 6.       *
       *  CUP009 - Creation of CMPOUTQ command.  This is a re-write    *
       *            of CMPCOB.                                         *
@@ -198,4 +200,4 @@
      C                   ENDSR
       **************************************************************************
 **CTDATA cpy@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2008')
+     H COPYRIGHT('(c) Finastra International Limited 2008')
       *****************************************************************
 /*XBIA*  CRTSRCPF FILE(QTEMP/RUNFTPSCR) RCDLEN(1000) MBR(RUNFTPSCR)   *
 /*XBIB*  RNMOBJ OBJ(QTEMP/RUNFTPSCR) OBJTYPE(*FILE)                   *
@@ -28,15 +28,17 @@
       *             and rename it (following the /*XBI instructions   *
       *             above.  It must also perform the FTP.             *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *  (c) Finastra International Limited 2008                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. CUT011  *CREATE    Date 04Jan08               *
-      *  Prev Amend No. xxxxxx             Date ddMmmyy               *
+      *  Prev Amend No. CUT011  *CREATE    Date 04Jan08               *
+      *                 XXXXXX             Date DDMmmYY               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CUT011 - New general purpose tool to make writing FTP        *
       *           scripts easier.                                     *
       *                                                               *

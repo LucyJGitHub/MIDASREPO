@@ -6,13 +6,15 @@
 /*                                                                   */
 /*       UTCB23884 - CL program to call datapatch PGM/UTB23884       */
 /*                                                                   */
-/*       (c) Copyright Misys International Banking Systems 2009      */
+/*       (c) Copyright Finastra International Limited 2009           */
 /*                                                                   */
-/*       Last Amend No. CER059             Date 19Jul10              */
-/*       Prev Amend No. BUG23884 *CREATE   Date 11Jun09              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CER059             Date 19Jul10              */
+/*                      BUG23884 *CREATE   Date 11Jun09              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CER059 - German Feature Upgrade to Delhi                    */
 /*       BUG23884 - Tax deduction on MM Deals shows customer name    */
 /*                  as narrative                                     */
@@ -21,7 +23,7 @@
              PGM        PARM(&MODE)
              DCL        VAR(&MODE) TYPE(*CHAR) LEN(1)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(C) +
-                          Copyright Misys International Banking +
+                          Copyright Finastra International Limited +
                           Systems 2009')
  
 /* Global monitor message */

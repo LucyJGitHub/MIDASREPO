@@ -7,13 +7,15 @@
 /*                                                                   */
 /*       UTCLE0793A - To correct sequence of records in PF/FACHISA   */
 /*                                                                   */
-/*       (c) Misys Banking Systems 2016                              */
+/*       (c) Finastra International Limited 2016                     */
 /*                                                                   */
-/*       Last Amend No. MD022057 *CREATE   Date 08Nov16              */
-/*       Prev Amend No. Xxxxxxxx           Date ddmmmyy              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD022057 *CREATE   Date 08Nov16              */
+/*                      Xxxxxxxx           Date ddmmmyy              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD022057- To resequence the records in FACHISA.             */
 /*                                                                   */
 /*********************************************************************/
@@ -25,7 +27,7 @@
              DCL        VAR(&PREF) TYPE(*CHAR) LEN(2)
              DCL        VAR(&RUNP) TYPE(*CHAR) LEN(3) VALUE('NO')
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys Banking Systems 2016')
+                          Finastra International Limited 2016')
 /**/
 /* Global monitor message                                            */
 /**/
@@ -256,6 +258,6 @@ CONTIN6:
                           TOPGMQ(*EXT) TOMSGQ(MOPERQ MRUNQ)
  
  END:        CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys Banking Systems 2016')
+                          Finastra International Limited 2016')
              SNDPGMMSG  MSG('End of UTCLE0793A') TOMSGQ(MRUNQ MOPERQ)
              ENDPGM

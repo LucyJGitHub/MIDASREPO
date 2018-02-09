@@ -7,14 +7,16 @@
 /*                                                                   */
 /*       TIC1710 - Midas TI Beginning of business save               */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2005           */
+/*       (c) Finastra International Limited 2005                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Last Amend No. 235616  *CREATE    Date 12Feb07              */
+/*       Prev Amend No. 235616  *CREATE    Date 12Feb07              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       235616 - The program does not save the latest               */
 /*                version of TI database and not the TI database     */
 /*                at the time the MIDAS_SAVE job is submitted.       */
@@ -27,7 +29,7 @@
  
              DCLF       FILE(T2PF)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2005')
 /**/
 /*   INITIAL PROCESSING                                             */
@@ -391,5 +393,5 @@ ABNOR:
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
  ENDPGM:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd. 2005')
+                          Finastra International Limited 2005')
              ENDPGM

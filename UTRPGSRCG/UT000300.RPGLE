@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2007')
+     H COPYRIGHT('(c) Finastra International Limited 2007')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas SM Populate UTSRCFPD for CRTALLOBJ')
@@ -9,14 +9,16 @@
       *                                                               *
       *  UT000300 - Populate UTSRCCPD for CRTALLOBJ                   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2007            *
+      *  (c) Finastra International Limited 2007                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. CUT011  *CREATE    Date 09Nov07               *
+      *  Prev Amend No. CUT011  *CREATE    Date 09Nov07               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CUT011 - Rewrite of command.  Make it more flexible and      *
       *           easier to maintain.                                 *
       *                                                               *

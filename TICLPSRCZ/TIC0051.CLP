@@ -9,19 +9,21 @@
 /*                                                                   */
 /*       Called by CoB                                               */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Last Amend No. 156300 *CREATE     Date 02MAr99              */
-/*       Prev Amend No. nnnnnn             Date ddmmmyy              */
+/*       Prev Amend No. 156300 *CREATE     Date 02MAr99              */
+/*                      nnnnnn             Date ddmmmyy              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       156300 - Midas/TI jobs keep running and halting database    */
 /*                 save.                                             */
 /*                                                                   */
@@ -31,7 +33,7 @@
              DCL        VAR(&CHECK) TYPE(*CHAR) LEN(2) VALUE('NN')
              DCL        VAR(&MSG) TYPE(*CHAR) LEN(132)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
@@ -87,6 +89,6 @@ DELAY:
  
  END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

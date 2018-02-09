@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*XBIA*  CRTPF FILE(QTEMP/MAXID) RCDLEN(15)                           *
 /*XBIB*  RNMOBJ OBJ(QTEMP/MAXID) OBJTYPE(*FILE) NEWOBJ(MAXAMT)        *
@@ -22,18 +22,20 @@
       *             - reset the 'start from' value of an automatic-   *
       *               ally generated field to a specified number.     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-/*    *  Last Amend No. CPK025             Date 11Jul06               /
-      *  Prev Amend No. BUG8856            Date 13Oct05               *
+/*    *  Prev Amend No. CPK025             Date 11Jul06               /
+      *                 BUG8856            Date 13Oct05               *
       *                 CPK030  *CREATE    Date 22Dec04               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
 /*    *  CPK025  - File UPCDFDPD is redundant. Use file UPFFDSTPD.    *
       *  BUG8856 - DSPFFD changed at V5R3.  Use core outfile instead  *
       *  CPK030 - New utility.                                        *

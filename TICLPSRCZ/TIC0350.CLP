@@ -9,17 +9,18 @@
 /*                                                                   */
 /*       Called by TIC0050                                           */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4.01.03 --------------------------------------------*/
-/*       Last Amend No. 173172             Date 06Jan03              */
+/*       Prev Amend No. 173172             Date 06Jan03              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.02 ---------------------------------------------------*/
-/*       Prev Amend No. 162541             Date 09Jul99              */
+/*                      162541             Date 09Jul99              */
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      156998             Date 11May99              */
 /*                      144700             Date 30Oct98              */
@@ -28,6 +29,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       173172 - Two TISHDPST jobs running simultaneously caused    */
 /*                problems in I/C termination.                       */
 /*       162541 - Guarantee to do projections before COB             */
@@ -42,7 +44,7 @@
              PGM        PARM(&PARM1 &PARM2 &PARM3 &PARM4 &PARM5)     /*139756*/
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(1)
              DCL        VAR(&STOP) TYPE(*CHAR) LEN(5)
@@ -147,6 +149,6 @@ ABNOR:       ROLLBACK
              MONMSG     MSGID(CPF0000 MCH0000)
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

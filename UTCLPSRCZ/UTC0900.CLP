@@ -7,14 +7,15 @@
 /*                                                                   */
 /*       UTC0900 - Create Data Backup prior to Bridge Processing     */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Last Amend No. CUP034             Date 25Jan06              */
+/*       Prev Amend No. CUP034             Date 25Jan06              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CUP022             Date 31Mar04              */
+/*                      CUP022             Date 31Mar04              */
 /*                      CSF002             Date 01Sep03              */
 /* Midas Release 4.01.03 --------------------------------------------*/
 /*                      CPK015             DATE 09Dec02              */
@@ -36,6 +37,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CUP034 - Reduce size of implementation library              */
 /*       CUP022 - Use command ACTIONFILE instead of individual file  */
 /*                command &CMD.                                      */
@@ -95,7 +97,7 @@
              DCL        VAR(&SVAL) TYPE(*CHAR) LEN(200)                                   /*CUP034*/
              DCL        VAR(&AORTN) TYPE(*CHAR) LEN(7)                                    /*CUP034*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /* Global monitor message */
@@ -359,7 +361,7 @@ CALL:
              MONMSG     MSGID(CPF0000)
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              DLTDTAARA  DTAARA(QTEMP/MIDASMSG)
  

@@ -11,13 +11,15 @@
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /*       VLDMNU - Validate Midas Plus menus                          */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2008           */
+/*       (c) Finastra International Limited 2008                     */
 /*                                                                   */
-/*       Last Amend No. 256038  *CREATE    Date 19Jun08              */
-/*       Prev Amend No. xxxxxx             Date ddMmmyy              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. 256038  *CREATE    Date 19Jun08              */
+/*                      XXXXXX             Date DDMmmYY              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       256038 - New command to call menu validation.  This command */
 /*                was created to allow panel group help.             */
 /*                                                                   */

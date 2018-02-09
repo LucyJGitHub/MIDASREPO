@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas UT Validation list data maintenance')
@@ -9,13 +9,14 @@
       *                                                               *
       *  UT000056 - Validation list data maintenance                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
       *  Last Amend No. CUP041   *CREATE   Date 02Jun14               *
       *  Prev Amend No. xxxxxxxx           Date ddMmmyy               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CUP041 - Restructure of deliverable data files.              *
       *                                                               *
       *****************************************************************
@@ -760,12 +761,12 @@
      C                   EVAL      *IN31 = *OFF
      C                   EVAL      *IN27 = *OFF
      C                   EVAL      DFAORD = *blank
- 
+
      C                   UPDATE    UT000056S0
      C                   READC     UT000056S0                             29
      C                   ENDDO
      C                   ENDIF
- 
+
      C                   EXSR      Clear
      C                   EXSR      ResetInds
      C                   EVAL      ErrInd = 'N'
@@ -1097,7 +1098,7 @@
      C                   PARM                    DFmt
      C                   PARM                    WQ0003
      C                   PARM      *blanks       ZDate
- 
+
      C                   EVAL      DFDATE = ZDate
       *
       ** Perform checks as to whether fields are displayed or not.

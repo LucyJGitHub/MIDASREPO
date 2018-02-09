@@ -9,13 +9,15 @@
 /*                                                                   */
 /*       SCRAMBLE - Scramble sensitive data                          */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2010           */
+/*       (c) Finastra International Limited 2010                     */
 /*                                                                   */
-/*       Last Amend No. BUG27787  *CREATE  Date 19Jul10              */
-/*       Prev Amend No. xxxxxx             Date ddmmmyy              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. BUG27787 *CREATE   Date 19Jul10              */
+/*                      XXXXXX             Date DDMmmYY              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BUG27787 - New version of the SCRAMBLE utility              */
 /*                                                                   */
 /*********************************************************************/

@@ -7,14 +7,15 @@
 /*                                                                   */
 /*       UPC0795 - Merge Message File Control Program.               */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Last Amend No. CUP033             Date 18Sep06              */
+/*       Prev Amend No. CUP033             Date 18Sep06              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CSM005             Date 21Sep05              */
+/*                      CSM005             Date 21Sep05              */
 /*                      CUP024             Date 13Jun03              */
 /* Midas Release 4.01 -----------------------------------------------*/
 /*                      CPK015             Date 04Apr02              */
@@ -27,6 +28,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CUP033 - Removal of System Value /COPYs.                    */
 /*       CSM005 - Changes to /COPYs.  Recompile.                     */
 /*       CUP024 - Migration of Bridge ICD to the System Values file. */
@@ -49,7 +51,7 @@
              DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)                                 /*CUP006*/
 /**COPY*UPCPYSRC,UPLIBDCL*                                           */ /*             */ /*CUP033*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
                                                                                           /*CUP006*/
 /************DCLF       FILE(UPUICDPD)                                      */ /*CUP006*/ /*CUP024*/
@@ -125,6 +127,6 @@
  
  END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

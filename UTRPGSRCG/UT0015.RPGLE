@@ -15,14 +15,15 @@
       *                                                               *
       *  Called By: UTC0016 - Expand source main program              *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CUT008             Date 22Feb11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CUT008             Date 22Feb11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CPK018  *MOVED     Date 26Apr04               *
+      *                 CPK018             Date 26Apr04               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.03 -----------------------------------------------*
       *                 178905             Date 17May00               *
@@ -36,6 +37,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CUT008 - CRTOBJ rewrite.  QUSRTVUS returns extra data at     *
       *           V5R4M0.                                             *
       *           Amend so that UT0015 extands sources for RGPLE      *

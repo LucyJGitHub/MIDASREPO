@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+     H COPYRIGHT('(c) Finastra International Limited 2010')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Utility to correct DLDTSCPD COHO')                     *
@@ -11,13 +11,15 @@
       *                                                               *
       *  Function: This program corrects COHO records in DLDTSCPD.    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. AR218328 *CREATE   Date 24Mar10               *
-      *  Prev Amend No. xxxxxx             Date ddmmmyy               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR218328 *CREATE   Date 24Mar10               *
+      *                 XXXXXX             Date DDMmmYY               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR218328 - Populate DLDTSCPD COHO if date is a holiday.      *
       *                                                               *
       *****************************************************************
@@ -394,4 +396,4 @@
       /COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2010
+(c) Finastra International Limited 2010

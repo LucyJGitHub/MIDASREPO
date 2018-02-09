@@ -9,19 +9,21 @@
 /*                                                                   */
 /*       UTMENU - Call Utilities Menu                                */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Last Amend No. CUP004 *CREATE     DATE 07May98              */
-/*       Prev Amend No. Xnnnnn             DATE ddmmmyy              */
+/*       Prev Amend No. CUP004 *CREATE     DATE 07May98              */
+/*                      Xnnnnn             DATE ddmmmyy              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CUP004 - Improve upgrade of DTALIB files                    */
 /*                                                                   */
 /*********************************************************************/

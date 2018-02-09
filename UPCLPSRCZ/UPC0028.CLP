@@ -7,20 +7,22 @@
 /*                                                                   */
 /*       UPC0028 - Change CoB components                             */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4.01 -----------------------------------------------*/
-/*       Last Amend No. CPK015             Date 05Mar02              */
+/*       Prev Amend No. CPK015             Date 05Mar02              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.05 ---------------------------------------------------*/
-/*       Prev Amend No. CUP014 *CREATE     Date 17Apr01              */
+/*                      CUP014 *C *CREATE  Date 17Apr01              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CPK015 - 4.01 packaging. Add MONMSG to error processing.    */
 /*       CUP014 - New utility for the Bridge.                        */
 /*                                                                   */
@@ -33,7 +35,7 @@
              DCL        VAR(&TIMESLICEN) TYPE(*DEC) LEN(8 0)
              DCL        VAR(&MESSAGE) TYPE(*CHAR) LEN(50)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /* Global monitor message */
@@ -77,6 +79,6 @@
              MONMSG     MSGID(CPF0000 MCH0000)                                            /*CPK015*/
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

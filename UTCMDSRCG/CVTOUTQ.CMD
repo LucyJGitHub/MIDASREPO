@@ -9,19 +9,21 @@
 /*                                                                   */
 /*       CVTOUTQ (Convert out put queue) command                     */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CPK018  *MOVED     Date 23Apr04              */
+/*       Prev Amend No. CPK018             Date 23Apr04              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CAA002 *CREATE     Date 31OCT95              */
+/*                      CAA002 *C *CREATE  Date 31Oct95              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CPK018 - MidasPlus packaging.  Moved to global layer.       */
 /*       CAA002 - Development of utility to save, edit and restore   */
 /*                spooled files.                                     */

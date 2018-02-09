@@ -9,13 +9,15 @@
 /*                                                                   */
 /*       UTWRKVLDL - Work with Validation Lists                      */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2010           */
+/*       (c) Finastra International Limited 2010                     */
 /*                                                                   */
-/*       Last Amend No. CUT007  *REWRITE   Date 15Dec10              */
-/*       Prev Amend No. BUG27989A*CREATE   Date 12Aug10              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CUT007             Date 15Dec10              */
+/*                      BUG27989A *CREATE  Date 12Aug10              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CUT007 - Rewrite of utility to make it more generic.        */
 /*       BUG27989A - HATS should run with/without LDAP (Reopen)      */
 /*                                                                   */

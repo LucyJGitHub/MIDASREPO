@@ -7,13 +7,15 @@
 /*                                                                   */
 /*       UTCLE0633 - CL program to call datapatch ILE/UTLE0633       */
 /*                                                                   */
-/*       (c) Misys Banking Systems 2012                              */
+/*       (c) Finastra International Limited 2012                     */
 /*                                                                   */
-/*       Last Amend No. AR806351 *CREATE   Date 05Mar12              */
-/*       Prev Amend No. Xxxxxxxx           Date ddmmmyy              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR806351 *CREATE   Date 05Mar12              */
+/*                      XXXXXXXX           Date DDMmmYY              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       AR806351 - PDCLs with type Y/Z and FAMU = N have records in */
 /*                  FACHISA. Delete invalid records in file and tag  */
 /*                  facility for recalculation. (Child: AR806352)    */
@@ -27,7 +29,7 @@
              DCL        VAR(&PREF) TYPE(*CHAR) LEN(2)
              DCL        VAR(&RUNP) TYPE(*CHAR) LEN(3) VALUE('NO')
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys Banking Systems 2012')
+                          Finastra International Limited 2012')
 /**/
 /* Global monitor message */
 /**/
@@ -199,7 +201,7 @@ ABNOR:       IF         COND((&MODE *EQ 'U') *OR (&MODE *EQ 'u')) +
 ABNOR1:      SNDPGMMSG  MSG('Error occurred in UTCLE0633 program') +
                           TOPGMQ(*EXT) TOMSGQ(MOPERQ MRUNQ)
  
-END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) Misys Banking +
+END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International +
                           Systems 2012')
              SNDPGMMSG  MSG('End of UTCLE0633') TOMSGQ(MRUNQ MOPERQ)
              ENDPGM

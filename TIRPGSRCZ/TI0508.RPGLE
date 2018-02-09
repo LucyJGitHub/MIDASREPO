@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas SD Message type descrip maintenance subfile')
@@ -13,16 +13,18 @@
       *             TIIMMSL0, allowing the contents to be inserted,   *
       *             amended and deleted.                              *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CTI004  *CREATE    Date 12Apr04               *
+      *  Prev Amend No. CTI004  *CREATE    Date 12Apr04               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CTI004 - MidasPlus-TI Integration Enhancements               *
       *           Routing Swift Messages                              *
       *                                                               *
@@ -1535,7 +1537,7 @@
  
      C                   ENDSR
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2004
+(c) Finastra International Limited 2004
 **CTDATA @CN
 ?
 *

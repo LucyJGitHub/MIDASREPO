@@ -8,18 +8,20 @@
       *                                                               *
       *  UTRTVMBRD - Retrieve member description details              *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4.01.03 ----------------------------------------*
-      *  Last Amend No. CTH001  *CREATE    Date 06Feb03               *
-      *  Prev Amend No.                    Date ddmmmyy               *
+      *  Prev Amend No. CTH001  *CREATE    Date 06Feb03               *
+      *                                    Date DDMmmYY               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CTH001 - Test Harness.                                       *
       *                                                               *
       *****************************************************************

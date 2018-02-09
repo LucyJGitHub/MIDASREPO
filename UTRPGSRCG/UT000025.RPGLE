@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+     H COPYRIGHT('(c) Finastra International Limited 2010')
       *****************************************************************
 /*XBI *  CRTSRCPF FILE(QTEMP/INPSRC) RCDLEN(112)                      *
 /*STD *  RPGBASEBND                                                   *
@@ -11,14 +11,16 @@
       *                                                               *
       *  UT000025 - Determine object type from member type            *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. CCB020             Date 06Aug12               *
-      *  Prev Amend No. CUT008  *CREATE    Date 16Nov10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CCB020             Date 06Aug12               *
+      *                 CUT008  *CREATE    Date 16Nov10               *
       *                 xxxxxx             Date ddMmmyy               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CCB020 - COB Restructure - Secondary COB Infrastructure      *
       *  CUT008 - CRTOBJ rewrite.                                     *
       *                                                               *

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2005')
+     H COPYRIGHT('(c) Finastra International Limited 2005')
       *****************************************************************
 /*STD *  RPGBASEBNC                                                   *
 /*EXI *  TEXT('Midas UT Create FTP commands')
@@ -14,17 +14,19 @@
       *  Function:  This module creates the FTP commands to send      *
       *             and optionally restore objects.                   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CPK022             Date 06Jul05               *
-      *  Prev Amend No. CUP096  *CREATE    Date 17Mar05               *
+      *  Prev Amend No. CPK022             Date 06Jul05               *
+      *                 CUP096  *CREATE    Date 17Mar05               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CPK022 - Should not use zone /COPYs.                         *
       *  CUP096 - New Utility                                         *
       *                                                               *

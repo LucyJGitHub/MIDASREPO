@@ -7,12 +7,14 @@
 /*                                                                   */
 /*       UTCDL0502 - Check duplicate deals in historic - control pgm */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2012           */
+/*       (c) Finastra International Limited 2012                     */
 /*                                                                   */
-/*       Last Amend No. AR317892 *Create   Date 26Jul12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR317892 *CREATE   Date 26Jul12              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       AR317892 - Utility that will check corrupted FSRRAT fields  */
 /*                  in DLBHISPD, DLCHISPD and DLDHISPD.              */
 /*                                                                   */
@@ -21,7 +23,7 @@
  
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2012')
              DCL        VAR(&PMODE) TYPE(*CHAR) LEN(1)
              DCL        VAR(&PRE) TYPE(*CHAR) LEN(2)
@@ -127,7 +129,7 @@
              ENDDO
  
  END:
-             CHGVAR     VAR(&CPYFLD) VALUE('(c) Misys International +
+             CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International +
                           Banking Systems Ltd. 2012')
  
              ENDPGM

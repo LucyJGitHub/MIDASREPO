@@ -7,19 +7,21 @@
 /*                                                                   */
 /*       TIC0027 - TI Environment Support Functions: Routines 7-8    */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CSC017             Date 14Feb03              */
+/*       Prev Amend No. CSC017             Date 14Feb03              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CTI001  *CREATE    Date 03OCT97              */
+/*                      CTI001  *CREATE    Date 03Oct97              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CSC017 - Change to 250 library list.                        */
 /*       CTI001 - Requirements clarification for Midas/TI Interface  */
 /*                Program created.                                   */
@@ -49,7 +51,7 @@
              DCL        VAR(&LIBCNT) TYPE(*DEC) LEN(9 0)
              DCL        VAR(&OFFLEN) TYPE(*DEC) LEN(9 0)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /* Global monitor message */
@@ -133,7 +135,7 @@
              MONMSG     MSGID(CPF0000 MCH0000)
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 /*/COPY WNCPYSRC,TIC0027END                                          */
  

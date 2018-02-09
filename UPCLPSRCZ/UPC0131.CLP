@@ -7,18 +7,20 @@
 /*                                                                   */
 /*       UPC0131 - Enter system id and set up library list           */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2004           */
+/*       (c) Finastra International Limited 2004                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Last Amend No. CUP033             Date 18Sep06              */
+/*       Prev Amend No. CUP033             Date 18Sep06              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CSM005             Date 21Sep05              */
+/*                      CSM005             Date 21Sep05              */
 /*                      CPK019 *CREATE     Date 22Jul04              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CUP033 - Removal of System Value /COPYs.                    */
 /*       CSM005 - Changes to /COPYs.  Recompile.                     */
 /*       CPK019 - Prompt to allow for entering a zone prefix and     */
@@ -40,7 +42,7 @@
              DCL        VAR(&AORTN) TYPE(*CHAR) LEN(7)                                    /*CUP033*/
              DCL        VAR(&RECURSIVE) TYPE(*CHAR) LEN(1) VALUE('N')
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2004')
  
 /* Global monitor message */
@@ -101,6 +103,6 @@
              ENDDO
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

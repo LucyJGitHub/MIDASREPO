@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+     H COPYRIGHT('(c) Finastra International Limited 2010')
       *****************************************************************
 /*XBI *  CRTSRCPF FILE(QTEMP/INPSRC) RCDLEN(112)                      *
 /*STD *  RPGBASEBND                                                   *
@@ -12,13 +12,15 @@
       *  UT000026 - Group creation parameters from file (W+job number)*
       *             into strings CrtPrm, XBCrtPrm, XACrtPrm           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. CUT008  *CREATE    Date 20Dec10               *
-      *  Prev Amend No. xxxxxx             Date ddMmmyy               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CUT008  *CREATE    Date 20Dec10               *
+      *                 XXXXXX             Date DDMmmYY               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CUT008 - Rewrite of CRTOBJ.                                  *
       *                                                               *
       *****************************************************************

@@ -4,18 +4,20 @@
 /*                                                                   */
 /*       mmCnnnn - (Program Name)                                    */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
-/*       Last Amend No. Xnnnnn  *CREATE    Date ddmmmyy              */
-/*       Prev Amend No. Xnnnnn             Date ddmmmyy              */
+/*       Prev Amend No. XNNNNN  *CREATE    Date DDMmmYY              */
+/*                      XNNNNN             Date DDMmmYY              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       Xnnnnn - (fix description)                                  */
 /*                                                                   */
 /*********************************************************************/
@@ -27,7 +29,7 @@
 /*H: SYSTEM     : SYNON/2 SHIPPED SUBROUTINE                                 */
 /*H: PROGRAMMER : PV                                                         */
 /*H: DATE       : 18/01/88                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*H: Copy of Y2SNMGC                                                         */
  
 /*H:  SYNOPSIS:                                                              */
@@ -53,7 +55,7 @@ DCL &ZAMSGF   *CHAR 10 /* MESSAGE FILE        */
 DCL &ZAMSDA   *CHAR 132 /* MESSAGE SUBSTITION DATA. */
 DCL &ZAMSTP   *CHAR  7 /* MESSAGE TYPE.*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /*=================================================================*/
 /*H: 1.  DEFAULT CERTAIN MESSAGE PARAMETERS. */
@@ -78,6 +80,6 @@ DCL &ZAMSTP   *CHAR  7 /* MESSAGE TYPE.*/
          RMVMSG     CLEAR(*ALL)
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 ENDPGM

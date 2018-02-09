@@ -8,10 +8,11 @@
       *                                                               *
       *   ZVRAT - Access available action codes for User/Pgm          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2011            *
+      *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. AR939494           Date 12Apr12               *
-      *  Prev Amend No. CBF005  *REWRITE   Date 04Jul11               *
+      *  Last Amend No. MD046248           Date 05Feb18               *
+      *  Prev Amend No. AR939494           Date 12Apr12               *
+      *                 CBF005  *REWRITE   Date 04Jul11               *
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       *                 CSF002             Date 11Aug03               *
@@ -22,6 +23,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR939494 - No SWIFT messages generated for Fund Transfer     *
       *             Updated query to MIVW_PERMM                       *
       *  CBF005 - BF Infrastructure: Single Security User Maintenance *
@@ -59,19 +61,19 @@
       *
      D PSDS           SDS
      D  USRID                254    263
- 
+
      C** Data structure to store BRANCH/AUTHORITY details
- 
+
      D AtCode          DS
      D  ACT                           1A   DIM(6)
- 
+
      D Action          S              1
      D EntType         S             10A
      D FetchErr        S              1A
      D Idx             S              2  0
      D OpenErr         S              1A
      D Stmt            S            500A
- 
+
      C     *DTAARA       DEFINE                  ZMITEM           10
      C                   IN        ZMITEM
      C                   UNLOCK    ZMITEM
@@ -81,24 +83,24 @@
      C                   Z-ADD     0             ERR
      C                   Z-ADD     0             Idx
      C                   MOVE      *BLANKS       ACODES
- 
+
      C                   EXSR      Prep_SQLStm
- 
+
      C                   IF        OpenErr = 'N'
      C                   EXSR      Fetch_SQLRec
      C                   END
- 
+
      C                   IF        Idx > 0
      C                   MOVE      AtCode        ACODES
      C                   ELSE
      C                   Z-ADD     1             ERR
      C                   END
- 
+
      C                   SETON                                        LR
      C                   RETURN
       *****************************************************************
      C     Prep_SQLStm   BEGSR
- 
+
      C                   EVAL      OpenErr = 'Y'
      C                   EVAL      EntType = 'Branch'
                                                                                             AR939494
@@ -120,30 +122,30 @@
       ***/End-free                                                                          AR939494
      C***/EXEC*SQL WHENEVER SQLERROR GOTO ERRP1                                             AR939494
      C***/END-EXEC                                                                          AR939494
- 
+
      C***/EXEC*SQL                                                                          AR939494
      C***+*PREPARE S1 FROM :STMT                                                            AR939494
      C***/END-EXEC                                                                          AR939494
- 
+
      C***/EXEC*SQL                                                                          AR939494
      C***+*DECLARE C1 CURSOR FOR S1                                                         AR939494
      C***/END-EXEC                                                                          AR939494
- 
+
      C***/EXEC*SQL                                                                          AR939494
      C***+*OPEN C1 using :ZMITEM,:ZBR,:USRID,:EntType                                       AR939494
      C***/END-EXEC                                                                          AR939494
      C                   EVAL      OpenErr = 'N'
      C                   EVAL      SQLSTT = '00000'
- 
+
      C     ERRP1         TAG
      C                   ENDSR
       *****************************************************************
       /EJECT
       *****************************************************************
      C     Fetch_SQLRec  BEGSR
- 
+
      C                   EVAL      FetchErr = 'Y'
- 
+
      C/EXEC SQL WHENEVER SQLERROR GOTO ERROP
      C/END-EXEC
      C                   DOW       SQLSTT = '00000' and Idx < 7
@@ -165,11 +167,11 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    ZBR               3
      C                   PARM                    ACODES            6
      C                   PARM                    ERR               1 0
- 
+
      C                   ENDSR
       *****************************************************************

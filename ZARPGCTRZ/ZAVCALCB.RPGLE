@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas ZA Validate int calculation basis (SD)')
@@ -15,17 +15,19 @@
       *             If it is valid the 10A return code will be blank. *
       *             If it is not it will contain  'Error'.            *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. BUG9342            Date 14Feb06               *
-      *  Prev Amend No. 224743             Date 15Mar04               *
+      *  Prev Amend No. BUG9342            Date 14Feb06               *
+      *                 224743             Date 15Mar04               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG9342 - Incorrect error message - MMM0429                  *
       *  224743 - If CIR004 is installed, system should allow         *
       *           interest calculation method '7'.  This module is    *
@@ -245,4 +247,4 @@
  
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2004
+(c) Finastra International Limited 2004

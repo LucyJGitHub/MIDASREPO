@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas ZA Validate interest calculation method')        *
@@ -22,7 +22,7 @@
       *                                                               *
       *  Component of: ZA_ALL - All ZA modules service program        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *    This source is centrally supported and must ONLY be        *
       *    amended by Core Development Personnel                      *
@@ -30,8 +30,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD027384           Date 10Jun14               *
-      *  Prev Amend No. CDL093             Date 07Apr14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD027384           Date 10Jun14               *
+      *                 CDL093             Date 07Apr14               *
       *                 CER059             Date 19Jul10               *
       *                 BUG26602           Date 19Nov09               *
       *                 BUG23841           Date 29Apr09               *
@@ -50,6 +51,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD027384 - remove forced initialisation of CDL093 feature    *
       *  CDL093 - MM Interest method 9 (Actual/ACtual - AFB)          *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -366,4 +368,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

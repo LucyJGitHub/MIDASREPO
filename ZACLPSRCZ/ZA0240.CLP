@@ -7,20 +7,22 @@
 /*                                                                   */
 /*          ZA0240 - SEND PROGRAM MESSAGE FOR MESSAGE SUBFILES       */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Last Amend No. 248597             Date 22Jun07              */
+/*       Prev Amend No. 248597             Date 22Jun07              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. 240474             Date 21Aug06              */
+/*                      240474             Date 21Aug06              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      BH3158             Date 20Aug91              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*      248597 - Try checking msgid in XX message file.              */
 /*               and correct code for Fix 240474                     */
 /*      240474 - Try checking msgid in FT message file.              */
@@ -32,7 +34,7 @@
 PGM        PARM(&@MSGID)
              DCL        VAR(&@MSGID) TYPE(*CHAR) LEN(10)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
 /*/COPY WNCPYSRC,ZA0240001                                           */
@@ -61,5 +63,5 @@ PGM        PARM(&@MSGID)
  
 GOTO ENDPGM
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 ENDPGM: ENDPGM

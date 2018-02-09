@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+     H COPYRIGHT('(c) Finastra International Limited 2010')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas ZA Calculate Final Spread Rate')                 *
@@ -13,10 +13,11 @@
       *             rules as parameters and return the new spread     *
       *             rate based on the rounding rules passed.          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. CRE083AU           Date 06Aug12               *
-      *  Prev Amend No. AR947093           Date 26Apr12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CRE083AU           Date 06Aug12               *
+      *                 AR947093           Date 26Apr12               *
       *                 AR944839           Date 31Mar12               *
       *                 AR943988           Date 29Mar12               *
       *                 AR847249           Date 11Jan12               *
@@ -25,6 +26,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CRE083AU - COB Restructure - RE COB Optimisation Phase 1     *
       *  AR947093 - Base Rate amendment resulted to 0 interest rate   *
       *  AR944839 - Incorrect calculated spread when rate can not be  *

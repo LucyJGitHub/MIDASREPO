@@ -7,19 +7,21 @@
 /*                                                                   */
 /*       ZAC1310  - Sub-program to Format Message Control            */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. 206018             Date 04Feb03              */
+/*       Prev Amend No. 206018             Date 04Feb03              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. 128437  *CREATE    Date 07Jan98              */
+/*                      128437  *CREATE    Date 07Jan98              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       206018 - OVRMSGF fails as &GBMSG becomes '  SDUSRMSG'.      */
 /*                Override is already made in calling program.       */
 /*       128437 - Allows selection of a specified message file.      */
@@ -32,7 +34,7 @@
 /*/COPY WNCPYSRC,ZAC1310INT                                          */
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /* Declare input variables */
@@ -77,7 +79,7 @@
              GOTO       CMDLBL(END)
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 /*/COPY WNCPYSRC,ZAC1310END                                          */
  

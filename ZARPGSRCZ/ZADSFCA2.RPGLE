@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
+     H COPYRIGHT('(c) Finastra International Limited 2011')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas ZA Discount Factor Calculation')                 *
@@ -17,12 +17,14 @@
       *            reives an interpolated rate, it is converted to a  *
       *            discount factor using program ZADSFCON.            *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2011            *
+      *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. 245132  *CREATE    Date 19Jan11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. 245132  *CREATE    Date 19Jan11               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  245132 - Amended to improve runtime. Copied from ZADSFCAL.   *
       *                                                               *
       *****************************************************************
@@ -259,4 +261,4 @@
      C                   ENDSR
      C********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2011
+(c) Finastra International Limited 2011

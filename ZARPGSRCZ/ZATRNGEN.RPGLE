@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas ZA Transaction number generation')
@@ -16,14 +16,15 @@
       *             transaction numbers for a module (and optionally  *
       *             transaction type) from its transaction no. file.  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. 234300             Date 29Sep06               *
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *  Prev Amend No. 234300             Date 29Sep06               *
+      *                 CSD027             Date 09Dec05               *
       *                 CSC024             Date 09Aug05               *
       *                 222727             Date 05Nov03               *
       * Midas Release 4 --------------- Base -------------------------*
@@ -36,6 +37,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  234300 - Recompiled over changed in PF/HSTTRD.               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CSC024 - Open Month End                                      *
@@ -511,4 +513,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

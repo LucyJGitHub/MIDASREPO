@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas ZA DEAMS File Trailer Update')                   *
@@ -9,10 +9,11 @@
       *                                                               *
       *  ZADMTRLRUD - DEAMS FILE TRAILER UPDATE                       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD037057           Date 22Mar16               *
-      *  Prev Amend No. AR856140           Date 22Mar16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD037057           Date 22Mar16               *
+      *                 AR856140           Date 22Mar16               *
       *                 CDL094             Date 11Jun14               *
       *                 CRE073             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -28,6 +29,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD037057 - Comment out subroutine HASHTO on top of applied   *
       *             fix for AR856140; subroutine not used anymore     *
       *  AR856140 - DLC0601B fails in CoB because of deal amendments  *
@@ -483,4 +485,4 @@
                                                                                             AR856140
      C                   Return    MergedNum                                                AR856140
      P                 E                                                                    AR856140
-
+ 

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas ZA Determine last coupon date')
@@ -12,7 +12,7 @@
       *                                                               *
       *  NOTE: This pgm was cloned from ZLCD release 4.01 version.    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
       *    This source is centrally supported and must ONLY be        *
       *    amended by Core Development Personnel                      *
@@ -20,17 +20,19 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSE071             Date 19Jul05               *
-      *  Prev Amend No. 197001             Date 08Mar02               *
+      *  Prev Amend No. CSE071             Date 19Jul05               *
+      *                 197001             Date 08Mar02               *
       *                 170783             Date 10Oct00               *
       *                 CSE035 *CREATE     Date 22Apr02               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSE071 - Multiple Holidays Re Securities                     *
       *  197001 - This module was created to get the Last Coupon Date *
       *           from the coupon array. Related to CSE035.           *

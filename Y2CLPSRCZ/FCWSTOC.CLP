@@ -3,19 +3,21 @@
 /*EXI *  TEXT('Y2 R2.1.1 Work station timeout processor')            */
 /*********************************************************************/
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Last Amend No. BG18886        DATE 21May08                 */
+/*       Prev Amend No. BG18886            Date 21May08              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev AMEND NO. E21879         DATE 09JAN92                 */
+/*                      E21879             Date 09Jan92              */
 /*                                                                   */
 /********************************************************************/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BG18886 - Amend non-standard code                          */
 /*       E21879 - CREATION PARAMETER USRPRF CHANGED FROM *USER TO   */
 /*                *OWNER                                            */
@@ -24,7 +26,7 @@ PGM (&PGMDS)
 DCL &PGMDS *CHAR 429 /* RPG PROGRAM DATA STRUCTURE. */
 DCL &REPLY    *CHAR 1    /* MESSAGE REPLY*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 DCLF       FILE(FCWSTOC#)
@@ -40,6 +42,6 @@ DCLF       FILE(FCWSTOC#)
              IF         COND(&REPLY = C) THEN(SIGNOFF LOG(*LIST))
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 ENDPGM

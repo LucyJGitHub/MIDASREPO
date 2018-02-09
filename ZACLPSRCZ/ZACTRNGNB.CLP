@@ -7,19 +7,21 @@
 /*                                                                   */
 /*       ZACTRNGNB - Control Batch Trans. Number Generation          */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CSC024             Date 09Aug05              */
+/*       Prev Amend No. CSC024             Date 09Aug05              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CAP003  *CREATE    Date 24May98              */
+/*                      CAP003  *CREATE    Date 24May98              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CSC024 - Open Month End                                     */
 /*                Avoid duplicate record in file ZAAVx when generate */
 /*       CAP003 - Conversion of Midas inputs to modular API structure*/
@@ -30,7 +32,7 @@
 /**/
 /** Declares                                                         */
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /** Return code, module, transaction type **/
@@ -125,6 +127,6 @@ END:
              MONMSG     MSGID(CPF0000)
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

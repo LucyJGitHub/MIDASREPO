@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas ZA Get Next Available JE Batch Number')
@@ -13,14 +13,15 @@
       *************number from the file GLJENHPD.**********************         186206
       *            number from the file GLBTNOPD.                     *         186206
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CDL038             Date 10May05               *
-      *  Prev Amend No. 216612             Date 07Apr03               *
+      *  Prev Amend No. CDL038             Date 10May05               *
+      *                 216612             Date 07Apr03               *
       * Midas Release 4.01.03 ----------------------------------------*
       *                 212636             Date 07Jan03               *
       * Midas Release 4 --------------- Base -------------------------*
@@ -31,6 +32,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL038 - Extended Deal Sub Type (Recompile)                  *
       *  216612 - Condition 212636 on TI module switched on.          *
       *  212636 - Take into account the reserved TI batch number      *
@@ -306,4 +308,4 @@
       *****************************************************************
       *
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

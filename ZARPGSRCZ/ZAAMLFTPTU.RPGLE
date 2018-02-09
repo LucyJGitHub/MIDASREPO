@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas ZA AML FTP import table uploader')
@@ -12,16 +12,18 @@
       *  Function:  This module uploads the AML Import Tables to      *
       *             the Compliance Alert Server via FTP.              *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSD017  *CREATE    Date 08Nov02               *
+      *  Prev Amend No. CSD017  *CREATE    Date 08Nov02               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSD017 - Midas Compliance Watch - Anti-Money Laundering      *
       *                                                               *
       *****************************************************************
@@ -703,7 +705,7 @@
       *****************************************************************
  
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2002
+(c) Finastra International Limited 2002
 ** CTDATA FTPCMD - OS/400 commands for FTP processing.
 OVRDBF FILE(INPUT) TOFILE(SDFTPSPD) MBR(SDFTPSPD) OVRSCOPE(*JOB)
 OVRDBF FILE(OUTPUT) TOFILE(SDFTPLPD) MBR(SDFTPLPD) OVRSCOPE(*JOB)

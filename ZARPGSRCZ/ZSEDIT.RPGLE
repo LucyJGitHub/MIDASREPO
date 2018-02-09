@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas ZS Edit Screen Field     MODULE')
@@ -8,20 +8,22 @@
       *   Module ZSEDIT  - Insert a decimal point and remove leading  *
       *                    zeros from signed numeric field            *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
-      *  Last Amend No. 243868             Date 22Nov06               *
+      *  Prev Amend No. 243868             Date 22Nov06               *
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. 238603             Date 28Aug06               *
+      *                 238603             Date 28Aug06               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.00 ---------------- Base -------------------------*
       *                 CTI001    Create   Date 03Sep97               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  243868 - Amount and CR sign are truncated in Account Enquiry *
       *           Prompt. Reverse fix 238603.                         *
       *  238603 - Z2 is not initialized correctly and led field       *
@@ -176,4 +178,4 @@
      C************   The converted ZSEDITZ3 ends here    *************
      C*
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

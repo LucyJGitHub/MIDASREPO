@@ -16,18 +16,20 @@
       *  Any changes done to this module must also be reflected in    *
       *  the /COPY members.                                           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. 208241             Date 22Aug02               *
+      *  Prev Amend No. 208241             Date 22Aug02               *
       * Midas Release 4 --------------- Base -------------------------*
-      *  Prev Amend No. CSE016  *CREATE    Date 10Jan01               *
+      *                 CSE016  *CREATE    Date 10Jan01               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  208241 - Applied core fix 127566 so that this ILE version is *
       *           in-synch with the /CPY version.  Added fix to       *
       *           populate century field for output.                  *
@@ -442,4 +444,4 @@
       /COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

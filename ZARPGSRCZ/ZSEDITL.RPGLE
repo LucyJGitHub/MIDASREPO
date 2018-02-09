@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(C) Copyright Midas-Kapiti International Ltd. 1997')
+     H COPYRIGHT('(C) Copyright Finastra International Limited, 1997')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas ZS Edit Screen Field w/ 9+ decimal places')
@@ -11,18 +11,20 @@
       *  This module is copied from ZSEDIT. Changes has been made to  *
       *  allow the numeric field to have more than 9 decimal places.  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. 238193             Date 23Aug06               *
-      *  Prev Amend No. BUG6460            Date 18Apr05               *
+      *  Prev Amend No. 238193             Date 23Aug06               *
+      *                 BUG6460            Date 18Apr05               *
       *                 220859  *CREATE    Date 11Sep03               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  238193 - OIS Compounding report error.  Apply BUG6460.       *
       *  BUG6460 - OIS Compounding report error                       *
       *  220859 - Increase the size of Compounding Rate from          *
@@ -158,4 +160,4 @@
      C*****************************************************************
      C*
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2003
+(c) Finastra International Limited 2003

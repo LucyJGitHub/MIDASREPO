@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2001')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas ZA DEALS File Trailer Update')                   *
@@ -9,8 +9,9 @@
       *                                                               *
       *  ZADLTRLRUD - DEALS FILE TRAILER UPDATE                       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 05Feb18               *
       *  Last Amend No. CDL099             Date 06Oct17               *
       *  Prev Amend No. CGL165             Date 15Feb17               *
       *                 CDL096             Date 22Sep14               *
@@ -42,6 +43,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
@@ -78,9 +80,9 @@
      F                                     RENAME(DEALSDFF : DEALSDFFX)                     MD025244
       ** Midas DL Deals File - Temporary Trailer                                            MD025244
       *                                                                                     MD025244
- 
+
      D**  Array for aligning integer/decimal portions of amount
- 
+
       **  Data Structure for aligning integer/decimal purchase amount
      D                 DS            18
      D  @@AINT                 1     15  0

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2015')
+     H COPYRIGHT('(c) Finastra International Limited 2015')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas ZS Insert Dec Pt & Remove 0s from Numeric')      *
@@ -10,12 +10,14 @@
       *  ZSEDIT  - Insert a Decimal Point and Remove Leading          *
       *            Zeros from Signed Numeric Field                    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2015            *
+      *  (c) Finastra International Limited 2015                      *
       *                                                               *
-      *  Last Amend No. MD034090 *CREATE   Date 11Mar15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD034090 *CREATE   Date 11Mar15               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD034090 - Extend field length of ZALIGN, ZEDIT & ZSEDIT     *
       *         - Modelled on ZEDIT2. Numeric input field adjusted    *
       *           from 15 numeric to 63 (max).                        *
@@ -170,4 +172,4 @@
      CSR                 ENDSR
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2015
+(c) Finastra International Limited 2015

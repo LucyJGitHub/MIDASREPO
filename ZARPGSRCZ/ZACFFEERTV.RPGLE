@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2005')
+     H COPYRIGHT('(c) Finastra International Limited 2005')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas Deal Retrieve CFFEED TRAM status fields')
@@ -12,17 +12,19 @@
       *  Function:  This module retrieves the TRAM status from        *
       *             the database for a given deal                     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. 238709             Date 06Jul06               *
-      *  Prev Amend No. BUG7287            Date 23May05               *
+      *  Prev Amend No. 238709             Date 06Jul06               *
+      *                 BUG7287            Date 23May05               *
       *                 BUG6512  *CREATE   Date 21Apr05               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  238709 - Allow Counterparty and Broker Status to be picked   *
       *           up for 'FI' deals on CFFEEDPD.                      *
       *  BUG7287- Allow Action code 'R'                               *
@@ -387,4 +389,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2005
+(c) Finastra International Limited 2005

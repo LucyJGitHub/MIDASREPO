@@ -7,12 +7,14 @@
       *  Function:  This includeds alternate prototype for            *
       *             AOSVALR0                                          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. CDL096  *CREATE    Date 22Sep14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL096  *CREATE    Date 22Sep14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL096 - Business Day Conventions on MM Deals                *
       *                                                               *
       *****************************************************************

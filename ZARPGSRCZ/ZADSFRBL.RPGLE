@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*XBI *  OVRDBF FILE(SDYLDRBD) TOFILE(SDYLDRL0)                       *
 /*STD *  RPGBASEMOD                                                   *
@@ -16,12 +16,13 @@
       *            Yield Rates File. This will be done for Yield      *
       *            Curves with a Zero coupon curve.                   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. CRE026             Date 24May06               *
-      *  Prev Amend No. BUG13149           Date 30Jan07               *
+      *  Prev Amend No. CRE026             Date 24May06               *
+      *                 BUG13149           Date 30Jan07               *
       * Midas Plus 1.3 ----------- Base ------------------------------*
       *                 BUG12254           Date 19Oct06               *
       *                 CSD031             Date 10Apr06               *
@@ -38,6 +39,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CRE026 - Consumer Banking (Recompile)                        *
       *  BUG13149 - Incorrect discount factor due to wrong spot date. *
       *  BUG12254 - Additional Calculation Method for FRA/IRS/CCF     *
@@ -1522,7 +1524,7 @@
       /EJECT
       *****************************************************************
 ** CPY@   **      OBJECT COPYRIGHT
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 **   ZF29 DAY NOS OF FEB 29 TO 2096 (INCLUDING 2000)
 0006001521029820444305904073650882610287117481320914670161311759219053
 2051421975234362489726358278192928030741322023366335124365853804639507

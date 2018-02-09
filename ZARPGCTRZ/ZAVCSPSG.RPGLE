@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2010')
+     H COPYRIGHT('(c) Finastra International Limited 2010')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas ZA Validate Contractual Spread and Sign')        *
@@ -9,10 +9,11 @@
       *                                                               *
       *  ZAVCSPSG - Midas ZA Validate Contractual Spread and Sign     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2010            *
+      *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. MD000091           Date 15May13               *
-      *  Prev Amend No. AR994581           Date 20Nov12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD000091           Date 15May13               *
+      *                 AR994581           Date 20Nov12               *
       *                 AR993993           Date 27Jun12               *
       *                 AR947093           Date 26Apr12               *
       *                 AR936885           Date 20Mar12               *
@@ -24,6 +25,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD000091 - Event Codes Substitution                          *
       *  AR994581 - Inconsistent description in error message in      *
       *             Period and Penallty Details (Credit Interest Side)*

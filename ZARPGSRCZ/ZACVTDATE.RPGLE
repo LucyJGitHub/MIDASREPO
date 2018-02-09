@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas ZA Fmts Midas day nmbr to date fmt data type')
@@ -13,17 +13,19 @@
       *  Function:  This module accepts Midas day number and converts *
       *             it to date format as defined on Data specification*
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. BUG7519            Date 09Jun05               *
-      *  Prev Amend No. CSD015  *CREATE    Date 14Oct02               *
+      *  Prev Amend No. BUG7519            Date 09Jun05               *
+      *                 CSD015  *CREATE    Date 14Oct02               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG7519- Format OUTDATE field based on the Date Format ind - *
       *           'D' = YYMMDD; 'M' = YYDDMM.                         *
       *  CSD015 - Midas Compliance Watch - Watch List Checking        *

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas ZS Calculate a period date')
@@ -12,16 +12,18 @@
       *  Function:    This module converts Midas Date into            *
       *               DDMMYY or MMDDYY format                         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CAP076    Create   Date 26Apr02               *
+      *  Prev Amend No. CAP076             Date 26Apr02               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CAP076 - Lending API enhancements - Rollover details         *
       *                                                               *
       ****************************************************************
@@ -307,6 +309,6 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2002
+(c) Finastra International Limited 2002
 **   ZFMD  -  NUMBER OF DAYS IN THE MONTH
 312831303130313130313031

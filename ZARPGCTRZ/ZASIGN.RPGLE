@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas ZA Validate & right align signed numeric fld')
@@ -43,19 +43,21 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.00 ---------------- Base -------------------------*
-     C*  LAST AMEND NO. 156689             DATE  08MAR99                 *
-     C*  PREV AMEND NO. S01176             DATE 17/08/88                 *
+      *  Prev Amend No. 156689             Date 08Mar99               *
+      *                 S01176             Date 17/08/88              *
      C*                                                                  *
      C*------------------------------------------------------------------*
      C*                                                                  *
+      *  MD046248 - Finastra Rebranding                               *
      C*  156689 - ZASIGN TO RECOGNIZE '.' OR ',' AS DECIMAL SEPARATOR    *
      C*  S01176 - SECURITIES TRADING 3.1 (AUSTRALIA)                     *S01176
      C*                                                                  *
@@ -465,4 +467,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

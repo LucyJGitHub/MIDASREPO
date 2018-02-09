@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas ZA Determine next coupon date')
@@ -22,7 +22,7 @@
       *  the old /COPY member, reconverting it using CVTRPGSRC, and   *
       *  copying it into this member, replacing the existing section. *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *    This source is centrally supported and must ONLY be        *
       *    amended by Core Development Personnel                      *
@@ -31,12 +31,13 @@
       *    applied to this source.                                    *
       *                                                               *
       *                                                               *
-      *  Last Amend No. MD034630           Date 10Nov15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD034630           Date 10Nov15               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSE071             Date 19Jul05               *
+      *                 CSE071             Date 19Jul05               *
       * Midas Release 4.01 -------------------------------------------*
       *                 CSE031             Date 15Nov01               *
       *                 180707             Date 25Jul00               *
@@ -49,6 +50,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD034630 - Multiple calls of UTCHOBJEX inside GOC0020        *
       *  CSE071 - Multiple Holidays Re Securities                     *
       *  CSE031 - Coupon Fixing for Floating Rate Notes               *

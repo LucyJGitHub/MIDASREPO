@@ -8,20 +8,22 @@
      F*                                                               *
      F*       ZA3344 - RUNDATE IN DAY NUMBER TO DATE CONVERSION       *
      F*                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
      F*                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.03 -----------------------------------------------*
-     F*   Last Amend No. CFT006            Date 15Jul99               *
+      *  Prev Amend No. CFT006             Date 15Jul99               *
       * Midas DBA 3.0 --------------- Base ---------------------------*
-     F*   Prev Amend No. S01251            DATE 03FEB90               *
+      *                 S01251             Date 03Feb90               *
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  MD046248 - Finastra Rebranding                               *
      F*   CFT006 - Conversion of original ZA3344 to ILE.  Old code    *
      F*            removed.                                           *
      F*   S01251 - SYNON Field/program name changes.                  *
@@ -258,7 +260,7 @@
      C                   END
      C                   ENDSR
 **  COPYRIGHT STATEMENT
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 **  CUMULATIVE NUMBER OF YEARS IN FOUR YEAR PERIOD
 00366007310109601461
 **  CUMULATIVE NUMBER OF DAYS IN YEAR BY MONTH

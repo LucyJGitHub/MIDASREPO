@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
+     H COPYRIGHT('(c) Finastra International Limited 2011')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas ZA Synon Ver - Calc Working Days Fwd')           *
@@ -9,13 +9,15 @@
       *                                                               *
       *  ZFWDTN - Calculate Working Days Forward                      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2011            *
+      *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. AR745198A          Date 25Apr11               *
-      *  Prev Amend No. AR745198 *CREATE   Date 13Apr11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR745198A          Date 25Apr11               *
+      *                 AR745198 *CREATE   Date 13Apr11               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR745198A - Parameter mismatch on ZFWDT (Child: AR745199)    *
       *  AR745198 - Programs called by ZASDFRBL was amended to improve*
       *             run time of SDC9600 component (Child: AR745199)   *
@@ -231,4 +233,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2011
+(c) Finastra International Limited 2011

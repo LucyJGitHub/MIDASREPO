@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2005')
+     H COPYRIGHT('(c) Finastra International Limited 2005')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas ZA Amortisation Calculator')                     *
@@ -16,10 +16,11 @@
       *  Called by: LE004610, LE004650, MM004610 & MM004650           *                       232928
       *             Passing paramaters should always match!           *                       232928
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. CLE154             Date 07Aug12               *
-      *  Prev Amend No. CDL093             Date 11Apr14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE154             Date 07Aug12               *
+      *                 CDL093             Date 11Apr14               *
       *                 CLE148             Date 23Jul12               *
       *                 262632             Date 10Apr09               *
       *                 262600             Date 19Feb09               *
@@ -44,6 +45,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE154 - Loan Repayment Schedule Enhancement (Recompile)     *
       *  CDL093 - MM Interest calculation type 9.                     *
       *  CLE148 - Alpha Loan Reference                                *

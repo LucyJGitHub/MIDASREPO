@@ -4,18 +4,20 @@
 /*                                                                   */
 /*       mmCnnnn - (Program Name)                                    */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
-/*       Last Amend No. Xnnnnn  *CREATE    Date ddmmmyy              */
-/*       Prev Amend No. Xnnnnn             Date ddmmmyy              */
+/*       Prev Amend No. XNNNNN  *CREATE    Date DDMmmYY              */
+/*                      XNNNNN             Date DDMmmYY              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       Xnnnnn - (fix description)                                  */
 /*                                                                   */
 /*********************************************************************/
@@ -26,7 +28,7 @@
 /*Z: CRTCLPGM LOG(*NO)  */
 /*H: SYSTEM     : SYNON/2 - SHIPPED PROGRAM.                           */
 /*H: PROGRAMMER : J.P.Lodge                                            */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*H: Copy of Y2CPMSC                                                   */
  
 /*H:  SYNOPSIS:  Copies a specified program message queue to                 */
@@ -50,7 +52,7 @@ DCL &MSGTYPE  *CHAR 7     /* Message type (plain)                   */
 DCL &ESCAPE   *CHAR 7     /* Translate *ESCAPE messages into :- ??? */
 DCL &NOTIFY   *CHAR 7     /* Translate *NOTIFY messages into :- ??? */
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /*==================================================================*/
              MONMSG     MSGID(CPF0000) EXEC(GOTO ENDPGM)
@@ -97,6 +99,6 @@ MSGDTA(&MSGDTA) TOPGMQ(*PRV &PGMQ) MSGTYPE(&MSGTYPE)
  ENDPGM:
              RETURN
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 ENDPGM

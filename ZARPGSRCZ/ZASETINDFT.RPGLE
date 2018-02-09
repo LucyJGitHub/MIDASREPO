@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas ZA Settle instructions defaulting')              *
@@ -9,10 +9,11 @@
       *                                                               *
       *  ZASETINDFT - SETTLEMENT INSTRUCTIONS DEFAULTING              *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD028079           Date 25Nov14               *
-      *  Prev Amend No. CDL094             Date 01Sep14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD028079           Date 25Nov14               *
+      *                 CDL094             Date 01Sep14               *
       *                 MD028280A          Date 19Aug14               *
       *                 MD028280           Date 19Aug14               *
       *                 CSD095             Date 08Apr14               *
@@ -53,6 +54,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD028079 - ISDA Rules Version defaulted for Non-ISDA type    *
       *  CDL094 - Enhance  Receive Settlement Instructions            *
       *  MD028280A - CUS-CCY-AT transactions does not default         *
@@ -1126,4 +1128,4 @@
      C/COPY WNCPYSRC,ZAH00039
      C/COPY ZACPYSRC,PSSR_ILE                                                   CDL008
 **  CPY@                                                                        CDL008
-(c) Misys International Banking Systems Ltd. 2001                               CDL008
+(c) Finastra International Limited 2001                                         CDL008

@@ -7,18 +7,20 @@
 /*                                                                   */
 /*       Y2CLMSC - Clear specified program message queue             */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CUP039  *MOVED     Date 20Apr11              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CUP039             Date 20Apr11              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
-/*       Prev Amend No. Xnnnnn  *CREATE    Date ddmmmyy              */
+/*                      XNNNNN  *CREATE    Date DDMmmYY              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CUP039 - Move program to global layer                       */
 /*                                                                   */
 /*********************************************************************/
@@ -40,7 +42,7 @@
              DCL        VAR(&PGMQREL) TYPE(*CHAR) LEN(5) /* +
                           *SAME,*PRV,*EXT     */
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /*H: 1. Clear message queue */
@@ -49,6 +51,6 @@
              RMVMSG     PGMQ(&PGMQREL (&TOPGMQ)) CLEAR(*ALL)
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

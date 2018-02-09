@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       **********************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Insert Decimal point and zeros for numeric *MODULE')
@@ -9,23 +9,25 @@
       *                                                                    *
       *     ZAEDITM - Insert Dec Point and 0's for Numeric                 *
       *                                                                    *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                                    *
       * This is an ILE module based on ZEDIT Subroutine                    *
       * This module is a component of service program ZA0001S              *
       *                                                                    *
       *--------------------------------------------------------------------*
       *                                                                    *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.00 ---------------- Base -------------------------*
-      *  Last Amend No. CLE004             Date 07MAR97                    *
+      *  Prev Amend No. CLE004             Date 07Mar97               *
       *                                                                    *
       *--------------------------------------------------------------------*
       *                                                                    *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE004 - Created for Customer Lending Enhancements                *
       *                                                                    *
       **********************************************************************

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
+     H COPYRIGHT('(c) Finastra International Limited 2011')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas ZA Retrieve BankFusion Event Code')
@@ -12,13 +12,14 @@
       *  Function:  This module takes error and warning messages      *
       *             issued by the APIs and returns BF Event Codes     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2011            *
+      *  (c) Finastra International Limited 2011                      *
       *                                                               *
       *  Last Amend No. AR996838           Date 10Jul12               *
       *  Prev Amend No. CBF011  *CREATE    Date 04Jul11               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR996838 - Incorrect BF event code and description when      *
       *             trying to reverse a facility attached to a live   *
       *             account                                           *
@@ -57,76 +58,76 @@
       ** ¦ D-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** Data Area giving Installation Control Details
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** Program Status Data Structure
      D LDA             DS           256
       ** Local data area for database error details
- 
+
      D  DBFILE               134    141
      D  DBKEY                142    170
      D  DBPGM                171    180
      D  DBASE                181    183  0
      D  DBTXT                184    256
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** The maximum size of the error arrays
      D ArrayMax        C                   CONST(75)
- 
+
       ** Message Id
      D #ErrMsgId       S             50A
- 
+
       ** Field Name
      D #FldNam         S             20A
- 
+
       ** API Name
      D #ApiSize        S             20A
- 
+
       ** Message File
      D #MsgFile        S             10A
- 
+
       ** BF Event Code
      D #BFEvntCode     S              8A
- 
+
       ** Array of error message IDs
      D ErrMsgIdArr     S                   DIM(ArrayMax)
      D                                     LIKE(#ErrMsgId)
- 
+
       ** Array of warning message IDs
      D WErMsgIdArr     S                   DIM(ArrayMax)
      D                                     LIKE(#ErrMsgId)
- 
+
       ** Array of Field Names with Errors
      D FldNameArr      S                   DIM(ArrayMax)
      D                                     LIKE(#FldNam)
- 
+
       ** Array of Field Names with Warnings
      D WFldNameArr     S                   DIM(ArrayMax)
      D                                     LIKE(#FldNam)
- 
+
       ** Array of message files
      D BFEvCdArr       S                   DIM(ArrayMax)
      D                                     LIKE(#BFEvntCode)
- 
+
       ** Array of warning BF Event Codes
      D WBFEvCdArr      S                   DIM(ArrayMax)
      D                                     LIKE(#BFEvntCode)
- 
+
       ** Data Array - message file, message id
      D                 DS
      D DatArr                       108    DIM(9999)
@@ -136,7 +137,7 @@
      D  DatMsF                             LIKE(#MsgFile) OVERLAY(DatArr:*next)
      D  DatEvc                             LIKE(#BFEvntCode)
      D                                     OVERLAY(DatArr:*next)
- 
+
       ** Temporary Array for holding query result
      D TmpArr          DS
      D  TAPI                   1     20
@@ -144,12 +145,12 @@
      D  TErr                  41     90
      D  TMsF                  91    100
      D  TEvc                 101    108
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D WRun            S              1A
      D STMT            S            200A   INZ(*BLANKS)
      D APIName         S             20A
@@ -169,7 +170,7 @@
      D SrchErr         S             50A
      D SrchStr         S             80A
      D NumCheck        C                   CONST('0123456789')                              AR996838
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -217,14 +218,14 @@
       *                                                               *
       *****************************************************************
      C     GetErrEvCd    BEGSR
- 
+
      C                   EVAL      I = 1
- 
+
      C                   DOW       I <= ArrayMax AND
      C                             ErrMsgIdArr(I) <> *BLANKS
- 
+
      C                   EVAL      Found = 'N'
- 
+
      C                   EVAL      SrchErr = ErrMsgIdArr(I)
      C                   EVAL      SrchStr = *BLANKS
      C                   EVAL      SrchStr = APIName + FldNameArr(I) +
@@ -233,7 +234,7 @@
       ** Search Event Codes in Data Array
       *
      C                   EXSR      SrchDtaArr
- 
+
       *
       ** Retrieve BF Event Code from Data Array
       *
@@ -248,7 +249,7 @@
       *
      C                   EVAL      VarId = ErrMsgIdArr(I)
      C                   EVAL      VarFld = FldNameArr(I)
- 
+
       *
       ** Prepare variables for query
       *
@@ -257,7 +258,7 @@
       ** Retrieve Event Code from mapping table
       *
      C                   EXSR      GenStmt
- 
+
      C                   IF        SQLCODE = *ZERO
      C
      C                   EVAL      BFEvCdArr(I) = TEvc
@@ -266,14 +267,14 @@
      C                   EVAL      ErrTyp = 'E'
      C                   EXSR      CrtEvCd
      C                   ENDIF
- 
+
      C/EXEC SQL
      C+ CLOSE C1
      C/END-EXEC
- 
+
      C                   ENDIF
      C                   EVAL      I = I + 1
- 
+
      C                   ENDDO
      C                   ENDSR
       *
@@ -288,14 +289,14 @@
       *                                                               *
       *****************************************************************
      C     GetWrnEvCd    BEGSR
- 
+
      C                   EVAL      I = 1
- 
+
      C                   DOW       I <= ArrayMax AND
      C                             WErMsgIdArr(I) <> *BLANKS
- 
+
      C                   EVAL      Found = 'N'
- 
+
      C                   EVAL      SrchErr = WErMsgIdArr(I)
      C                   EVAL      SrchStr = *BLANKS
      C                   EVAL      SrchStr = APIName + WFldNameArr(I) +
@@ -304,7 +305,7 @@
       ** Search Event Codes in Data Array
       *
      C                   EXSR      SrchDtaArr
- 
+
       *
       ** Retrieve BF Event Code from Data Array
       *
@@ -319,7 +320,7 @@
       *
      C                   EVAL      VarId = WErMsgIdArr(I)
      C                   EVAL      VarFld = WFldNameArr(I)
- 
+
       *
       ** Prepare variables for query
       *
@@ -328,23 +329,23 @@
       ** Retrieve Event Code from mapping table
       *
      C                   EXSR      GenStmt
- 
+
      C                   IF        SQLCODE = *ZERO
- 
+
      C                   EVAL      WBFEvCdArr(I) = TEvc
      C                   MOVEA     TmpArr        DatArr(X)
      C                   ELSE
      C                   EVAL      ErrTyp = 'W'
      C                   EXSR      CrtEvCd
      C                   ENDIF
- 
+
      C/EXEC SQL
      C+ CLOSE C1
      C/END-EXEC
- 
+
      C                   ENDIF
      C                   EVAL      I = I + 1
- 
+
      C                   ENDDO
      C                   ENDSR
       *
@@ -393,56 +394,56 @@
       *                                                               *
       *****************************************************************
      C     GenStmt       BEGSR
- 
+
      C                   EVAL      STMT = *BLANKS
      C                   EVAL      STMT = 'SELECT * FROM MIVW_BFEVC +
      C                                    WHERE EVAPIN = ' + FinAPI +
      C                                    ' AND EVFLDN = ' + FinFld +
      C                                    ' AND EVERCD = ' + FinId
- 
+
      C                   EXSR      ExecStmt
- 
+
      C                   IF        SQLCODE = 100
- 
+
      C/EXEC SQL
      C+ CLOSE C1
      C/END-EXEC
- 
+
      C                   EVAL      STMT = *BLANKS
      C                   EVAL      STMT = 'SELECT * FROM MIVW_BFEVC +
      C                                    WHERE EVAPIN = ' + FinAPI +
      C                                    ' AND EVERCD = ' + FinId
      C                   EXSR      ExecStmt
- 
+
      C                   ENDIF
- 
+
      C                   IF        SQLCODE = 100
- 
+
      C/EXEC SQL
      C+ CLOSE C1
      C/END-EXEC
- 
+
      C                   EVAL      STMT = *BLANKS
      C                   EVAL      STMT = 'SELECT * FROM MIVW_BFEVC +
      C                                    WHERE EVFLDN = ' + FinFld +
      C                                    ' AND EVERCD = ' + FinId
      C                   EXSR      ExecStmt
- 
+
      C                   ENDIF
- 
+
      C                   IF        SQLCODE = 100
- 
+
      C/EXEC SQL
      C+ CLOSE C1
      C/END-EXEC
- 
+
      C                   EVAL      STMT = *BLANKS
      C                   EVAL      STMT = 'SELECT * FROM MIVW_BFEVC +
      C                                    WHERE EVERCD = ' + FinId
      C                   EXSR      ExecStmt
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -458,23 +459,23 @@
       *                                                               *
       *****************************************************************
      C     ExecStmt      BEGSR
- 
+
      C/EXEC SQL
      C+ PREPARE S1 FROM :STMT
      C/END-EXEC
- 
+
      C/EXEC SQL
      C+ DECLARE C1 CURSOR FOR S1
      C/END-EXEC
- 
+
      C/EXEC SQL
      C+ OPEN C1
      C/END-EXEC
- 
+
      C/EXEC SQL
      C+ FETCH NEXT FROM C1 INTO :TmpArr
      C/END-EXEC
- 
+
      C                   ENDSR
       *
       *****************************************************************

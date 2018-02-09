@@ -4,19 +4,21 @@
 /*                                                                   */
 /*       mmCnnnn - (Program Name)                                    */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Last Amend No. BG18886            Date 21May08              */
+/*       Prev Amend No. BG18886            Date 21May08              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
-/*       Prev amend no. Xnnnnn  *CREATE    Date ddmmmyy              */
+/*                      XNNNNN  *CREATE    Date DDMmmYY              */
 /*                      Xnnnnn             Date ddmmmyy              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BG18886 - Amend non-standard codes                          */
 /*       Xnnnnn - (fix description)                                  */
 /*                                                                   */
@@ -28,7 +30,7 @@
 /*Z: CRTCLPGM LOG(*NO)  */
 /*H: SYSTEM     : SYNON1 SUBROUTINE                                    */
 /*H: PROGRAMMER : P.WILSON                                             */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
  
 /*H:  SYNOPSIS:                                                              */
 /*H:  Retrieve the second level text of the supplied message id using        */
@@ -63,7 +65,7 @@ DCL &SECLVL   *CHAR 1425   /* Second level message text */
 DCL &SECLVLLEN *DEC (5 0)  /* Second level message text length */
 DCL &CMDLEN    *DEC (15 5) /* Second level message text length */
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /*..............................................................*/
@@ -114,6 +116,6 @@ ENDPGM:      RCLRSC
              RMVMSG CLEAR(*ALL)
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 ENDPGM

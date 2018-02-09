@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas ZA Settle instructions validation')              *
@@ -9,10 +9,11 @@
       *                                                               *
       *  ZASETINVAL - SETTLEMENT INSTRUCTIONS VALIDATION              *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046115           Date 24Jul17               *
-      *  Prev Amend No. MD036475           Date 04Dec15               *      
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD046115           Date 24Jul17               *
+      *                 MD036475           Date 04Dec15               *
       *                 MD024884A          Date 04Jul17               *
       *                 MD032089           Date 28Apr15               *
       *                 MD040199           Date 05Aug16               *
@@ -130,10 +131,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD046115 - The error messages for CDL094 were not properly   *
       *             formatted.                                        *
       *  MD036475 - System error in MR loan events. Check account for *
-      *             both blocked debit/credit when CALP is MAPY.      *      
+      *             both blocked debit/credit when CALP is MAPY.      *
       *  MD024884A - Incorrect Payment and Receipt accounts           *
       *  MD032089  - PSTM and PONS lost when amended via SOAP with    *
       *              auto AUTH = 'Y'. Error due to clear of received  *
@@ -358,9 +360,9 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       **------------------------------------------------------------------------CAP003--------------
       ** The following /COPY line includes all the defined fields in the        CAP003
       ** Program Status Data Structures.  They have meaningful                  CAP003
@@ -373,16 +375,16 @@
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
@@ -391,18 +393,18 @@
      D @ACCD           S             10                                                       CGL029
      D DDRONS          S             18                                                       CGL029
      D DDPONS          S             18                                                       CGL029
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
      D/COPY WNCPYSRC,ZASETNVD01
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D SDCNST        E DS                  EXTNAME(SDCNSTPD)
       ** EXTERNAL DS FOR COUNTERPARTY NOSTRO DETAILS
       *
@@ -483,7 +485,7 @@
       ** External DS for SAR Details                                            CDL008
       *                                                                         CDL008
      D DLUFBO        E DS                  EXTNAME(DLUFBOPD) DTAARA                           CGL014
- 
+
       ** Array containing Copyright statement                                                 CLE033
      D SVAL            S             80    DIM(4) CTDATA PERRCD(1)                            CLE033
                                                                                               CLE033
@@ -491,14 +493,14 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of of error message ids etc
      D Idx             S              3P 0
                                                                                               219241
       ** flag to indicate if CFT013 is installed                                              219241
      D CFT013          S              1A                                                      219241
      D/COPY WNCPYSRC,ZAH00044
- 
+
       * FLAGS TO INDICATE WHETHER RECEIVE INSTRUCTIONS ARE OK
      D OKReceive       DS
      D  DDRscyOK                      1A
@@ -1630,7 +1632,7 @@
      C                   EVAL      MsgIDArr(Idx) = 'ESM0862'
      C                   MOVE      'N'           DDRscyOK
      C                   ELSE
- 
+
      C                   MOVEL     A6CYCD        DDRSCY
       *                                                                                       CLE031
       **  CLE031 enhancement allows settlement of In-ccy or Euro currency                     CLE031
@@ -3469,7 +3471,7 @@
      C                   EVAL      MsgIDArr(Idx) = 'ESM0848'
      C                   MOVE      'N'           DDPscyOK
      C                   ELSE
- 
+
      C                   MOVEL     A6CYCD        DDPSCY
       *                                                                                       CLE031
       **  CLE031 enhancement allows settlement of In-ccy or Euro currency                     CLE031
@@ -6026,11 +6028,11 @@
      C                   EVAL      MsgIDArr(Idx) = 'ESM0849'
      C                   MOVE      'N'           DDIc72OK
      C                   ELSE
- 
+
      C                   MOVEL     A6CYCD        DDIC72
- 
+
       * If transaction pay currency is Euros
- 
+
      C     ##PCCY        IFEQ      BKEURO
       *
       ** Currency in field 72 is not an 'In' currency
@@ -6078,7 +6080,7 @@
      C                   EVAL      MsgIDArr(Idx) = 'ESM0857'
      C                   MOVE      'N'           DDIc72OK
      C                   ENDIF
- 
+
      C                   ENDSR
      C********************************************************************
       /EJECT
@@ -6542,7 +6544,7 @@
      C                   MOVE      'N'           DDRscyOK
      C                   MOVE      'N'           DDPscyOK
      C                   ENDIF
- 
+
      C**********         ENDSR                                                                196808
      C     XVRPEND       ENDSR                                                                196808
      C********************************************************************
@@ -8857,47 +8859,47 @@
       *
      C     *ENTRY        PLIST
      C                   PARM                    RetCodeIn
- 
+
       * INPUTS
       ** Code to indicate calling function
      C                   PARM                    ##CALP            4
- 
+
       * Payment currency
      C                   PARM                    ##PCCY            3
- 
+
       * Receive currency
      C                   PARM                    ##RCCY            3
- 
+
       * Customer shortname (or number)
      C                   PARM                    ##CSNM           10
- 
+
       * Transaction Type
      C                   PARM                    ##TTYP            2
- 
+
       * Federal Funds Ind.
      C                   PARM                    ##FFND            1
- 
+
       * Booking branch
      C                   PARM                    ##BRCA            3
- 
+
       * Receipt Date
       * (must = 99999 if no back valuation validation to be done)
      C                   PARM                    ##DATR            5 0
- 
+
       * Payment Date
       * (must = 99999 if no back valuation validation to be done)
      C                   PARM                    ##DATP            5 0
- 
+
       * Payment instructions - screen format
      C                   PARM                    ##PAYS
- 
+
       * Receive instructions - screen format
      C                   PARM                    ##RECS
- 
+
       **FRA/IRS*instructions*-*screen*format***************************                       CSW212
       * Extended Settlement instructions - screen format                                      CSW212
      C                   PARM                    ##FRIS
- 
+
       * Action Code                                                                           185751
      C                   PARM                    ##ACTN            1                          185751
       * Protect Payment Field                                                                 196461
@@ -8906,20 +8908,20 @@
      C                   PARM                    ##PREC            1                          196461
                                                                                               185751
       * OUTPUTS
- 
+
       * Payment instructions OK
      C                   PARM                    OKPayment
- 
+
       * Receive instructions OK
      C                   PARM                    OKReceive
- 
+
       * FRA/IRS instructions OK
      C                   PARM                    OKFRAIRS
- 
+
       * Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
- 
+
       * Array index (3P0) from/to caller
      C                   PARM                    Idx
                                                                                               CRE008
@@ -8928,13 +8930,13 @@
      C                   PARM                    WMsgIdArr                                    CRE008
      C                   PARM                    WMsgDtaArr                                   CRE008
      C                   PARM                    WIdx                                         CRE008
- 
+
       * Payment instructions - file format
      C                   PARM                    ##PAYF
- 
+
       * Receive instructions - file format
      C                   PARM                    ##RECF
- 
+
       **FRA/IRS*instructions*-*file*format*****************************                       CSW212
       * Extended Settlement instructions - file format                                        CSW212
      C                   PARM                    ##FRIF
@@ -9231,7 +9233,7 @@
      C                   If        PRTCD = *Blanks                                            CDL018
      C                   Eval      CDL018 = 'Y'                                               CDL018
      C                   Endif                                                                CDL018
- 
+
       ** Access SAR details file to determine if CDL036 is switched on                        CDL036
       ** (CLS Enhancements 2)                                                                 CDL036
      C                   CallB     'AOSARDR0'                                                 CDL036
@@ -9478,7 +9480,7 @@
      C                   ENDSR
      C*****************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 **   SVAL  -  SYSTEM VALUES ARRAY                                                             CLE033
 Settlement09Customer                                                                          CLE033
 Settlement09AccCode                                                                           CLE033

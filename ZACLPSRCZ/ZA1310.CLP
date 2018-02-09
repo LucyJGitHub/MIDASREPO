@@ -7,9 +7,10 @@
 /*                                                                   */
 /*       ZA1310  -  SUB-PROGRAM TO FORMAT MESSAGE                    */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CRE083             Date 06Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CRE083             Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -22,6 +23,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CRE083 - COB Restructure - RE COB Optimisation Phase 1      */
 /*       177440 - Add ABNOR processing                               */
 /*       S01413 - Retail 3 Incorporation                             */
@@ -31,7 +33,7 @@
                           &MSGDTA3 &MSGDTA4 &MSGDTA5 &MSGDTA6 +
                           &MSGDTA7 &MSGDTA8 &MSGDTA9 &RESULT)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
 /*   DECLARE INPUT VARIABLES                                         */
@@ -101,7 +103,7 @@ TAG01:
 /**********  GOTO       CMDLBL(TAG01)                                                  */ /*CRE083*/
 /**********  ENDDO                                                                     */ /*CRE083*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              GOTO       CMDLBL(END)                                   /*177440*/
  
  ABNOR:                                                               /*177440*/

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas ZA Settle Instructions Conversion:File>Scrn')    *
@@ -10,10 +10,11 @@
       *  ZASETINCVT - SETTLE INSTRUCTIONS CONVERSION:                 *
       *               FILE TO SCREEN FORMAT                           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD040199           Date 05Aug16               *
-      *  Prev Amend No. MD033870           Date 17Apr15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD040199           Date 05Aug16               *
+      *                 MD033870           Date 17Apr15               *
       *                 AR1023850          Date 25Nov14               *
       *                 CDL094             Date 03Jun14               *
       *                 MD026923           Date 24May14               *
@@ -42,6 +43,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD040199 - ISDA Agreement Version reflected incorrectly in   *
       *             MT reports and deals enquiry. Reverse MD-33870.   *
       *  MD033870 - Wrong value for DDAGVV. Corrected MOVE and MOVEL. *

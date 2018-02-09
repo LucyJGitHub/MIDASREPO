@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas ZA Send a message to the Front Office')          *
@@ -26,11 +26,12 @@
       *                                                               *
       *  Component of: ZAMESSAGE - ZA Message handling service program*
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR1079155          Date 23Jan12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR1079155          Date 23Jan12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Prev Amend No. 259935C            Date 21May09               *
+      *                 259935C            Date 21May09               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 256332             Date 01Sep08               *
       *                 248095A            Date 26Jun07               *
@@ -44,6 +45,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR1079155 - APCENDBKJB component failed during COB run       *
       *  259935C- No need for Disconnect to prevent RC 2037. Fix is   *
       *           to partially reverse 256332.                        *
@@ -651,4 +653,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

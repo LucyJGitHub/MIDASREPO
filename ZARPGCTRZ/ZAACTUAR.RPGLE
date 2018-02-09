@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2005')
+     H COPYRIGHT('(c) Finastra International Limited 2005')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas ZA Actuarial Interpolation of a Rate')
@@ -9,14 +9,15 @@
       *                                                               *
       *  ZAACTUAR - Actuarial Interpolation of a Rate                 *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. BUG11193           Date 02May06               *
-      *  Prev Amend No. BUG11164           Date 06Apr06               *
+      *  Prev Amend No. BUG11193           Date 02May06               *
+      *                 BUG11164           Date 06Apr06               *
       *                 BUG9961            Date 19Jan06               *
       *                 237063             Date 20Nov05               *
       *                 236985             Date 11Aug05               *
@@ -25,6 +26,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG11193 - Purchased Interest not calculated on BackValued   *
       *             Trade. (Recompile)                                *
       *  BUG11164 - A Serious Midas Error on SETRAD insert/amend      *

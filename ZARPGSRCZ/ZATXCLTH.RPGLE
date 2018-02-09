@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2009')
+     H COPYRIGHT('(c) Finastra International Limited 2009')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas ZA Withholding Tax Calc for Thresholds')         *
@@ -10,10 +10,11 @@
       *  ZATXCLTH - Midas ZA Withholding Tax Calculation for          *
       *             Thresholds                                        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2009            *
+      *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. AR749044           Date 04May11               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR749044           Date 04May11               *
+      *                 CER059             Date 19Jul10               *
       *                 BUG26979           Date 22Jan10               *
       *                 BUG26839           Date 05Jan10               *
       *                 BUG26746           Date 13Nov09               *
@@ -30,6 +31,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR749044 - Manual interest adjustment did reverse threshold  *
       *             utilized on retail account. (Child: AR749045)     *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -656,7 +658,7 @@
      C/COPY ZSRSRC,ZCCYCN_ILE
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2009
+(c) Finastra International Limited 2009
 **  POWER
 0000001
 0000010

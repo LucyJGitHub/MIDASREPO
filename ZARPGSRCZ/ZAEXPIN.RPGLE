@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas ZA Exponential interpolation')
@@ -13,18 +13,20 @@
       *             on an exponential curve.                          *
       *             This is basically ZEXPIN converted to RPG ILE.    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. 211373             Date 05Mar03               *
+      *  Prev Amend No. 211373             Date 05Mar03               *
       * Midas Release 4.01 -------------------------------------------*
-      *  Prev Amend No. CAS001  *CREATE    Date 23Nov01               *
+      *                 CAS001  *CREATE    Date 23Nov01               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  211373 - MCH1211 unmonitored - cannot divide by zero at 74.  *
       *           Problem occur when near date, far date and spot     *
       *           date are the same. Add a 3rd select statement for   *

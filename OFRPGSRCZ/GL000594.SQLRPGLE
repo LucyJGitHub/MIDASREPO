@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas OF Automatic Opening of GL Account - JRNE')
@@ -9,12 +9,14 @@
       *                                                               *
       *  GL000594 - Midas OF Automatic Opening of GL Account - JRNE   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. CGL135A  *CREATE   Date 11Oct13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL135A  *CREATE   Date 11Oct13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL135A - Accounting Rules Process                           *
       *                                                               *
       *****************************************************************

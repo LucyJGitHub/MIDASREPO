@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas OF Update Nostro Group Totals (Update Pgm)')
@@ -14,10 +14,11 @@
       *                                                               *
       *  Called By: GLC009061 and GLC009062                           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD028029           Date 07Jul14               *
-      *  Prev Amend No. MD027684A          Date 26Jun14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD028029           Date 07Jul14               *
+      *                 MD027684A          Date 26Jun14               *
       *                 MD027684           Date 24Jun14               *
       *                 MD027292           Date 06Jun14               *
       *                 MD027208C          Date 05Jun14               *
@@ -31,6 +32,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD028029 - Group total balance updated with real time posting*
       *             for new account.                                  *
       *  MD027684A - Incorrect amount shown in group total balance.   *
@@ -81,62 +83,62 @@
       *  SrConvert      - Convert amounts                             *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ D-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for Bank Details
- 
+
      D AccBeforeImg  E DS                  EXTNAME(ACCNTAB) PREFIX(BA)
       **  External DS for Before Image ACCNTAB
- 
+
      D AccAfterImg   E DS                  EXTNAME(ACCNTAB) PREFIX(AA)
       **  External DS for After Image ACCNTAB
- 
+
      D ProBeforeImg  E DS                  EXTNAME(PRONOPN) PREFIX(BP)
       **  External DS for Before Image PRONOPN
- 
+
      D ProAfterImg   E DS                  EXTNAME(PRONOPN) PREFIX(AP)
       **  External DS for After Image PRONOPN
- 
+
      D NosBeforeImg  E DS                  EXTNAME(SDNOSTPD) PREFIX(BN)
       **  External DS for Before Image SDNOSTPD
- 
+
      D NosAfterImg   E DS                  EXTNAME(SDNOSTPD) PREFIX(AN)
       **  External DS for After Image SDNOSTPD
- 
+
      D CurBeforeImg  E DS                  EXTNAME(SDCURRPD) PREFIX(BC)
       **  External DS for Before Image SDCURRPD
- 
+
      D CurAfterImg   E DS                  EXTNAME(SDCURRPD) PREFIX(AC)
       **  External DS for After Image SDCURRPD
- 
+
      D TNoBeforeImg  E DS                  EXTNAME(GLTNOSTD) PREFIX(BT)
       **  External DS for Before Image GLTNOSTD
- 
+
      D TnoAfterImg   E DS                  EXTNAME(GLTNOSTD) PREFIX(AT)
       **  External DS for After Image GLTNOSTD
- 
+
      D GLHBeforeImg  E DS                  EXTNAME(SDNGLHTD) PREFIX(BH)
       **  External DS for Before Image SDNGLHTD
- 
+
      D GLHAfterImg   E DS                  EXTNAME(SDNGLHTD) PREFIX(AH)
       **  External DS for After Image SDNGLHTD
- 
+
      D RsaBeforeImg  E DS                  EXTNAME(RSACMTPD) PREFIX(BR)
       **  External DS for Before Image RSACMTPD
- 
+
      D RsaAfterImg   E DS                  EXTNAME(RSACMTPD) PREFIX(AR)
       **  External DS for After Image RSACMTPD
                                                                                             MD027224
@@ -151,51 +153,51 @@
                                                                                            MD027208B
      D RTpAfterImg   E DS                  EXTNAME(GLRTNOTD) PREFIX(AZ)                    MD027208B
       **  External DS for After Image GLRTNOTD                                             MD027208B
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ***  External data structures for Currency Details
- 
+
      D GLPRON        E DS                  EXTNAME(GLPRONOW0)
       ***  External data structures for PRONOPN
- 
+
      D SDSTAT        E DS                  EXTNAME(SDSTAT)
       ** Data Area for Standing Data Details
- 
+
      D NGLD          E DS                  EXTNAME(SDNGLDTD)
       ** External DS for SDNGLDTD details
- 
+
      D DSZN          E DS                  EXTNAME(GPZONEPD)
       ** External DS for GPZONEPD details
- 
+
      D NGLH          E DS                  EXTNAME(SDNGLHTD)
       ** External DS for SDNGLHTD details
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** Short data structure for access objects
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** DS for access programs, long data structure
- 
+
      D/COPY ZACPYSRC,PSDS
       ** The Following /COPY Line Includes All The Defined Fields In
       ** The PSDS.  They Have Meaningful Names, Prefixed By 'PS'.
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays AND Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D FGLData         DS
- 
+
       ** Event Type
      D  WEventType             1     20
      D  WTrigEvent            21     21
- 
+
       ** Event Detail
      D  WDetail               22   4021
      D  WAfter                22   2021
      D  WBefore             2022   4021
- 
+
      D LISTB_DS        DS
      D  WGrpc                  1     10
      D  WCcy                  11     13
@@ -226,7 +228,7 @@
      D**BalAdjB               79     86P 0                                                  MD027292
      D**BalAdjB               79     86P 3                                        MD027292 MD027684A
      D  BalAdjB               79     86P 0                                                 MD027684A
- 
+
      D LISTD_DS        DS
      D  WDCcy                  1      3
      D  WDNosn                 4      5
@@ -250,7 +252,7 @@
      D  DBal02Adj             28     35P 0                                                 MD027684A
      D  DBal03Adj             39     46P 0                                                 MD027684A
      D  DBal04Adj             50     57P 0                                                 MD027684A
- 
+
      D LISTE_DS        DS
      D  RGrpc                  1     10
      D  RCcy                  11     13
@@ -296,31 +298,31 @@
      D**IBal00Adj             24     31P 3                              MD027208C MD027292 MD027684A
      D  IBalClAdj             16     23P 0                                                 MD027684A
      D  IBal00Adj             24     31P 0                                                 MD027684A
- 
+
      DMPHAS            DS             1
      DPHASE1                   1      1
- 
+
      D GLACNT        E DS                  EXTNAME(ACCNTAB) PREFIX(Acct)
       ** Account details
- 
+
      D SDNOST        E DS                  EXTNAME(SDNOSTPD)
       ** Nostro details
- 
+
      D TNOS          E DS                  EXTNAME(GLTNOSTD)
       ** Total Outstanding Forecasts
                                                                                             MD027224
      D FORT          E DS                  EXTNAME(GLFORTTD)                                MD027224
       ** Total Forecasts                                                                    MD027224
- 
+
      D LDA             DS           256
       ** Local data area for database error details
- 
+
      D  DBFILE               134    141
      D  DBKEY                142    170
      D  DBPGM                171    180
      D  DBASE                181    183  0
      D  DBTXT                184    256
- 
+
      D*PronoBalance    S             15P 0 DIM(5)                                           MD027292
      D*PronoBalanceL   S             15P 0 DIM(5)                                           MD027292
      D*AcctBalance     S             15P 0 DIM(5)                                           MD027292
@@ -355,12 +357,12 @@
      D RTimBalanceL    S             15S 0 DIM(5)                                          MD027684A
      D ForTBalance     S             15P 0 DIM(5)                                          MD027684A
      D ForTBalanceL    S             15P 0 DIM(5)                                          MD027684A
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D PRtCd           S              7A
      D POptn           S              7A
      D PAcno           S             10A
@@ -407,15 +409,15 @@
      D**PRBalS1                1     13  1                                        MD027684 MD027684A
      D**PRBalS2                1     14  2                                        MD027684 MD027684A
      D**PRBalS3                1     15  3                                        MD027684 MD027684A
- 
+
      D PrvGrpc         S             10A
- 
+
      D LDat0           S              5P 0 INZ(0)
      D LDat1           S              5P 0 INZ(0)
      D LDat2           S              5P 0 INZ(0)
      D LDat3           S              5P 0 INZ(0)
      D LDat4           S              5P 0 INZ(0)
- 
+
      D FromCcy         S              3A
      D ToCcy           S              3A
      D FromAmt         S             15  0 INZ(0)
@@ -433,61 +435,61 @@
      D XRate1          S             13  8 INZ(0)
      D XRate2          S             13  8 INZ(0)
      D Given           S              1A
- 
+
      D GRPC            S             10    DIM(9999)
- 
+
      D ZdayNo          S              5P 0 INZ(0)
      D ZDyNbr          S              5P 0 INZ(0)
      D ZNrDys          S              2P 0 INZ(0)
      D ZCcy            S              3A
      D ZLoc            S              3A   INZ(*Blanks)
- 
+
      D WRun            S              1A
      D WUpdate         S              1A   INZ(*Blanks)
      D Returncode      S              6A
      D Idx             S              4S 0
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       *  MAIN - Processing                                            *
       *****************************************************************
- 
+
      C/exec SQL
      C+ set option commit = *CHG
      C/end-exec
- 
+
      C     FGLData       Ifeq      *Blanks
- 
+
      C     Phase1        Ifne      'A'
      C     Phase1        andne     'G'
      C                   Exsr      SrReBuild
      C                   Endif
- 
+
      C                   Else
- 
+
      C                   SELECT
- 
+
      C                   WHEN      WEventType = 'MNT_ACCNTAB'
      C                   EXSR      SrACCNTAB
- 
+
      C                   WHEN      WEventType = 'MNT_PRONOPN'
      C                   EXSR      SrPRONOPN
- 
+
      C                   WHEN      WEventType = 'MNT_SDNOSTPD'
      C                   EXSR      SrSDNOSTPD
- 
+
      C                   WHEN      WEventType = 'MNT_SDCURRPD'
      C                   EXSR      SrSDCURRPD
- 
+
      C********           WHEN      WEventType = 'MNT_GLTNOSTD'                              MD027224
      C********           EXSR      SrGLTNOSTD                                               MD027224
      C                   WHEN      WEventType = 'MNT_GLFORTTD'                              MD027224
      C                   EXSR      SrGLFORTTD                                               MD027224
- 
+
      C                   WHEN      WEventType = 'MNT_SDNGLHTD'
      C                   EXSR      SrSDNGLHTD
- 
+
      C                   WHEN      WEventType = 'MNT_RSACMTPD_BEFORE' or
      C                             WEventType = 'MNT_RSACMTPD_AFTER' or
      C                             WEventType = 'MNT_RSACMTPD_BOTH'
@@ -495,20 +497,20 @@
                                                                                            MD027208B
      C                   WHEN      WEventType = 'MNT_GLRTNOTD'                             MD027208B
      C                   EXSR      SrGLRTNOTD                                              MD027208B
- 
+
      C                   Endsl
- 
+
      C                   Endif
- 
+
      C                   IF        WUpdate = 'Y'
      C                   Commit
      C                   ENDIF
- 
+
       ** Terminate program
- 
+
      C                   Eval      *INLR = *ON
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -520,26 +522,26 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SrACCNTAB     BEGSR
- 
+
      C                   EVAL      AccBeforeImg = WBefore
      C                   EVAL      AccAfterImg = WAfter
- 
+
       ***Recalculate*Group*Total*if*LDBL*has*changed                                       MD027208
       ** Recalculate Group Total if CLBL has changed                                       MD027208
- 
+
      C*****BALdbl        Ifne      AALdbl                                                  MD027208
      C     BACLBL        Ifne      AACLBL                                                  MD027208
- 
+
       ** Retrieve Nostro Code of the account
- 
+
      C                   EVAL      PCusn = AACnum
      C                   EVAL      PCurr = AACcy
      C                   EVAL      PBrch = AABrca
      C                   MOVE(P)   AAAcod        PACod
      C                   MOVE(P)   AAAcsq        PASeq
- 
+
      C                   Call      'AONOSTR0'    PAoNost
      C**********         If        PRtCd <> *BLANKS                                         MD026872
      C******Lock         In        LDA                                                      MD026872
@@ -551,9 +553,9 @@
      C**********         Out       LDA                                                      MD026872
      C**********         exsr      *PSSR                                                    MD026872
      C**********         Endif                                                              MD026872
- 
+
       ** Check if Nostro code belongs to a Nostro Group and retrieve Limit Ccy if so
- 
+
      C                   IF        PRTCD = *BLANKS                                          MD026872
      C/exec SQL
      C+ select * into :NGLD from SDNGLDTD
@@ -562,36 +564,36 @@
      C+   and NCNOSC = :A7NONB
      C+   and NCRECI = 'D'
      C/end-exec
- 
+
      C                   If        SQLCODE = 0
      C                   eval      PGrpc = NCGRPC
- 
+
      C/exec SQL
      C+ select * into :NGLH from SDNGLHTD
      C+ where
      C+       NGGRPC = :PGrpc
      C+   and NGRECI = 'D'
      C/end-exec
- 
+
      C                   If        SQLCODE = 0
      C                   eval      PLCcy = NGLCcy
      C                   Exsr      SrLCcyDat
      C                   Endif
- 
+
      C                   Exsr      SrPronoBal
      C********           Exsr      SrTNostBal                                               MD027224
      C                   Exsr      SrFortTBal                                               MD027224
      C                   Exsr      SrCalcTot
- 
+
      C                   EXSR      SrUpdate
- 
+
      C                   Endif
      C                   Endif
- 
+
      C                   ENDIF                                                              MD026872
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -603,14 +605,14 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SrPRONOPN     BEGSR
- 
+
      C                   EVAL      ProBeforeImg = WBefore
      C                   EVAL      ProAfterImg = WAfter
- 
+
       ** Check if Nostro code belongs to a Nostro Group and retrieve Limit Ccy if so
- 
+
      C/exec SQL
      C+ select * into :NGLD from SDNGLDTD
      C+ where
@@ -618,34 +620,34 @@
      C+   and NCNOSC = :APNosn
      C+   and NCRECI = 'D'
      C/end-exec
- 
+
      C                   If        SQLCODE = 0
      C                   eval      PGrpc = NCGRPC
- 
+
      C/exec SQL
      C+ select * into :NGLH from SDNGLHTD
      C+ where
      C+       NGGRPC = :PGrpc
      C+   and NGRECI = 'D'
      C/end-exec
- 
+
      C                   If        SQLCODE = 0
      C                   eval      PLCcy = NGLCcy
      C                   Exsr      SrLCcyDat
      C                   Endif
- 
- 
+
+
      C                   Exsr      SrPronoBal
      C********           Exsr      SrTNostBal                                               MD027224
      C                   Exsr      SrFortTBal                                               MD027224
      C                   Exsr      SrCalcTot
- 
+
      C                   EXSR      SrUpdate
- 
+
      C                   Endif
- 
+
      C                   Endsr
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -657,14 +659,14 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SrSDNOSTPD    BEGSR
- 
+
      C                   EVAL      NosBeforeImg = WBefore
      C                   EVAL      NosAfterImg = WAfter
- 
+
       ** Check if Nostro code belongs to a Nostro Group and retrieve Limit Ccy if so
- 
+
      C/exec SQL
      C+ select * into :NGLD from SDNGLDTD
      C+ where
@@ -672,33 +674,33 @@
      C+   and NCNOSC = :ANA7Nonb
      C+   and NCRECI = 'D'
      C/end-exec
- 
+
      C                   If        SQLCODE = 0
      C                   eval      PGrpc = NCGRPC
- 
+
      C/exec SQL
      C+ select * into :NGLH from SDNGLHTD
      C+ where
      C+       NGGRPC = :PGrpc
      C+   and NGRECI = 'D'
      C/end-exec
- 
+
      C                   If        SQLCODE = 0
      C                   eval      PLCcy = NGLCcy
      C                   Exsr      SrLCcyDat
      C                   Endif
- 
+
      C                   Exsr      SrPronoBal
      C********           Exsr      SrTNostBal                                               MD027224
      C                   Exsr      SrFortTBal                                               MD027224
      C                   Exsr      SrCalcTot
- 
+
      C                   EXSR      SrUpdate
- 
+
      C                   Endif
- 
+
      C                   Endsr
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -710,20 +712,20 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SrSDCURRPD    BEGSR
- 
+
      C                   movel     *Blanks       GRPC
- 
+
      C                   EVAL      CurBeforeImg = WBefore
      C                   EVAL      CurAfterImg = WAfter
- 
+
       ** Recalculate Groups affected Totals if A6SPRT has changed
- 
+
      C     BCA6Sprt      Ifne      ACA6Sprt
- 
+
       ** Determine all those Group codes affected by the Currency being changed
- 
+
      C/exec SQL
      C+ declare LISTA cursor for
      C+ select * from SDNGLDTD
@@ -731,11 +733,11 @@
      C+       NCNCCY = :ACA6CYCD
      C+   and NCRECI = 'D'
      C/end-exec
- 
+
      C/exec SQL
      C+ open LISTA
      C/end-exec
- 
+
       ** Handle SQL Error (if not %EOF)
      C                   If        SQLCOD < 0
      C     *LOCK         IN        LDA
@@ -746,18 +748,18 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   EndIf
- 
+
      C/exec SQL
      C+ fetch next
      C+ from LISTA
      C+ into :NGLD
      C/end-exec
- 
+
      C                   eval      PrvGrpc = *Blanks
      C                   eval      Idx = 0
- 
+
      C                   DOW       SQLCode <> 100
- 
+
      C     NCGRPC        Ifne      PrvGrpc
      C     NCGRPC        LOOKUP    GRPC                                   80
      C     *In80         Ifeq      *Off
@@ -765,16 +767,16 @@
      C                   movea     NCGRPC        Grpc(Idx)
      C                   Endif
      C                   Endif
- 
+
      C                   eval      PrvGrpc = NCGRPC
- 
+
      C/exec SQL
      C+ fetch next from LISTA
      C+ into :NGLD
      C/end-exec
- 
+
      C                   ENDDO
- 
+
       ** Handle SQL Error (if not %EOF)
      C                   If        SQLCode < 100
      C     *LOCK         IN        LDA
@@ -785,13 +787,13 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   EndIf
- 
+
      C/exec SQL
      C+ close LISTA
      C/end-exec
- 
+
       ** Determine all those Group codes whose limit ccy is the currency being changed
- 
+
      C/exec SQL
      C+ declare LISTF cursor for
      C+ select * from SDNGLHTD
@@ -799,11 +801,11 @@
      C+       NGLCCY = :ACA6CYCD
      C+   and NGRECI = 'D'
      C/end-exec
- 
+
      C/exec SQL
      C+ open LISTF
      C/end-exec
- 
+
       ** Handle SQL Error (if not %EOF)
      C                   If        SQLCOD < 0
      C     *LOCK         IN        LDA
@@ -814,15 +816,15 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   EndIf
- 
+
      C/exec SQL
      C+ fetch next
      C+ from LISTF
      C+ into :NGLH
      C/end-exec
- 
+
      C                   DOW       SQLCode <> 100
- 
+
      C     NGGRPC        Ifne      PrvGrpc
      C     NGGRPC        LOOKUP    GRPC                                   80
      C     *In80         Ifeq      *Off
@@ -830,16 +832,16 @@
      C                   movea     NGGRPC        Grpc(Idx)
      C                   Endif
      C                   Endif
- 
+
      C                   eval      PrvGrpc = NGGRPC
- 
+
      C/exec SQL
      C+ fetch next from LISTF
      C+ into :NGLH
      C/end-exec
- 
+
      C                   ENDDO
- 
+
       ** Handle SQL Error (if not %EOF)
      C                   If        SQLCode < 100
      C     *LOCK         IN        LDA
@@ -850,48 +852,48 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   EndIf
- 
+
      C/exec SQL
      C+ close LISTF
      C/end-exec
- 
+
      C     Idx           Ifgt      0
- 
+
       ** Process all Group codes in array
- 
+
      C                   z-add     1             Idx
      C                   eval      PGrpc = GRPC(Idx)
- 
+
      C                   DOW       PGrpc <> *Blanks
- 
+
      C/exec SQL
      C+ select * into :NGLH from SDNGLHTD
      C+ where
      C+       NGGRPC = :PGrpc
      C+   and NGRECI = 'D'
      C/end-exec
- 
+
      C                   If        SQLCODE = 0
      C                   eval      PLCcy = NGLCcy
      C                   Exsr      SrLCcyDat
      C                   Endif
- 
+
      C                   Exsr      SrPronoBal
      C********           Exsr      SrTNostBal                                               MD027224
      C                   Exsr      SrFortTBal                                               MD027224
      C                   Exsr      SrCalcTot
- 
+
      C                   EXSR      SrUpdate
- 
+
      C                   add       1             Idx
      C                   eval      PGrpc = GRPC(Idx)
      C                   Enddo
      C                   EndIf
- 
+
      C                   EndIf
- 
+
      C                   Endsr
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -903,14 +905,14 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SrGLTNOSTD    BEGSR
- 
+
      C                   EVAL      TnoBeforeImg = WBefore                                   MD027208
      C                   EVAL      TnoAfterImg = WAfter                                     MD027208
- 
+
       ** Check if Nostro code belongs to a Nostro Group and retrieve Limit Ccy if so
- 
+
      C/exec SQL
      C+ select * into :NGLD from SDNGLDTD
      C+ where
@@ -918,31 +920,31 @@
      C+   and NCNOSC = :ATNCNONB
      C+   and NCRECI = 'D'
      C/end-exec
- 
+
      C                   If        SQLCODE = 0
      C                   eval      PGrpc = NCGRPC
- 
+
      C/exec SQL
      C+ select * into :NGLH from SDNGLHTD
      C+ where
      C+       NGGRPC = :PGrpc
      C+   and NGRECI = 'D'
      C/end-exec
- 
+
      C                   If        SQLCODE = 0
      C                   eval      PLCcy = NGLCcy
      C                   Exsr      SrLCcyDat
      C                   Endif
- 
+
      C                   Exsr      SrPronoBal
      C********           Exsr      SrTNostBal                                               MD027224
      C                   Exsr      SrFortTBal                                               MD027224
      C                   Exsr      SrCalcTot
- 
+
      C                   EXSR      SrUpdate
- 
+
      C                   Endif
- 
+
      C                   Endsr
                                                                                             MD027224
       *****************************************************************                     MD027224
@@ -996,7 +998,7 @@
      C                   Endif                                                              MD027224
                                                                                             MD027224
      C                   Endsr                                                              MD027224
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1008,20 +1010,20 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SrSDNGLHTD    BEGSR
- 
+
      C                   EVAL      GLhBeforeImg = WBefore
      C                   EVAL      GLhAfterImg = WAfter
- 
+
      C                   If        BHNGRECI = 'D'
      C                             and AHNGRECI = '*'
- 
+
      C                   eval      PGrpc = BHNGGRPC
      C                   exsr      SrDelGTot
- 
+
      C                   else
- 
+
      C                   eval      PGrpc = AHNGGRPC
      C                   eval      PLCcy = AHNGLCCY
      C                   Exsr      SrLCcyDat
@@ -1030,11 +1032,11 @@
      C                   Exsr      SrFortTBal                                               MD027224
      C                   Exsr      SrCalcTot
      C                   Exsr      SrUpdate
- 
+
      C                   Endif
- 
+
      C                   Endsr
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1046,23 +1048,23 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SrRSACMTPD    BEGSR
- 
+
      C                   EVAL      RsaBeforeImg = WBefore
      C                   EVAL      RsaAfterImg = WAfter
- 
+
       ** Retrieve Nostro Code of the Before Image account
- 
+
      C                   If        WEventType = 'MNT_RSACMTPD_BEFORE' or
      C                             WEventType = 'MNT_RSACMTPD_BOTH'
- 
+
      C                   EVAL      PCusn = BRCusn
      C                   EVAL      PCurr = BRCcyd
      C                   EVAL      PBrch = BRBrca
      C                   MOVE(P)   BRAcde        PACod
      C                   MOVE(P)   BRAsnc        PASeq
- 
+
      C                   Call      'AONOSTR0'    PAoNost
      C                   If        PRtCd <> *BLANKS
      C     *Lock         In        LDA
@@ -1074,9 +1076,9 @@
      C                   Out       LDA
      C                   exsr      *PSSR
      C                   Endif
- 
+
       ** Check if Nostro code belongs to a Nostro Group and retrieve Limit Ccy if so
- 
+
      C/exec SQL
      C+ select * into :NGLD from SDNGLDTD
      C+ where
@@ -1084,43 +1086,43 @@
      C+   and NCNOSC = :A7NONB
      C+   and NCRECI = 'D'
      C/end-exec
- 
+
      C                   If        SQLCODE = 0
      C                   eval      PGrpc = NCGRPC
- 
+
      C/exec SQL
      C+ select * into :NGLH from SDNGLHTD
      C+ where
      C+       NGGRPC = :PGrpc
      C+   and NGRECI = 'D'
      C/end-exec
- 
+
      C                   If        SQLCODE = 0
      C                   eval      PLCcy = NGLCcy
      C                   Exsr      SrLCcyDat
      C                   Endif
- 
+
      C                   Exsr      SrPronoBal
      C********           Exsr      SrTNostBal                                               MD027224
      C                   Exsr      SrFortTBal                                               MD027224
      C                   Exsr      SrCalcTot
- 
+
      C                   EXSR      SrUpdate
- 
+
      C                   Endif
      C                   Endif
- 
+
       ** Retrieve Nostro Code of the After Image account
- 
+
      C                   If        WEventType = 'MNT_RSACMTPD_AFTER' or
      C                             WEventType = 'MNT_RSACMTPD_BOTH'
- 
+
      C                   EVAL      PCusn = ARCusn
      C                   EVAL      PCurr = ARCcyd
      C                   EVAL      PBrch = ARBrca
      C                   MOVE(P)   ARAcde        PACod
      C                   MOVE(P)   ARAsnc        PASeq
- 
+
      C                   Call      'AONOSTR0'    PAoNost
      C                   If        PRtCd <> *BLANKS
      C     *Lock         In        LDA
@@ -1132,9 +1134,9 @@
      C                   Out       LDA
      C                   exsr      *PSSR
      C                   Endif
- 
+
       ** Check if Nostro code belongs to a Nostro Group and retrieve Limit Ccy if so
- 
+
      C/exec SQL
      C+ select * into :NGLD from SDNGLDTD
      C+ where
@@ -1142,32 +1144,32 @@
      C+   and NCNOSC = :A7NONB
      C+   and NCRECI = 'D'
      C/end-exec
- 
+
      C                   If        SQLCODE = 0
      C                   eval      PGrpc = NCGRPC
- 
+
      C/exec SQL
      C+ select * into :NGLH from SDNGLHTD
      C+ where
      C+       NGGRPC = :PGrpc
      C+   and NGRECI = 'D'
      C/end-exec
- 
+
      C                   If        SQLCODE = 0
      C                   eval      PLCcy = NGLCcy
      C                   Exsr      SrLCcyDat
      C                   Endif
- 
+
      C                   Exsr      SrPronoBal
      C********           Exsr      SrTNostBal                                               MD027224
      C                   Exsr      SrFortTBal                                               MD027224
      C                   Exsr      SrCalcTot
- 
+
      C                   EXSR      SrUpdate
- 
+
      C                   Endif
      C                   Endif
- 
+
      C                   ENDSR
                                                                                            MD027208B
       *****************************************************************                    MD027208B
@@ -1221,7 +1223,7 @@
      C                   Endif                                                             MD027208B
                                                                                            MD027208B
      C                   Endsr                                                             MD027208B
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1233,20 +1235,20 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SrReBuild     BEGSR
- 
+
      C/exec SQL
      C+ declare LISTC cursor for
      C+ select * from SDNGLHTD
      C+ where
      C+       NGRECI = 'D'
      C/end-exec
- 
+
      C/exec SQL
      C+ open LISTC
      C/end-exec
- 
+
       ** Handle SQL Error (if not %EOF)
      C                   If        SQLCOD < 0
      C     *LOCK         IN        LDA
@@ -1257,33 +1259,33 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   EndIf
- 
+
      C/exec SQL
      C+ fetch next
      C+ from LISTC
      C+ into :NGLH
      C/end-exec
- 
+
      C                   DOW       SQLCode <> 100
- 
+
      C                   eval      PGrpc = NGGRPC
      C                   eval      PLCcy = NGLCcy
      C                   Exsr      SrLCcyDat
- 
+
      C                   Exsr      SrPronoBal
      C********           Exsr      SrTNostBal                                               MD027224
      C                   Exsr      SrFortTBal                                               MD027224
      C                   Exsr      SrCalcTot
- 
+
      C                   Exsr      SrUpdate
- 
+
      C/exec SQL
      C+ fetch next from LISTC
      C+ into :NGLH
      C/end-exec
- 
+
      C                   ENDDO
- 
+
       ** Handle SQL Error (if not %EOF)
      C                   If        SQLCode < 100
      C     *LOCK         IN        LDA
@@ -1294,13 +1296,13 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   EndIf
- 
+
      C/exec SQL
      C+ close LISTC
      C/end-exec
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1312,17 +1314,17 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SrDelGTot     BEGSR
- 
+
      C/exec SQL
      C+ delete from GLFRBLTD
      C+ where
      C+       FCGRPC = :PGrpc
      C/end-exec
- 
+
      C                   Endsr
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1331,9 +1333,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SrPronoBal    BEGSR
- 
+
      C                   z-add     0             PronoBalance
      C                   z-add     0             AcctBalance
      C                   z-add     0             RTimBalance                                MD027208
@@ -1432,7 +1434,7 @@
      C/exec SQL                                                                             MD027292
      C+ close LISTI                                                                         MD027292
      C/end-exec                                                                             MD027292
- 
+
      C/exec SQL
      C+ declare LISTB cursor for
      C**SELECT*NCGRPC,*a.ccy,*a.nosn,*b.ldbl,                                               MD027208
@@ -1465,11 +1467,11 @@
      C+ b.CCY = a7cycd AND b.acod = A7accd AND b.acsq = a7acsn
      C+ where NCGRPC = :PGrpc
      C/end-exec
- 
+
      C/exec SQL
      C+ open LISTB
      C/end-exec
- 
+
       ** Handle SQL Error (if not %EOF)
      C                   If        SQLCOD < 0
      C     *LOCK         IN        LDA
@@ -1480,7 +1482,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   EndIf
- 
+
      C/exec SQL
      C+ fetch next
      C+ from LISTB
@@ -1489,7 +1491,7 @@
      C********           If        SQLCOD = 100                                   MD027208C MD027292
      C********           move      'Y'           Prono_F           1              MD027208C MD027292
      C********           Endif                                                    MD027208C MD027292
- 
+
      C                   DOW       SQLCode <> 100
                                                                                             MD027292
      C                   If        Wccy <> PLCcy                                           MD027684A
@@ -1563,9 +1565,9 @@
      C**********         EVAL(H)   BalAdjB = BalAdjB / 1000                       MD027292 MD027684A
      C**********         Endsl                                                    MD027292 MD027684A
      C**********         Endif                                                    MD027292 MD027684A
- 
+
       ** Limit Ccy Run date
- 
+
      C                   SELECT
      C     Ldat0         Wheneq    WPnd0
      C                   eval      PronoBalance(1) = PronoBalance(1) + Bal00Adj
@@ -1583,9 +1585,9 @@
      C                   eval      PronoBalance(1) = PronoBalance(1) + Bal04Adj
      C********           eval      AcctBalance(1) = AcctBalance(1) + BalAdjB                MD027292
      C                   ENDSL
- 
+
       ** Limit Ccy Run date + 1
- 
+
      C                   SELECT
      C     Ldat1         Wheneq    WPnd0
      C                   eval      PronoBalance(2) = PronoBalance(2) + Bal00Adj
@@ -1603,9 +1605,9 @@
      C                   eval      PronoBalance(2) = PronoBalance(2) + Bal04Adj
      C********           eval      AcctBalance(2) = AcctBalance(2) + BalAdjB                MD027292
      C                   ENDSL
- 
+
       ** Limit Ccy Run date + 2
- 
+
      C                   SELECT
      C     Ldat2         Wheneq    WPnd0
      C                   eval      PronoBalance(3) = PronoBalance(3) + Bal00Adj
@@ -1623,9 +1625,9 @@
      C                   eval      PronoBalance(3) = PronoBalance(3) + Bal04Adj
      C********           eval      AcctBalance(3) = AcctBalance(3) + BalAdjB                MD027292
      C                   ENDSL
- 
+
       ** Limit Ccy Run date + 3
- 
+
      C                   SELECT
      C     Ldat3         Wheneq    WPnd0
      C                   eval      PronoBalance(4) = PronoBalance(4) + Bal00Adj
@@ -1643,9 +1645,9 @@
      C                   eval      PronoBalance(4) = PronoBalance(4) + Bal04Adj
      C********           eval      AcctBalance(4) = AcctBalance(4) + BalAdjB                MD027292
      C                   ENDSL
- 
+
       ** Limit Ccy Run date + 4
- 
+
      C                   SELECT
      C     Ldat4         Wheneq    WPnd0
      C                   eval      PronoBalance(5) = PronoBalance(5) + Bal00Adj
@@ -1663,14 +1665,14 @@
      C                   eval      PronoBalance(5) = PronoBalance(5) + Bal04Adj
      C********           eval      AcctBalance(5) = AcctBalance(5) + BalAdjB                MD027292
      C                   ENDSL
- 
+
      C/exec SQL
      C+ fetch next from LISTB
      C+ into :LISTB_DS
      C/end-exec
- 
+
      C                   ENDDO
- 
+
       ** Handle SQL Error (if not %EOF)
      C                   If        SQLCode < 100
      C     *LOCK         IN        LDA
@@ -1681,13 +1683,13 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   EndIf
- 
+
      C/exec SQL
      C+ close LISTB
      C/end-exec
- 
+
       ** Check for Nostro Codes which might not yet have a record in PRONOPN
- 
+
      C/exec SQL
      C+ declare LISTE cursor for
      C**SELECT*NCGRPC,*a.ccyd,*a.a7nonb,*b.ldbl,                                            MD027208
@@ -1707,11 +1709,11 @@
      C+ b.CCY = a.ccyd AND b.acod = A.acde AND b.acsq = a.asnc
      C+ where NCGRPC = :PGrpc
      C/end-exec
- 
+
      C/exec SQL
      C+ open LISTE
      C/end-exec
- 
+
       ** Handle SQL Error (if not %EOF)
      C                   If        SQLCOD < 0
      C     *LOCK         IN        LDA
@@ -1722,7 +1724,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   EndIf
- 
+
      C/exec SQL
      C+ fetch next
      C+ from LISTE
@@ -1731,9 +1733,9 @@
      C********           If        SQLCOD = 100                                 MD027208C  MD027292
      C********           move      'Y'           Rsacm_F           1            MD027208C  MD027292
      C********           Endif                                                  MD027208C  MD027292
- 
+
      C                   DOW       SQLCode <> 100
- 
+
      C                   If        Rccy <> PLCcy                                           MD027684A
                                                                                            MD027684A
      C                   eval      FromCcy = Rccy                                          MD027684A
@@ -1769,46 +1771,46 @@
      C**********         EVAL(H)   RBalAdjB = RBalAdjB / 1000                     MD027292 MD027684A
      C**********         Endsl                                                    MD027292 MD027684A
      C**********         Endif                                                    MD027292 MD027684A
- 
+
      C                   SELECT
       ** Limit Ccy Run date
      C     Ldat0         Wheneq    WVudt
      C                   eval      PronoBalance(1) = PronoBalance(1) + RBal00Adj
      C**********                    + RBalAdjB                                              MD028029
      C********           eval      AcctBalance(1) = AcctBalance(1) + RBalAdjB               MD027292
- 
+
       ** Limit Ccy Run date + 1
      C     Ldat1         Wheneq    WVudt
      C                   eval      PronoBalance(2) = PronoBalance(2) + RBal00Adj
      C**********                    + RBalAdjB                                              MD028029
      C********           eval      AcctBalance(2) = AcctBalance(2) + RBalAdjB               MD027292
- 
+
       ** Limit Ccy Run date + 2
      C     Ldat2         Wheneq    WVudt
      C                   eval      PronoBalance(3) = PronoBalance(3) + RBal00Adj
      C**********                    + RBalAdjB                                              MD028029
      C********           eval      AcctBalance(3) = AcctBalance(3) + RBalAdjB               MD027292
- 
+
       ** Limit Ccy Run date + 3
      C     Ldat3         Wheneq    WVudt
      C                   eval      PronoBalance(4) = PronoBalance(4) + RBal00Adj
      C**********                    + RBalAdjB                                              MD028029
      C********           eval      AcctBalance(4) = AcctBalance(4) + RBalAdjB               MD027292
- 
+
       ** Limit Ccy Run date + 4
      C     Ldat4         Wheneq    WVudt
      C                   eval      PronoBalance(5) = PronoBalance(5) + RBal00Adj
      C**********                    + RBalAdjB                                              MD028029
      C********           eval      AcctBalance(5) = AcctBalance(5) + RBalAdjB               MD027292
      C                   ENDSL
- 
+
      C/exec SQL
      C+ fetch next from LISTE
      C+ into :LISTE_DS
      C/end-exec
- 
+
      C                   ENDDO
- 
+
       ** Handle SQL Error (if not %EOF)
      C                   If        SQLCode < 100
      C     *LOCK         IN        LDA
@@ -1819,7 +1821,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   EndIf
- 
+
      C/exec SQL
      C+ close LISTE
      C/end-exec
@@ -2002,7 +2004,7 @@
      C/end-exec                                                                             MD027208
                                                                                             MD027208
      C                   Endsr
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -2280,7 +2282,7 @@
      C/end-exec                                                                             MD027224
                                                                                             MD027224
      C                   Endsr                                                              MD027224
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -2289,32 +2291,32 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SrLCcyDat     BEGSR
- 
+
       ** Get dates for the Limit Currency
      C                   z-add     BJRDNB        LDat0
- 
+
      C                   z-add     BJRDNB        ZDayNo
      C                   z-add     1             ZNrDys
      C                   move      PLccy         ZCcy
      C                   Exsr      ZFWDT
      C                   z-add     ZDyNbr        LDat1
- 
+
      C                   z-add     2             ZNrDys
      C                   Exsr      ZFWDT
      C                   z-add     ZDyNbr        LDat2
- 
+
      C                   z-add     3             ZNrDys
      C                   Exsr      ZFWDT
      C                   z-add     ZDyNbr        LDat3
- 
+
      C                   z-add     4             ZNrDys
      C                   Exsr      ZFWDT
      C                   z-add     ZDyNbr        LDat4
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -2323,13 +2325,13 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SrCalcTot     BEGSR
- 
+
      C                   z-add     0             TotBalance
- 
+
       ** Calculate Totals for the group code
- 
+
      C                   If        PronoBalance(1) <> 0
      C                   eval      TotBalance(1) = PronoBalance(1) -
      C********                                 AcctBalance(1) + OForBalance(1)              MD027224
@@ -2342,28 +2344,28 @@
      C                                          + ForTBalance(1)                            MD027224
      C                                         + RTimBalance(1)                            MD027208C
      C                   Endif
- 
+
      C********           eval      TotBalance(2) = PronoBalance(2) -                        MD023273
      C                   eval      TotBalance(2) = PronoBalance(2)                          MD023273
      C********                                 AcctBalance(2) + OForBalance(2)              MD027224
      C********                                 AcctBalance(2) + ForTBalance(2)     MD027224 MD023273
      C                                         + ForTBalance(2)                             MD023273
      C********                                 + RTimBalance(2)                   MD027208 MD027208A
- 
+
      C********           eval      TotBalance(3) = PronoBalance(3) -                        MD023273
      C                   eval      TotBalance(3) = PronoBalance(3)                          MD023273
      C********                                 AcctBalance(3) + OForBalance(3)              MD027224
      C********                                 AcctBalance(3) + ForTBalance(3)     MD027224 MD023273
      C                                         + ForTBalance(3)                             MD023273
      C********                                 + RTimBalance(3)                   MD027208 MD027208A
- 
+
      C********           eval      TotBalance(4) = PronoBalance(4) -                        MD023273
      C                   eval      TotBalance(4) = PronoBalance(4)                          MD023273
      C********                                 AcctBalance(4) + OForBalance(4)              MD027224
      C********                                 AcctBalance(4) + ForTBalance(4)     MD027224 MD023273
      C                                         + ForTBalance(4)                             MD023273
      C********                                 + RTimBalance(4)                   MD027208 MD027208A
- 
+
      C********           eval      TotBalance(5) = PronoBalance(5) -                        MD023273
      C                   eval      TotBalance(5) = PronoBalance(5)                          MD023273
      C********                                 AcctBalance(5) + OForBalance(5)              MD027224
@@ -2549,7 +2551,7 @@
      C*****WNbdp2        Wheneq    3                                              MD027292 MD027684A
      C**********         EVAL(H)   PronoBalanceL(2) = ToAmt / 100                 MD027292 MD027684A
      C**********         Endsl                                                    MD027292 MD027684A
- 
+
      C********           EVAL      FromAmt = PronoBalance(3)                      MD027292 MD027684A
      C**********         Select                                                   MD027292 MD027684A
      C*****Bjnbdp        Wheneq    0                                              MD027292 MD027684A
@@ -2923,14 +2925,14 @@
      C                   EVAL      AcctBalanceL(3) = AcctBalance(3)
      C                   EVAL      AcctBalanceL(4) = AcctBalance(4)
      C                   EVAL      AcctBalanceL(5) = AcctBalance(5)
- 
+
       ** Prono Total Balance
      C                   EVAL      PronoBalanceL(1) = PronoBalance(1)
      C                   EVAL      PronoBalanceL(2) = PronoBalance(2)
      C                   EVAL      PronoBalanceL(3) = PronoBalance(3)
      C                   EVAL      PronoBalanceL(4) = PronoBalance(4)
      C                   EVAL      PronoBalanceL(5) = PronoBalance(5)
- 
+
       ** Forecast Total Balance
      C********           EVAL      OForBalanceL(1) = OForBalance(1)                         MD027224
      C********           EVAL      OForBalanceL(2) = OForBalance(2)                         MD027224
@@ -2950,20 +2952,20 @@
      C********           EVAL      RTimBalanceL(3) = RTimBalance(3)               MD027208 MD027208A
      C********           EVAL      RTimBalanceL(4) = RTimBalance(4)               MD027208 MD027208A
      C********           EVAL      RTimBalanceL(5) = RTimBalance(5)               MD027208 MD027208A
- 
+
       ** Group Total Balance
      C                   EVAL      TotBalanceL(1) = TotBalance(1)
      C                   EVAL      TotBalanceL(2) = TotBalance(2)
      C                   EVAL      TotBalanceL(3) = TotBalance(3)
      C                   EVAL      TotBalanceL(4) = TotBalance(4)
      C                   EVAL      TotBalanceL(5) = TotBalance(5)
- 
+
      C**********         Endif                                                             MD027684A
- 
+
      C                   eval      Given = *Blanks
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -2972,14 +2974,14 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SrUpdate      BEGSR
- 
+
      C                   Exsr      SrDelGTot
- 
+
      C                   z-add     1             WCount            1 0
      C                   Dow       WCount <= 5
- 
+
      C                   Select
      C     WCount        Wheneq    1
      C                   eval      PDate = LDat0
@@ -3118,7 +3120,7 @@
      C**********         move      PTBalS3       PTBal                            MD027292 MD027684A
      C**********         move      PRBalS3       PRBal                            MD027292 MD027684A
      C**********         Endsl                                                    MD027292 MD027684A
- 
+
      C/Exec SQL
      C+ insert into GLFRBLTD
      C+ (
@@ -3145,14 +3147,14 @@
      C+ ,:PRBal                                                                             MD027208
      C+ )
      C/End-Exec
- 
+
      C                   add       1             WCount
      C                   Enddo
- 
+
      C                   eval      WUpdate = 'Y'
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -3160,64 +3162,64 @@
       * SRConvert - Convert Currency                                  *
       *                                                               *
       *****************************************************************
- 
+
      C     SRConvert     BEGSR
- 
+
       ** If one of currencies is blank, skip conversion
- 
+
      C                   If        FromCcy = *Blanks or ToCcy = *Blanks
      C                   eval      ToAmt = 0
      C                   Else
- 
+
       ** From currency
      C                   Call      'AOCURRR0'
      C                   Parm      *Blanks       Prtcd
      C                   Parm      '*KEY   '     POptn
      C                   Parm                    FromCcy
      C     SDCURR        Parm      SDCURR        DSSDY
- 
+
      C                   If        PRtcd <> *BLANKS
      C                   Eval      DBFILE = 'SDCURRPD'
      C                   Eval      DBASE = 11
      C                   Eval      DBKEY = FromCcy
      C                   Exsr      *PSSR
      C                   Endif
- 
+
      C                   Eval      WNbdp1 = A6NBDP
      C                   If        Given = 'N'
      C                   eval      WRate1 = A6SPRT
      C                   eval      WMdin1 = A6MDIN
      C                   Endif
- 
+
       ** To currency
      C                   Call      'AOCURRR0'
      C                   Parm      *Blanks       PRtcd
      C                   Parm      '*KEY   '     POptn
      C                   Parm                    ToCcy
      C     SDCURR        Parm      SDCURR        DSSDY
- 
+
      C                   If        PRTCD <> *BLANKS
      C                   Eval      DBFILE = 'SDCURRPD'
      C                   Eval      DBASE = 12
      C                   Eval      DBKEY = ToCcy
      C                   Exsr      *PSSR
      C                   Endif
- 
+
      C                   EVAL      WNbdp2 = A6NBDP
      C                   If        Given = 'N'
      C                   eval      WRate2 = A6SPRT
      C                   eval      WMdin2 = A6MDIN
      C                   Endif
- 
+
      C                   If        Given = 'N'
- 
+
       ** Get exchange rate
- 
+
      C                   eval      XMDIN1 = WMDIN1
      C                   eval      XMDIN2 = WMDIN2
      C                   eval      XRate1 = WRate1
      C                   eval      XRate2 = WRate2
- 
+
      C                   Call      'ZXRATE'
      C                   Parm                    XRate1
      C                   Parm                    XMDIN1
@@ -3226,7 +3228,7 @@
      C                   Parm                    WRATE
      C                   Parm                    WMDIN
      C                   Endif
- 
+
       ** Convert amount
      C                   Call      'ZCONVZ1'
      C                   Parm                    FromAmt
@@ -3237,11 +3239,11 @@
      C                   Parm                    WNbdp1
      C                   Parm                    WNbdp2
      C                   Parm                    ToAmt
- 
+
      C                   Endif
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -3249,18 +3251,18 @@
       * ZFWDT    - Get next Nth working day                           *
       *                                                               *
       *****************************************************************
- 
+
      C     ZFWDT         BEGSR
- 
+
      C                   CALL      'ZFWDT'
      C                   PARM                    ZDAYNO
      C                   PARM                    ZNRDYS
      C                   PARM      *ZERO         ZDYNBR
      C                   PARM                    ZCCY
      C                   PARM                    ZLOC
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -3273,12 +3275,12 @@
       *        AOSARDR0                                               *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    FGLData
- 
+
      C     PAccntab      PLIST
      C                   PARM      '*BLANKS'     PRtCd
      C                   PARM      '*KEY   '     POptn
@@ -3289,7 +3291,7 @@
      C                   PARM                    PASeq
      C                   PARM                    PBrch
      C     GLACNT        PARM      '*BLANKS'     DSSDY
- 
+
      C     PAoNost       PLIST
      C                   PARM      '*BLANKS'     PRtCd
      C                   PARM      '*KEY   '     POptn
@@ -3302,11 +3304,11 @@
      C                   PARM                    PCssn
      C                   PARM                    PPNoi
      C     SDNOST        PARM      SDNOST        DSFDY
- 
+
       ** Read in data area
- 
+
      C     *DTAARA       DEFINE                  LDA
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBPGM  = 'GL009071'
      C                   EVAL      DBFILE = *BLANKS
@@ -3314,17 +3316,17 @@
      C                   EVAL      DBTXT  = *BLANKS
      C                   EVAL      DBASE  = 0
      C                   OUT       LDA
- 
+
      C     *DTAARA       DEFINE                  SDSTAT
      C                   IN        SDSTAT
- 
+
       ** Access Bank details
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      *BLANKS       PRtcd
      C                   PARM      '*FIRST  '    POptn
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
      C     PRtcd         IFNE      *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE =  'SDBANKPD'
@@ -3349,23 +3351,23 @@
      C                   else                                                              MD027292
      C                   z-add     A6NBDP        BJNBDP            1 0                     MD027292
      C                   Endif                                                             MD027292
- 
+
      C     *DTAARA       DEFINE                  MPHAS
      C                   IN        MPHAS
- 
+
      C/exec SQL
      C+ select * into :DSZN from GPZONEPD
      C+ where
      C+       ZOMSYS = :LIBR
      C/end-exec
- 
+
      C                   If        SQLCODE = 0
      C                   eval      PZone = ZOZONE
      C                   Endif
- 
- 
+
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -3380,20 +3382,20 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *PSSR         BEGSR
- 
+
      C                   IF        WRun = *BLANKS
      C                   EVAL      WRun = 'Y'
      C                   DUMP
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
- 
+
      C                   ROLBK
      C                   RETURN
- 
+
      C                   ENDSR
- 
+

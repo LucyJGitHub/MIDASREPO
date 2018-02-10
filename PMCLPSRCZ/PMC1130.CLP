@@ -7,15 +7,16 @@
 /*                                                                   */
 /*       PMC1130 - PM GENERATE MATURE/FLAT PORTFOLIO HOLDINGS        */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CLE134             Date 01Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CLE134             Date 01Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4.01 -----------------------------------------------*/
-/*       Prev Amend No. 183309             Date 13Sep01              */
+/*                      183309             Date 13Sep01              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      100075             Date 26Mar96              */
@@ -34,6 +35,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CLE134 - Past Due Call Loan Processing (Recompile)          */
 /*       183309 - CPF4101 msg received because correct overrides     */
 /*                not in place. Fix is to output error message       */
@@ -69,7 +71,7 @@
              PGM
 /* DECLARE VARIABLES */
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /************DCL        VAR(&DATA) TYPE(*CHAR) LEN(52)                 *S01486*/
              DCL        VAR(&DATA) TYPE(*CHAR) LEN(50)                /*S01486*/
@@ -443,7 +445,7 @@
              GOTO       CMDLBL(ENDPGM)                                /*183309*/
 /****ABNOR:******ENDPGM                                                *S01486*/
 ABNOR:       CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              DLTOVR FILE(*ALL)                                        /*100075*/
                                                                       /*183309*/
              CHGJOB     JOB(*) LOG(4 0 *SECLVL) LOGCLPGM(*YES)        /*183309*/

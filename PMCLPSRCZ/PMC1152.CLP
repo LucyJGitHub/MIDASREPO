@@ -7,16 +7,17 @@
 /*                                                                  */
 /*       PMC1152  - Pool Portfolio Holdings                         */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Last Amend No. CPM005             DATE 08JUL96              */
-/*       Prev Amend No. 080734             DATE 11AUG94              */
+/*       Prev Amend No. CPM005             Date 08Jul96              */
+/*                      080734             Date 11Aug94              */
 /*                      S01486             DATE 11AUG94              */
 /*                      056460             DATE 07JUN93             */
 /*                      056986             DATE 11MAY93             */
@@ -24,6 +25,7 @@
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CPM005 - Private Banking Phase 2                            */
 /*                Focus Group Changes upgraded to DBA                */
 /*                PBFG/2 - CALCUL & REPORT PERF. FOR ALL CUST. PORT  */
@@ -48,7 +50,7 @@
              PGM
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&DATA) TYPE(*CHAR) LEN(52)
 /*           DCL        VAR(&PARM) TYPE(*CHAR) LEN(1)       */
@@ -163,5 +165,5 @@
  
 ENDPGM:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

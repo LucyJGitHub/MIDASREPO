@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas OF Bank Position Optimisation Audit Report')     *
@@ -9,14 +9,16 @@
       *                                                               *
       *  GL000900P - Midas OF Bank Position Optimisation Audit Report *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. CGL176             Date 28Jul15               *
-      *  Prev Amend No. MD032130           Date 29Jan15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL176             Date 28Jul15               *
+      *                 MD032130           Date 29Jan15               *
       *                 CGL158   *CREATE   Date 20Aug14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL176 - Optimisation of Nostro Balances by Company          *
       *  MD032130 - Incorrect initiate date and time shown when only  *
       *             manual transfers were in a batch                  *

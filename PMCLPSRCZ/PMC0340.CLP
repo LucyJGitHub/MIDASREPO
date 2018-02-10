@@ -7,22 +7,24 @@
 /*                                                                   */
 /*       PMC0340 PM PORTFOLIO TRANSFER REPORT                        */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. 095249             DATE 06NOV95              */
-/*       PREV AMEND NO. S01486             DATE 31AUG94              */
+/*       Prev Amend No. 095249             Date 06Nov95              */
+/*                      S01486             Date 31Aug94              */
 /*                      58180              DATE 07JUL93              */
 /*                      B8087              DATE 24SEP91              */
 /*                      R00300             DATE 28AUG90              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       095249 - Add branch for accounts - RECOMPILE ONLY           */
 /*       S01486 - Portfolio Management Upgrade to R10                */
 /*       58180  - WHEN JOB SUBMITTED TO BATCH CREATE LDA IN QTEMP    */
@@ -38,7 +40,7 @@
              PGM      PARM(&MODE &RSEQ &RLVL &RENT &PARM)             /*S01486*/
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /************DCL        VAR(&MEM) TYPE(*CHAR) LEN(52)                 /*S01486*/
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
@@ -290,5 +292,5 @@
 /*ENDPGM:***  ENDPGM                                               */ /*S01486*/
  ENDPGM:                                                              /*S01486*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM                                                   /*S01486*/

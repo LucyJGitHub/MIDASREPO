@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas OF RE IIS Capitalisation Extract')
@@ -15,15 +15,17 @@
       *                                                               *
       *  Called By: REC000001                                         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD032380           Date 12Feb15               *
-      *  Prev Amend No. MD032161           Date 29Jan15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD032380           Date 12Feb15               *
+      *                 MD032161           Date 29Jan15               *
       *                 MD032091           Date 26Jan15               *
       *                 CRE101   *Create   Date 01Oct14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD032380 - Delayed capitalisation when on holiday            *
       *  MD032161 - New requirements for the set-up of start date     *
       *  MD032091 - Add new flag for back-valuations                  *

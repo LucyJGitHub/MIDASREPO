@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGSQLMOD                                                    *
 /*EXI *  TEXT('Midas OF Nostro Sweeping Rules Validation')
@@ -9,15 +9,17 @@
       *                                                               *
       *  GLNSRMVU - Midas OF Nostro Sweeping Rules Validation         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD034621           Date 16Jun15               *
-      *  Prev Amend No. MD033486           Date 27Feb15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD034621           Date 16Jun15               *
+      *                 MD033486           Date 27Feb15               *
       *                 MD031768           Date 06Jan15               *
       *                 CGL158   *CREATE   Date 16Sep14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD034621 - Telefonica Enhancement upgrade to SP9
       *  MD033486 - Add new Beneficiary Account field                 *
       *  MD031768 - External party fields not updated                 *

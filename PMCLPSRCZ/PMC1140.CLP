@@ -7,16 +7,17 @@
 /*                                                                   */
 /*       PMC1140 - PM Portfolio Generation Holdings                  */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4.01.02 --------------------------------------------*/
-/*       Last Amend No. 207764             Date 23Jul02              */
+/*       Prev Amend No. 207764             Date 23Jul02              */
 /* Midas Release 4.01 -----------------------------------------------*/
-/*       Prev Amend No. 183309             Date 13Sep01              */
+/*                      183309             Date 13Sep01              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /*                      192731             Date 11Jul01              */
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
@@ -48,6 +49,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       207764 - Change all SAV* and RST* commands to print a       */
 /*                report of objects saved or restored.               */
 /*       183309 - CPF4101 msg received because correct overrides     */
@@ -99,7 +101,7 @@
 /**********  PGM                                                     */
              PGM        PARM(&CNAM &CSEQ)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
              DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5)
@@ -831,5 +833,5 @@ ABNOR:
 /*ENDPGM                                                           */ /*S01486*/
  ENDPGM:                                                              /*S01486*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM                                                   /*S01486*/

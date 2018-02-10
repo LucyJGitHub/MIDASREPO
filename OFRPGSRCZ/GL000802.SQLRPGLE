@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas OF Forecast Total for Nostro Code - COB')
@@ -10,26 +10,28 @@
       *  GL000802 - Midas OF Forecast Total for Nostro Code Balance   *
       *             Rebuild - COB                                     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD031636           Date 11Dec14               *
-      *  Prev Amend No. MD027171           Date 28May14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD031636           Date 11Dec14               *
+      *                 MD027171           Date 28May14               *
       *                 CGL153   *CREATE   Date 05Feb14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD031636 - Forecast Balance show backdated amounts even if   *
       *             system value 'ForecastIncUnmatched' is set to 'N' *
       *  MD027171 - Forecast Balance should show backdated amounts    *
       *  CGL153 - Estimated Exchange Rate                             *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ D-specs: Arrays and Data Structures  ¦
       ** ¦ =======  ==========================  ¦
@@ -43,16 +45,16 @@
       **                                    181 1830DBase
       **                                    184 193 DBMod
       **                                    194 203 DBProc
- 
+
       ** Program Status Data Structure
      D/COPY ZACPYSRC,PSDS
- 
+
      **   Midas OF Individual Forecast Table
      D FORIT         E DS                  EXTNAME(GLFORITD)
- 
+
       ** External DS for Forecast Totals for Nostro Codes
      D TNOST         E DS                  EXTNAME(GLTNOSTD)
- 
+
      D                 DS
      D  WDATEA0                1      5  0
      D  WDATEA1                6     10  0
@@ -66,7 +68,7 @@
      D  WDATEA9               46     50  0
      D  WDATEA                 1     50  0
      D                                     DIM(10)
- 
+
      D                 DS
      D  WAMTA0                 1     15  0
      D  WAMTA1                16     30  0
@@ -80,15 +82,15 @@
      D  WAMTA9               136    150  0
      D  WAMTA                  1    150  0
      D                                     DIM(10)
- 
+
       ** +--------------------------------------+
       ** ¦ D-specs: Declared variables          ¦
       ** ¦ =======  ==================          ¦
       ** +--------------------------------------+
- 
+
       ** Parameters for access object programs
      D PRTCD           S              7A
- 
+
       ** Other fields used
      D WRun            S              1A   Inz
      D wBJRDNB         S              5S 0
@@ -146,15 +148,15 @@
       *****************************************************************
       * MAIN PROCEDURE                                                *
       *****************************************************************
- 
+
       ** Main Subroutine
- 
+
      C                   EXSR      SRMain
- 
+
       ** End Program
- 
+
      C                   EVAL      *INLR = *ON
- 
+
      C                   RETURN
       *****************************************************************
       *  P R O G R A M   E N D                                        *
@@ -164,10 +166,10 @@
       *                                                               *
       *****************************************************************
      C     SRMain        BEGSR
- 
+
       ** Set file pointer to first record of Individual Forecast Table
       ** and do an initial read
- 
+
      C/exec SQL
      C+ declare LIST1 cursor for
      C+ select * from GLFORITD
@@ -179,15 +181,15 @@
      C+ order by
      C+       IFCCY, IFNOSC, IFDATE ASC
      C/end-exec
- 
+
      C/exec SQL
      C+ open LIST1
      C/end-exec
- 
+
       ** Handle SQL Error (if not %EOF)
- 
+
      C                   IF        SQLCOD < 0
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBASE = 2
      C                   EVAL      DBFILE = 'SQL STM'
@@ -195,20 +197,20 @@
      C                                   + ';  SQLCOD : ' + %char(SQLCOD)
      C                   OUT       LDA
      C                   EXSR      *PSSR
- 
+
      C                   ENDIF
- 
+
      C/exec SQL
      C+ fetch next
      C+ from LIST1
      C+ into: FORIT
      C/end-exec
- 
+
       ** Read Individual Forecast Table until end of file
- 
+
      C                   MOVE      0             COUNT             1 0
      C                   EVAL      WFIRST = 'N'
- 
+
      C                   DOW       SQLCode <> 100
      C                   IF        WFIUPB = 'N' And IFDATE < wBJRDNB                        MD031636
      C                   GOTO      ReadNext                                                 MD031636
@@ -216,40 +218,40 @@
                                                                                             MD031636
      C                   IF        WCCY   <> IFCCY OR
      C                             WNOSC  <>  IFNOSC
- 
+
      C                   IF        WFIRST = 'N'
      C                   EVAL      WFIRST = 'Y'
      C                   ELSE
      C                   EXSR      SRUpdateTNOS
      C                   ENDIF
- 
+
      C                   EVAL      WCCY   = IFCCY
      C                   EVAL      WNOSC  = IFNOSC
- 
+
      C                   EXSR      SRGetNostroDtl
- 
+
      C                   ENDIF
- 
+
       ** Accumulate the forecast amount
      C                   EXSR      SRAccumFore
- 
+
      C     ReadNext      TAG
- 
+
      C/exec SQL
      C+ fetch next from LIST1
      C+ into :FORIT
      C/end-exec
- 
+
      C                   ENDDO
- 
+
      C                   IF        WFIRST = 'Y'
      C                   EXSR      SRUpdateTNOS
      C                   ENDIF
- 
+
      C/exec SQL
      C+ close LIST1
      C/end-exec
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -259,11 +261,11 @@
       *                                                               *
       *****************************************************************
      C     SRUpdateTNOS  BEGSR
- 
+
      C                   IF        WTNOST = 'Y'
- 
+
       ** Update Forecast Available Amount
- 
+
      C/exec SQL
      C+ update GLTNOSTD set NCDAT0 = :WDATEA0
      C+ , NCDAT1 = :WDATEA1
@@ -291,11 +293,11 @@
      C+ NCACOD = :WACOD  and
      C+ NCACSQ = :wA7ACSN
      C/end-exec
- 
+
      C                   ELSE
- 
+
       ** Write Forecast Totals for Nostro Codes
- 
+
      C/exec SQL
      C+ insert into GLTNOSTD
      C+ (
@@ -356,9 +358,9 @@
      C+ , :WAMTA9
      C+ )
      C/end-exec
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -368,7 +370,7 @@
       *                                                               *
       *****************************************************************
      C     SRGetNostroDtlBEGSR
- 
+
      C/exec sql
      C+ select A7BRCD, A7CUST, A7CYCD, A7ACSN, A7ACCD
      C+ into: wA7BRCD, :wA7CUST, :wA7CYCD, :wA7ACSN, :wA7ACCD
@@ -387,7 +389,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -405,11 +407,11 @@
      C+ NCACOD = :WACOD  and
      C+ NCACSQ = :wA7ACSN
      C/end-exec
- 
+
       ** Handle SQL Error (If not %EOF)
- 
+
      C                   IF        SQLCOD < 0
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBASE = 3
      C                   EVAL      DBFILE = 'SQL STM'
@@ -417,21 +419,21 @@
      C                                   + ';  SQLCOD : ' + %char(SQLCOD)
      C                   OUT       LDA
      C                   EXSR      *PSSR
- 
+
      C                   ENDIF
- 
+
       ** If record found in GLTNOSTD, then update
- 
+
      C                   IF        SQLCOD = 0
      C                   EXSR      SRLoadNostAmt
      C                   ENDIF
- 
+
       ** If record not found in GLTNOSTD, then write
- 
+
      C                   IF        SQLCOD = 100
      C                   EXSR      SRInitArr
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -441,25 +443,25 @@
       *                                                               *
       *****************************************************************
      C     SRInitArr     BEGSR
- 
+
      C                   EVAL      WDATEA = 0
      C                   EVAL      WDATE  = wBJRDNB
- 
+
      C                   EVAL      WAMTA  = 0
- 
+
      C                   EVAL      WTNOST = 'N'
- 
+
      C                   EVAL      WCTR   = 1
- 
+
      C                   DOW       WCTR <= 10
- 
+
      C                   EVAL      WDATEA(WCTR) = WDATE
- 
+
      C                   EVAL      WDATE +=1
      C                   EVAL      WCTR  += 1
- 
+
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -469,62 +471,62 @@
       *                                                               *
       *****************************************************************
      C     SRLoadNostAmt BEGSR
- 
+
      C                   EVAL      WTNOST = 'Y'
      C                   EVAL      WCTR = 1
      C                   EVAL      WDATEA = 0
      C                   EVAL      WAMTA = 0
- 
+
      C                   DOW       WCTR <= 10
- 
+
      C                   SELECT
- 
+
      C                   WHEN      WCTR = 1
      C                   EVAL      WDATEA(WCTR) = NCDAT0
      C                   EVAL      WAMTA(WCTR) = NCAMT0
- 
+
      C                   WHEN      WCTR = 2
      C                   EVAL      WDATEA(WCTR) = NCDAT1
      C                   EVAL      WAMTA(WCTR) = NCAMT1
- 
+
      C                   WHEN      WCTR = 3
      C                   EVAL      WDATEA(WCTR) = NCDAT2
      C                   EVAL      WAMTA(WCTR) = NCAMT2
- 
+
      C                   WHEN      WCTR = 4
      C                   EVAL      WDATEA(WCTR) = NCDAT3
      C                   EVAL      WAMTA(WCTR) = NCAMT3
- 
+
      C                   WHEN      WCTR = 5
      C                   EVAL      WDATEA(WCTR) = NCDAT4
      C                   EVAL      WAMTA(WCTR) = NCAMT4
- 
+
      C                   WHEN      WCTR = 6
      C                   EVAL      WDATEA(WCTR) = NCDAT5
      C                   EVAL      WAMTA(WCTR) = NCAMT5
- 
+
      C                   WHEN      WCTR = 7
      C                   EVAL      WDATEA(WCTR) = NCDAT6
      C                   EVAL      WAMTA(WCTR) = NCAMT6
- 
+
      C                   WHEN      WCTR = 8
      C                   EVAL      WDATEA(WCTR) = NCDAT7
      C                   EVAL      WAMTA(WCTR) = NCAMT7
- 
+
      C                   WHEN      WCTR = 9
      C                   EVAL      WDATEA(WCTR) = NCDAT8
      C                   EVAL      WAMTA(WCTR) = NCAMT8
- 
+
      C                   WHEN      WCTR = 10
      C                   EVAL      WDATEA(WCTR) = NCDAT9
      C                   EVAL      WAMTA(WCTR) = NCAMT9
- 
+
      C                   ENDSL
- 
+
      C                   EVAL      WCTR += 1
- 
+
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -534,44 +536,44 @@
       *                                                               *
       *****************************************************************
      C     SRAccumFore   BEGSR
- 
+
       ***Update*balances*for*forecast*dates*greater*than*or*equal*to***                     MD027171
       ** Update balances for forecast dates less than or equal to                           MD027171
       ** run date
- 
+
      C**********         IF        IFDATE >= wBJRDNB                                        MD027171
      C                   IF        IFDATE <= wBJRDNB                                        MD027171
- 
+
      C                   EVAL      WCTR2 = 1
      C**********         EVAL      WCTR2 = %LOOKUP(IFDATE:WDATEA:WCTR2)                     MD027171
- 
+
      C**********         IF        WCTR2 > 0                                                MD027171
- 
+
      C                   DOW       WCTR2 <= 10
- 
+
      C                   EVAL      WAMTA(WCTR2) += IFAMNT
      C                   EVAL      WCTR2 += 1
- 
+
      C                   ENDDO
- 
+
      C**********         ENDIF                                                              MD027171
- 
+
      C                   ELSE
- 
+
       ** Place to first array or rundate for forward forecast date
      C                   EVAL      WCTR2 = 1
      C**********         EVAL      WCTR2 = %LOOKUP(wBJRDNB:WDATEA:WCTR2)                    MD027171
      C                   EVAL      WCTR2 = %LOOKUP(IFDATE:WDATEA:WCTR2)                     MD027171
- 
+
      C                   IF        WCTR2 > 0
      C                   DOW       WCTR2 <= 10                                              MD027171
      C                   EVAL      WAMTA(WCTR2) += IFAMNT
      C                   EVAL      WCTR2 += 1                                               MD027171
      C                   ENDDO                                                              MD027171
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -581,26 +583,26 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
       ** Set off program indicators
- 
+
      C                   EVAL      *INU7 = *OFF
      C                   EVAL      *INU8 = *OFF
- 
+
      C     *DTAARA       DEFINE                  LDA
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBPGM  =  PSProcPgm
      C                   OUT       LDA
- 
+
       ** Access Bank details
       **   Retrieve Run day number
- 
+
      C/exec sql
      C+ select BJRDNB into :wBJRDNB
      C+ from SDBANKPD
      C/end-exec
- 
+
      C                   IF        SQLCOD <> 0
      C     *LOCK         IN        LDA
      C                   EVAL      DBKey = '*FIRST'
@@ -609,7 +611,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       * Retrieve the system value                                                           MD031636
                                                                                             MD031636
      C                   EVAL      ProcMode = 'ForecastIncUnmatched'                        MD031636
@@ -667,18 +669,18 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
      C                   IF        WRun = *Blanks
      C                   EVAL      WRun = 'Y'
      C                   DUMP
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *On
      C                   EVAL      *INU8 = *On
      C                   EVAL      *INLR = *On
      C                   EVAL      PRTCD = '*ERROR'
- 
+
      C                   RETURN
- 
+
      C                   ENDSR
- 
+

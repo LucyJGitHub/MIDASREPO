@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas OF RE IIS Accounts Extract - Closure')
@@ -15,14 +15,16 @@
       *                                                               *
       *  Called By: REC000003                                         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD032161           Date 29Jan15               *
-      *  Prev Amend No. MD032091           Date 26Jan15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD032161           Date 29Jan15               *
+      *                 MD032091           Date 26Jan15               *
       *                 CRE101   *Create   Date 14Nov14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD032161 - New requirements for the set-up of the Start Date *
       *  MD032091 - Add flag for back-valuations                      *
       *  CRE101 - Interim Interest Statement on a Frequency           *
@@ -51,27 +53,27 @@
 
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ D-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for Bank Details
- 
+
      D STMT          E DS                  EXTNAME(RESTMTTD)
       ** External DS for RE IIS Driver file
- 
+
      D/COPY ZACPYSRC,PSDS
       ** The Following /COPY Line Includes All The Defined Fields In
       ** The PSDS.  They Have Meaningful Names, Prefixed By 'PS'.
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays AND Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D LIST1_DS        DS
      D  IMiCnum                1      6
      D  IMiCcy                 7      9
@@ -104,18 +106,18 @@
 
      D LDA             DS           256
       ** Local data area for database error details
- 
+
      D  DBFILE               134    141
      D  DBKEY                142    170
      D  DBPGM                171    180
      D  DBASE                181    183  0
      D  DBTXT                184    256
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D PStdt           S              5S 0
      D PCrpr           S              5S 0
      D PTime           S               Z
@@ -129,13 +131,13 @@
       *****************************************************************
       *  MAIN - Processing                                            *
       *****************************************************************
- 
+
      C/exec SQL
      C+ set option commit = *CHG
      C/end-exec
- 
+
       ** Retrieve details from GLACMI1D
- 
+
      C/exec SQL
      C+ declare LIST1 cursor for
      C+ Select MICNUM, MICCY, MIACOD, MIACSQ, MIBRCA, MISTMI,
@@ -147,11 +149,11 @@
      C+ where MISTMI <> ' '
      C+   and b.dacc = :Bjrdnb
      C/end-exec
- 
+
      C/exec SQL
      C+ open LIST1
      C/end-exec
- 
+
       ** Handle SQL Error (if not %EOF)
      C                   If        SQLCOD < 0
      C     *LOCK         IN        LDA
@@ -162,15 +164,15 @@
      C                   Out       LDA
      C                   Exsr      *PSSR
      C                   EndIf
- 
+
      C/exec SQL
      C+ fetch next
      C+ from LIST1
      C+ into :LIST1_DS
      C/end-exec
- 
+
      C                   DOW       SQLCode <> 100
- 
+
      C/exec SQL
      C+ select * into :STMT from RESTMTTD
      C+ where
@@ -182,18 +184,18 @@
      C+   and ISCCY = :IMiCcy
      C+   and ISSTAT = ' '
      C/end-exec
- 
+
      C                   If        SQLCODE = 100
      C                   Exsr      SrWrtSTMT
      C                   Endif
- 
+
      C/exec SQL
      C+ fetch next from LIST1
      C+ into :LIST1_DS
      C/end-exec
- 
+
      C                   ENDDO
- 
+
       ** Handle SQL Error (if not %EOF)
      C                   If        SQLCode < 100
      C     *LOCK         IN        LDA
@@ -204,16 +206,16 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   EndIf
- 
+
      C/exec SQL
      C+ close LIST1
      C/end-exec
- 
+
       ** Terminate program
- 
+
      C                   Eval      *INLR = *ON
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -225,18 +227,18 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SrWrtStmt     BEGSR
- 
+
      C                   TIME                    PTime
- 
+
       ** Start Date
      C                   If        ILcid >= ILdid
      C                   eval      PStdt = ILcid
      C                   else
      C                   eval      PStdt = ILdid
      C                   Endif
- 
+
       ** Current period
      C                   eval      PStCr = *Blanks                                          MD032161
      C                   Select
@@ -300,9 +302,9 @@
      C+ ,:PBval                                                                             MD032091
      C+ )
      C/End-Exec
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -342,11 +344,11 @@
      C+ Order by
      C+       a.CNUM, a.CCY, a.ACOD, a.ACSQ, a.BRCA, a.VALD
      C/End-Exec
- 
+
      C/exec SQL
      C+ open LIST2
      C/end-exec
- 
+
       ** Handle SQL Error (if not %EOF)
      C                   If        SQLCOD < 0
      C     *LOCK         IN        LDA
@@ -357,13 +359,13 @@
      C                   Out       LDA
      C                   Exsr      *PSSR
      C                   EndIf
- 
+
      C/exec SQL
      C+ fetch next
      C+ from LIST2
      C+ into :LIST2_DS
      C/end-exec
- 
+
      C                   If        SQLCode <> 100
      C/exec SQL                                                                             MD032161
      C+ declare LIST3 cursor for                                                            MD032161
@@ -438,13 +440,13 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   EndIf
- 
+
      C/exec SQL
      C+ close LIST2
      C/end-exec
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -456,13 +458,13 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
       ** Read in data area
- 
+
      C     *DTAARA       DEFINE                  LDA
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBPGM  = 'RE000005'
      C                   EVAL      DBFILE = *BLANKS
@@ -470,15 +472,15 @@
      C                   EVAL      DBTXT  = *BLANKS
      C                   EVAL      DBASE  = 0
      C                   OUT       LDA
- 
+
       ** Access Bank details
- 
+
      C/exec SQL
      C+ select *
      C+ into :SDBANK
      C+ from SDBANKPD
      C/end-exec
- 
+
      C     SQLCOD        Ifne      *Zeros
      C     *LOCK         In        LDA
      C                   eval      DBKey = '*FIRST'
@@ -487,9 +489,9 @@
      C                   Out       LDA
      C                   Exsr      *PSSR
      C                   Endif
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -504,20 +506,20 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *PSSR         BEGSR
- 
+
      C                   IF        WRun = *BLANKS
      C                   EVAL      WRun = 'Y'
      C                   DUMP
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
- 
+
      C                   ROLBK
      C                   RETURN
- 
+
      C                   ENDSR
- 
+

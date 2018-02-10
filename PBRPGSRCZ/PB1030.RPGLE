@@ -16,10 +16,11 @@
       *                                                               *
       *  Called By: PBC1030 - (program name)                          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
-      *  Prev Amend No. CER071             Date 01Aug16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CER071             Date 01Aug16               *
       *                 CLE141             Date 08Feb16               *
       *                 CGL165             Date 15Feb17               *
       *                 CER070             Date 24Nov14               *
@@ -86,6 +87,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CER071 - BAIS - Legal Form field (Recompile)                 *
       *  CLE141 - Currency and Location Business Day Convention       *
@@ -3501,7 +3503,7 @@
       /Eject
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 **  TABDealTypes
 LNDLTIIPCLITTDCDCI
 **  POWER8 - Array of POWERS for cuurency conversion

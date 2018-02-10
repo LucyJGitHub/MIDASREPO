@@ -7,9 +7,10 @@
 /*                                                                   */
 /*       ZACDELAY3 - Function to apply a DELAYJOB                    */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2014           */
+/*       (c) Finastra International Limited 2014                     */
 /*                                                                   */
-/*       Last Amend No. MD024362 *CREATE   Date 16Jan14              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD024362 *CREATE   Date 16Jan14              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
@@ -17,6 +18,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*      MD024362 - Subsidiaries Daily Sweeping Forecasts             */
 /*                 Amendment of GLFORITD and GLFORTTD does not work. */
 /*                 Delay added to manage all events regarding the    */

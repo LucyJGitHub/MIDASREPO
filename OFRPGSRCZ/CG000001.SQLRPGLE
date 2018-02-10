@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGSQLMOD                                                    *
 /*EXI *  TEXT('Midas OF RE Interim Interest Statement Driver')
@@ -14,15 +14,17 @@
       *                                                               *
       *  Called By: CGC000001 in Close of Business                    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD045010           Date 05Apr17               *
-      *  Prev Amend No. MD032380           Date 12Feb15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD045010           Date 05Apr17               *
+      *                 MD032380           Date 12Feb15               *
       *                 MD032091           Date 26Jan15               *
       *                 CRE101  *Create    Date 06Oct14               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD045010 - Component LEC06A 10008 looping during COB caused  *
       *             by CGL184. Recompile due to changes in ZFRQB3.    *
       *  MD032380 - Next IIS date not updated when on holiday         *

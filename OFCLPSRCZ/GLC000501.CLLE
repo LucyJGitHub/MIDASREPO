@@ -8,15 +8,17 @@
 /*       GLC000501 - Midas OF Forecast Total Amount and Available    */
 /*                   Balance Calculation                             */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2013           */
+/*       (c) Finastra International Limited 2013                     */
 /*                                                                   */
-/*       Last Amend No. MD032099           Date 27Jan15              */
-/*       Prev Amend No. CGL153             Date 05Feb14              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD032099           Date 27Jan15              */
+/*                      CGL153             Date 05Feb14              */
 /*                      MD024037A          Date 20Dec13              */
 /*                      CGL145B  *CREATE   Date 28Oct13              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD032099 - Auto-authorise forecasts with negative amount    */
 /*                  not included in Forecast Balance Calculation.    */
 /*       CGL153 - Bank Position Report                               */
@@ -25,7 +27,7 @@
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&RTNMSG &USRPRF &MNITEM &SYSPRFX &INPARM)
-
+ 
              DCL        VAR(&RTNMSG) TYPE(*CHAR) LEN(256)
              DCL        VAR(&USRPRF) TYPE(*CHAR) LEN(10)
              DCL        VAR(&MNITEM) TYPE(*CHAR) LEN(10)
@@ -61,33 +63,33 @@
              DCL        VAR(&PPNOI) TYPE(*CHAR) LEN(1)                                    /*CGL153*/
              DCL        VAR(&SDNOST) TYPE(*CHAR) LEN(300)                                 /*CGL153*/
              DCL        VAR(&CGL153) TYPE(*CHAR) LEN(1)                                   /*CGL153*/
-
+ 
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2013')
-
+ 
 /* Global monitor message */
-
+ 
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
-
+ 
              CHGVAR     VAR(&SBS) VALUE(&SYSPRFX)
              CHGVAR     VAR(&LIB) VALUE(&SBS *CAT 'XLIB')
-
+ 
              CHKOBJ     OBJ(&LIB/MIDASIC) OBJTYPE(*JOBD)
              MONMSG     MSGID(CPF9801 CPF9802 CPF9810 CPF9820 +
                           CPF9830 CPF9899) EXEC(GOTO CMDLBL(ABNOR))
-
+ 
 /* Set up parameters for call to IBM API. */
              CHGVAR     VAR(&JOBDNAME) VALUE('MIDASIC')
              CHGVAR     VAR(&JOBD) VALUE(&JOBDNAME *CAT &LIB)
              CHGVAR     VAR(%BIN(&LEN 1 4)) VALUE(3193)
              CHGVAR     VAR(%BIN(&ERRCDE 1 4)) VALUE(0)
-
+ 
 /* Use API to access the job description library list. */
              CALL       PGM(QWDRJOBD) PARM(&PARM &LEN JOBD0100 &JOBD +
                           &ERRCDE)
-
+ 
  INLLIBL:    CHGVAR     &OFFSET %BIN(&PARM 361 4)
              CHGVAR     VAR(&OFFSET) VALUE(&OFFSET + 1)
              CHGVAR     VAR(&LIBCNT) VALUE(%BIN(&PARM 365 4))
@@ -95,19 +97,19 @@
              CHGVAR     VAR(&INLLIBL) VALUE(%SST(&PARM &OFFSET +
                           &OFFLEN))
              MONMSG     MSGID(MCH3601)
-
+ 
              CHGVAR     VAR(&CMD) VALUE('CHGLIBL LIBL(' *CAT +
                              &INLLIBL *CAT ')')
-
+ 
              CALL       PGM(QCMDEXC) PARM(&CMD 2764)
-
+ 
              CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256) +
                           VALUE(' ')
              MONMSG     MSGID(CPF0000)
              CHGJOB SWS(00000000)
-
+ 
 /* Validate Action Code for User/Program/Branch */
-
+ 
              CHGVAR     VAR(&ZACTN) VALUE(%SST(&INPARM 1 1))
              CHGVAR     VAR(&ZBR) VALUE(%SST(&INPARM 12 3))
                                                                                           /*CGL153*/
@@ -158,9 +160,9 @@
              CHGVAR     VAR(&ZBR) VALUE(%SUBSTRING(&SDNOST 72 3))                         /*CGL153*/
                                                                                           /*CGL153*/
              ENDDO                                                                        /*CGL153*/
-
+ 
              CALL       PGM(ZBACTBU) PARM(&ZACTN &ZBR &USRPRF &MNITEM &ERR)
-
+ 
              IF         COND(&ERR *EQ 1) THEN(DO)
              SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('No +
                           Actions are Authorised for this +
@@ -170,7 +172,7 @@
                           Authorised for this User/Branch/Menu Item.')
                 GOTO       CMDLBL(END)
              ENDDO
-
+ 
              IF         COND(&ERR *EQ 2) THEN(DO)
              SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('User is +
                           not authorised to this Action Code for +
@@ -180,19 +182,19 @@
                           for this Menu Item/Branch.')
                 GOTO       CMDLBL(END)
              ENDDO
-
+ 
 /* Check if CGL145 is installed */
-
+ 
              CHGVAR     VAR(&PRTCD) VALUE('       ')
              CHGVAR     VAR(&POPTN) VALUE('*VERIFY')
              CHGVAR     VAR(&PSARD) VALUE('CGL145')
-
+ 
              CALL       PGM(AOSARDR0) PARM(&PRTCD &POPTN &PSARD &SCSARD)
-
+ 
              IF         COND(&PRTCD *NE '       ') THEN(DO)
                 GOTO       CMDLBL(END)
              ENDDO
-
+ 
 /* If no retail account, go to Forecast Totals for Nostro Codes */                        /*CGL153*/
                                                                                           /*CGL153*/
              IF         COND((%SUBSTRING(&INPARM 36 3) *NE '    ') +
@@ -205,31 +207,31 @@
              GOTO       CMDLBL(NOSTRO)
                                                                                           /*CGL153*/
              ENDDO                                                                        /*CGL153*/
-
+ 
 /* Call program to update Forecast Available Balance for Total List view */
-
+ 
              CALL       PGM(GL000501) PARM(&INPARM)
-
+ 
              IF COND(%SWITCH(XXXXXX11)) THEN(DO)
                 GOTO CMDLBL(ABNOR)
              ENDDO
-
+ 
 /* Call program to update Forecast Forward Available Balance */
-
+ 
              CALL       PGM(GL000601) PARM(&INPARM)
-
+ 
              IF COND(%SWITCH(XXXXXX11)) THEN(DO)
                 GOTO CMDLBL(ABNOR)
              ENDDO
-
+ 
 /* Call program to update Forecast Credit Line Available Balance */
-
+ 
              CALL       PGM(GL000701) PARM(&INPARM)
-
+ 
              IF COND(%SWITCH(XXXXXX11)) THEN(DO)
                 GOTO CMDLBL(ABNOR)
              ENDDO
-
+ 
  NOSTRO:                                                                                  /*CGL153*/
              IF         COND(&CGL153 *EQ 'Y') THEN(DO)                                    /*CGL153*/
 /* Call program to update Forecast Totals for Nostro Codes*/                              /*CGL153*/
@@ -250,18 +252,18 @@
              ENDDO                                                                        /*CGL153*/
                                                                                           /*CGL153*/
              GOTO       CMDLBL(END)
-
+ 
 /* Abnormal termination */
-
+ 
  ABNOR:      CHGJOB     SWS(XXXXXX11)
              DMPCLPGM
              MONMSG     MSGID(CPF0000 MCH0000)
-
+ 
              SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
                           GLC000501 ended abnormally - see job log') +
                           TOMSGQ(MOPERQ MRUNQ)
              MONMSG     MSGID(CPF0000 MCH0000)
-
+ 
 /*END:*****    RCLRSC                                                 */       /*MD024037A */
 /**********  MONMSG     MSGID(CPF0000 MCH0000)                        */       /*MD024037A */
 /**********  RCLRSC     LVL(*CALLER)                                  */       /*MD024037A */

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  ACTGRP(*CALLER) DFTACTGRP(*NO)                               *
@@ -10,17 +10,19 @@
       *                                                               *
       *  SDSPTRUPF1 - Midas SD Payment Charge Definitions Update      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
       *  Function : This program allows the maintenance of payment    *
       *             charge details                                    *
       *                                                               *
-      *  Last Amend No. MD032880           Date 12Aug15               *
-      *  Prev Amend No. 259785             Date 14Jan13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD032880           Date 12Aug15               *
+      *                 259785             Date 14Jan13               *
       *                 CFT147  *CREATE    Date 14Jan13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD032880 - API: FTPCHGPD not updated by SPTR                 *
       *  259785 - Fix for CFT147.                                     *
       *           Base Ccy amounts calc'd from max value "other ccy"  *
@@ -2116,4 +2118,4 @@
       /EJECT
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2013
+(c) Finastra International Limited 2013

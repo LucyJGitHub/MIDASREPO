@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas OF Validate Real Time Post for System Value')    *
@@ -9,45 +9,47 @@
       *                                                               *
       *  SD009557 - Midas OF Validate Real Time Post for System Value *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. CGL135   *CREATE   Date 10Jul13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL135   *CREATE   Date 10Jul13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL135 - Accounting Rules Process                            *
       *                                                               *
       *****************************************************************
       ** D-specs
       ** =======
- 
+
       ** Data structure for UserVal string
      D UserVal         DS           200
      D  Subsystem              1     10
      D  UserVal1_1             1      1
- 
+
       ** Data structure for AOSVALR0 string
      D @SVAL1          DS           200
      D  SVAL1                  1    200
      D  SVAL1_1                1      1
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Program return code
      D @RTCD           S              7
- 
+
       ** Error message id in GBSDUSRMSG
      D ErrMsgId        S              7
- 
+
       ** System value to be processed
      D SystemValue     S             20
- 
+
       ** Processing mode
      D ProcMode        S            190
- 
+
       ** Parameter variables for AOSVALR0 string
      DRTNCDE           S              7
      DSVALK2           S             20
@@ -68,16 +70,16 @@
      DSVAL9            S            200
      DSVALK0           S             20
      DSVAL10           S            200
- 
+
       ** General error indicator
      D GenError        S              1
- 
+
       ** Index for arrays of of error message ids etc
      D Idx             S              2P 0
- 
+
       ** Array of error message IDs
      D MsgIDXArr       S                   DIM(99) LIKE(ErrMsgId)
- 
+
       /EJECT
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
@@ -85,9 +87,9 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       * Retrieve the system value
- 
+
      C                   CALL      'AOSVALR0'
      C                   PARM                    RTNCDE
      C                   PARM                    ProcMode
@@ -110,13 +112,13 @@
      C                   PARM                    SVAL9
      C                   PARM                    SVALK0
      C                   PARM                    SVAL10
- 
+
       * If the system value is not found then issue a database error
- 
+
      C     RTNCDE        IFNE      '       '
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C     UserVal1_1    IFNE      'Y'
      C     UserVal1_1    ANDNE     'N'
      C                   EVAL      GenError = 'Y'
@@ -125,7 +127,7 @@
      C                   EVAL       *INLR = *ON
      C                   RETURN
      C                   ENDIF
- 
+
      C     SVAL1_1       IFEQ      'N'
      C     UserVal1_1    ANDEQ     'Y'
      C                   EVAL      GenError = 'Y'
@@ -134,9 +136,9 @@
      C                   EVAL       *INLR = *ON
      C                   RETURN
      C                   ENDIF
- 
+
       ** Check for error
- 
+
      C                   IF        @RTCD = '*ERROR'
      C                   EVAL      GenError = 'Y'
      C                   ADD       1             Idx
@@ -144,27 +146,27 @@
      C                   EVAL       *INLR = *ON
      C                   RETURN
      C                   ENDIF
- 
+
       ** Catchall for unprocessed errors
- 
+
      C                   IF        @RTCD <> *BLANKS
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Normal end processing
- 
+
      C                   EVAL      GenError = ' '
      C                   EVAL      *INLR = *ON
- 
+
      C                   RETURN
       /EJECT
       *****************************************************************
       *  *INZSR - Program Initialisation routine                      *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
- 
+
       ** System value to be processed
      C                   PARM                    SystemValue
       ** Value entered by user
@@ -177,7 +179,7 @@
      C                   PARM                    Idx
       ** Error message ID (array)
      C                   PARM                    MsgIDXArr
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -189,14 +191,14 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
      C                   DUMP
- 
+
      C                   EVAL      GenError = 'Y'
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
- 
+
      C                   RETURN
- 
+
      C                   ENDSR

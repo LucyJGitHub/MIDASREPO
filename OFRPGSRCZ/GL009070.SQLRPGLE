@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas OF Update Nostro Group Totals (Trigger Pgm)')
@@ -13,14 +13,16 @@
       *             when files involved in the Nostro Group Total     *
       *             calculations are amended.                         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD027208B          Date 03Jun14               *
-      *  Prev Amend No. MD027224           Date 28May14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD027208B          Date 03Jun14               *
+      *                 MD027224           Date 28May14               *
       *                 CGL155  *Create    Date 24Mar14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD027208B - GLRTNOTD not updated by the time totals are      *
       *              calculated                                       *
       *  MD027224 - Use Total forecast instead of o/s forecast in     *
@@ -62,7 +64,7 @@
       ** ¦ D-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      D LDA           E DS           256    EXTNAME(LDA)
       ** Local data area for database error details
       ** *LOCK IN LDA immediately before and OUT LDA immediately
@@ -72,90 +74,90 @@
       **       Defines:                     142 170 DBKEY
       **                                    171 180 DBPGM
       **                                    181 1830DBASE
- 
+
      D RUNDAT        E DS                  EXTNAME(RUNDAT)
       ** Data Area giving Installation Control Details
- 
+
      D SDSTAT        E DS                  EXTNAME(SDSTAT)
       ** Data Area for Standing Data Details
- 
+
      D RsaBeforeImg  E DS                  EXTNAME(RSACMTPD) PREFIX(B_)
       **  External DS for Before Image RSACMTPD
- 
+
      D RsaAfterImg   E DS                  EXTNAME(RSACMTPD) PREFIX(A_)
       **  External DS for After Image RSACMTPD
- 
+
      D RSACW1        E DS                  EXTNAME(GLRSACMW1)
       **  External DS for GLRSACMW1
- 
+
      D/COPY ZACPYSRC,PSDS
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D PARM1           DS
       ** First entry parameter
- 
+
      D  PFlName                1     10
       ** Physical file name
- 
+
      D  MbrName               21     30
       ** Member name
- 
+
      D  TrgEvent              31     31
       ** Trigger event 1=Insert, 2=Delete, 3=Update, 4=Read
- 
+
      D  TrgTime               32     32
       ** Trigger time  1=After, 2=Before
- 
+
      D  BOff                  49     52B 0
       ** Offset to the before image of the record
- 
+
      D  BLen                  53     56B 0
       ** Length of the before image of the record
- 
+
      D  AOff                  65     68B 0
       ** Offset to the after image of the record
- 
+
      D  ALen                  69     72B 0
       ** Length of the after image of the record
- 
+
      D  EntryData            117  10117A
       ** Images
- 
+
      D PARM2           DS
       ** Second entry parameter
- 
+
      D  Leng                   1      4B 0
- 
+
      D FGLData         DS
- 
+
       ** Event Type
- 
+
      D  WEventType             1     20
      D  WTrigEvent            21     21
- 
+
       ** Event Detail
- 
+
      D  WDetail               22   4021
      D  WAfter                22   2021
      D  WBefore             2022   4021
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D AfterImg        S           2000A
      D BeforeImg       S           2000A
      D DtqLen          S              5P 0
@@ -167,75 +169,75 @@
      D UpdRSAC         S              1
      D RsacAft         S              1
      D RsacBef         S              1
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Retrieve before/after image from PARM1 using length and offset
- 
+
      C                   EVAL      OffSet = BOff + 1
      C     BLen          SUBST     PARM1:OffSet  BeforeImg
- 
+
      C                   EVAL      OffSet = AOff + 1
      C     ALen          SUBST     PARM1:OffSet  AfterImg
- 
+
       ** Call the appropriate subroutine, based on received physical file
- 
+
      C                   SELECT
- 
+
      C                   WHEN      PFlName = 'ACCNTAB'
      C                   EXSR      SrACCNTAB
- 
+
      C                   WHEN      PFlName = 'PRONOPN'
      C                   EXSR      SrPRONOPN
- 
+
      C                   WHEN      PFlName = 'SDNOSTPD'
      C                   EXSR      SrSDNOSTPD
- 
+
      C                   WHEN      PFlName = 'SDCURRPD'
      C                   EXSR      SrSDCURRPD
- 
+
      C**********         WHEN      PFlName = 'GLTNOSTD'                                     MD027224
      C**********         EXSR      SrGLTNOSTD                                               MD027224
- 
+
      C                   WHEN      PFlName = 'GLFORTTD'                                     MD027224
      C                   EXSR      SrGLFORTTD                                               MD027224
- 
+
      C                   WHEN      PFlName = 'SDNGLHTD'
      C                   EXSR      SrSDNGLHTD
- 
+
      C                   WHEN      PFlName = 'RSACMTPD'
      C                   EXSR      SrRSACMTPD
                                                                                            MD027208B
      C                   WHEN      PFlName = 'GLRTNOTD'                                    MD027208B
      C                   EXSR      SrGLRTNOTD                                              MD027208B
- 
+
      C                   ENDSL
- 
+
       ** Send FGLData to CGLFORIQ data queue
- 
+
      C                   IF        FGLData <> *BLANKS
      C                   EXSR      SrSendDtaQ
      C                   ENDIF
- 
+
       ** Terminate Program
- 
+
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -247,22 +249,22 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SrACCNTAB     BEGSR
- 
+
      C                   EXSR      SrReset
- 
+
       ** Trigger event is Update Or Delete.
- 
+
      C                   IF        TrgEvent = '2' OR TrgEvent = '3'
      C                   EVAL      WEventType = 'MNT_ACCNTAB'
      C                   EVAL      WAfter = AfterImg
      C                   EVAL      WBefore = BeforeImg
      C                   EVAL      WTrigEvent = TrgEvent
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -274,22 +276,22 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SrPRONOPN     BEGSR
- 
+
      C                   EXSR      SrReset
- 
+
       ** Trigger event is Update Or Delete.
- 
+
      C                   IF        TrgEvent = '2' OR TrgEvent = '3'
      C                   EVAL      WEventType = 'MNT_PRONOPN'
      C                   EVAL      WAfter = AfterImg
      C                   EVAL      WBefore = BeforeImg
      C                   EVAL      WTrigEvent = TrgEvent
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -301,22 +303,22 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SrSDNOSTPD    BEGSR
- 
+
      C                   EXSR      SrReset
- 
+
       ** Trigger event is Update Or Delete.
- 
+
      C                   IF        TrgEvent = '2' OR TrgEvent = '3'
      C                   EVAL      WEventType = 'MNT_SDNOSTPD'
      C                   EVAL      WAfter = AfterImg
      C                   EVAL      WBefore = BeforeImg
      C                   EVAL      WTrigEvent = TrgEvent
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -328,22 +330,22 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SrSDCURRPD    BEGSR
- 
+
      C                   EXSR      SrReset
- 
+
       ** Trigger event is Update Or Delete.
- 
+
      C                   IF        TrgEvent = '2' OR TrgEvent = '3'
      C                   EVAL      WEventType = 'MNT_SDCURRPD'
      C                   EVAL      WAfter = AfterImg
      C                   EVAL      WBefore = BeforeImg
      C                   EVAL      WTrigEvent = TrgEvent
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -356,14 +358,14 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C*****SrGLTNOSTD    BEGSR                                                              MD027224
      C     SrGLFORTTD    BEGSR                                                              MD027224
- 
+
      C                   EXSR      SrReset
- 
+
       ** Trigger event is Insert.
- 
+
      C                   IF        TrgEvent = '1'
      C**********         EVAL      WEventType = 'MNT_GLTNOSTD'                              MD027224
      C                   EVAL      WEventType = 'MNT_GLFORTTD'                              MD027224
@@ -371,9 +373,9 @@
      C                   EVAL      WBefore = *BLANKS
      C                   EVAL      WTrigEvent = TrgEvent
      C                   ENDIF
- 
+
       ** Trigger event is Update Or Delete.
- 
+
      C                   IF        TrgEvent = '2' OR TrgEvent = '3'
      C**********         EVAL      WEventType = 'MNT_GLTNOSTD'                              MD027224
      C                   EVAL      WEventType = 'MNT_GLFORTTD'                              MD027224
@@ -381,9 +383,9 @@
      C                   EVAL      WBefore = BeforeImg
      C                   EVAL      WTrigEvent = TrgEvent
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -395,31 +397,31 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SrSDNGLHTD    BEGSR
- 
+
      C                   EXSR      SrReset
- 
+
       ** Trigger event is Insert.
- 
+
      C                   IF        TrgEvent = '1'
      C                   EVAL      WEventType = 'MNT_SDNGLHTD'
      C                   EVAL      WAfter = AfterImg
      C                   EVAL      WBefore = *BLANKS
      C                   EVAL      WTrigEvent = TrgEvent
      C                   ENDIF
- 
+
       ** Trigger event is Update Or Delete.
- 
+
      C                   IF        TrgEvent = '2' OR TrgEvent = '3'
      C                   EVAL      WEventType = 'MNT_SDNGLHTD'
      C                   EVAL      WAfter = AfterImg
      C                   EVAL      WBefore = BeforeImg
      C                   EVAL      WTrigEvent = TrgEvent
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -431,22 +433,22 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SrRSACMTPD    BEGSR
- 
+
      C                   EXSR      SrReset
- 
+
      C                   eval      UpdRSAC = *Blanks
      C                   eval      RsacAft = *Blanks
      C                   eval      RsacBef = *Blanks
      C                   clear                   RsaBeforeImg
      C                   clear                   RsaAfterImg
- 
+
       ** Trigger event is Insert.
- 
+
      C                   If        TrgEvent = '1'
      C                   eval      RsaAfterImg = AfterImg
- 
+
      C/exec SQL
      C+ declare LISTA cursor for
      C+ SELECT * from GLRSACMW1
@@ -457,11 +459,11 @@
      C+   and ACDE = :A_ACDE
      C+   and ASNC = :A_ASNC
      C/end-exec
- 
+
      C/exec SQL
      C+ open LISTA
      C/end-exec
- 
+
       ** Handle SQL Error (if not %EOF)
      C                   If        SQLCOD < 0
      C     *LOCK         IN        LDA
@@ -472,38 +474,38 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   EndIf
- 
+
      C/exec SQL
      C+ fetch next
      C+ from LISTA
      C+ into :RSACW1
      C/end-exec
- 
+
      C                   If        SQLCode <> 100
      C                   eval      UpdRsac = 'Y'
      C                   Endif
- 
+
      C/exec SQL
      C+ close LISTA
      C/end-exec
- 
+
      C                   Endif
- 
+
       ** Trigger event is Update or Delete
- 
+
      C                   If        TrgEvent = '2' OR TrgEvent = '3'
- 
+
      C                   eval      RsaBeforeImg = BeforeImg
      C     AfterImg      Ifne      *Blanks
      C                   eval      RsaAfterImg = AfterImg
      C                   Endif
- 
+
      C                   If        B_BRCA <> A_BRCA or
      C                             B_CUSN <> A_CUSN or
      C                             B_CCYD <> A_CCYD or
      C                             B_ACDE <> A_ACDE or
      C                             B_ASNC <> A_ASNC
- 
+
      C/exec SQL
      C+ declare LISTB cursor for
      C+ SELECT * from GLRSACMW1
@@ -514,11 +516,11 @@
      C+   and ACDE = :B_ACDE
      C+   and ASNC = :B_ASNC
      C/end-exec
- 
+
      C/exec SQL
      C+ open LISTB
      C/end-exec
- 
+
       ** Handle SQL Error (if not %EOF)
      C                   If        SQLCOD < 0
      C     *LOCK         IN        LDA
@@ -529,22 +531,22 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   EndIf
- 
+
      C/exec SQL
      C+ fetch next
      C+ from LISTB
      C+ into :RSACW1
      C/end-exec
- 
+
      C                   If        SQLCode <> 100
      C                   eval      UpdRsac = 'Y'
      C                   eval      RsacBef = 'Y'
      C                   Endif
- 
+
      C/exec SQL
      C+ close LISTB
      C/end-exec
- 
+
      C/exec SQL
      C+ declare LISTC cursor for
      C+ SELECT * from GLRSACMW1
@@ -555,11 +557,11 @@
      C+   and ACDE = :A_ACDE
      C+   and ASNC = :A_ASNC
      C/end-exec
- 
+
      C/exec SQL
      C+ open LISTC
      C/end-exec
- 
+
       ** Handle SQL Error (if not %EOF)
      C                   If        SQLCOD < 0
      C     *LOCK         IN        LDA
@@ -570,24 +572,24 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   EndIf
- 
+
      C/exec SQL
      C+ fetch next
      C+ from LISTC
      C+ into :RSACW1
      C/end-exec
- 
+
      C                   If        SQLCode <> 100
      C                   eval      UpdRsac = 'Y'
      C                   eval      RsacAft = 'Y'
      C                   Endif
- 
+
      C/exec SQL
      C+ close LISTC
      C/end-exec
- 
+
      C                   else
- 
+
      C/exec SQL
      C+ declare LISTD cursor for
      C+ SELECT * from GLRSACMW1
@@ -598,11 +600,11 @@
      C+   and ACDE = :B_ACDE
      C+   and ASNC = :B_ASNC
      C/end-exec
- 
+
      C/exec SQL
      C+ open LISTD
      C/end-exec
- 
+
       ** Handle SQL Error (if not %EOF)
      C                   If        SQLCOD < 0
      C     *LOCK         IN        LDA
@@ -613,39 +615,39 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   EndIf
- 
+
      C/exec SQL
      C+ fetch next
      C+ from LISTD
      C+ into :RSACW1
      C/end-exec
- 
+
      C                   If        SQLCode <> 100
      C                   eval      UpdRsac = 'Y'
      C                   eval      RsacBef = 'Y'
      C                   Endif
- 
+
      C/exec SQL
      C+ close LISTD
      C/end-exec
- 
+
      C                   Endif
- 
+
      C                   Endif
- 
- 
+
+
       ** Trigger event is Insert.
      C     UpdRSAC       Ifeq      'Y'
- 
+
      C                   IF        TrgEvent = '1'
      C                   EVAL      WEventType = 'MNT_RSACMTPD_AFTER'
      C                   EVAL      WAfter = AfterImg
      C                   EVAL      WBefore = *BLANKS
      C                   EVAL      WTrigEvent = TrgEvent
      C                   ENDIF
- 
+
       ** Trigger event is Update Or Delete.
- 
+
      C                   IF        TrgEvent = '2' OR TrgEvent = '3'
      C                   If        RsacBef = 'Y' and RsacAft = 'Y'
      C                   EVAL      WEventType = 'MNT_RSACMTPD_BOTH'
@@ -661,9 +663,9 @@
      C                   EVAL      WBefore = BeforeImg
      C                   EVAL      WTrigEvent = TrgEvent
      C                   ENDIF
- 
+
      C                   Endif
- 
+
      C                   ENDSR
                                                                                           MD027208B
       *****************************************************************                   MD027208B
@@ -701,7 +703,7 @@
      C                   ENDIF                                                            MD027208B
                                                                                           MD027208B
      C                   ENDSR                                                            MD027208B
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -711,13 +713,13 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SrReset       BEGSR
- 
+
      C                   CLEAR                   FGLData
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -729,46 +731,46 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SrSendDtaQ    BEGSR
- 
+
       ** Find the first non-blank position starting from the right
       ** Result field would contain the position relative to the left
- 
+
      C     ' '           CHECKR    FGLData       WLength
- 
+
      C                   CALL      'QSNDDTAQ'
      C                   PARM      'CGLFORIQ'    DtqNam
      C                   PARM                    DtqLib
      C                   PARM      WLength       DtqLen
      C                   PARM                    FGLData
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    PARM1
      C                   PARM                    PARM2
- 
+
       ** Read in data areas
- 
+
      C     *DTAARA       DEFINE                  RUNDAT
      C     *DTAARA       DEFINE                  LDA
      C     *DTAARA       DEFINE                  SDSTAT
      C                   IN        RUNDAT
      C                   IN        SDSTAT
- 
+
      C                   EVAL      DtqLib = LIBR + 'DPLIB'
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -783,19 +785,19 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *PSSR         BEGSR
- 
+
      C                   IF        WRun = *BLANKS
      C                   EVAL      WRun = 'Y'
      C                   DUMP
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
- 
+
       *****************************************************************

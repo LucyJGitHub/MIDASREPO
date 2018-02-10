@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas OF Forecast Totals by Nostro Code')
@@ -9,14 +9,16 @@
       *                                                               *
       *  GL000801 - Midas OF Forecast Totals by Nostro Code           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD032099           Date 27Jan15               *
-      *  Prev Amend No. MD031997           Date 22Jan15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD032099           Date 27Jan15               *
+      *                 MD031997           Date 22Jan15               *
       *                 CGL153   *CREATE   Date 05Feb14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD032099 - Auto-authorise forecasts with negative amount     *
       *             not included in Forecast Balance Calculation.     *
       *  MD031997 - Amended Forecast not correctly reflected in the   *
@@ -26,26 +28,26 @@
       *  CGL153 - Bank Position Report                                *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ D-specs: Arrays and Data Structures  ¦
       ** ¦ =======  ==========================  ¦
       ** +--------------------------------------+
- 
+
       ** Program Status Data Structure
      D/COPY ZACPYSRC,PSDS
- 
+
       ** External DS for Forecast Totals for Nostro Codes
      D TNOST         E DS                  EXTNAME(GLTNOSTD)
- 
+
       ** Local Data Area for database error details
      D LDA           E DS                  EXTNAME(LDA) DTAARA(LDA)
- 
+
      D                 DS
      D  WDATE0                 1      5  0
      D  WDATE1                 6     10  0
@@ -59,7 +61,7 @@
      D  WDATE9                46     50  0
      D  WDATE                  1     50  0
      D                                     DIM(10)
- 
+
      D                 DS
      D  WAMTA0                 1     15  0
      D  WAMTA1                16     30  0
@@ -127,15 +129,15 @@
      DSVALK0           S             20                                                     MD031997
      DSVAL10           S            200                                                     MD031997
                                                                                             MD031997
- 
+
       ** +--------------------------------------+
       ** ¦ D-specs: Declared variables          ¦
       ** ¦ =======  ==================          ¦
       ** +--------------------------------------+
- 
+
       ** Parameters for access object programs
      D PRtCd           S              7
- 
+
       ** Other fields used
      D X               S              2  0
      D WRun            S              1A   Inz
@@ -154,7 +156,7 @@
      D wA7BRCD         S              3A
      D wA7ACCD         S             10A
      D wA7ACSN         S              2S 0
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -166,32 +168,32 @@
       *****************************************************************
       * MAIN PROCEDURE                                                *
       *****************************************************************
- 
+
       ** Access record Forecast Total by Nostro Code
- 
+
      C/exec SQL
      C+ select * into :TNOST from GLTNOSTD
      C+ where NCCYCD = :PFCurr and
      C+ NCNONB = :PNosCode
      C/end-exec
- 
- 
+
+
      C                   IF        SQLCOD = 0
      C                   EXSR      SRLoadFore
      C                   ELSE
      C                   EXSR      SRPopulate
      C                   ENDIF
- 
+
       ** Compute for Forecast Total
- 
+
      C                   EXSR      SRForeBal
- 
+
       ** Update or write to file
- 
+
      C                   EXSR      SRUpdateTNOS
- 
+
      C                   EVAL      *INLR = *ON
- 
+
      C                   RETURN
       *****************************************************************
       *  P R O G R A M   E N D                                        *
@@ -203,11 +205,11 @@
       *                                                               *
       *****************************************************************
      C     SRPopulate    BEGSR
- 
+
      C                   EVAL      WTNOST = 'N'
- 
+
       ** Retrieve details for Nostro Code
- 
+
      C/exec sql
      C+ select A7BRCD, A7CUST, A7CYCD, A7ACSN, A7ACCD, A7NONB
      C+ into: wA7BRCD, :wA7CUST, :wA7CYCD, :wA7ACSN, :wA7ACCD, :wA7NONB
@@ -215,7 +217,7 @@
      C+ where A7CYCD = :PFCurr and
      C+ A7NONB = :PNosCode
      C/end-exec
- 
+
      C                   IF        SQLCOD <> 0
      C     *LOCK         IN        LDA
      C                   EVAL      DBKey = PFCurr + PNosCode
@@ -232,20 +234,20 @@
      C                   MOVE      wA7ACSN       NCACSQ
      C                   MOVE      wA7ACCD       WACOD
      C                   ENDIF
- 
+
       ** Set Forecast Dates
- 
+
      C                   EVAL      WDATE(1) = wBJRDNB
      C                   EVAL      X = 2
      C                   DOW       X <= 10
      C                   EVAL      WDATE(X) = WDATE(X-1) + 1
      C                   EVAL      X = X + 1
      C                   ENDDO
- 
+
       ** Set Forecast Amounts
- 
+
      C                   EVAL      WAMTA = 0
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -259,58 +261,58 @@
      C                   EVAL      WCTR = 1
      C                   EVAL      WAMTA = 0
      C                   EVAL      WDATE = 0
- 
+
      C                   DOW       WCTR <= 10
- 
+
      C                   SELECT
- 
+
      C                   WHEN      WCTR = 1
      C                   EVAL      WDATE(WCTR) = NCDAT0
      C                   EVAL      WAMTA(WCTR) = NCAMT0
- 
+
      C                   WHEN      WCTR = 2
      C                   EVAL      WDATE(WCTR) = NCDAT1
      C                   EVAL      WAMTA(WCTR) = NCAMT1
- 
+
      C                   WHEN      WCTR = 3
      C                   EVAL      WDATE(WCTR) = NCDAT2
      C                   EVAL      WAMTA(WCTR) = NCAMT2
- 
+
      C                   WHEN      WCTR = 4
      C                   EVAL      WDATE(WCTR) = NCDAT3
      C                   EVAL      WAMTA(WCTR) = NCAMT3
- 
+
      C                   WHEN      WCTR = 5
      C                   EVAL      WDATE(WCTR) = NCDAT4
      C                   EVAL      WAMTA(WCTR) = NCAMT4
- 
+
      C                   WHEN      WCTR = 6
      C                   EVAL      WDATE(WCTR) = NCDAT5
      C                   EVAL      WAMTA(WCTR) = NCAMT5
- 
+
      C                   WHEN      WCTR = 7
      C                   EVAL      WDATE(WCTR) = NCDAT6
      C                   EVAL      WAMTA(WCTR) = NCAMT6
- 
+
      C                   WHEN      WCTR = 8
      C                   EVAL      WDATE(WCTR) = NCDAT7
      C                   EVAL      WAMTA(WCTR) = NCAMT7
- 
+
      C                   WHEN      WCTR = 9
      C                   EVAL      WDATE(WCTR) = NCDAT8
      C                   EVAL      WAMTA(WCTR) = NCAMT8
- 
+
      C                   WHEN      WCTR = 10
      C                   EVAL      WDATE(WCTR) = NCDAT9
      C                   EVAL      WAMTA(WCTR) = NCAMT9
- 
+
      C                   ENDSL
- 
+
      C                   EVAL      WCTR += 1
- 
+
      C                   ENDDO
- 
- 
+
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -320,30 +322,30 @@
       *                                                               *
       *****************************************************************
      C     SRForeBal     BEGSR
- 
+
       ** Update balances for forecast dates greater than or equal to
       ** the individual forecast date.
- 
+
      C                   EVAL      X = 1
- 
+
      C                   DOW       X <= 10
- 
+
      C                   IF        PAProjNos = 'Y'
      C                             AND WDATE(X) >= WFDate
      C                             OR  PAProjNos = 'N'
      C                             AND POProjNos = 'Y'
      C                             AND WDATE(X) >= WFDate
- 
+
      C                   SELECT
- 
+
       ** On Insert: add up the forecast amount.
- 
+
      C                   WHEN      PActCode = 'I'
      C                   IF        WAAmt = *Zero AND
      C                             PAAZero <> 'Y'
      C                   EVAL      WAMTA(X)  = WAMTA(X)  + WFAmt
      C                   ENDIF
- 
+
       ** On Amend:
       ** If forecast amount was changed, subtract the original forecast
       **    amount, then add the new forcast amount.
@@ -351,7 +353,7 @@
       **    from 'Y' to 'N', reduce the original forecast amount.
       ** If project in nostro flag was changed from 'N' to 'Y', add
       **    forecast amount.
- 
+
      C                   WHEN      PActCode = 'A'
      C                   IF        WFIUPB = 'N' And WFDate < wBJRDNB                        MD031997
      C                   GOTO      NoUpdate                                                 MD031997
@@ -365,9 +367,9 @@
      C                   EVAL      WAMTA(X)  = WAMTA(X) - WOFAmt
      C                   ENDIF
      C     NoUpdate      TAG                                                                MD031997
- 
+
       ** On delete: reduce the forecast amount
- 
+
      C                   WHEN      PActCode = 'D'
      C                   IF        WFIUPB = 'N' And WFDate < wBJRDNB                        MD031997
      C                   GOTO      NoDelete                                                 MD031997
@@ -376,14 +378,14 @@
      C                   EVAL      WAMTA(X)  = WAMTA(X)  - WFAmt
      C                   ENDIF
      C     NoDelete      TAG                                                                MD031997
- 
+
      C                   ENDSL
      C                   ENDIF
- 
+
      C                   ADD       1             X
- 
+
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -393,14 +395,14 @@
       *                                                               *
       *****************************************************************
      C     SRUpdateTNOS  BEGSR
- 
+
      C                   IF        WFIUPB = 'N' And WFDate < wBJRDNB                        MD031997
      C                   GOTO      NoAction                                                 MD031997
      C                   ENDIF                                                              MD031997
      C                   IF        WTNOST = 'Y'
- 
+
       ** Update Forecast Available Amount
- 
+
      C/exec SQL
      C+ update GLTNOSTD set NCDAT0 = :WDATE0
      C+ , NCDAT1 = :WDATE1
@@ -425,11 +427,11 @@
      C+ where NCCYCD = :PFCurr and
      C+ NCNONB = :PNosCode
      C/end-exec
- 
+
      C                   ELSE
- 
+
       ** Write Forecast Totals for Nostro Codes
- 
+
      C/exec SQL
      C+ insert into GLTNOSTD
      C+ (
@@ -490,10 +492,10 @@
      C+ , :WAMTA9
      C+ )
      C/end-exec
- 
+
      C     NoAction      TAG                                                                MD031997
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -503,28 +505,28 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
       ** Input Parameters
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    Param
- 
+
       ** Set off program indicators
- 
+
      C                   EVAL      *INU7 = *OFF
      C                   EVAL      *INU8 = *OFF
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBPGM  =  PSProcPgm
      C                   OUT       LDA
- 
+
       ** Access Bank details
- 
+
      C/exec sql
      C+ select BJRDNB into :wBJRDNB
      C+ from SDBANKPD
      C/end-exec
- 
+
      C                   IF        SQLCOD <> 0
      C     *LOCK         IN        LDA
      C                   EVAL      DBKey = '*FIRST'
@@ -533,9 +535,9 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Initialize date and amount fields if non-blanks
- 
+
      C                   IF        PFAmt <> *Blanks
      C                   EVAL      WFAmt   = %DEC(%TRIM(PFAmt):15:0)
      C                   ENDIF
@@ -609,17 +611,17 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
      C                   IF        WRun = *Blanks
      C                   EVAL      WRun = 'Y'
      C                   DUMP
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *On
      C                   EVAL      *INU8 = *On
      C                   EVAL      *INLR = *On
      C                   EVAL      PRTCD = '*ERROR'
- 
+
      C                   RETURN
- 
+
      C                   ENDSR

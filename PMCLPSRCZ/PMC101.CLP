@@ -7,17 +7,18 @@
 /*                                                                   */
 /*       PMC101 - PM PORTFOLIO CLLOSURE                              */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.02 ---------------------------------------------------*/
-/*       Last Amend No. 147295             Date 08Nov98              */
+/*       Prev Amend No. 147295             Date 08Nov98              */
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev AMend No. S01408             Date 11May95              */
+/*                      S01408             Date 11May95              */
 /*                      S01486             Date 02Jun94              */
 /*                      049421             DATE 18JAN93              */
 /*                      S01189     GB      DATE 25MAR92              */
@@ -25,6 +26,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       147295  -  Include RCF processing.                          */
 /*                  See also PM1010.                                 */
 /*       S01408  -  Addition of core hook PMC101MP1                  */
@@ -42,7 +44,7 @@
 /**********  PGM        PARM(&CNAM &CSEQ)                               147295*/
              PGM        PARM(&CNAM &CSEQ &RSEQ &RLVL &RENT)           /*147295*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
              DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5)
@@ -283,5 +285,5 @@
              ENDDO
 ABNOR:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 ENDPGM

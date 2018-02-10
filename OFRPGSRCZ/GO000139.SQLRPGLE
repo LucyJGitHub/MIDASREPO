@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas OF MT940/950 I/C generation status')
@@ -9,39 +9,41 @@
       *                                                               *
       *  GO000139 - Midas OF MT940/950 I/C Generation Status          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. CGL146A   *CREATE  Date 10Jul13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL146A   *CREATE  Date 10Jul13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL146A - MT940/MT950 Production in Input Cycle              *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Files                                ¦
       ** ¦ =====                                ¦
       ** +--------------------------------------+
- 
+
      FGPZONEL2  IF   E           K DISK    INFSR(*PSSR)
      FGLNWACL4  IF   E           K DISK    INFSR(*PSSR)
      FGLNW94L2  IF   E           K DISK    INFSR(*PSSR)
      FSDNWRKI0  IF   E           K DISK    INFSR(*PSSR)
      FGPDWNLL0  UF A E           K DISK    INFSR(*PSSR)
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D                 DS
      D  CountN                 1      5  0
      D  CountA                 1      5
- 
+
       ** Program Status Data Structure
      D/COPY ZACPYSRC,PSDS
- 
+
       ** Midas Local Data Area for database error reporting
      D LDA           E DS           256    EXTNAME(LDA) DTAARA(LDA)
       ** The following fields are defined in the external file:
@@ -57,25 +59,25 @@
       ** +--------------------------------------+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External Data Structure for Bank Details
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** DS for access programs: Short Data Structure
- 
- 
+
+
      D @RUN            S              1
      D Value           S             50
      D Zone            S             10
      D CountX          S              5  0
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    System_ID         2
      C                   PARM                    MidasPhase        1
@@ -86,24 +88,24 @@
      C                   PARM                    Enq_Program      10
      C                   PARM                    Enq_Parms        30
      C                   PARM                    Unauth_Ind        1
- 
+
       ** Retrieve Bank details.
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      '*DBERR '     P@RTCD            7
      C                   PARM      '*FIRST '     P@OPTN            7
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
      C                   IF        MidasPhase = 'C'
      C                   EVAL      Value = *blanks
      C                   ELSE
      C                   EVAL      CountN = 0
      C                   ENDIF
- 
+
      C                   READ      SDNWRKI0                               90
      C                   DOW       *IN90 = *OFF
      C                   IF        EDP950 = 'Y' OR EDP940 = 'Y'
- 
+
      C     EDNWR1        CHAIN     GLNWACL4                           91
      C                   DOW       *IN91 = *OFF
      C                   IF        NAG950 = 'Y' AND EDP950 = 'Y'
@@ -111,8 +113,8 @@
      C                   ENDIF
      C     EDNWR1        READE     GLNWACL4                               91
      C                   ENDDO
- 
- 
+
+
      C     EDNWR1        CHAIN     GLNW94L2                           91
      C                   DOW       *IN91 = *OFF
      C                   IF        N4G940 = 'Y' AND EDP940 = 'Y'
@@ -123,28 +125,28 @@
      C                   ENDIF
      C                   READ      SDNWRKI0                               90
      C                   ENDDO
- 
+
      C                   IF        %Open(GPDWNLL0)
      C                   CLOSE     GPDWNLL0
      C                   ENDIF
- 
+
      C     GPDWNLL0Key   KLIST
      C                   KFLD                    DLMSID
      C                   KFLD                    DLKEYD
- 
+
       ** Update Global Processing download file.
- 
+
      C                   Open      GPDWNLL0
      C                   EVAL      DLMSID = System_ID
      C                   EVAL      DLKEYD = Key_Desc
- 
+
      C     GPDWNLL0Key   SETLL     GPDWNLL0
      C     GPDWNLL0Key   CHAIN     GPDWNLL0                           11
- 
+
      C                   IF        MidasPhase <> 'C'
      C                   EVAL      Value = CountA
      C                   ENDIF
- 
+
      C                   EVAL      DLVAL = Value
      C                   EVAL      DLMPGM = Maint_Program
      C                   EVAL      DLMPRM = Maint_Parms
@@ -157,7 +159,7 @@
      C                   UPDATE    @DWNLL0
      C                   ENDIF
      C                   Close     GPDWNLL0
- 
+
      C     ENDPGM        TAG
      C                   EVAL      *INLR = *ON
      C                   RETURN
@@ -173,14 +175,14 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     UpdateCountA  BEGSR
- 
+
       ** If the Midas phase is not Input Cycle then set data to blank.
- 
+
      C                   IF        MidasPhase <> 'C'
      C                   EVAL      CountX = 0
- 
+
      C/EXEC SQL
      C+  SELECT COUNT(*) INTO :CountX FROM GLMR94PD WHERE
      C+      MRNWRK=:NANWRK  AND
@@ -194,21 +196,21 @@
      C+      MRRDTE=:BJRDNB  AND
      C+      MRSTAT= 'GENERATED'
      C/END-EXEC
- 
+
       ** Check for successful completion
- 
+
      C                   IF        SQLCOD <> 0
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        CountX = 0
      C                   EVAL      CountN = CountN + 1
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C     UpdateCountAE ENDSR
- 
+
       /EJECT
       *****************************************************************
       *                                                               *
@@ -221,14 +223,14 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     UpdateCountB  BEGSR
- 
+
       ** If the Midas phase is not Input Cycle then set data to blank.
- 
+
      C                   IF        MidasPhase <> 'C'
      C                   EVAL      CountX = 0
- 
+
      C/EXEC SQL
      C+  SELECT COUNT(*) INTO :CountX FROM GLMR94PD WHERE
      C+      MRNWRK=:N4NWRK  AND
@@ -242,21 +244,21 @@
      C+      MRRDTE=:BJRDNB  AND
      C+      MRSTAT= 'GENERATED'
      C/END-EXEC
- 
+
       * Check for successful completion
- 
+
      C                   IF        SQLCOD <> 0
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        CountX = 0
      C                   EVAL      CountN = CountN + 1
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C     UpdateCountBE ENDSR
- 
+
       /EJECT
       *****************************************************************
       *                                                               *
@@ -270,17 +272,17 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *PSSR         BEGSR
- 
+
      C                   IF        @RUN = *BLANK
      C                   EVAL      @RUN = 'Y'
      C                   DUMP
      C                   ENDIF
- 
+
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
- 
+
       *****************************************************************

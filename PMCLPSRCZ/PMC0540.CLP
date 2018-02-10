@@ -7,11 +7,12 @@
 /*                                                                  */
 /*       PMC0540 PM TURNOVER BY INDUSTRY PER DEPARTMENT             */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
 /*                                                                  */
-/*       Last Amend No. CER059             Date 19Jul10              */
-/*       Prev Amend No. BUG23967           Date 15May09              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CER059             Date 19Jul10              */
+/*                      BUG23967           Date 15May09              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -24,6 +25,7 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CER059 - German Feature Upgrade to Delhi                    */
 /*       BUG23967 - Add Local Industry Code Field.                  */
 /*       093976  -  Change PMSTAT to show that PMC0900 is running   */
@@ -39,7 +41,7 @@
              PGM        PARM(&RSEQ &RLVL &RENT)                       /*S01486*/
 /*                                                                   */
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&RSEQ) TYPE(*CHAR) LEN(5)                 /*S01486*/
              DCL        VAR(&RLVL) TYPE(*CHAR) LEN(1)                 /*S01486*/
@@ -189,6 +191,6 @@ DATAAREA:                                                             /*093976*/
 /*END:********ENDPGM                                                    S01486*/
 END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
                                                                       /*S01486*/
              ENDPGM                                                   /*S01486*/

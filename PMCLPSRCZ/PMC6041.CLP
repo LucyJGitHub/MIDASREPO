@@ -8,19 +8,21 @@
 /*       PMC6041 - PM Net Currency Commitment Report Selection       */
 /*                 (On Request Processing)                           */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Last Amend No. CPM005             Date 21Jun96              */
-/*       Prev Amend No. S01124             Date 13Jun94              */
+/*       Prev Amend No. CPM005             Date 21Jun96              */
+/*                      S01124             Date 13Jun94              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CPM005 - Private Banking Phase II                           */
 /*                Focus Group Changes Upgraded to DBA                */
 /*       S01124 - PBFG/1 - Change Customer/Portfolio Base Currency   */
@@ -51,7 +53,7 @@
              DCL        VAR(&RENT) TYPE(*CHAR) LEN(3)                 /*CPM005*/
              DCL        VAR(&PARM) TYPE(*CHAR) LEN(100)               /*CPM005*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /*  GLOBAL MONITOR MESSAGE:                                          */
@@ -370,5 +372,5 @@
 /*********** ENDPGM                                                */ /*CPM005*/
  ENDPGM:     RCLRSC
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM                                                   /*CPM005*/

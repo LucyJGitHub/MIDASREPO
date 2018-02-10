@@ -8,13 +8,15 @@
 /*       MEC0008 - Midas ME Upload and Convert Multicash MT100s to   */
 /*                 Swift MT103s                                      */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2013           */
+/*       (c) Finastra International Limited 2013                     */
 /*                                                                   */
-/*       Last Amend No. AR1070196          Date 20Feb13              */
-/*       Prev Amend No. CFT135  *CREATE    Date 20Feb13              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR1070196          Date 20Feb13              */
+/*                      CFT135  *CREATE    Date 20Feb13              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*   AR1070196 - CFT135 - Submit job before outputting confirmation  */
 /*               screen (Child: AR1070198)                           */
 /*   CFT135 - MT100 MultiCash Interface                              */

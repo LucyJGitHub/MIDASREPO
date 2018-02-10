@@ -7,13 +7,15 @@
 /*                                                                  */
 /*       GLC000589 - REAL TIME POSTINGS                             */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2014          */
+/*       (c) Finastra International Limited 2014                    */
 /*                                                                  */
-/*       Last Amend No. MD028241           Date 19Aug14             */
-/*       Prev Amend No. MD025973  *CREATE  Date 25Mar14             */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD028241           Date 19Aug14              */
+/*                      MD025973 *CREATE   Date 25Mar14              */
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD028241 - Real Time processing rollback issue.            */
 /*       MD025973 - Intermitent Generation of Movement in MT940     */
 /*                                                                  */
@@ -23,7 +25,7 @@
              PGM        PARM(&BNUM)                                                     /*MD028241*/
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2014')
  
              DCL        VAR(&BNUM) TYPE(*CHAR) LEN(3)
@@ -248,7 +250,7 @@ ABNOR:
              ENDCMTCTL
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              DLTOVR     FILE(*ALL)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
              ENDPGM

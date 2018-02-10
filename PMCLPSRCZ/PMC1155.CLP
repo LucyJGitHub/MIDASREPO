@@ -7,19 +7,21 @@
 /*                                                                   */
 /*       PMC1155 -  PM Mature Flat Position For Pool Portfolio       */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. S01486             DATE 10AUG94              */
-/*       PREV AMEND NO. 056460             DATE 07JUN93              */
+/*       Prev Amend No. S01486             Date 10Aug94              */
+/*                      056460             Date 07Jun93              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       S01486 - Portfolio Management Upgrade to Release 10.        */
 /*       056460 - FIX TO ALLOW PERFORMANCE ON POOL PORTFOLIOS        */
 /*                                                                   */
@@ -30,7 +32,7 @@
 /*********************************************************************/
              PGM
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&DATA) TYPE(*CHAR) LEN(52)
  
@@ -98,5 +100,5 @@
  
 /**********  ENDPGM          ***/                                     /*S01486*/
 ENDPGM:      CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

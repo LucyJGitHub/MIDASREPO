@@ -7,16 +7,17 @@
 /*                                                                   */
 /*       PMC4210 - RECONCILE COB CAPITAL FLOW                        */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CCB020             Date 06Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CCB020             Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. 097389             DATE 02JUL96              */
+/*                      097389             Date 02Jul96              */
 /*                      101266             DATE 07FEB96              */
 /*                      094891             DATE 23OCT95              */
 /*                      085871             DATE 16MAR95              */
@@ -25,6 +26,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CCB020 - COB Restructure - Secondary COB Infrastructure     */
 /*       097389 - Matching is not done between transactions (reports)*/
 /*       101266 - Bank Portfolios                                    */
@@ -46,7 +48,7 @@
 /*********** PGM                                                   */ /*S01486*/
              PGM        PARM(&RSEQ &RLEV &RENT)                       /*S01486*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(52)
@@ -260,5 +262,5 @@ PM4210:                                                               /*S01486*/
              DLTOVR     FILE(*ALL)                                    /*094891*/
              MONMSG     MSGID(CPF0000)                                /*094891*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM                                                   /*S01486*/

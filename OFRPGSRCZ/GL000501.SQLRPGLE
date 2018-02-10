@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas OF Forecast Avail. Balance Calculation - I/C')
@@ -9,10 +9,11 @@
       *                                                               *
       *  GL000501 - Midas OF Forecast Avail. Bal. Calculation - I/C   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD032099           Date 27Jan15               *
-      *  Prev Amend No. MD031997           Date 22Jan15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD032099           Date 27Jan15               *
+      *                 MD031997           Date 22Jan15               *
       *                 CGL153             Date 05Feb14               *
       *                 MD024950           Date 11Feb14               *
       *                 MD024013           Date 12Dec13               *
@@ -21,6 +22,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD032099 - Auto-authorise forecasts with negative amount     *
       *             not included in Forecast Balance Calculation.     *
       *  MD031997 - Amended Forecast not correctly reflected in the   *
@@ -34,12 +36,12 @@
       *  CGL145B - Subsidiaries Daily Sweeping Forecast (Drop 3)      *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ D-specs: Arrays and Data Structures  ¦
       ** ¦ =======  ==========================  ¦
@@ -53,31 +55,31 @@
       **                                    181 1830DBase
       **                                    184 193 DBMod
       **                                    194 203 DBProc
- 
+
       ** Program Status Data Structure
      D/COPY ZACPYSRC,PSDS
- 
+
       ** External DS for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** External DS for Currency Details
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** External DS for Account Details
      D SDACCT        E DS                  EXTNAME(ACCNTAB)
      D                                     PREFIX(A_)
- 
+
       **  Short DS for access programs
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       **  Long DS for access programs
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
      ** File DS
      **   Midas OF Midas OF Forecast Available Balance Table
      D FOAVT         E DS                  EXTNAME(GLFOAVTD)
- 
- 
+
+
       ** Parameter data
      D InParm          DS           500
      D  ActnCode               1      1
@@ -104,28 +106,28 @@
      D**Filler**             112    500                                              CGL153 MD032099
      D  PAutoAuth            112    112                                                     MD032099
      D  Filler               113    500                                                     MD032099
- 
+
       ** Data structure for AOSVALR0 string
      D @SVAL1          DS           200
      D  SVAL1                  1    200
      D  SVAL1_1                1      1
- 
+
       ** +--------------------------------------+
       ** ¦ D-specs: Declared variables          ¦
       ** ¦ =======  ==================          ¦
       ** +--------------------------------------+
- 
+
       ** Parameters for access object programs
      D PRtCd           S              7
      D POptn           S              7
      D PCcy            S              3
- 
+
       ** Processing mode
      D ProcMode        S            190
- 
+
       ** Forecast Include Unmatched in Projected Balance
      D WFIUPB          S              1A
- 
+
       ** Parameter variables for AOSVALR0 string
      DRTNCDE           S              7
      DSVALK2           S             20
@@ -146,7 +148,7 @@
      DSVAL9            S            200
      DSVALK0           S             20
      DSVAL10           S            200
- 
+
       ** Paramaters for ZXRATE                                                              MD024013
      D  ZRATE1         S             13P 8                                                  MD024013
      D  ZMDI1          S              1A                                                    MD024013
@@ -166,7 +168,7 @@
      D PFrDecPlace     S              1  0
      D PToDecPlace     S              1  0
      D POutAmt         S             15  0
- 
+
       ** Other fields used
      D WRun            S              1A   Inz
      D WConvFAmt       S             15  0
@@ -191,7 +193,7 @@
      D WToXrate        S                   LIKE(A6SPRT)                                     MD024013
      D WToMDIn         S                   LIKE(A6MDIN)                                     MD024013
      D WToDecPlace     S                   LIKE(A6NBDP)
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -203,15 +205,15 @@
       *****************************************************************
       * MAIN PROCEDURE                                                *
       *****************************************************************
- 
+
       ** Check Transaction Received
- 
+
      C                   EXSR      SRCheck
- 
+
       ** End Program
- 
+
      C                   EVAL      *INLR = *ON
- 
+
      C                   RETURN
       *****************************************************************
       *  P R O G R A M   E N D                                        *
@@ -221,39 +223,39 @@
       *                                                               *
       *****************************************************************
      C     SRCheck       BEGSR
- 
+
      C                   EVAL      TOTAM = *Zeros
- 
+
       ** Convert only if amounts passed are non blanks
- 
+
      C                   IF        IndFCastDatX <> *Blanks
      C                   EVAL      IndFCastDat = %Dec(%Trim(IndFCastDatX):5:0)
      C                   ENDIF
- 
+
      C                   IF        FCastAmtX <> *Blanks
      C                   EVAL      FCastAmt = %Dec(%Trim(FCastAmtX):15:0)
      C                   ENDIF
- 
+
      C                   IF        ActlAmtX <> *Blanks
      C                   EVAL      ActlAmt = %Dec(%Trim(ActlAmtX):15:0)
      C                   ENDIF
- 
+
      C                   IF        AccntCodeX <> *Blanks
      C                   EVAL      AccntCode = %Dec(%Trim(AccntCodeX):10:0)
      C                   ENDIF
- 
+
      C                   IF        AccntSeqX <> *Blanks
      C                   EVAL      AccntSeq = %Dec(%Trim(AccntSeqX):2:0)
      C                   ENDIF
- 
+
      C                   IF        OFCastAmtX <> *Blanks
      C                   EVAL      OFCastAmt = %Dec(%Trim(OFCastAmtX):15:0)
      C                   ENDIF
- 
+
      C                   IF        OActlAmtX <> *Blanks
      C                   EVAL      OActlAmt = %Dec(%Trim(OActlAmtX):15:0)
      C                   ENDIF
- 
+
      C                   IF        ActnCode = 'A' or  ActnCode = 'D'                        MD031997
      C                   IF        WFIUPB = 'N' And IndFCastDat < BJRDNB                    MD031997
      C                   LEAVESR                                                            MD031997
@@ -261,37 +263,37 @@
      C                   ENDIF                                                              MD031997
                                                                                             MD031997
       * Verify that the transaction received must be processed
- 
+
       ** 'Projected on Retail' is 'N' or 'Actual is Zero' is 'Y'
       **  or 'Actual Amount' is not 0
       **  No processing to do for Actual amount
       **  In Amend mode processing to do for Original amount
- 
+
      C                   IF        PrjctRetl = 'N' Or ActlZero = 'Y' Or
      C                             ActlAmt <> 0
- 
+
       ** Action Code is Amend
- 
+
      C                   IF        ActnCode = 'A'
      C                   EXSR      SRAmO
      C                   ENDIF
- 
+
      C                   LEAVESR
      C                   ENDIF
- 
+
       ** 'Projected on Retail' is 'Y' and  'Actual is Zero' is not 'Y'
       **  and 'Actual Amount' is 0
- 
+
       ** Convert Forecast Currency if not equal
       ** to Account Currency
- 
+
      C                   IF        Currency <> FCastCCY
      C                   EXSR      SRConvert
      C                   ELSE
      C                   EVAL      WConvFAmt  = FCastAmt
      C                   EVAL      WConvOFAmt = OFCastAmt
      C                   ENDIF
- 
+
      C/exec SQL
      C+ declare LIST1 cursor for
      C+ select * from GLFOAVTD
@@ -302,15 +304,15 @@
      C+ AFACSQ = :AccntSeq and
      C+ AFDATE = :IndFCastDat
      C/end-exec
- 
+
      C/exec SQL
      C+ open LIST1
      C/end-exec
- 
+
       ** Handle SQL Error (If not %EOF)
- 
+
      C                   IF        SQLCOD < 0
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBASE = 2
      C                   EVAL      DBFILE = 'SQL STM'
@@ -318,70 +320,70 @@
      C                                   + ';  SQLCOD : ' + %char(SQLCOD)
      C                   OUT       LDA
      C                   EXSR      *PSSR
- 
+
      C                   ENDIF
- 
+
      C/exec SQL
      C+ fetch next
      C+ from LIST1
      C+ into: FOAVT
      C/end-exec
- 
+
       **  Status is not 'Reject'
- 
+
      C                   IF        Status <> 'REJECT'
                                                                                             MD024950
      C                   IF        Status = 'COMPLETE' AND WConvFAmt < 0                    MD024950
      C                             OR Status = 'AUTHORISE' AND WConvFAmt > 0                MD024950
- 
+
       ** Action Code is Insert
- 
+
      C                   IF        ActnCode = 'I'
      C                   EXSR      SRIn
      C                   ENDIF
- 
+
       ** Action Code is Amend
- 
+
      C                   IF        ActnCode = 'A'
      C                   EXSR      SRAm
      C                   ENDIF
- 
+
       ** Action Code is Delete
- 
+
      C                   IF        ActnCode = 'D'
      C                   EXSR      SRDe
      C                   ENDIF
- 
+
      C                   ENDIF                                                              MD024950
                                                                                             MD024950
      C                   ELSE
- 
+
       **  Status is 'Reject'
- 
+
       ** Action Code is Insert
- 
+
      C                   IF        ActnCode = 'I'
      C                   EXSR      SRInRej
      C                   ENDIF
- 
+
       ** Action Code is Amend
- 
+
      C                   IF        ActnCode = 'A'
      C                   EXSR      SRAmRej
      C                   ENDIF
- 
+
       ** Action Code is Delete
- 
+
      C                   IF        ActnCode = 'D'
      C                   EXSR      SRDeRej
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C/exec SQL
      C+ close LIST1
      C/end-exec
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -391,10 +393,10 @@
       *                                                               *
       *****************************************************************
      C     SRAmO         BEGSR
- 
+
      C                   IF        OPrjctRetl = 'Y' And  OActlZero <> 'Y' And
      C                             OActlAmt = 0
- 
+
      C/exec SQL
      C+ declare LIST2 cursor for
      C+ select * from GLFOAVTD
@@ -405,15 +407,15 @@
      C+ AFACSQ = :AccntSeq and
      C+ AFDATE = :IndFCastDat
      C/end-exec
- 
+
      C/exec SQL
      C+ open LIST2
      C/end-exec
- 
+
       ** Handle SQL Error (If not %EOF)
- 
+
      C                   IF        SQLCOD < 0
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBASE = 3
      C                   EVAL      DBFILE = 'SQL STM'
@@ -421,35 +423,35 @@
      C                                   + ';  SQLCOD : ' + %char(SQLCOD)
      C                   OUT       LDA
      C                   EXSR      *PSSR
- 
+
      C                   ENDIF
- 
+
      C/exec SQL
      C+ fetch next
      C+ from LIST2
      C+ into: FOAVT
      C/end-exec
- 
+
       ** If record found in GLFOAVTD
- 
+
      C                   IF        SQLCOD = 0
- 
+
       ** Convert Forecast Currency if not equal
       ** to Account Currency
- 
+
      C                   IF        Currency <> FCastCCY
      C                   EXSR      SRConvert
      C                   ELSE
      C                   EVAL      WConvFAmt  = FCastAmt
      C                   EVAL      WConvOFAmt = OFCastAmt
      C                   ENDIF
- 
+
      C                   EVAL      WAFAVAIL = *ZEROS
      C                   EVAL      WAFAVAIL = AFAVAIL - WConvOFAmt
      C                   EVAL      TOTAM = TOTAM - WConvOFAmt
- 
+
       ** Update Forecast Available Amount
- 
+
      C/exec SQL
      C+ update GLFOAVTD set AFAVAIL = :WAFAVAIL
      C+ where AFBRCA = :BrchCode and
@@ -459,18 +461,18 @@
      C+ AFACSQ = :AccntSeq and
      C+ AFDATE = :IndFCastDat
      C/end-exec
- 
+
       ** Update the Available Balance for other forward dates
      C                   EXSR      SRForw
- 
+
      C                   ENDIF
- 
+
      C/exec SQL
      C+ close LIST2
      C/end-exec
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -480,18 +482,18 @@
       *                                                               *
       *****************************************************************
      C     SRIn          BEGSR
- 
- 
+
+
       ** If record found in GLFOAVTD, then update
- 
+
      C                   IF        SQLCOD = 0
- 
+
      C                   EVAL      WAFAVAIL = *ZEROS
      C                   EVAL      WAFAVAIL = AFAVAIL + WConvFAmt
      C                   EVAL      TOTAM = TOTAM + WConvFAmt
- 
+
       ** Update Forecast Available Amount
- 
+
      C/exec SQL
      C+ update GLFOAVTD set AFAVAIL = :WAFAVAIL
      C+ where AFBRCA = :BrchCode and
@@ -501,13 +503,13 @@
      C+ AFACSQ = :AccntSeq and
      C+ AFDATE = :IndFCastDat
      C/end-exec
- 
+
      C                   ENDIF
- 
+
       ** If record not found in GLFOAVTD, then create
- 
+
      C                   IF        SQLCOD = 100
- 
+
       ** Retrieve previous Forecast if exists                                               MD023692
                                                                                             MD023692
      C                   EXSR      SRPrev                                                   MD023692
@@ -516,13 +518,13 @@
      C**********         EVAL      WAFAVAIL = WConvFAmt                                     MD023692
      C                   EVAL      WAFAVAIL = WConvFAmt + PRFAVAIL                          MD023692
      C                   EVAL      TOTAM = TOTAM + WConvFAmt
- 
+
       ** Get Facility Details
- 
+
      C                   EXSR      SRGetFcltyDtl
- 
+
       ** Insert Forecast Entry
- 
+
      C/exec SQL
      C+ insert into GLFOAVTD
      C+ (
@@ -552,11 +554,11 @@
      C+ )
      C/end-exec
      C                   ENDIF
- 
+
       ** Update the Available Balance for other forward dates
      C                   EXSR      SRForw
- 
- 
+
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -566,19 +568,19 @@
       *                                                               *
       *****************************************************************
      C     SRAm          BEGSR
- 
+
       ** If record found in GLFOAVTD
- 
+
      C                   IF        SQLCOD = 0
- 
+
      C                   EVAL      WAFAVAIL = *ZEROS
      C                   EVAL      WAFAVAIL = AFAVAIL - WConvOFAmt
      C                   EVAL      WAFAVAIL = WAFAVAIL + WConvFAmt
      C                   EVAL      TOTAM = TOTAM - WConvOFAmt
      C                   EVAL      TOTAM = TOTAM + WConvFAmt
- 
+
       ** Update Forecast Available Amount
- 
+
      C/exec SQL
      C+ update GLFOAVTD set AFAVAIL = :WAFAVAIL
      C+ where AFBRCA = :BrchCode and
@@ -588,13 +590,13 @@
      C+ AFACSQ = :AccntSeq and
      C+ AFDATE = :IndFCastDat
      C/end-exec
- 
+
       ** Update the Available Balance for other forward dates
      C                   EXSR      SRForw
- 
+
      C                   ENDIF
- 
- 
+
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -604,17 +606,17 @@
       *                                                               *
       *****************************************************************
      C     SRDe          BEGSR
- 
+
       ** If record found in GLFOAVTD
- 
+
      C                   IF        SQLCOD = 0
- 
+
      C                   EVAL      WAFAVAIL = *ZEROS
      C                   EVAL      WAFAVAIL = AFAVAIL - WConvFAmt
      C                   EVAL      TOTAM = TOTAM - WConvFAmt
- 
+
       ** Update Forecast Available Amount
- 
+
      C/exec SQL
      C+ update GLFOAVTD set AFAVAIL = :WAFAVAIL
      C+ where AFBRCA = :BrchCode and
@@ -624,12 +626,12 @@
      C+ AFACSQ = :AccntSeq and
      C+ AFDATE = :IndFCastDat
      C/end-exec
- 
+
       ** Update the Available Balance for other forward dates
      C                   EXSR      SRForw
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -639,17 +641,17 @@
       *                                                               *
       *****************************************************************
      C     SRInRej       BEGSR
- 
+
       ** If record found in GLFOAVTD
- 
+
      C                   IF        SQLCOD = 0
- 
+
      C                   EVAL      WAFAVAIL = *ZEROS
      C                   EVAL      WAFAVAIL = AFAVAIL - WConvFAmt
      C                   EVAL      TOTAM = TOTAM - WConvFAmt
- 
+
       ** Update Forecast Available Amount
- 
+
      C/exec SQL
      C+ update GLFOAVTD set AFAVAIL = :WAFAVAIL
      C+ where AFBRCA = :BrchCode and
@@ -659,12 +661,12 @@
      C+ AFACSQ = :AccntSeq and
      C+ AFDATE = :IndFCastDat
      C/end-exec
- 
+
       ** Update the Available Balance for other forward dates
      C                   EXSR      SRForw
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -674,19 +676,19 @@
       *                                                               *
       *****************************************************************
      C     SRAmRej       BEGSR
- 
+
       ** If record found in GLFOAVTD
- 
+
      C                   IF        SQLCOD = 0
- 
+
      C                   EVAL      WAFAVAIL = *ZEROS
      C                   EVAL      WAFAVAIL = AFAVAIL - WConvFAmt
      C                   EVAL      WAFAVAIL = WAFAVAIL - WConvOFAmt
      C                   EVAL      TOTAM = TOTAM - WConvFAmt
      C                   EVAL      TOTAM = TOTAM + WConvOFAmt
- 
+
       ** Update Forecast Available Amount
- 
+
      C/exec SQL
      C+ update GLFOAVTD set AFAVAIL = :WAFAVAIL
      C+ where AFBRCA = :BrchCode and
@@ -696,12 +698,12 @@
      C+ AFACSQ = :AccntSeq and
      C+ AFDATE = :IndFCastDat
      C/end-exec
- 
+
       ** Update the Available Balance for other forward dates
      C                   EXSR      SRForw
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -711,17 +713,17 @@
       *                                                               *
       *****************************************************************
      C     SRDeRej       BEGSR
- 
+
       ** If record found in GLFOAVTD
- 
+
      C                   IF        SQLCOD = 0
- 
+
      C                   EVAL      WAFAVAIL = *ZEROS
      C                   EVAL      WAFAVAIL = AFAVAIL + WConvFAmt
      C                   EVAL      TOTAM = TOTAM + WConvFAmt
- 
+
       ** Update Forecast Available Amount
- 
+
      C/exec SQL
      C+ update GLFOAVTD set AFAVAIL = :WAFAVAIL
      C+ where AFBRCA = :BrchCode and
@@ -731,12 +733,12 @@
      C+ AFACSQ = :AccntSeq and
      C+ AFDATE = :IndFCastDat
      C/end-exec
- 
+
       ** Update the Available Balance for other forward dates
      C                   EXSR      SRForw
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************                     MD023692
       /EJECT                                                                                MD023692
@@ -814,9 +816,9 @@
       *                                                               *
       *****************************************************************
      C     SRForw        BEGSR
- 
+
       ** Set file pointer to first record of GLFOAVTD
- 
+
      C/exec SQL
      C+ declare LIST3 cursor for
      C+ select * from GLFOAVTD
@@ -828,15 +830,15 @@
      C+ order by
      C+       AFDATE
      C/end-exec
- 
+
      C/exec SQL
      C+ open LIST3
      C/end-exec
- 
+
       ** Handle SQL Error (If not %EOF)
- 
+
      C                   IF        SQLCOD < 0
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBASE = 4
      C                   EVAL      DBFILE = 'SQL STM'
@@ -844,28 +846,28 @@
      C                                   + ';  SQLCOD : ' + %char(SQLCOD)
      C                   OUT       LDA
      C                   EXSR      *PSSR
- 
+
      C                   ENDIF
- 
+
      C/exec SQL
      C+ fetch next
      C+ from LIST3
      C+ into: FOAVT
      C/end-exec
- 
+
       ** Read Total Forecast Table until end of file
- 
+
      C                   DOW       SQLCode <> 100
- 
+
      C                   IF        AFDATE > IndFCastDat
- 
+
      C                   EVAL      WAFDATE = *ZEROS
      C                   EVAL      WAFDATE = AFDATE
      C                   EVAL      WAFAVAIL = *ZEROS
      C                   EVAL      WAFAVAIL = AFAVAIL + TOTAM
- 
+
       ** Update Forecast Available Amount
- 
+
      C/exec SQL
      C+ update GLFOAVTD set AFAVAIL = :WAFAVAIL
      C+ where AFBRCA = :BrchCode and
@@ -875,21 +877,21 @@
      C+ AFACSQ = :AccntSeq and
      C+ AFDATE = :WAFDATE
      C/end-exec
- 
+
      C                   ENDIF
- 
+
      C/exec SQL
      C+ fetch next
      C+ from LIST3
      C+ into: FOAVT
      C/end-exec
- 
+
      C                   ENDDO
- 
+
      C/exec SQL
      C+ close LIST3
      C/end-exec
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -899,15 +901,15 @@
       *                                                               *
       *****************************************************************
      C     SRConvert     BEGSR
- 
+
       ** Retrieve currency details for FROM currency (Forecast Currency)
- 
+
      C                   CALL      'AOCURRR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY'        POPTN
      C                   PARM      FCastCCY      PCCY
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C                   IF        PRTCD <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBKey = FCastCCY
@@ -920,15 +922,15 @@
      C                   EVAL      WFrMDIn  = A6MDIN
      C                   EVAL      WFrDecPlace = A6NBDP
      C                   ENDIF
- 
+
       ** Retrieve currency details for TO currency (Account Currency)
- 
+
      C                   CALL      'AOCURRR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY'        POPTN
      C                   PARM      Currency      PCCY
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C                   IF        PRTCD <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBKey = Currency
@@ -941,7 +943,7 @@
      C                   EVAL      WToMDIn  = A6MDIN                                        MD024013
      C                   EVAL      WToDecPlace = A6NBDP
      C                   ENDIF
- 
+
       *                                                                                     MD024013
      C                   Z-ADD     WFrXrate      ZRATE1                                     MD024013
      C                   MOVE      WFrMDIn       ZMDI1                                      MD024013
@@ -959,7 +961,7 @@
      C                   MOVE      ZMDIX         ZMD                                        MD024013
                                                                                             MD024013
       ** Convert Forecast Amount
- 
+
      C                   CALL      'ZCONVZ1'
      C                   PARM      FCastAmt      PAmnt
      C**********         PARM      WFrXRate      PFrXRate                                   MD024013
@@ -971,11 +973,11 @@
      C                   PARM      WFrDecPlace   PFrDecPlace
      C                   PARM      WToDecPlace   PToDecPlace
      C                   PARM                    POutAmt
- 
+
      C                   EVAL      WConvFAmt = POutAmt
- 
+
       ** Convert Original Forecast Amount
- 
+
      C                   CALL      'ZCONVZ1'
      C                   PARM      OFCastAmt     PAmnt
      C**********         PARM      WFrXRate      PFrXRate                                   MD024013
@@ -987,9 +989,9 @@
      C                   PARM      WFrDecPlace   PFrDecPlace
      C                   PARM      WToDecPlace   PToDecPlace
      C                   PARM                    POutAmt
- 
+
      C                   EVAL      WConvOFAmt = POutAmt
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -999,7 +1001,7 @@
       *                                                               *
       *****************************************************************
      C     SRGetFcltyDtl BEGSR
- 
+
      C                   MOVE      *Blanks       WFCCUS
      C                   MOVE      *Zeros        WFACT
      C                   MOVE      *Zeros        WFCNO
@@ -1008,7 +1010,7 @@
      C                   MOVE      AccntCode     @ACCD            10
      C                   MOVE      AccntSeq      @ACSN             2
      C                   MOVE      BrchCode      @BRCA             3
- 
+
      C                   CALL      'AOACCTR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY    '    POPTN
@@ -1019,13 +1021,13 @@
      C                   PARM                    @ACSN
      C                   PARM                    @BRCA
      C     SDACCT        PARM      SDACCT        DSSDY
- 
+
      C     PRTCD         IFEQ      *BLANKS
      C                   EVAL      WFCCUS = A_FCCU
      C                   EVAL      WFACT = A_FACT
      C                   EVAL      WFCNO = A_FCNO
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1035,29 +1037,29 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    InParm
- 
+
       ** Set off program indicators
- 
+
      C                   EVAL      *INU7 = *OFF
      C                   EVAL      *INU8 = *OFF
- 
+
      C     *DTAARA       DEFINE                  LDA
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBPGM  =  PSProcPgm
      C                   OUT       LDA
- 
+
       ** Access Bank details
       **   Retrieve Run day number
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      *Blanks       PRtCd
      C                   PARM      '*FIRST '     POptn
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
      C                   IF        PRtCd <> *Blanks
      C     *LOCK         IN        LDA
      C                   EVAL      DBKey = POptn
@@ -1066,9 +1068,9 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       * Retrieve the system value
- 
+
      C                   EVAL      ProcMode = 'ForecastIncUnmatched'
      C                   CALL      'AOSVALR0'
      C                   PARM                    RTNCDE
@@ -1092,17 +1094,17 @@
      C                   PARM                    SVAL9
      C                   PARM                    SVALK0
      C                   PARM                    SVAL10
- 
+
       * If the system value is not found then issue a database error
- 
+
      C     RTNCDE        IFNE      '       '
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       * Get the Forecast Include Unmatched in Projected Balance
- 
+
      C                   EVAL      WFIUPB = SVAL1
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1119,17 +1121,17 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
      C                   IF        WRun = *Blanks
      C                   EVAL      WRun = 'Y'
      C                   DUMP
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *On
      C                   EVAL      *INU8 = *On
      C                   EVAL      *INLR = *On
      C                   EVAL      PRTCD = '*ERROR'
- 
+
      C                   RETURN
- 
+
      C                   ENDSR

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2015')
+     H COPYRIGHT('(c) Finastra International Limited 2015')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
       *****************************************************************
@@ -8,13 +8,15 @@
       *                                                               *
       *  RE000007 - Midas OF Generation of Modelo 123                 *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2015            *
+      *  (c) Finastra International Limited 2015                      *
       *                                                               *
-      *  Last Amend No. MD034332           Date 31Mar15               *
-      *  Prev Amend No. CRE104  *CREATE    Date 31Mar15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD034332           Date 31Mar15               *
+      *                 CRE104  *CREATE    Date 31Mar15               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD034332 - Resultado a ingresar field on the generated       *
       *             Modelo 123 report has erroneous value             *
       *  CRE104 - Modelo 123 and 193 Reports                          *

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2015')
+     H COPYRIGHT('(c) Finastra International Limited 2015')
       *****************************************************************
 /*STD *  RPGSQLMOD                                                    *
       *****************************************************************
@@ -11,13 +11,15 @@
       *  Function:  This program allow users to request for Modelo    *
       *               123 report                                      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2015            *
+      *  (c) Finastra International Limited 2015                      *
       *                                                               *
-      *  Last Amend No. MD034330           Date 07May15               *
-      *  Prev Amend No. CRE104  *CREATE    Date 04Mar15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD034330           Date 07May15               *
+      *                 CRE104  *CREATE    Date 04Mar15               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD034330 - Cancelled 123 request on the Modelo 123 screen is *
       *             saved on the audit file.                          *
       *  CRE104 - Modelo 123 and 193 Reports                          *
@@ -990,7 +992,7 @@
 
      C                   ENDSR
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2013
+(c) Finastra International Limited 2013
 ** MOSNUM
 01
 02

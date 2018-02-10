@@ -7,18 +7,20 @@
 /*                                                                   */
 /*       PMC0002 - Pool Portfolio Files Setup                        */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. S01486  *CREATE    DATE 24NOV94              */
+/*       Prev Amend No. S01486  *CREATE    Date 24Nov94              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       S01486 - Portfolio Management Enhancements (New program)    */
 /*                                                                   */
 /*********************************************************************/
@@ -30,7 +32,7 @@
              PGM        PARM(&RTNCDE &IPMODE)                         /*S01496*/
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
              DCL        VAR(&RTCD) TYPE(*CHAR) LEN(1) VALUE(' ')
@@ -101,5 +103,5 @@ ABNOR:       SNDPGMMSG  MSG('Program PMC0002 ended ABNORMALLY.') +
 /**/
 END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

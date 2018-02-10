@@ -8,12 +8,14 @@
 /*       GLC000030 - Initialisation program to setup feature         */
 /*                   dependencies for CGL176                         */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2015           */
+/*       (c) Finastra International Limited 2015                     */
 /*                                                                   */
-/*       Last Amend No. CGL176  *CREATE    DATE 11Sep15              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CGL176  *CREATE    Date 11Sep15              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CGL176 - Optimisation of Nostro Balances by Company         */
 /*                                                                   */
 /*********************************************************************/
@@ -21,7 +23,7 @@
              PGM        PARM(&RTNCDE &IPMODE)
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2015')
 /**/
              DCL        VAR(&RTCD) TYPE(*CHAR) LEN(1) VALUE(' ')
@@ -62,5 +64,5 @@ ABNOR:       SNDPGMMSG  MSG('Program GLC000030 ended ABNORMALLY.') +
 /**/
 END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

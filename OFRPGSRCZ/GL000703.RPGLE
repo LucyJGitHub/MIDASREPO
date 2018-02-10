@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas OF Send Forecast Individ. Msg to JMS')           *
@@ -10,10 +10,11 @@
       *  GL000703 - Midas OF Automatic Update/Create Indivdidual      *
       *             Forecast - JAVA API Forecast                      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD033895           Date 09Jun14               *
-      *  Prev Amend No. MD027428           Date 09Jun14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD033895           Date 09Jun14               *
+      *                 MD027428           Date 09Jun14               *
       *                 MD027243           Date 29May14               *
       *                 MD025783           Date 19May14               *
       *                 MD025967           Date 24Apr14               *
@@ -25,6 +26,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD033895 - Correct parameters for UT000033.                  *
       *  MD027428 - Forecast update error. Actual amount of the Total *
       *             forecast should not update if there is an update  *

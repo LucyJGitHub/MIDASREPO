@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas OF Validate Optimisation Payment Sub Type')
@@ -10,13 +10,15 @@
       *  SD009591 - Validate a Midas System Value for the following:  *
       *             - Optimisation Payment Sub Type                   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD038445           Date 25May16               *
-      *  Prev Amend No. CGL158   *CREATE   Date 16Sep14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD038445           Date 25May16               *
+      *                 CGL158   *CREATE   Date 16Sep14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL158 - Nostro Sweeping Rules Maintenance                   *
       *                                                               *
       *****************************************************************

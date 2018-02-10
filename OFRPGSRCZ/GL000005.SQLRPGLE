@@ -13,12 +13,14 @@
       *                                                               *
       *  Called By:                                                   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Lasr Amend No. CGL141  *CREATE    Date 12Dec12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL141  *CREATE    Date 12Dec12               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL141 - Amount Accruals Extended Narrative                  *
       *                                                               *
       *****************************************************************
@@ -134,21 +136,21 @@
       *
      D AmtAcc        E DS                  EXTNAME(GLAMAC1D)
      D** Midas GL Amount Accruals extension file
- 
+
      D APOSTY0       E DS                  EXTNAME(APOSTPD)
      D** Midas GL GE-AA APOSTPD Records
- 
+
      D CCYCount        S              4  0
- 
+
       /EJECT
       *****************************************************************
       *                M A I N    P R O C E S S I N G
       *****************************************************************
- 
+
      C/exec SQL
      C+ set option commit = *CHG
      C/end-exec
- 
+
       **   Standard parameter list for window manager
       *
      C     *ENTRY        PLIST
@@ -295,14 +297,14 @@
       ** Determine the last accrual profit date
       *
      C                   MOVEL(P)  #1AREF        WOTRF            21
- 
+
      C/exec SQL
      C+ select *
      C+ into :APOSTY0
      C+ from APOSTPD
      C+ where SPOS = '  GE-AA'  and OTRF = :WOTRF
      C/end-exec
- 
+
      C                   If        %Subst(SQLState:1:2) = '00' or
      C                             %Subst(SQLState:1:2) = '01'
      C                   Z-ADD     VALD          ZDAYNO
@@ -339,10 +341,10 @@
      C+ from GLAMAC1D
      C+ where SGBRCA = :#1BRCA and SGAREF = :#1AREF and SGATYP = :#1ATYP
      C/end-exec
- 
+
      C                   If        %Subst(SQLState:1:2) = '00' or
      C                             %Subst(SQLState:1:2) = '01'
- 
+
       ** Get decimal value using purchase currency
      C                   MOVE(P)   SGPCCY        @AJCD
      C                   EXSR      GETCCY
@@ -470,10 +472,10 @@
      C+ from GLAMAC1D
      C+ where SGBRCA = :#1BRCA and SGAREF = :#1AREF and SGATYP = :#1ATYP
      C/end-exec
- 
+
      C                   If        %Subst(SQLState:1:2) = '00' or
      C                             %Subst(SQLState:1:2) = '01'
- 
+
       ** Get decimal value using purchase currency
      C     #PCCY         IFEQ      *BLANKS
      C                   ELSE
@@ -879,7 +881,7 @@
      C+ from SDCURRL2 L
      C+ where L.A6CYCD = :#PCCY
      C/end-exec
- 
+
      C                   If        CCYCount = 0
      C                   MOVE      'Y'           ERR
      C                   MOVE      *ON           *IN34
@@ -1799,7 +1801,7 @@
      C+     ,:SGDTSL
      C+     ,:SGSLDD )
      C/end-exec
- 
+
      C                   ENDIF
       *
      C     ACTN          IFEQ      'A'
@@ -1810,13 +1812,13 @@
      C+ from GLAMAC1D
      C+ where SGBRCA = :#1BRCA and SGAREF = :#1AREF and SGATYP = :#1ATYP
      C/end-exec
- 
+
      C                   If        %Subst(SQLState:1:2) = '00' or
      C                             %Subst(SQLState:1:2) = '01'
       *
      C                   EXSR      MOVRT1
      C                   EXSR      MOVRT2
- 
+
      C/exec SQL
      C+ update GLAMAC1D
      C+ set  SGBRCA =  :SGBRCA
@@ -1865,7 +1867,7 @@
      C+     ,SGSLDD =  :SGSLDD
      C+ where SGBRCA =  :#1BRCA and SGAREF = :#1AREF and SGATYP = :#1ATYP
      C/end-exec
- 
+
      C                   ELSE
      C                   CLEAR                   AmtAcc
      C                   EXSR      MOVRT1
@@ -1874,7 +1876,7 @@
      C+ insert into GLAMAC1D
      C+ values(:AmtAcc)
      C/end-exec
- 
+
      C                   ENDIF
      C                   ENDIF
       *
@@ -2168,4 +2170,4 @@
 0100000
 1000000
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2012
+(c) Finastra International Limited 2012

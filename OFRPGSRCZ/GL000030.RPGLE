@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2015')
+     H COPYRIGHT('(c) Finastra International Limited 2015')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas MS Switch on feature CQQ006 for CGL176')
@@ -18,13 +18,15 @@
       *                                                               *
       *  Called By: SCOFMENU                                          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2015            *
+      *  (c) Finastra International Limited 2015                      *
       *                                                               *
-      *  Last Amend No. CGL176 *CREATE     Date 10Sep15               *
-      *  Prev Amend No.                    Date                       *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL176 *CREATE     Date 10Sep15               *
+      *                                    Date                       *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL176 - Optimisation of Nostro Balances by Company          *
       *                                                               *
       *****************************************************************

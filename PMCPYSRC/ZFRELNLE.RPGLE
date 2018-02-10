@@ -5,13 +5,15 @@
       *  ZFRELNLE - SR. to format the 20A portfolio management        *
       *             line description for retail                       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD021155 *REWRITE  Date 10Jul13               *
-      *  Prev Amend No. CGL120     *CREATE Date 06Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD021155           Date 10Jul13               *
+      *                 CGL120  *CREATE    Date 06Aug12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD021155 - COB Restructure Phase 1 remnants                  *
       *           - Header box not correct                            *
       *  CGL120 - GL COB Components Task Split                        *

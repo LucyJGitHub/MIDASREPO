@@ -7,16 +7,17 @@
 /*                                                                   */
 /*       PMC1200 - PM Charges Accruals                               */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. 195518             Date 22Apr02              */
+/*       Prev Amend No. 195518             Date 22Apr02              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CPM005             DATE 05AUG96              */
+/*                      CPM005             Date 05Aug96              */
 /*                      S01408             DATE 11MAY95              */
 /*                      081340             DATE 13DEC94              */
 /*                      S01486             DATE 11AUG94              */
@@ -27,6 +28,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       195518 - Nothing reported although Last Accrual Date updated*/
 /*                in PF/PMCHRGPD. Fix is to do another OVRDBF to     */
 /*                PF/GEPM2PD if parm &POST is equal to '5'.          */
@@ -51,7 +53,7 @@
 /*********** PGM        PARM(&CNAM &CSEQ)                             /*CPM005*/
              PGM        PARM(&CNAM &CSEQ &POST)                       /*CPM005*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
              DCL        VAR(&CSEQ) TYPE(*DEC) LEN(5)
@@ -255,5 +257,5 @@ ABNOR:
 /***ENDPGM                                                         */ /*S01486*/
  ENDPGM:                                                              /*S01486*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM                                                   /*S01486*/

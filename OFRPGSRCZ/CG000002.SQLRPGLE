@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas OF RE Interim Interest Statement Extract')
@@ -15,10 +15,11 @@
       *  Called By: CG000001 - Midas OF RE Interim Interest           *
       *                        Statement Driver                       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD032162A          Date 12Feb15               *
-      *  Prev Amend No. MD032161           Date 29Jan15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD032162A          Date 12Feb15               *
+      *                 MD032161           Date 29Jan15               *
       *                 MD032162           Date 29Jan15               *
       *                 MD032091           Date 26Jan15               *
       *                 MD032013           Date 20Jan15               *
@@ -27,6 +28,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD032162A - Set Last Statement Date = 1Jan72 for CM fmt      *
       *  MD032161 - New requirements in the set-up of the Start Date  *
       *  MD032162 - Include Last Statement Date element in the advice *

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas OF AP Submit Job')
@@ -9,13 +9,15 @@
       *                                                               *
       *  APSBJBVU - Midas OF AP Submit Job                            *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. CAP090A            Date 04Nov13               *
-      *  Prev Amend No. CAP090   *CREATE   Date 10Jul13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CAP090A            Date 04Nov13               *
+      *                 CAP090   *CREATE   Date 10Jul13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CAP090A - Initiate Batch Process API                         *
       *  CAP090 - Initiate Batch Process API                          *
       *                                                               *
@@ -44,37 +46,37 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** The following /COPY includes the standard API declares:
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       ** The following /COPY line includes definitions for the above fields
       ** as #ProcPgm, #ProcMod and #ProcName.  They are based on the
       ** corresponding fields in the PSDS /COPY member, so that member
       ** must be included where this one is used.
- 
+
      D/COPY ZACPYSRC,PROCPARMS
- 
+
       **-----------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **-----------------------------------------------------------------------
       **-----------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -102,7 +104,7 @@
       *
       ** Incoming Transaction
      D InfData       E DS                  EXTNAME(APSBEXTD)
- 
+
      D ZMUSER          DS            17                                                      CAP090A
      D  APUSER                 1     10                                                      CAP090A
                                                                                              CAP090A
@@ -230,7 +232,7 @@
      C+ FROM APPGMSTD
      C+ WHERE SJProcType = :ApProcType
      C/END-EXEC
- 
+
      C                   SELECT
      C                   When      SQLCOD = 00 and
      C                             InProgram <> *blanks
@@ -265,7 +267,7 @@
      C                   ENDIF
       *
      C                   ENDSR
- 
+
       ******************************************************************
       /EJECT
       ******************************************************************
@@ -308,16 +310,16 @@
      C                   PARM                    UPDATEYN          1
      C                   PARM                    BUFFER         6000
      C                   PARM                    APIRetc           3 0
- 
+
      C                   If        IDX <> 0
      C                   EVAL      FldNameArr(Idx) = FIELDNAME
      C                   EVAL      MsgIDArr(Idx)   = MSGID
      C                   EVAL      MsgDtaArr(Idx)  = *BLANKS
      C                   EVAL      APIRetc = 0
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -334,7 +336,7 @@
      C                   RESET                   Idx
       *
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -345,20 +347,20 @@
       *           This subroutine DUMPs the program just once.        *
       *                                                               *
       *****************************************************************
- 
+
      C     *PSSR         BEGSR
- 
+
      C                   IF        WRun = *BLANK
      C                   EVAL      WRun = 'Y'
      C                   DUMP
      C                   CALL      'DBERRCTL'
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
- 
+
      C                   RETURN
- 
+
      C                   ENDSR
- 
+

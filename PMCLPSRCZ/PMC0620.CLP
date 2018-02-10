@@ -7,8 +7,9 @@
 /*                                                                  */
 /*       PMC0620 START UP GROUP JOB 'CUSTOMER'                      */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                    */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -16,11 +17,12 @@
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.04 ---------------------------------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. 092963            DATE  18SEP95             */
-/*       PREV AMEND NO. S01486            DATE  07JUL94             */
+/*       PREV AMEND NO. 092963            DATE  18SEP95             */
+/*                      S01486            DATE  07JUL94             */
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                             */
 /*       092963  -  Clear *LDA after enquiry                        */
 /*       S01486  -  Portfolio Management Upgrade                    */
 /*                                                                  */
@@ -31,7 +33,7 @@
 /*********************************************************************/
              PGM
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
              DCL        VAR(&USER) TYPE(*CHAR) LEN(10)
@@ -69,7 +71,7 @@
 /*********** CHGGRPA    GRPJOB(*NONE)  */
 /*S01486 END*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /*/COPY WNCPYSRC,PMC0620002                                          */
 ENDPGM
 /********ENDPGM                                                      */

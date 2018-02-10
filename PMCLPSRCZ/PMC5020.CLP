@@ -7,16 +7,17 @@
 /*                                                                   */
 /*       PMC5020 - PROGRAM TO CONTROL DISPLAY OF 'POOL CUSTOMER' JOB */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Last Amend No. CPM005             DATE 17JUL96              */
-/*       Prev Amend No. 089169             DATE 06SEP95              */
+/*       Prev Amend No. CPM005             Date 17Jul96              */
+/*                      089169             Date 06Sep95              */
 /*                      082392             DATE 30JAN95              */
 /*                      S01486             DATE 26AUG94              */
 /*                      049421             DATE 18JAN93              */
@@ -24,6 +25,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CPM005 - Private Banking Phase 2                            */
 /*                Focus Group Changes upgraded to DBA                */
 /*                PBFG/7 - NET COMMITMENT BY CURRENCY                */
@@ -43,7 +45,7 @@
              PGM        PARM(&WJOB)                                   /*CPM005*/
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /************DCL        VAR(&WWEND) TYPE(*CHAR) LEN(1)                 *S01486*/
              DCL        VAR(&DSPG) TYPE(*CHAR) LEN(10)
@@ -150,5 +152,5 @@
 /*********** ENDDO                                                    /*CPM005*/
              ENDDO
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 ENDPGM

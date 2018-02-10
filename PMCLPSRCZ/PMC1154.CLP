@@ -7,10 +7,11 @@
 /*                                                                   */
 /*       PMC1154 - Setup Position Type Totals Information            */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD029813           Date 08Sep14              */
-/*       Prev Amend No. AR796218           Date 28Jun11              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD029813           Date 08Sep14              */
+/*                      AR796218           Date 28Jun11              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -24,6 +25,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD029813 - Field TTLOIC on FORMAT parameter not found.      */
 /*                  Added Local Industry Code (FILOIC/TTLOIC) in     */
 /*                  grouping field names and mapped field of OPNQRYF */
@@ -42,7 +44,7 @@
 /* Copyright statement defination  */                                 /*CPM005*/
 /**/                                                                  /*CPM005*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
              DCL        VAR(&CNAM) TYPE(*CHAR) LEN(10)
@@ -487,5 +489,5 @@
              DLTOVR     FILE(*ALL)
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 ABNOR:       ENDPGM

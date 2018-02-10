@@ -7,18 +7,20 @@
 /*                                                                   */
 /*       PLC0400 - End Midas-Plato Real-time Interface Job           */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2002           */
+/*       (c) Finastra International Limited 2002                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
-/*       Last Amend No. CPK014  *CREATE    Date 09Jan02              */
-/*       Prev Amend No. Xnnnnn             Date ddmmmyy              */
+/*       Prev Amend No. CPK014  *CREATE    Date 09Jan02              */
+/*                      XNNNNN             Date DDMmmYY              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CPK014 - Remove shutdown jobs from SCC0400 and replace with */
 /*                individual CoB components.                         */
 /*                                                                   */
@@ -29,7 +31,7 @@
  
              DCL        VAR(&MQMSGQ) TYPE(*CHAR) LEN(48)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2002')
  
 /* Global monitor message */
@@ -59,7 +61,7 @@ ABNOR:
  
 END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 /*/COPY WNCPYSRC,PLC0400END                                          */
  

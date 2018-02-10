@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas OF Initialisation program for CAP090')
@@ -10,13 +10,15 @@
       *  AP000020 - Midas OF Initialisation program for CAP090        *
       *             Midas OF AP Program To Submit                     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. CAP090A            Date 04Nov13               *
-      *  Prev Amend No. CAP090   *CREATE   Date 10Jul13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CAP090A            Date 04Nov13               *
+      *                 CAP090   *CREATE   Date 10Jul13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CAP090A - Initiate Batch Process API                         *
       *  CAP090 - Initiate Batch Process API                          *
       *                                                               *
@@ -38,7 +40,7 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -47,10 +49,10 @@
       ** ¦ D-specs: Arrays and Data Structures  ¦
       ** ¦ =======  ==========================  ¦
       ** +--------------------------------------+
- 
+
      D LDA           E DS                  EXTNAME(LDA) DTAARA(LDA)
       ** Local data area for database error details
- 
+
       ** +--------------------------------------+
       ** ¦ D-specs: Named constants             ¦
       ** ¦ =======  ===============             ¦
@@ -61,7 +63,7 @@
       ** ¦ =======  ==================          ¦
       ** +--------------------------------------+
      D WRun            S              1A   Inz
- 
+
       *
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -81,9 +83,9 @@
       *****************************************************************
       * MAIN PROCEDURE                                                *
       *****************************************************************
- 
+
       ** Write to Network Descriptions Extension File
- 
+
      C/exec SQL
      C+ Insert into APPGMSTD
      C+  Values
@@ -93,9 +95,9 @@
      C+    'GLC000585'                                                                       CAP090A
      C+  )
      C/end-exec
- 
+
       ** Handle SQL Error
- 
+
      C                   If        SQLCOD < 0
      C     *LOCK         IN        LDA
      C                   EVAL      DBASE = 1
@@ -105,10 +107,10 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   EndIf
- 
- 
+
+
       ** End Program
- 
+
      C                   EVAL      *INLR = *ON
      C                   RETURN
       *
@@ -127,21 +129,21 @@
       *****************************************************************
       *
      C     *PSSR         BEGSR
- 
+
      C                   IF        WRun = *BLANKS
- 
+
      C                   EVAL      WRun = 'Y'
      C                   DUMP
- 
+
      C                   CALL      'DBERRCTL'
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

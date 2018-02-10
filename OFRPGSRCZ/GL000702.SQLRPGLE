@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas OF Forecast Credit Line Avail Bal calc - COB')
@@ -10,70 +10,72 @@
       *  GL000702 - Midas OF Forecast Credit Line Avail Bal calcul    *
       *             Rebuild (COB)                                     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD024191           Date 08Jan14               *
-      *  Prev Amend No. MD024013           Date 12Dec13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD024191           Date 08Jan14               *
+      *                 MD024013           Date 12Dec13               *
       *                 CGL145B  *CREATE   Date 29Oct13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD024191 - Program failed when Facility file is empty        *
       *  MD024013 - Conversion rate not correct                       *
       *  CGL145B - Subsidiaries Daily Sweeping Forecast               *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ D-specs: Arrays and Data Structures  ¦
       ** ¦ =======  ==========================  ¦
       ** +--------------------------------------+
- 
+
       ** Program Status Data Structure
      D/COPY ZACPYSRC,PSDS
- 
+
       ** External DS for Bank Details
      D SDBANK        E DS                  Extname(SDBANKPD)
- 
+
       ** External DS for Currency Details
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** External DS for Account Details
      D SDACCT        E DS                  EXTNAME(ACCNTAB)
      D                                     PREFIX(A_)
- 
+
       ** External DS for SAR Details
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
      D                                     PREFIX(S_)
- 
+
      **   Midas OF Midas OF Forecast Credit line Available Balance Table
      D FOCL          E DS                  EXTNAME(GLFOCLTD)
      D                                     PREFIX(F_)
- 
+
       ** Midas OF Individual Forecast
      D FORIT         E DS                  EXTNAME(GLFORITD)
- 
+
      D FCLTYM        E DS                  EXTNAME(FCLTYFM)
- 
+
       **  Short DS for access programs
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       **  Long DS for access programs
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** Copyright array
      D A@CPY           DS
      D  CPY@                   1     80
      D                                     DIM(1) CTDATA PERRCD(1)
- 
+
       ** Local Data Area for database error details
      D LDA           E DS                  EXTNAME(LDA) DTAARA(LDA)
- 
+
       ** Account
      D KAccnt          DS
      D  KBRCA                  1      3
@@ -81,7 +83,7 @@
      D  KCCY                  10     12
      D  KACOD                 13     22  0
      D  KACSQ                 23     24  0
- 
+
      D                 DS
      D  RUN0                   1      3P 0
      D  RUN1                   4      6P 0
@@ -96,7 +98,7 @@
      D**RUNS********           1     30P 0                                                  MD024191
      D  RUNS                   1     30P 0 INZ(0)                                           MD024191
      D                                     DIM(10) ASCEND
- 
+
      D                 DS
      D  CLDAT0                 1      5  0
      D  CLDAT1                 6     10  0
@@ -110,7 +112,7 @@
      D  CLDAT9                46     50  0
      D  CLDATS                 1     50  0
      D                                     DIM(10) ASCEND
- 
+
      DForeBal          DS
      D  CLFTB0                 1     15  0
      D  CLFTB1                16     30  0
@@ -124,17 +126,17 @@
      D  CLFTB9               136    150  0
      D  CLFTBS                 1    150  0
      D                                     DIM(10) ASCEND
- 
+
       ** +--------------------------------------+
       ** ¦ D-specs: Declared variables          ¦
       ** ¦ =======  ==================          ¦
       ** +--------------------------------------+
- 
+
       ** Parameters for access object programs
      D PRtCd           S              7
      D POptn           S              7
      D PCcy            S              3
- 
+
       ** Paramaters for ZXRATE                                                              MD024013
      D  ZRATE1         S             13P 8                                                  MD024013
      D  ZMDI1          S              1A                                                    MD024013
@@ -154,7 +156,7 @@
      D PFrDecPlace     S              1  0
      D PToDecPlace     S              1  0
      D POutAmt         S             15  0
- 
+
       ** Other fields used
      D KkBrca          S              3A
      D KkFcus          S              6A
@@ -179,7 +181,7 @@
      D PCurSet         S            200    DIM(10)
      D SVFACN          S             24A
      D SVSQLCode       S             10  0
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -191,11 +193,11 @@
       *****************************************************************
       *  MAIN PROCEDURE                                               *
       *****************************************************************
- 
+
      C                   EXSR      SRReadFORI
- 
+
      C                   EVAL      *INLR = *ON
- 
+
      C                   RETURN
       *****************************************************************
       *  PROGRAM END                                                  *
@@ -207,11 +209,11 @@
       *                                                               *
       *****************************************************************
      C     SRReadFORI    BEGSR
- 
+
       ** Set file pointer to first record and do initial read
       ** Include forecast transactions that are:
       ** live, Actual Amount = 0, Actual is Zero Flag = N, Projected on Retail = 'Y'
- 
+
      C/exec SQL
      C+ declare CUR1 cursor for
      C+ select * from GLFORITD
@@ -224,13 +226,13 @@
      C+ order by
      C+       IFFACN
      C/end-exec
- 
+
      C/exec SQL
      C+ open CUR1
      C/end-exec
- 
+
       ** Handle SQL Error (if not %EOF)
- 
+
      C                   IF        SQLCOD < 0
      C     *LOCK         IN        LDA
      C                   EVAL      DBase = 3
@@ -240,64 +242,64 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C/exec SQL
      C+ fetch next
      C+ from CUR1
      C+ into :FORIT
      C/end-exec
- 
+
       ** Read Individual forecast table until end of file
- 
+
      C                   DOW       SQLCode <> 100
- 
+
       ** Accumulate for this account
      C                   EVAL      CLFTBS = *ZEROS
      C                   EVAL      SVFACN = IFFACN
      C                   EVAL      WOnce =  'N'
- 
+
      C                   DOW       IFFACN = SVFACN AND
      C                             SQLCode <> 100
- 
+
       ** Access Account record
- 
+
      C                   IF        WOnce =  'N'
      C                   EXSR      SRReadAcc
      C                   EVAL      WOnce =  'Y'
      C                   ENDIF
- 
+
       ** Process Individual forecasts when needed
- 
+
      C                   If        WProc =  'Y'
      C                   EXSR      SRProcFORI
      C                   End
- 
+
      C/exec SQL
      C+ fetch next
      C+ from CUR1
      C+ into :FORIT
      C/end-exec
- 
+
      C                   ENDDO
- 
+
       ** Output to Total forecasts table if needed
- 
+
      C                   If        WProc =  'Y'
      C                   EVAL      SVSQLCode = SQLCode
- 
+
      C                   If        WFound =  'N'
      C                   EXSR      SROutTABF
      C                   Else
      C                   EXSR      SRUpdTABF
      C                   End
- 
+
      C                   EVAL      SQLCode = SVSQLCode
      C                   End
- 
+
      C                   ENDDO
- 
+
       ** Handle SQL Error (if %EOF)
- 
+
      C                   IF        SQLCode < 100
      C     *LOCK         IN        LDA
      C                   EVAL      DBase = 4
@@ -307,11 +309,11 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C/exec SQL
      C+ close CUR1
      C/end-exec
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -321,17 +323,17 @@
       *                                                               *
       *****************************************************************
      C     SRReadAcc     BEGSR
- 
+
      C                   EVAL      KAccnt = IFFACN
- 
+
       * If the Retail account is not linked to a Facility do not process it
- 
+
      C                   MOVE      KCNUM         @CUST             6
      C                   MOVE      KCCY          @CCY              3
      C                   MOVE      KACOD         @ACCD            10
      C                   MOVE      KACSQ         @ACSN             2
      C                   MOVE      KBRCA         @BRCA             3
- 
+
      C                   CALL      'AOACCTR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY    '    POPTN
@@ -342,22 +344,22 @@
      C                   PARM                    @ACSN
      C                   PARM                    @BRCA
      C     SDACCT        PARM      SDACCT        DSSDY
- 
+
      C                   IF        PRTCD = *BLANKS and A_FCCU = *Blanks
      C                             and A_FACT = 0 and A_FCNO = 0
      C                             or  PRTCD <> *Blanks
      C                   Eval      WProc = 'N'
      C                   Else
- 
+
      C                   Eval      WProc = 'Y'
- 
+
      C                   EVAL      KkBrca = A_BRCA
      C                   EVAL      KkFCUS = A_FCCU
      C                   EVAL      KkFACT = A_FACT
      C                   EVAL      KkFCNO = A_FCNO
- 
+
       * Retrieve Facility currency from FCLTYFM
- 
+
      C/exec SQL
      C+ select
      C+       CNUM
@@ -375,9 +377,9 @@
      C+       FACT = :KkFACT and
      C+       FCNO = :KkFCNO
      C/end-exec
- 
+
       * Retrieve Facility table from FCLTYFN
- 
+
      C/exec SQL
      C+ select
      C+       CNUM
@@ -413,9 +415,9 @@
      C+       FACT = :KkFACT and
      C+       FCNO = :KkFCNO
      C/end-exec
- 
+
       * Retrieve GLFOCLTD record if already created for this facility
- 
+
      C/exec SQL
      C+ select *
      C+ into: FOCL
@@ -426,14 +428,14 @@
      C+       CLFACT = :KkFACT and
      C+       CLFCNO = :KkFCNO
      C/end-exec
- 
+
       ** If record found in GLFOCLTD
- 
+
      C                   IF        SQLCOD = 0
      C                   EVAL      WFound = 'Y'
- 
+
       ** Set Forecast Amount in the table
- 
+
      C                   EVAL      CLFTB0    = F_CLFTB0
      C                   EVAL      CLFTB1    = F_CLFTB1
      C                   EVAL      CLFTB2    = F_CLFTB2
@@ -444,23 +446,23 @@
      C                   EVAL      CLFTB7    = F_CLFTB7
      C                   EVAL      CLFTB8    = F_CLFTB8
      C                   EVAL      CLFTB9    = F_CLFTB9
- 
+
      C                   ELSE
      C                   EVAL      WFound = 'N'
      C                   END
- 
+
      C                   END
- 
+
       ** Set Forecast Dates from Available balance dates
       ** only if Forecast is processed                                                      MD024191
      C                   If        WProc =  'Y'                                             MD024191
- 
+
      C                   EVAL      X = 1
      C                   DOW       X <= 10
      C                   EVAL      CLDATS(X) = RUNS(X)
      C                   EVAL      X = X + 1
      C                   ENDDO
- 
+
      C                   End                                                                MD024191
                                                                                             MD024191
      C                   ENDSR
@@ -472,19 +474,19 @@
       *                                                               *
       *****************************************************************
      C     SRPRocFORI    BEGSR
- 
+
       ** Convert Forecast Amount to Facility Currency
- 
+
      C                   IF        IFCCY <> FCCY
      C                   EXSR      SRConvert
      C                   ELSE
      C                   EVAL      WConvFAmt  = IFAMNT
      C                   ENDIF
- 
+
       ** Compute for Forecast Total Available Balance
- 
+
      C                   EXSR      SRForeBal
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -494,15 +496,15 @@
       *                                                               *
       *****************************************************************
      C     SRConvert     BEGSR
- 
+
       ** Retrieve currency details for FROM currency
- 
+
      C                   CALL      'AOCURRR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*KEY'        POptn
      C                   PARM      IFCCY         PCcy
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C                   IF        PrtCd <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBKey = IFCCY
@@ -515,15 +517,15 @@
      C                   EVAL      WFrMDIn  = A6MDIN
      C                   EVAL      WFrDecPlace = A6NBDP
      C                   ENDIF
- 
+
       ** Retrieve currency details for TO currency
- 
+
      C                   CALL      'AOCURRR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*KEY'        POPTN
      C                   PARM      FCCY          PCCY
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C                   IF        PRtCd <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBKey = FCCY
@@ -536,7 +538,7 @@
      C                   EVAL      WToMDIn  = A6MDIN                                        MD024013
      C                   EVAL      WToDecPlace = A6NBDP
      C                   ENDIF
- 
+
       *                                                                                     MD024013
      C                   Z-ADD     WFrXrate      ZRATE1                                     MD024013
      C                   MOVE      WFrMDIn       ZMDI1                                      MD024013
@@ -554,7 +556,7 @@
      C                   MOVE      ZMDIX         ZMD                                        MD024013
                                                                                             MD024013
       ** Convert Forecast Amount
- 
+
      C                   CALL      'ZCONVZ1'
      C                   PARM      IFAMNT        PAmnt
      C**********         PARM      WFrXRate      PFrXRate                                   MD024013
@@ -566,9 +568,9 @@
      C                   PARM      WFrDecPlace   PFrDecPlace
      C                   PARM      WToDecPlace   PToDecPlace
      C                   PARM                    POutAmt
- 
+
      C                   EVAL      WConvFAmt = POutAmt
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -578,24 +580,24 @@
       *                                                               *
       *****************************************************************
      C     SRForeBal     BEGSR
- 
+
       ** Update Balances
- 
+
      C                   EVAL      X = 1
- 
+
      C                   DOW       X <= 10
- 
+
      C                   IF        (IFDATE <= CLDATS(X)
      C                             AND WIncl = 'Y')
      C                             or (IFDATE <= CLDATS(X) and IFDATE >= BJRDNB
      C                             AND WIncl = 'N')
      C                   EXSR      SRCalFBal
      C                   ENDIF
- 
+
      C                   ADD       1             X
- 
+
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -605,18 +607,18 @@
       *                                                               *
       *****************************************************************
      C     SRCalFBal     BEGSR
- 
+
       ** If the feature CLE025 is on and Include Net CR = 'N', then omit Credit
       ** Forecast (i.e positive amount)
- 
+
      C                   IF        CLE025 = 'Y' and WNetCR = 'N'
      C                             and WConvFAmt > 0
      C                   LEAVESR
      C                   END
- 
+
       ** Update Forecast Balances
      C                   EVAL      CLFTBS(X)  = CLFTBS(X)  + WConvFAmt
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -626,7 +628,7 @@
       *                                                               *
       *****************************************************************
      C     SROutTABF     BEGSR
- 
+
      C/exec SQL
      C+ insert into GLFOCLTD
      C+    ( CLBRCA
@@ -679,7 +681,7 @@
      C+     ,:CLFTB8
      C+     ,:CLFTB9 )
      C/end-exec
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -689,7 +691,7 @@
       *                                                               *
       *****************************************************************
      C     SRUpdTABF     BEGSR
- 
+
      C/exec SQL
      C+ update GLFOCLTD set
      C+    ( CLBRCA
@@ -746,7 +748,7 @@
      C+ CLFACT = :KkFact and
      C+ CLFCNO = :KkFcno
      C/end-exec
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -756,23 +758,23 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
       ** Set off program indicators
- 
+
      C                   EVAL      *INU7 = *OFF
      C                   EVAL      *INU8 = *OFF
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBPGM  =  PSProcPgm
      C                   OUT       LDA
- 
+
       ** Access Bank details
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      *Blanks       PRtCd
      C                   PARM      '*FIRST '     POptn
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
      C                   IF        PRtCd <> *Blanks
      C     *LOCK         IN        LDA
      C                   EVAL      DBKey = POptn
@@ -781,9 +783,9 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Establish switchable features
- 
+
      C                   MOVE      'N'           CLE025            1
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD             7
@@ -795,11 +797,11 @@
      C                   MOVE      'Y'           CLE025
      C                   EVAL      PSysVal(2) = 'ForecastAppyNetForCL'
      C                   END
- 
+
      C                   EVAL      PSysVal(1) = 'ForecastIncUnmatched'
- 
+
       ** Retrieve System Values
- 
+
      C                   CALL      'AOSVALR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM                    PSysVal(1)
@@ -822,15 +824,15 @@
      C                   PARM                    PCurSet(9)
      C                   PARM                    PSysVal(10)
      C                   PARM                    PCurSet(10)
- 
+
       ** Check if database error occured
- 
+
      C                   FOR       X = 1 TO 10
- 
+
      C                   IF        PCurSet(X) = '*NRF' OR
      C                             PRtCd <> *BLANKS AND
      C                             PRtCd <> '*NRF'
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBKey   = PSysVal(X)
      C                   EVAL      DBFile  = 'SDSVALPD'
@@ -838,15 +840,15 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDFOR
- 
+
      C                   EVAL      WIncl = PCurSet(1)
- 
+
      C                   IF        CLE025 = 'Y'
      C                   EVAL      WNetCR = PCurSet(2)
      C                   END
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -863,22 +865,22 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
      C                   IF        WRun = *Blanks
      C                   EVAL      WRun = 'Y'
      C                   DUMP
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *On
      C                   EVAL      *INU8 = *On
      C                   EVAL      *INLR = *On
      C                   EVAL      PRtCd = '*ERROR'
- 
+
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
       *****************************************************************
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2013
+(c) Finastra International Limited 2013

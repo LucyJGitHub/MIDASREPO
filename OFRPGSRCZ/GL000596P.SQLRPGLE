@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
 /*EXI *  TEXT('Midas OF Bank Position COB Report')
@@ -9,10 +9,11 @@
       *                                                               *
       *  GL000596P - Midas OF Bank Position COB Report                *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD034975           Date 23Oct15               *
-      *  Prev Amend No. CGL176             Date 05Aug15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD034975           Date 23Oct15               *
+      *                 CGL176             Date 05Aug15               *
       *                 MD031573           Date 11Dec14               *
       *                 CGL159             Date 27Aug14               *
       *                 MD027241           Date 29May14               *
@@ -24,6 +25,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       * MD034975 - Bank position report not reflecting future or today*
       *            mvmts for transit accounts.                        *
       *  CGL176 - Optimisation of Nostro Balances by Company          *
@@ -39,71 +41,71 @@
       *  CGL153 - Bank Position Report                                *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** Midas OF Foreacast Audit/List report - Detail
      FGL000596P1O    E             PRINTER INFSR(*PSSR)
      F                                     INFDS(SPOOL1)
      F                                     USROPN                                           CGL176
- 
+
       ** Midas OF Foreacast Audit/List report - Audit
      FGL000596AUO    E             PRINTER INFDS(SPOOLU)
      F                                     INFSR(*PSSR)
- 
+
       ** +--------------------------------------+
       ** ¦ D-specs: Arrays and Data Structures  ¦
       ** ¦ =======  ==========================  ¦
       ** +--------------------------------------+
- 
+
       ** Program Status Data Structure
      D/COPY ZACPYSRC,PSDS
- 
+
       ** External DS for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** External DS for Currency Details
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** External DS for Customer Details
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
- 
+
       ** External DS for Account Details
      D SDACCT        E DS                  EXTNAME(ACCNTAB)
      D                                     PREFIX(A_)
- 
+
       **  Short DS for access programs
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       **  Long DS for access programs
      D DSSDY         E DS                  EXTNAME(DSSDY)
                                                                                               CGL159
      ** External DS for SAR Details                                                           CGL159
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CGL159
- 
+
      ** File DS
                                                                                               CGL159
      D BPOW          E DS                  EXTNAME(SDNOSTW0)                                  CGL159
      D SDEX          E DS                  EXTNAME(SDEXRTTD)                                  CGL159
      D                                     PREFIX(S)                                          CGL159
- 
+
      D*BPOW*****     E DS                  EXTNAME(SDBPOWTD)                                  CGL159
      D*NOS2*****     E DS                  EXTNAME(SDNOST2D)                                  CGL159
      D*EERT*****     E DS                  EXTNAME(SDEERTTD)                                  CGL159
      D*TNOS*****     E DS                  EXTNAME(GLTNOSTD)                                  CGL159
      D*NOST*****     E DS                  EXTNAME(SDNOSTPD)                                  CGL159
- 
- 
+
+
       ** File Information Data Structure for GL000596P1.
      D SPOOL1          DS
      D   SFILE1               83     92
      D   SFNUM1              123    124B 0
      D   OFLLN1              188    189B 0
      D   PRTLN1              367    368B 0
- 
+
       ** File Information Data Structure for GL000591AU.
      D SPOOLU          DS
      D   SFILEU               83     92
@@ -112,19 +114,19 @@
       ** Nostro Code                                                                          CGL159
      D NOSVAR          DS                                                                     CGL159
      D  NOSNUM                 4      5                                                       CGL159
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** +--------------------------------------+
       ** ¦ D-specs: Declared variables          ¦
       ** ¦ =======  ==================          ¦
       ** +--------------------------------------+
- 
+
       ** Parameters for access object programs
      D PRtCd           S              7
      D POptn           S              7
      D PSARD           S              6
- 
+
       ***Parameter*variables*for*AOSVALR0*string***********************                       CGL159
      D*SVALK1***       S             20                                                       CGL159
      D*SVAL1****       S            200                                                       CGL159
@@ -146,7 +148,7 @@
      D*SVAL9****       S            200                                                       CGL159
      D*SVALK0***       S             20                                                       CGL159
      D*SVAL10***       S            200                                                       CGL159
- 
+
       ** Parameters for ZSFILE
      D PSeq            S              5
      D PLevel          S              1
@@ -154,18 +156,18 @@
      D ZSnum           S              6  0
      D ZSnumU          S              6  0
      D ZSerr           S              1
- 
+
       ** Parameter list fields
      D PMode           S              1
      D PLevl           S              1
      D PEnty           S              3
- 
+
       ** Other fields used
      D WRun            S              1A   Inz
      D WRecNo          S              7S 0 Inz
      D RqdLn1          S              3  0
      D DifLn1          S              4  0
- 
+
      D WField          S             21A
      D PEdtCode        S              1A
      D*PNB0*****       S             15P 0                                                    CGL159
@@ -200,7 +202,7 @@
      D*FrDecPlace      S              1  0                                                    CGL159
      D*ToDecPlace      S              1  0                                                    CGL159
      D*OutputAmnt      S             15  0                                                    CGL159
- 
+
      D*sqlString       S          32000A   Varying                                            CGL159
      D**********                           Inz                                                CGL159
                                                                                               CGL159
@@ -259,7 +261,7 @@
      D CGL159          S              1A                                                      CGL159
                                                                                               CGL159
      D CGL176          S              1                                                       CGL176
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -271,7 +273,7 @@
       *****************************************************************
       * MAIN PROCEDURE                                                *
       *****************************************************************
- 
+
                                                                                               CGL159
      C                   EXSR      SELSQLRTN                                                  CGL159
                                                                                               CGL159
@@ -359,7 +361,7 @@
      C                   PARM                    SFILE1                                       CGL176
      C                   PARM                    ZSnum                                        CGL176
      C                   PARM      *Blanks       ZSerr                                        CGL176
- 
+
      C                   IF        ZSErr = 'Y'                                                CGL176
      C                   EVAL      *INU7 = *On                                                CGL176
      C                   EVAL      *INU8 = *On                                                CGL176
@@ -1134,7 +1136,7 @@
                                                                                               CGL159
      C**********         ELSE                                                          CGL159 CGL176
      C                   WHEN      CGL176 = 'Y'                                               CGL176
- 
+
      C/exec SQL                                                                               CGL176
      C+ declare LISTC cursor for                                                              CGL176
      C+ SELECT IFNULL(NOSRPOOL, ' '),                                                         CGL176
@@ -1830,7 +1832,7 @@
       *                                                               *
       *****************************************************************
      C     ConvertBase   BEGSR
- 
+
      C                   CALL      'ZCONVZ1'
      C                   PARM                    InputAmnt        15 0
      C                   PARM                    ExchRate         13 8
@@ -1840,7 +1842,7 @@
      C                   PARM                    FrDecPlace        1 0
      C                   PARM                    ToDecPlace        1 0
      C                   PARM      *ZERO         OutputAmnt       15 0
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1850,18 +1852,18 @@
       *                                                               *
       *****************************************************************
      C     FormatAmount  BEGSR
- 
+
       ** If non-zero, format amount
      C                   IF        WAmount <> 0
- 
+
      C                   CALL      'ZSEDIT'
      C                   PARM                    WAmount
      C                   PARM                    PDecPlace
      C                   PARM      'J'           PEdtCode
      C                   PARM                    WField
- 
+
      C                   ELSE
- 
+
       * If zero, check number of decimal places
      C                   IF        PDecPlace = 0
      C                   EVAL      WField = '                   0 '
@@ -1874,9 +1876,9 @@
      C                   ELSEIF    PDecPlace = 4
      C                   EVAL      WField = '              0.0000 '
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1886,13 +1888,13 @@
       *                                                               *
       *****************************************************************
      C     GetCurrDtls   BEGSR
- 
+
      C                   CALL      'AOCURRR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*KEY    '    POptn
      C                   PARM                    PCCY
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1902,9 +1904,9 @@
       *                                                               *
       *****************************************************************
      C     SRPrintHdr1   BEGSR
- 
+
      C                   WRITE     HEADER1
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1914,19 +1916,19 @@
       *                                                               *
       *****************************************************************
      C     SRPrintHdr2   BEGSR
- 
+
       ** Set up Header 2 details
- 
+
      C                   CLEAR                   HEADER2
- 
+
       ** Prepare the Header Title to be used (must be centered)
- 
+
      C                   IF        PMode = 'A'
      C                   EVAL      *IN50 = *OFF
      C                   ELSE
      C                   EVAL      *IN50 = *ON
      C                   ENDIF
- 
+
       *
       ** Show Company code when CGL176 is enabled                                           CGL176
      C                   IF        CGL176 = 'Y'                                             CGL176
@@ -1934,9 +1936,9 @@
      C                   EVAL      *IN40 = *ON                                              CGL176
      C                   ENDIF                                                              CGL176
       *                                                                                     CGL176
- 
+
      C                   WRITE     HEADER2
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1946,11 +1948,11 @@
       *                                                               *
       *****************************************************************
      C     SRPrintHdr3   BEGSR
- 
+
      C                   EVAL      PDBCUR = BJCYCD
- 
+
      C                   WRITE     HEADER3
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2016,51 +2018,51 @@
       *                                                               *
       *****************************************************************
      C     SRAudit       BEGSR
- 
+
       ** Ensure Audit Spool File recorded by RCF.
- 
+
      C                   EVAL      ZSnumU = SFNUMU
- 
+
      C                   CALL      'ZSFILE'
      C                   PARM                    PSeq
      C                   PARM      *Blanks       SEnty
      C                   PARM                    SFILEU
      C                   PARM                    ZSnumU
      C                   PARM      *Blank        ZSerr
- 
+
       ** If Error occurs during ZSFILE processing, then return to the
       ** Calling Program.
- 
+
      C                   IF        ZSERR = 'Y'
      C                   EVAL      *InU7 = *On
      C                   EVAL      *InU8 = *On
      C                   EVAL      *InLR = *On
      C                   RETURN
      C                   ENDIF
- 
+
      C                   WRITE     HEADAU
- 
+
      C                   EVAL      RCOUNT = WRecNo
- 
+
       ** If there is a DB Error, Output the DB Error Information.
- 
+
      C                   IF        *INU7 = *ON
      C                   WRITE     DBERROR
      C                   ELSE
- 
+
       ** If there is a record read, write audit control report.
- 
+
      C                   IF        WRecNo <> 0
      C                   WRITE     CONTROL
      C                   ELSE
- 
+
       ** Or, if no records read, Output "No Details" message.
- 
+
      C                   WRITE     NODTLS
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2070,31 +2072,31 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    ReturnCode
      C                   PARM                    PMode
      C                   PARM                    PSeq
      C                   PARM                    PLevel
      C                   PARM                    PEnty
- 
+
       ** Set off program indicators
- 
+
      C                   EVAL      *INU7 = *OFF
      C                   EVAL      *INU8 = *OFF
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBPGM  =  PSProcPgm
      C                   OUT       LDA
- 
+
       ** Access Bank details
       **   Retrieve Run day number
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      *Blanks       PRtCd
      C                   PARM      '*FIRST '     POptn
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
      C                   IF        PRtCd <> *Blanks
      C     *LOCK         IN        LDA
      C                   EVAL      DBKey = POptn
@@ -2105,18 +2107,18 @@
      C                   ELSE
      C                   EVAL      RRPTDS = BJURPT
      C                   ENDIF
- 
+
       ** Ensure Detail Spool File recorded by RCF.
- 
+
      C**********         EVAL      ZSnum = SFNUM1                                             CGL176
- 
+
      C**********         CALL      'ZSFILE'                                                   CGL176
      C**********         PARM                    PSeq                                         CGL176
      C**********         PARM      *Blanks       SEnty                                        CGL176
      C**********         PARM                    SFILE1                                       CGL176
      C**********         PARM                    ZSnum                                        CGL176
      C**********         PARM      *Blanks       ZSerr                                        CGL176
- 
+
      C**********         IF        ZSErr = 'Y'                                                CGL176
      C**********         EVAL      *INU7 = *On                                                CGL176
      C**********         EVAL      *INU8 = *On                                                CGL176
@@ -2146,7 +2148,7 @@
      C                   IF        @RTCD = *Blanks                                            CGL159
      C                   EVAL      CGL159 = 'Y'                                               CGL159
      C                   ENDIF                                                                CGL159
- 
+
       ** Check if CGL176 is On.                                                               CGL176
       *                                                                                       CGL176
      C                   EVAL      CGL176 = 'N'                                               CGL176
@@ -2160,8 +2162,8 @@
      C                   IF        @RTCD = *Blanks                                            CGL176
      C                   EVAL      CGL176 = 'Y'                                               CGL176
      C                   ENDIF                                                                CGL176
- 
- 
+
+
       **Retrieve*the*system*value**************************************                       CGL159
       **********                                                                              CGL159
      C**********         EVAL      SVALK1 = 'ZoneSystemName'                                  CGL159
@@ -2212,21 +2214,21 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
      C                   IF        WRun = *Blanks
      C                   EVAL      WRun = 'Y'
      C                   DUMP
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *On
      C                   EVAL      *INU8 = *On
      C                   EVAL      *INLR = *On
      C                   EVAL      ReturnCode = '*ERROR'
- 
+
      C                   EXSR      SRAUDIT
- 
+
      C                   RETURN
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************

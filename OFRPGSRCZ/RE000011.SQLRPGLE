@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2015')
+     H COPYRIGHT('(c) Finastra International Limited 2015')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
       *****************************************************************
@@ -13,13 +13,15 @@
       *                                                               *
       *  Called By: REC000011                                         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2015            *
+      *  (c) Finastra International Limited 2015                      *
       *                                                               *
-      *  Last Amend No. CRE105   *Create   Date 30Mar15               *
-      *  Prev Amend No. xxxxxx             Date ddmmmyy               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CRE105   *Create   Date 30Mar15               *
+      *                 xxxxxx             Date ddmmmyy               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CRE105 - Withholding Tax Extract Report                      *
       *                                                               *
       *****************************************************************

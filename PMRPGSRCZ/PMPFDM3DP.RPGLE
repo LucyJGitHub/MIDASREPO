@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas PM Portfolio Definition Details Display')        *
@@ -14,14 +14,15 @@
       *            Key fields (Action Code, Customer Number and       *
       *            Portfolio Reference) are protected on the screen.  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR689705           Date 03Jan11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR689705           Date 03Jan11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 CSD031             Date 10Apr06               *
       *                 CSW037A            Date 02May05               *
       *                 CSD025             Date 11Jan05               *
       *                 CSW037             Date 15Dec04               *
@@ -37,6 +38,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR689705 - Nominal and value settled were missing after      *
       *             enter. Applied fix AR656294 (Child: AR689706)     *
       *  AR656294 - HATS issue                                        *
@@ -600,6 +602,6 @@
       *****************************************************************
       *
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 ** WZ0
 000000000000000000000000000000000000000000000000000000000000

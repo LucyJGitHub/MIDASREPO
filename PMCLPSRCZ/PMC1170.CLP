@@ -7,16 +7,17 @@
 /*                                                                   */
 /*       PMC1170 - Portfolio Due Valuation Statement                 */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Last Amend No. CPM005             Date 29Jul96              */
-/*       Prev Amend No. 095867             Date 08Nov95              */
+/*       Prev Amend No. CPM005             Date 29Jul96              */
+/*                      095867             Date 08Nov95              */
 /*                      CCG009             Date 01Jun95              */
 /*                      S01408             DATE 05MAY95              */
 /*                      085852             DATE 14MAR95              */
@@ -29,6 +30,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CPM005 - Private Banking Phase II                           */
 /*                Focus Group Changes Upgraded to DBA                */
 /*                Just Recompiled because of PM File(s) changes      */
@@ -54,7 +56,7 @@
              PGM        PARM(&WWDPCD &WWACOC &WWPMNG &WWMODE &WWTNLA +
                           &WWSCBR &WWPFMR &WWCNUM &WWPTFR)            /* 53103*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
              DCL        VAR(&WWDPCD) TYPE(*CHAR) LEN(4)
@@ -412,5 +414,5 @@
  
  ENDPGM:                                                              /*S01486*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

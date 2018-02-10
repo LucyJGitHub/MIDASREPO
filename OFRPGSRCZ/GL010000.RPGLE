@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas GP Format Data for a Indiv. Forecast Wip Msg')   *
@@ -9,14 +9,16 @@
       *                                                               *
       *  GL010000 - Format Data for a WIP Message - indiv. Forecast  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD025783           Date 19May14               *
-      *  Prev Amend No. MD024362           Date 14Jan14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD025783           Date 19May14               *
+      *                 MD024362           Date 14Jan14               *
       *                 MD023712 *Create   Date 30Oct13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD025783 - FORI and SBJB message structure enhancement.      *
       *             Replaced the following compile time arrays from:  *
       *             1. 'for:createHeaderRequest' to 'for:header'      *
@@ -59,41 +61,41 @@
       *             from the Accounting Rules Process                 *
       *                                                               *
       *****************************************************************
- 
+
      D                 DS
      D Msg                     1  32000    DIM(32000)
- 
+
      D #_FieldTag      S            300A   DIM(999)
      D #_FieldData     S           1000A   DIM(999)
      D #_FieldType     S             10A   DIM(999)
      D #_FieldAttr     S             10A   DIM(999)
- 
+
      D                 DS
      D WrkData                 1   1000
      D WD                      1   1000    DIM(1000)
- 
+
      D****NARJMS          S             30    DIM(11) CTDATA PERRCD(1)                      MD024362
      D****NA2JMS          S             30    DIM(10) CTDATA PERRCD(1)                      MD024362
      D********** NARJMS          S             30    DIM(14) CTDATA PERRCD(1)      MD024362 MD025783
      D********** NA2JMS          S             30    DIM(13) CTDATA PERRCD(1)      MD024362 MD025783
      D NARJMS          S             30    DIM(12) CTDATA PERRCD(1)                         MD025783
      D NA2JMS          S             30    DIM(11) CTDATA PERRCD(1)                         MD025783
- 
+
      D                 DS
      D ZFL15                   1     15  0
      D ZF15                    1     15    DIM(15)
- 
+
      D F1              S             26    INZ('<midasActionAPI apiNames="')
      D F2              S             17    INZ('</midasActionAPI>')
- 
+
      D CHAPTAG         S            300
- 
+
      D                 DS
      D ZOUT21                  1     21
      D ZOUT21Sign             21     21
      D ZOUT21Edit              1     22
      D ZOUT21Digit             1     20
- 
+
      C     *ENTRY        PLIST
       ** IN
      C                   PARM                    p@Mode           10
@@ -105,7 +107,7 @@
      C                   PARM                    p@FieldAttr      10
       ** OUT
      C                   PARM                    p@msgbuf      32000
- 
+
      C                   SELECT
      C     p@Mode        WHENEQ    '*CLEAR'
      C                   Z-ADD     1             Z                 4 0
@@ -113,7 +115,7 @@
      C                   MOVEL     *BLANK        #_FieldData
      C                   MOVEL     *BLANK        #_FieldType
      C                   MOVEL     *BLANK        #_FieldAttr
- 
+
      C     p@Mode        WHENEQ    '*ENTER'
      C                   MOVEL     p@FieldTag    #_FieldTag(Z)
      C                   MOVEL     p@FieldData   #_FieldData(Z)
@@ -124,7 +126,7 @@
      C                   MOVEL     *BLANK        p@FieldType
      C                   MOVEL     *BLANK        p@FieldAttr
      C                   ADD       1             Z
- 
+
      C     p@Mode        WHENEQ    '*UPDATE'                                                MD024362
      C                   MOVEL     p@FieldTag    #_FieldTag(Z)                              MD024362
      C                   MOVEL     p@FieldData   #_FieldData(Z)                             MD024362
@@ -141,33 +143,33 @@
      C                   EXSR      LOAD_MSG
      C                   MOVEA     Msg           p@msgbuf
      C                   ENDSL
- 
+
      C                   RETURN
- 
+
       *****************************************************************
       *                                                               *
      C**   LOAD_MSG                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     LOAD_MSG      BEGSR
- 
+
      C                   Z-ADD     1             X                 4 0
- 
+
       ** Loop through all fields
- 
+
      C                   Z-ADD     1             R                 3 0
      C     #_FieldTag(R) DOWNE     *BLANK
- 
+
       ** Start tag for field
- 
+
      C                   EXSR      STARTofFLDTAG
- 
+
      C                   MOVEA     #_FieldData(R)WrkDATA
      C                   MOVEA     #_FieldAttr(R)WrkATTR          10
- 
+
       ** Date, amount or other
- 
+
      C**********     #_FieldType(R)IFEQ      'keys:date'                                    MD025783
      C     #_FieldType(R)IFEQ      'for:date'                                               MD025783
      C                   EXSR      DET_DATE
@@ -180,27 +182,27 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   MOVEA     WrkDATA       Msg(X)
- 
+
      C                   EXSR      DET_EoDATA
      C                   ADD       Size          X
- 
+
       ** End tag for field
- 
+
      C                   EXSR      ENDofFLDTAG
- 
+
      C                   ADD       1             R
- 
+
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
       *                                                               *
       **   STARTofFMT                                                 *
       *                                                               *
       *****************************************************************
- 
+
      C     STARTofFMT    BEGSR
      C     #_FieldTag(1) IFNE      NARJMS(1)
      C                   MOVEA     '<'           Msg(X)
@@ -216,7 +218,7 @@
       **   STARTofFLDTAG                                              *
       *                                                               *
       *****************************************************************
- 
+
      C     STARTofFLDTAG BEGSR
      C                   MOVEL     '<'           Msg(X)
      C                   ADD       1             X
@@ -242,11 +244,11 @@
       **   ENDofFLDTAG                                                *
       *                                                               *
       *****************************************************************
- 
+
      C     ENDofFLDTAG   BEGSR
       *
       ** Loop through all Narratives
- 
+
      C                   Z-ADD     1             Y                 2 0
      C*****Y             DOWLT     12                                                       MD024362
      C**********     Y             DOWLT     15                                    MD024362 MD025783
@@ -263,7 +265,7 @@
      C                   ENDDO
       *
       ** Loop through all end of Narratives
- 
+
      C                   Z-ADD     1             V                 2 0
      C*****V             DOWLT     11                                                       MD024362
      C**********     V             DOWLT     14                                    MD024362 MD025783
@@ -307,7 +309,7 @@
       **   DET_DATE                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     DET_DATE      BEGSR
      C                   MOVEL     WrkData       ZDAYNO
      C                   MOVEL     WrkAttr       BJDFIN
@@ -324,9 +326,9 @@
       **   DET_AMOUNT                                                 *
       *                                                               *
       *****************************************************************
- 
+
      C     DET_AMOUNT    BEGSR
- 
+
      C                   EXSR      DET_EoDATA
      C                   Z-ADD     *ZERO         ZFL15
      C                   Z-ADD     15            Ix                2 0
@@ -336,9 +338,9 @@
      C                   SUB       1             Size
      C                   SUB       1             Ix
      C                   ENDDO
- 
+
      C                   Z-ADD     ZFL15         ZFLD15
- 
+
      C                   MOVEL     WrkAttr       ZDECS
      C                   CALL      'ZSEDIT'
      C                   PARM                    ZFLD15           15 0
@@ -353,9 +355,9 @@
       **   DET_DRCRAMNT                                               *
       *                                                               *
       *****************************************************************
- 
+
      C     DET_DRCRAMNT  BEGSR
- 
+
      C                   EXSR      DET_EoDATA
      C                   Z-ADD     *ZERO         ZFL15
      C                   Z-ADD     15            Ix
@@ -365,9 +367,9 @@
      C                   SUB       1             Size
      C                   SUB       1             Ix
      C                   ENDDO
- 
+
      C                   Z-ADD     ZFL15         ZFLD15
- 
+
      C                   MOVEL     WrkAttr       ZDECS
      C                   CALL      'ZSEDIT'
      C                   PARM                    ZFLD15
@@ -387,7 +389,7 @@
       **   DET_EoDATA                                                 *
       *                                                               *
       *****************************************************************
- 
+
      C     DET_EoDATA    BEGSR
      C                   Z-ADD     1000          Size              4 0
      C     WD(Size)      DOUNE     *BLANK
@@ -402,7 +404,7 @@
      C                   END
       *
      C                   ENDSR
- 
+
       *****************************************************************
      C     *INZSR        BEGSR
      C                   ENDSR

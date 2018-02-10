@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas OF Automatic Opening of GL Account')             *
@@ -9,15 +9,17 @@
       *                                                               *
       *  GL000590 - Midas OF Automatic Opening of GL Account.         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD033895           Date 16Apr15               *
-      *  Prev Amend No. MD023674           Date 29Nov13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD033895           Date 16Apr15               *
+      *                 MD023674           Date 29Nov13               *
       *                 MD023747           Date 23Nov13               *
       *                 CGL135A  *CREATE   Date 11Oct13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD033895 - MD033895 - Correct parameters for UT000033.       *
       *  MD023674 - Invalid date                                      *
       *  MD023747 - Accounting Rules Process (Recompile)              *

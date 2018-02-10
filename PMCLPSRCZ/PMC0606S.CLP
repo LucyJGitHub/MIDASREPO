@@ -7,19 +7,21 @@
 /*                                                                   */
 /*       PMC0606S - UPDATE USER AND CUSTOMER DEPOT POSITIONS         */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. S01408             DATE 11MAY95              */
-/*       PREV AMEND NO. S01486             DATE 17JUN94              */
+/*       Prev Amend No. S01408             Date 11May95              */
+/*                      S01486             Date 17Jun94              */
 /*                      S01189             DATE 10APR92              */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       S01408 - Addition of core hook PMC0606SM1                   */
 /*       S01486 - Private Banking Upgrade to Release 10              */
 /*       S01189 - CLOSE OF BUSINESS IMPROVEMENTS PHASE 2             */
@@ -32,7 +34,7 @@
 /*********** PGM                                                        S01189*/
              PGM        PARM(&ACCRX &CNAM &CSEQ)                      /*S01189*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
  
@@ -294,6 +296,6 @@
  
 ENDPGM:                                                               /*S01486*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /****ENDPGM:      ENDPGM                                                S01486*/
                 ENDPGM                                                /*S01486*/

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas OF Validate JE Item Posting Date')               *
@@ -10,13 +10,15 @@
       *  GLVPTDT01  - Validate Journal Batch Entry Item               *
       *               Posting Date                                    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD032379           Date 15Jul15               *
-      *  Prev Amend No. CGL135A  *CREATE   Date 10Jul13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD032379           Date 15Jul15               *
+      *                 CGL135A  *CREATE   Date 10Jul13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD032379 - Correct posting date validation for non-working   *
       *             day.                                              *
       *  CGL135A - Accounting Rules Process                           *
@@ -403,4 +405,4 @@
       *****************************************************************
       *
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2013
+(c) Finastra International Limited 2013

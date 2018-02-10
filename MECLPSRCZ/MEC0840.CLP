@@ -8,10 +8,11 @@
 /*                                                                   */
 /*   MEC0840 - Outgoing message status  report - selection           */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*   Last Amend No. MD030783           Date 13Nov14                  */
-/*   Prev Amend No. AR1097217          Date 25Mar13                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD030783           Date 13Nov14              */
+/*                      AR1097217          Date 25Mar13              */
 /*                  CCB023B            Date 06Aug12                  */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -25,6 +26,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*         MD030783 - COB component is failing while accessing       */
 /*                    MGOREFL0 (in case of multiple messages).       */
 /*         AR1097217 - DBICDM in use                                 */
@@ -86,7 +88,7 @@ PGM          PARM(&RSEQ &RLVL &RBCH &RPARM)
              DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(8)                                   /*CCB023B*/
              DCL        VAR(&ZONEID) TYPE(*CHAR) LEN(2)                                  /*CCB023B*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /*/COPY WNCPYSRC,MEC0840001                                          */
  
@@ -486,5 +488,5 @@ WAIT:          ALCOBJ     OBJ((DBICDM *FILE *EXCL)) WAIT(3)                     
              MONMSG MSGID(CPF0000 MCH0000)
              RCLRSC
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

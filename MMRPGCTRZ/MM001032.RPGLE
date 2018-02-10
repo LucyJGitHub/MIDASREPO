@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MM: S/R to calculate interest int calc 9')       *
@@ -19,7 +19,7 @@
       *             36600. The division by 100 is performed after     *
       *             multiple calls to this program                    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *    This source is centrally supported and must ONLY be        *
       *    amended by Core Development Personnel                      *
@@ -27,10 +27,12 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CDL093  *CREATE    Date 07Apr14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL093  *CREATE    Date 07Apr14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL093 - MM Interest calculation type 9.                     *
       *                                                               *
       *****************************************************************
@@ -276,4 +278,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2014
+(c) Finastra International Limited 2014

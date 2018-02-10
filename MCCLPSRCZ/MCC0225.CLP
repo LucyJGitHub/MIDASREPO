@@ -7,14 +7,15 @@
 /*                                                                   */
 /*   MCC0225 - Opening Balance Maintenance Control                   */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. BUG12454           Date 06Nov06              */
-/*       Prev Amend No. CGL029             Date 01Sep03              */
+/*       Prev Amend No. BUG12454           Date 06Nov06              */
+/*                      CGL029             Date 01Sep03              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      067849             Date 07Mar94              */
@@ -22,6 +23,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BUG12454 - Changed OPNQRYF statements for alpha customer    */
 /*                  number                                           */
 /*       CGL029 - Increase Account Code to 10 digits                 */
@@ -38,7 +40,7 @@
              PGM        PARM(&GCD &PYR &PNO &ANL &SCS &SDT &PBS &RET)
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50) /* Error +
                           message variable */
@@ -87,7 +89,7 @@
                           CMDLBL(ERROR))
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 /* Create local data area                                            */
              CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256) +

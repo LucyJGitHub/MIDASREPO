@@ -7,15 +7,17 @@
 /*                                                                   */
 /*       MMC5293 - Penalty Termination Unauthorized check            */
 /*                                                                   */
-/*       (C) Copyright MISYS INTERNATIONAL BANKING SYSTEMS LTD 2008  */
+/*       (C) Copyright Finastra International Limited 2008           */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Last Amend No. 256795  *Create    Date 25Sep08              */
-/*       Prev Amend No. xxxxxx             Date ddmmmyy              */
+/*       Prev Amend No. 256795  *CREATE    Date 25Sep08              */
+/*                      XXXXXX             Date DDMmmYY              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       256795 - Penalty Termination of Time Deposits (CDL052)      */
 /*                                                                   */
 /*********************************************************************/
@@ -23,7 +25,7 @@
              PGM
  
              DCL        VAR(&MKICPY) TYPE(*CHAR) LEN(64) VALUE('(C) +
-                        Copyright MISYS INTERNATIONAL BANKING SYSTEMS LTD 2008')
+                        Copyright FINASTRA INTERNATIONAL LIMITED 2008')
  
              DCL        VAR(&CHECK) TYPE(*CHAR) LEN(1)
              DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)
@@ -75,6 +77,6 @@ ABNOR:
              CHGJOB     SWS(XXXXXX11)
  
  END:
-     CHGVAR &MKICPY '(C) Copyright MISYS INTERNATIONAL BANKING SYSTEMS LTD 2008'
+     CHGVAR &MKICPY '(c) Copyright FINASTRA INTERNATIONAL LIMITED 2008'
  
  ENDPGM

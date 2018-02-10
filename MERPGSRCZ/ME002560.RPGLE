@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas ME MT941/2 Message Requests - D.B. Update')      *
@@ -13,19 +13,21 @@
       *  Function:  This module updates the files related to a        *
       *             Message Request.                                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. AR647426           Date 19Aug14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR647426           Date 19Aug14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD027             Date 09Dec05               *
       *                 CGL029             Date 01Sep03               *
       *                 CGL013  *CREATE    Date 25Apr02               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR647426 - Schedules must be updated also when floors change.*
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CGL029 - Increase Account Code to 10 digits (Recompile)      *
@@ -562,4 +564,4 @@
  
       *========================================================================*
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2002
+(c) Finastra International Limited 2002

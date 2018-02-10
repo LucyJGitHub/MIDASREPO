@@ -7,16 +7,19 @@
 /*                                                                   */
 /*       MCC0205 - MANAGEMENT ACCOUNTS REVIEW INITIAL CONTROL        */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMENDMENT NO.          DATE                            */
+/*       PREV AMENDMENT NO.          DATE                            */
 /*                                                                   */
+/*********************************************************************/
+/*       MD046248 - Finastra Rebranding                              */
 /*********************************************************************/
 /*       C R E A T I O N     P A R A M E T E R S                     */
 /*                                                                   */
@@ -30,7 +33,7 @@
              DCL        VAR(&LDA) TYPE(*CHAR) LEN(256)
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
 /* Global Monitor Message */
@@ -39,7 +42,7 @@
                           CMDLBL(ABNOR))
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /* Set-off Database Error Switches */
 /**/
              CHGJOB     SWS(XXXXX000)

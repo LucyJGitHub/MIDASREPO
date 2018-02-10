@@ -8,19 +8,21 @@
 /*     MSC4050 - FOR SELECTION AND CANCELATION OF TRACE MODE        */
 /*               COMMUNICATION PROGRAMS FOR THE 3270 PROTOCOL       */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*     LAST AMEND NO. S01314           DATE 25APR91                 */
-/*     PREV AMEND NO. S01250           DATE 29JAN90                 */
+/*       Prev Amend No. S01314             Date 25Apr91              */
+/*                      S01250             Date 29Jan90              */
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*     S01314 - CHANGES MADE DURING PTF INCORPORATION               */
 /*            - ADD COPYRIGHT STATEMENT AND MOVE END LABEL TO       */
 /*              ENSURE THAT THE NEW CHGVAR COMMAND IS EXECUTED.     */
@@ -38,7 +40,7 @@
              DCL        VAR(&TRACF) TYPE(*CHAR) LEN(1)
              DCL        VAR(&CPA) TYPE(*CHAR) LEN(1)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /*                                                                  */
 /* Retrive status of Trace Mode and Communications Link from        */
@@ -90,6 +92,6 @@
 /*   SET UP COPYRIGHT  */                                             /*S01314*/
 /**/                                                                  /*S01314*/
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /*END:        ENDPGM **/                                              /*S01314*/
              ENDPGM                                                   /*S01314*/

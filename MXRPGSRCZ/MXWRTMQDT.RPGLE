@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MX Write MQ Series Data')
@@ -13,19 +13,21 @@
       *             to write data to the appropriate MQ series data   *
       *             file.                                             *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.05 -----------------------------------------------*
-      *  Last Amend No. CMX001  *CREATE    Data 01Jan00               *
-      *  Prev Amend No.                    Date ddmmmyy               *
+      *  Prev Amend No. CMX001  *CREATE    Data 01Jan00               *
+      *                                    Date ddmmmyy               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CMX001 - Meridian Export                                     *
       *                                                               *
       *****************************************************************
@@ -200,4 +202,4 @@
       /COPY MXCPYSRC,MXPSSR
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

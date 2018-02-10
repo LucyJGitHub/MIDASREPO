@@ -7,22 +7,24 @@
 /*                                                                   */
 /*       MCC0210 - Management Accounts Review Enquiry                */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Last Amend No. 120835             Date 14Jul97              */
-/*       Prev Amend No. 057942             Date 15JUL94              */
+/*       Prev Amend No. 120835             Date 14Jul97              */
+/*                      057942             Date 15Jul94              */
 /*                      048237             Date 09DEC92              */
 /*                                                                   */
 /* This program is called from MC0205 and calls MC0210 and MCC0220   */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       120835 - Database error using invalid period number         */
 /*       057942 - If the physical/logical file members for the       */
 /*                control group do not exist, add them, else the     */
@@ -51,7 +53,7 @@
 /************DCL        VAR(&RPY) TYPE(*CHAR) LEN(1) /* Msg reply */  /*048237*/
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /* Global Monitor Message                                            */
@@ -60,7 +62,7 @@
                           CMDLBL(ABNOR))
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /** If the required members do not exist, create them.            */ /*057942*/
 /** This will be required where a database is restored containing */ /*057942*/
 /** control groups for which the pf/lf members do not exist.      */ /*057942*/

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MM Validate Deal Amendment Type')                *
@@ -15,7 +15,7 @@
       *             valid. If it is valid the 10A return code will be *
       *             blank; if it is not it will contain 'Error'       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *    This source is centrally supported and must ONLY be        *
       *    amended by Core Development Personnel                      *
@@ -23,8 +23,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CDL088             Date 07Jul15               *
-      *  Prev Amend No. CGL165             Date 15Feb17               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL088             Date 07Jul15               *
+      *                 CGL165             Date 15Feb17               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -56,6 +57,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL088 - Allow Spread Change for Negotiable Assets           *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
@@ -785,4 +787,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

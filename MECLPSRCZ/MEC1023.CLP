@@ -7,14 +7,15 @@
 /*                                                                   */
 /*       MEC1023  - Submit MS ME IMM Extraction job                  */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD027770           Date 27Jun14              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD027770           Date 27Jun14              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CSC023             Date 30Jan04              */
+/*                      CSC023             Date 30Jan04              */
 /* Midas Release 4.01 -----------------------------------------------*/
 /*                      CPK015             Date 18Apr02              */
 /* Midas Release 4 --------------- Base -----------------------------*/
@@ -25,6 +26,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD027770 - Job ME_FT_IMM dumps due to xxOWNER not found     */
 /*                  in MUSER. Use the current user in SBMJOB command */
 /*                  as xxOWNER is no longer added to file MUSER.     */
@@ -41,7 +43,7 @@
 /* Copyright statement defination  */
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /* */
 /* Declare variables */
@@ -69,7 +71,7 @@
 /*           Copyright statement definition - at runtime             */
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /* */
 /* Send Message to MRUNQ */
 /* */

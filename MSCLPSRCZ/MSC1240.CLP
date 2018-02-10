@@ -7,16 +7,17 @@
 /*                                                                   */
 /*     MSC1240 - INCOMING MESSAGES REFERENCE GENERATION              */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*        Last Amend No. CPK009            Date 09Aug99              */
-/*        Prev Amend No  S01310            DATE 06DEC90              */
+/*       Prev Amend No. CPK009             Date 09Aug99              */
+/*                      S01310             Date 06Dec90              */
 /*                       S01259            DATE 20AUG90              */
 /*                       S01179            DATE 12/09/88             */
 /*                       E12907            DATE 14/04/88             */
@@ -25,6 +26,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*     CPK009 - Packaging for DBA3 release. STRCMTCTL values set     */
 /*              to CMTSCOPE(*JOB).                                   */
 /*     S01310 - SWIFT RATIONALISATION                                */
@@ -49,7 +51,7 @@
 /*           DCLDTAARA  DTAARA(MMOD)                      *  *E12907*  *S01179*/
              DCL        VAR(&MMOD)   TYPE(*CHAR) LEN(256)             /*S01179*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/                                                                  /*E12907*/
 /*                                                                   */
@@ -128,5 +130,5 @@
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
 /*                                                                   */
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  ENDPGM:     ENDPGM

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MM Validate dates for loans & deposits')         *
@@ -13,7 +13,7 @@
       *  Function:  This module cross-validates the various date      *
       *             fields on a LDNI transaction.                     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *    This source is centrally supported and must ONLY be        *
       *    amended by Core Development Personnel                      *
@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CGL165             Date 15Feb17               *
-      *  Prev Amend No. MD029724           Date 24Nov14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL165             Date 15Feb17               *
+      *                 MD029724           Date 24Nov14               *
       *                 CDL096             Date 22Sep14               *
       *                 CER059             Date 19Jul10               *
       *                 BUG23732           Date 23Apr09               *
@@ -48,6 +49,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  MD029724 - Rollover not allowed before maturity for deposits *
       *             with Taxable Indicator not equal to 'T'(Threshold)*
@@ -918,4 +920,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

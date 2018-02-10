@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+     H COPYRIGHT('(c) Finastra International Limited 2012')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas ME Check if SWIFT 2013 is active')               *
@@ -16,12 +16,14 @@
       *             or Rundate is equal to 16th November and          *
       *             MPHAS is not 'A' and not 'F'.                     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. CSW213  *CREATE    Date 03Jun13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CSW213  *CREATE    Date 03Jun13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSW213 - SWIFT Changes 2013                                  *
       *                                                               *
       *****************************************************************

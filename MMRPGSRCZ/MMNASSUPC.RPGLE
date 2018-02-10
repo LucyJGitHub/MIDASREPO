@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MM NAs sold database update controller')
@@ -9,14 +9,15 @@
       *                                                               *
       *  MMNASSUPC - NAS SOLD CONTROLLER FOR UPDATES                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSD027             Date 09Dec05               *
-      *  Prev Amend No. BUG9711            Date 26Jan06               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 BUG9711            Date 26Jan06               *
       *                 CDL038             Date 10May05               *
       *                 CDL010             Date 02Aug02               *
       * Midas Release 4.01 -------------------------------------------*
@@ -28,6 +29,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  BUG9711- Changes to MMVNASPPD/MMVNASSPD (re-compile)         *
       *  CDL038 - Extended Deal Sub Type (Recompile)                  *
@@ -391,4 +393,4 @@
       ********************************************************************
       /EJECT
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

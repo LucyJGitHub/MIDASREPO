@@ -11,15 +11,17 @@
       *  Function:  This program will handle the deletion/cancellation*
       *             of MT340, MT360, MT361 and MT341                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD029017           Date 25Nov14               *
-      *  Prev Amend No. MD028226           Date 07Jul14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD029017           Date 25Nov14               *
+      *                 MD028226           Date 07Jul14               *
       *                 MD022052           Date 09Sep13               *
       *                 CSW213  *CREATE    Date 03Jun13               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD029017 - Tag 22A value is AMND instead of NEWT             *
       *  MD028226 - Deletion of FRA transaction did not create a      *
       *             cancellation entry on MGF340TR archive file when  *

@@ -8,15 +8,16 @@
 /*       MXC0021 - COB Bulk Transmission - All Composites and Formats*/
 /*                                         to Flat file              */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CSW034             Date 09JAN04              */
+/*       Prev Amend No. CSW034             Date 09Jan04              */
 /* Midas Release 4.01 -----------------------------------------------*/
-/*       Prev Amend No. CMX011             Date 29Dev01              */
+/*                      CMX011             Date 29Dev01              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.05 ---------------------------------------------------*/
 /*                      CMX010  *CREATE    Data 18Jan01              */
@@ -24,6 +25,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CSW034 - Midas Message Manager Global Processing            */
 /*       CMX011 - Enable Meridian Export to use data queue as well   */
 /*                as MQ queue.                                       */
@@ -59,7 +61,7 @@
              DCL        VAR(&ERMS) TYPE(*CHAR) LEN(30)
              DCL        VAR(&CMX011) TYPE(*CHAR) LEN(1) VALUE(' ')             /*CMX011*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /* Global monitor message */
@@ -201,7 +203,7 @@
                MONMSG     MSGID(CPF0000 MCH0000)
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 /*/COPY WNCPYSRC,MXC0021END                                          */
  

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MM Deal range auth. by front office ID')         *
@@ -13,10 +13,11 @@
       *  Function:  This input function allows range authorization    *
       *             of all MM transactions by Front Office ID         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR701789           Date 26Sep16               *
-      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR701789           Date 26Sep16               *
+      *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 CRE073             Date 06Dec10               *
@@ -53,6 +54,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR701789 - Unable to reject a deal amendment. Add a new      *
       *             parameter to indicate reject transaction.         *
       *             Applied for MD041482                              *
@@ -1470,4 +1472,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CCPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

@@ -7,16 +7,18 @@
 /*                                                                   */
 /*       MEC1460 - ME BIC Database Converter                         */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2007           */
+/*       (c) Finastra International Limited 2007                     */
 /*                                                                   */
-/*       Last Amend No. 262412             Date 11Nov09              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. 262412             Date 11Nov09              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Prev Amend No. CFT040             Date 15Sep08              */
+/*                      CFT040             Date 15Sep08              */
 /*                      CFT035  *Create    Date 22Jan07              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       262412 - Call ME1460 when CFT035 is switched ON             */
 /*       CFT040 - BIC Plus IBAN                                      */
 /*       CFT035 - BIC Database Changes 2007                          */
@@ -25,7 +27,7 @@
              PGM
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2007')
              DCL        VAR(&ERRTYP) TYPE(*CHAR) LEN(1) VALUE('0')                        /*CFT040*/
              DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7) VALUE('       ')                    /*CFT040*/
@@ -105,7 +107,7 @@
  
  END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM
  

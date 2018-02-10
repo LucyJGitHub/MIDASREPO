@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2006')
+     H COPYRIGHT('(c) Finastra International Limited 2006')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas ME Outgoing Message Field Management Excpt R')   *
@@ -18,10 +18,11 @@
       *  Called By: MEC1752 - ME Outgoing Message Field Management    *
       *             Exception Report Control.                         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. CER070             Date 19Aug14               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER070             Date 19Aug14               *
+      *                 CLE134             Date 01Aug12               *
       *                 CRE075             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
       *                 CER034             Date 19May08               *
@@ -37,6 +38,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CER070 - BuBa Reporting / BAIS V.1.16.0 (Recompile)          *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *

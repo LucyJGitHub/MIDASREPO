@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2005')
+     H COPYRIGHT('(c) Finastra International Limited 2005')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MM Date Schedule Maintenance')
@@ -16,16 +16,18 @@
       *                                                               *
       *  Called by: DL0170, MMLDNICHD, MMLDNIRPR, MMLDNISIN, MM0090   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CDL033  *CREATE    Date 10Feb05               *
+      *  Prev Amend No. CDL033  *CREATE    Date 10Feb05               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL033 - Floating Rate CDs Issued                            *
       *                                                               *
       *****************************************************************
@@ -1897,7 +1899,7 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2005
+(c) Finastra International Limited 2005
 ** NARR - Titles
 Interest Rate Change Schedule
 Interest Payment Schedule

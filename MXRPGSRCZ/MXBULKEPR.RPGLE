@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MX Bulk Export Prompt')
@@ -12,20 +12,22 @@
       *  Function:  This module prompts for a bulk download           *
       *             of a composite or a single file                   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
-      *  Last Amend No. 244432             Date 16Feb07               *
+      *  Prev Amend No. 244432             Date 16Feb07               *
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CAAA03             Data 12Mar04               *
+      *                                    Date                       *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.05 -----------------------------------------------*
       *                 CMX001  *CREATE    Data 01Jan00               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  244432 - Write MAIN record format after CONFIRM to prevent   *
       *           the WF0092 application error from occurring in the  *
       *           webface screen.  Patterned after CAAA03.            *
@@ -172,4 +174,4 @@
       /COPY MXCPYSRC,MXPSSR
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

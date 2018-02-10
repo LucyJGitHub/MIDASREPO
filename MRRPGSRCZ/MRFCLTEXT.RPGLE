@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2005')
+     H COPYRIGHT('(c) Finastra International Limited 2005')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MR Facilities Extract')
@@ -13,18 +13,20 @@
       *             for each record required, will write a record     *
       *             to MRTRAPPD.                                      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
-      *  Last Amend No. 242999             Date 12Oct06               *
+      *  Prev Amend No. 242999             Date 12Oct06               *
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027A            Date 09May06               *
+      *                 CSD027A            Date 09May06               *
       *                 CRN001  *CREATE    Date 20Jul05               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  242999 - Missing parameter by CDL038.                        *
       *  CSD027A - Conversion Of Customer Number to Alpha             *
       *            (recompile)                                        *
@@ -822,4 +824,4 @@
      C                   ENDSR
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2005
+(c) Finastra International Limited 2005

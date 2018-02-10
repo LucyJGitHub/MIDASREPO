@@ -8,14 +8,15 @@
 /*       MAC0121 - Delete or Rename the Optical Disk                 */
 /*                 DOWNLOAD.xx Folder.                               */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. BUG11102           Date 15May06              */
-/*       Prev Amend No. CPK024             Date 12Apr06              */
+/*       Prev Amend No. BUG11102           Date 15May06              */
+/*                      CPK024             Date 12Apr06              */
 /* Midas Release 4.01 -----------------------------------------------*/
 /*                      194175             Date 03Aug01              */
 /* Midas Release 4 --------------- Base -----------------------------*/
@@ -24,6 +25,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BUG11102 - Do not proceed with rename if backup folder      */
 /*                  already exists.                                  */
 /*       CPK024 - Packaging of MPlus 1.2.1. Copy sources needed by   */
@@ -39,7 +41,7 @@
              PGM
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&SYSTEM) TYPE(*CHAR) LEN(2)
              DCL        VAR(&RTNCODE) TYPE(*CHAR) LEN(7)
@@ -163,7 +165,7 @@
              MONMSG     MSGID(CPF0000 MCH0000)
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              MONMSG     MSGID(CPF0000 MCH0000)
  
 /***COPY*MACPYSRC,MAC0121END*                                        */                   /*CPK024*/

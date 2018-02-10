@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MM Loans/deposits retrieve a record')            *
@@ -11,10 +11,11 @@
       *                                                               *
       *  Function:  This module retrieves a record from the file      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. AR701789           Date 26Sep16               *
-      *  Prev Amend No. CGL165             Date 23Feb15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR701789           Date 26Sep16               *
+      *                 CGL165             Date 23Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 30May14               *
       *                 AR1060863          Date 06Apr13               *
@@ -62,6 +63,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR701789 - Unable to reject a deal amendment. Add a new      *
       *             parameter to indicate reject transaction.         *
       *             Applied for MD041482                              *
@@ -1402,4 +1404,4 @@
       /EJECT                                                                                  CER043
       *****************************************************************                       CER043
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2003
+(c) Finastra International Limited 2003

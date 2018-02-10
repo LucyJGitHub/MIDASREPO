@@ -7,22 +7,24 @@
 /*                                                                   */
 /*       MTC4020 - TESTKEY REQUEST BY DESTINATION                    */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.03 ---------------------------------------------------*/
-/*       Last Amend No. 176843      Date 01Aug00                     */
+/*       Prev Amend No. 176843             Date 01Aug00              */
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CTK001      Date 13May99                     */
+/*                      CTK001             Date 13May99              */
 /*                      E32895      DATE 30APR92                     */
 /*                      00000       DATE 00XXX00                     */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       176843 - Create a working copy of TKII interface file       */
 /*                within QTEMP and process this one instead of       */
 /*                that in xxDMLIB to prevent problems.               */
@@ -49,7 +51,7 @@
              DCL       VAR(&FMT) TYPE(*CHAR) LEN(200)                 /*CTK001*/
              DCL       VAR(&CTK001) TYPE(*CHAR) LEN(1) VALUE('N')     /*CTK001*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
              DCL        VAR(&MMOD) TYPE(*CHAR) LEN(256)
@@ -172,7 +174,7 @@ ABNOR:       SNDPGMMSG  MSG('TESTKEY REQUEST BY DESTINATION +
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              CLRPFM     FILE(TKOTOPF)                                                     /*CTK001*/
              CLRPFM     FILE(TKIBCKPD)                                                    /*176843*/
              ENDPGM

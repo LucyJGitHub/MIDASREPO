@@ -7,23 +7,25 @@
 /*                                                                   */
 /*       MEC1210  - End I.M.M. C.O.B. Activity Control               */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.03 ---------------------------------------------------*/
-/*       Last Amend No. CCB009             DATE 01Jun00              */
+/*       Prev Amend No. CCB009             Date 01Jun00              */
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. 092425             DATE 09SEP95              */
+/*                      092425             Date 09Sep95              */
 /*                      092957             DATE 09SEP95              */
 /*                      S01408             DATE 05MAY95              */
 /*                      S01435             DATE 19AUG93              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*   CCB009 - Journal files throughout close of business             */
 /*   092425 - Allocation of the JLIB during generic delete of the    */
 /*            receivers causes other components to be locked out -   */
@@ -43,7 +45,7 @@
              PGM        PARM(&COMP_NAME &COMP_SEQ)
 /* */
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /* */
 /* Declare variables */
@@ -189,7 +191,7 @@ ABNORMAL:
  ENDCLPGM:   RCLRSC     LVL(*CALLER)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
 /* */
              ENDPGM

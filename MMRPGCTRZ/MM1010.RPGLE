@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MM: MM0089 S/R to calc interest at maturity')    *
@@ -27,7 +27,7 @@
       *             From these it calulates the interest at maturity  *
       *             which it returns as another parameter.            *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *    This source is centrally supported and must ONLY be        *
       *    amended by Core Development Personnel                      *
@@ -35,8 +35,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CDL094             Date 11Jun14               *
-      *  Prev Amend No. BUG28052           Date 22Aug10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *                 BUG28052           Date 22Aug10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 CDL081             Date 14Dec09               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -58,6 +59,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL094 - Enhance  Receive Settlement Instructions            *
       *           (Recompiled)                                        *
       *  BUG28052 - MMM0188 Incorrect new deals principal             *
@@ -947,6 +949,6 @@ C    D ZLOC            S              3A
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 ** @M  USED BY SR. MM1004 - DAYS IN A MONTH
 312831303130313130313031

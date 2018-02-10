@@ -7,22 +7,24 @@
 /*                                                                  */
 /*       MEC0610 - Outgoing messages release by range               */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Last Amend No.  BG18886          DATE 29May08              */
+/*       Prev Amend No. BG18886            Date 29May08              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4.01.03 --------------------------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.03 ---------------------------------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       PREV AMEND NO.  00000            DATE 00XXX00              */
+/*                      00000              Date 00Xxx00              */
 /*                       00000            DATE 00XXX00              */
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BG18886 - Amend non-standard codes.                        */
 /*                                                                  */
 /********************************************************************/
@@ -60,7 +62,7 @@ PGM          PARM(&RSEQ &RLVL &RBCH &RPARM)
  
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /* Global monitor message */
@@ -249,5 +251,5 @@ TAG5:
              MONMSG MSGID(CPF0000 MCH0000)
              RCLRSC
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

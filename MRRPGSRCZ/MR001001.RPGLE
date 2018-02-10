@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
+     H COPYRIGHT('(c) Finastra International Limited 2011')
       *****************************************************************
 /*STD *  RPGBASEBNC                                                   *
 /*EXS *  RPGCVTOPT2                                                   *
@@ -14,13 +14,15 @@
       *                                                               *
       *  MR001001 - MBI/Almonde interface                             *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2011            *
+      *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. AR844222           Date 05Oct11               *
-      *  Prev Amend No. CMR002  *CREATE    Date 14Feb11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR844222           Date 05Oct11               *
+      *                 CMR002  *CREATE    Date 14Feb11               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR844222 - MBI signal file format update (CCR003)            *
       *  CMR002 - MBI/Almonde Interface                               *
       *                                                               *

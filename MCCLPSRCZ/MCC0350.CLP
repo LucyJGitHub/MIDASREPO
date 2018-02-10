@@ -7,20 +7,22 @@
 /*                                                                   */
 /*       MCC0350 - Primary Management A/c Update                     */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Last Amend No. 130068             DATE 30Apr99              */
-/*       Prev Amend No. CED002             DATE 19JUN97              */
+/*       Prev Amend No. 130068             Date 30Apr99              */
+/*                      CED002             Date 19Jun97              */
 /*                      CMC001 *CREATE     Date 18MAR96              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*   130068 - Dbase error in MCPOSTL4, at 05, in pgm MC0400.         */
 /*            (Same cause of the problem when new period is not      */
 /*            being generated.)                                      */
@@ -33,7 +35,7 @@
 /* Copyright statement defination  */
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /* */
 /* Declare variables */
@@ -340,5 +342,5 @@
              DMPCLPGM
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

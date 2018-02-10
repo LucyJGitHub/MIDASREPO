@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MX Saved data update - dealing module')          *
@@ -11,10 +11,11 @@
       *                                                               *
       *  Function:  This module updates the dealing saved data files. *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
-      *  Prev Amend No. CGL165             Date 15Feb17               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CGL165             Date 15Feb17               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 AR1097467          Date 01Apr13               *
@@ -52,6 +53,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
@@ -91,7 +93,7 @@
       *  CMX001 - Meridian Export                                     *
       *                                                               *
       *****************************************************************
- 
+
      F***DEALSDB   IP   E             DISK    INFSR(*PSSR) PREFIX(B_)                      AR1097467
      F***DEALSDC   IS   E             DISK    INFSR(*PSSR) PREFIX(C_)                      AR1097467
      F***DEALSDD   IS   E             DISK    INFSR(*PSSR) PREFIX(D_)                      AR1097467
@@ -113,7 +115,7 @@
      FMXSDLDGPD UF A E           K DISK    RENAME(DEALSDGF:MXSDLDGP0)
      F                                     INFSR(*PSSR) PREFIX(PG_)
      FMXAKDLPD  O    E             DISK    INFSR(*PSSR)
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
@@ -131,20 +133,20 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** Entry Parameter                                                                   AR1097467
                                                                                            AR1097467
      D I#FILE          S             10A                                                   AR1097467
- 
+
       * FX Deals
      D DLDB          E DS                  EXTNAME(DEALSDB)
      D                                     PREFIX(B_)
@@ -170,31 +172,31 @@
      D                                     PREFIX(G_)
      D P_DLDG        E DS                  EXTNAME(MXSDLDGPD)
      D                                     PREFIX(PG_)
- 
- 
+
+
      D                 DS
      D*AKEY********************1     10                                                       CDL038
      D AKEY                    1     14                                                       CDL038
      D AK_DTYP                 1      2
      D AK_DLST                 4      5
      D AK_AMTC                 9     10
- 
- 
+
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for BANK details
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
- 
+
+
      D MXEXPCTL      E DS                  EXTNAME(MXEXPCTL)
- 
- 
+
+
      I***DEALSDBF      01                                                                  AR1097467
      I***DEALSDCF      02                                                                  AR1097467
      I***DEALSDDF      03                                                                  AR1097467
      I***DEALSDEF      04                                                                  AR1097467
      I***DEALSDGF      05                                                                  AR1097467
- 
- 
+
+
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7
      C                   PARM                    I#ERMS           30
@@ -202,11 +204,11 @@
       * Start of Month (Y/N)
      C                   PARM                    S_O_Month         1
      C                   PARM                    I#FILE                                    AR1097467
- 
+
      C                   MOVEL     *BLANK        AKEY
- 
+
       * If an FX Deal
- 
+
      C******in01         IFEQ      '1'                                                     AR1097467
      C                   IF        I#FILE = 'DEALSDB'                                      AR1097467
      C     1             SETLL     DEALSDB                                                 AR1097467
@@ -218,11 +220,11 @@
      C                   MOVEL     B_DTYP        I#DTYP
      C                   MOVEL     B_DLST        I#DLST
      C                   EXSR      FILTER
- 
+
       * If deal is for export
       * Update Saved FX Deals
       * Write Start of Month 'Dummy' A/C Key For FX Deals
- 
+
      C     Exp_BRCA      IFEQ      'Y'
      C     Exp_DTST      ANDEQ     'Y'
      C                   EXSR      UPD_DB
@@ -235,9 +237,9 @@
      C                   READ      DEALSDB                                                 AR1097467
      C                   ENDDO                                                             AR1097467
      C                   ENDIF
- 
+
       * If a Loan/Deposit
- 
+
      C******in02         IFEQ      '1'                                                     AR1097467
      C                   IF        I#FILE = 'DEALSDC'                                      AR1097467
      C     1             SETLL     DEALSDC                                                 AR1097467
@@ -249,11 +251,11 @@
      C                   MOVEL     C_DTYP        I#DTYP
      C                   MOVEL     C_DLST        I#DLST
      C                   EXSR      FILTER
- 
+
       * If deal is for export
       * Update Saved Loans/Deposits
       * Write Start of Month 'Dummy' A/C Key For Loans/Deposits
- 
+
      C     Exp_BRCA      IFEQ      'Y'
      C     Exp_DTST      ANDEQ     'Y'
      C                   EXSR      UPD_DC
@@ -266,9 +268,9 @@
      C                   READ      DEALSDC                                                 AR1097467
      C                   ENDDO                                                             AR1097467
      C                   ENDIF
- 
+
       * If a Negotiable Asset Purchased
- 
+
      C******in03         IFEQ      '1'                                                     AR1097467
      C                   IF        I#FILE = 'DEALSDD'                                      AR1097467
      C     1             SETLL     DEALSDD                                                 AR1097467
@@ -280,11 +282,11 @@
      C                   MOVEL     D_DTYP        I#DTYP
      C                   MOVEL     D_DLST        I#DLST
      C                   EXSR      FILTER
- 
+
       * If deal is for export
       * Update Saved N.A.s Purchased
       * Write Start of Month 'Dummy' A/C Key For N.A.s Purchased
- 
+
      C     Exp_BRCA      IFEQ      'Y'
      C     Exp_DTST      ANDEQ     'Y'
      C                   EXSR      UPD_DD
@@ -297,9 +299,9 @@
      C                   READ      DEALSDD                                                 AR1097467
      C                   ENDDO                                                             AR1097467
      C                   ENDIF
- 
+
       * If a Negotiable Asset Sold
- 
+
      C******in04         IFEQ      '1'                                                     AR1097467
      C                   IF        I#FILE = 'DEALSDE'                                      AR1097467
      C     1             SETLL     DEALSDE                                                 AR1097467
@@ -311,11 +313,11 @@
      C                   MOVEL     E_DTYP        I#DTYP
      C                   MOVEL     E_DLST        I#DLST
      C                   EXSR      FILTER
- 
+
       * If deal is for export
       * Update Saved Negotiable Assets Sold
       * Write Start of Month 'Dummy' A/C Key For Negotiable Assets Sold
- 
+
      C     Exp_BRCA      IFEQ      'Y'
      C     Exp_DTST      ANDEQ     'Y'
      C                   EXSR      UPD_DE
@@ -328,9 +330,9 @@
      C                   READ      DEALSDE                                                 AR1097467
      C                   ENDDO                                                             AR1097467
      C                   ENDIF
- 
+
       * If an FRA, Swap, Cap, Floor, Collar
- 
+
      C******in05         IFEQ      '1'                                                     AR1097467
      C                   IF        I#FILE = 'DEALSDG'                                      AR1097467
      C     1             SETLL     DEALSDG                                                 AR1097467
@@ -342,11 +344,11 @@
      C                   MOVEL     G_DTYP        I#DTYP
      C                   MOVEL     G_DLST        I#DLST
      C                   EXSR      FILTER
- 
+
       * If deal is for export
       * Update Saved FRAS, Swaps, Caps, Floors, Collars
       * Write Start of Month 'Dummy' A/C Key For FRAS, Swaps, Cps, Fls, Clrs
- 
+
      C     Exp_BRCA      IFEQ      'Y'
      C     Exp_DTST      ANDEQ     'Y'
      C                   EXSR      UPD_DG
@@ -359,7 +361,7 @@
      C                   READ      DEALSDG                                                 AR1097467
      C                   ENDDO                                                             AR1097467
      C                   ENDIF
- 
+
      C                   EVAL      *INLR = *ON                                             AR1097467
      C                   RETURN                                                            AR1097467
       *
@@ -368,19 +370,19 @@
       * Filter Deals
       ********************************************************************
      C     FILTER        BEGSR
- 
+
       * On change of branch
       * Determine if branch is to be included in the export
- 
+
      C     I#BRCA        IFNE      Prev_BRCA
      C                   MOVE      'D'           I#LD
      C                   EXSR      BRCA_FLT
      C                   MOVEL     I#BRCA        Prev_BRCA         3
      C                   ENDIF
- 
+
       * On change of deal type/sub type
       * Determine if deal type/sub type is to be included in the export
- 
+
      C     I#DTYP        IFNE      Prev_DTYP
      C     I#DLST        ORNE      Prev_DLST
      C                   MOVE      'D'           I#LD
@@ -388,7 +390,7 @@
      C                   MOVEL     I#DTYP        Prev_DTYP         2
      C                   MOVEL     I#DLST        Prev_DLST         2
      C                   ENDIF
- 
+
      C                   ENDSR
      C********************************************************************
       /SPACE 5
@@ -396,7 +398,7 @@
       * Update Saved FX Deals
       ********************************************************************
      C     UPD_DB        BEGSR
- 
+
      C     B_DLNO        CHAIN     MXSDLDBP0                          99        *
      C                   EVAL      P_DLDB = DLDB
      C                   EVAL      PB_LCD = CURSOM
@@ -405,7 +407,7 @@
      C                   ELSE
      C                   UPDATE    MXSDLDBP0
      C                   ENDIF
- 
+
      C                   ENDSR
      C********************************************************************
       /SPACE 5
@@ -413,7 +415,7 @@
       * Update Saved Loans/Deposits
       ********************************************************************
      C     UPD_DC        BEGSR
- 
+
      C     C_DLNO        CHAIN     MXSDLDCP0                          99        *
      C                   EVAL      P_DLDC = DLDC
      C                   EVAL      PC_LCD = CURSOM
@@ -422,7 +424,7 @@
      C                   ELSE
      C                   UPDATE    MXSDLDCP0
      C                   ENDIF
- 
+
      C                   ENDSR
      C********************************************************************
       /SPACE 5
@@ -430,7 +432,7 @@
       * Update Saved Negotiable Assets Purchased
       ********************************************************************
      C     UPD_DD        BEGSR
- 
+
      C     D_DLNO        CHAIN     MXSDLDDP0                          99        *
      C                   EVAL      P_DLDD = DLDD
      C                   EVAL      PD_LCD = CURSOM
@@ -439,7 +441,7 @@
      C                   ELSE
      C                   UPDATE    MXSDLDDP0
      C                   ENDIF
- 
+
      C                   ENDSR
      C********************************************************************
       /SPACE 5
@@ -447,7 +449,7 @@
       * Update Saved Negotiable Assets Sold
       ********************************************************************
      C     UPD_DE        BEGSR
- 
+
      C     E_DLNO        CHAIN     MXSDLDEP0                          99        *
      C                   EVAL      P_DLDE = DLDE
      C                   EVAL      PE_LCD = CURSOM
@@ -456,7 +458,7 @@
      C                   ELSE
      C                   UPDATE    MXSDLDEP0
      C                   ENDIF
- 
+
      C                   ENDSR
      C********************************************************************
       /SPACE 5
@@ -464,7 +466,7 @@
       * Update Saved FRAS, Swaps, Caps, Floors, Collars
       ********************************************************************
      C     UPD_DG        BEGSR
- 
+
      C     G_DLNO        CHAIN     MXSDLDGP0                          99        *
      C                   EVAL      P_DLDG = DLDG
      C                   EVAL      PG_LCD = CURSOM
@@ -473,7 +475,7 @@
      C                   ELSE
      C                   UPDATE    MXSDLDGP0
      C                   ENDIF
- 
+
      C                   ENDSR
      C********************************************************************
       /SPACE 5
@@ -481,9 +483,9 @@
       * Write Start of Month 'Dummy' A/C Key For FX Deals
       ********************************************************************
      C     WRTSOM_DB     BEGSR
- 
+
      C     B_ORED        IFLT      CURSOM
- 
+
      C                   MOVEL     B_DTYP        AK_DTYP
      C                   MOVEL     B_DLST        AK_DLST
      C                   Z-ADD     B_DLNO        DLNO
@@ -499,7 +501,7 @@
      C                   Z-ADD     B_SLAM        EAMT
      C                   MOVEL     B_SLCY        ECCY
      C                   WRITE     DKEYSDPF
- 
+
      C                   ENDIF
      C                   ENDSR
      C********************************************************************
@@ -508,10 +510,10 @@
       * Write Start of Month 'Dummy' A/C Key For Loans/Deposits
       ********************************************************************
      C     WRTSOM_DC     BEGSR
- 
+
      C     C_ORED        IFLT      CURSOM
      C     C_VDAT        ANDLT     CURSOM
- 
+
      C                   MOVEL     C_DTYP        AK_DTYP
      C                   MOVEL     C_DLST        AK_DLST
      C                   Z-ADD     C_DLNO        DLNO
@@ -525,7 +527,7 @@
      C                   ENDIF
      C                   MOVEL     C_CCY         ECCY
      C                   WRITE     DKEYSDPF
- 
+
      C                   ENDIF
      C                   ENDSR
      C********************************************************************
@@ -534,10 +536,10 @@
       * Write Start of Month 'Dummy' A/C Key For Negotiable Assets Purchased
       ********************************************************************
      C     WRTSOM_DD     BEGSR
- 
+
      C     D_ORED        IFLT      CURSOM
      C     D_VDAT        ANDLT     CURSOM
- 
+
      C                   MOVEL     D_DTYP        AK_DTYP
      C                   MOVEL     D_DLST        AK_DLST
      C                   Z-ADD     D_DLNO        DLNO
@@ -550,7 +552,7 @@
      C                   SUB       D_DISA        EAMT                           191998
      C                   MOVEL     D_CCY         ECCY
      C                   WRITE     DKEYSDPF
- 
+
      C                   ENDIF
      C                   ENDSR
      C********************************************************************
@@ -559,9 +561,9 @@
       * Write Start of Month 'Dummy' A/C Key For Negotiable Assets Sold
       ********************************************************************
      C     WRTSOM_DE     BEGSR
- 
+
      C     E_ORED        IFLT      CURSOM
- 
+
      C                   MOVEL     E_DTYP        AK_DTYP
      C                   MOVEL     E_DLST        AK_DLST
      C                   Z-ADD     E_DLNO        DLNO
@@ -572,7 +574,7 @@
      C                   Z-ADD     E_SAPR        EAMT
      C                   MOVEL     E_CCY         ECCY
      C                   WRITE     DKEYSDPF
- 
+
      C                   ENDIF
      C                   ENDSR
      C********************************************************************
@@ -581,13 +583,13 @@
       * Write Start of Month 'Dummy' A/C Key For FRAS, Swaps, Cps, Fls, Clrs
       ********************************************************************
      C     WRTSOM_DG     BEGSR
- 
+
      C     G_DTYP        IFEQ      'FR'
      C     G_ORED        ANDLT     CURSOM
      C     G_DTYP        ORNE      'FR'
      C     G_ORED        ANDLT     CURSOM
      C     G_VDAT        ANDLT     CURSOM
- 
+
      C                   MOVEL     G_DTYP        AK_DTYP
      C                   MOVEL     G_DLST        AK_DLST
      C                   Z-ADD     G_DLNO        DLNO
@@ -606,9 +608,9 @@
      C                   MOVEL     G_TCUCY       ECCY
      C                   WRITE     DKEYSDPF
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
      C********************************************************************
       /SPACE 5
@@ -616,48 +618,48 @@
       * *INZSR - Initial subroutine called automatically at program start
       ********************************************************************
      C     *INZSR        BEGSR
- 
+
       * Set up constants
- 
+
      C                   MOVEL     'A'           I#EXTT            1
- 
- 
+
+
       **  Access Bank Details
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      '*DBERR  '    @RTCD             7
      C                   PARM      '*FIRST  '    @OPTN             7
      C     SDBANK        PARM      SDBANK        DSFDY
- 
- 
+
+
       * Get extract control data
- 
+
      C     *DTAARA       DEFINE                  MXEXPCTL
      C     *LOCK         IN        MXEXPCTL
      C                   OUT       MXEXPCTL
- 
- 
+
+
       * If no save data is required then end
       * (If frequency is 'NEVER'  or
       *  if frequency is 'MONTHLY' but it is not the start of the month)
- 
+
      C     SDFQDL        IFEQ      'N'
      C     SDFQDL        OREQ      'M'
      C     S_O_Month     ANDNE     'Y'
      C                   SETON                                        LR
      C                   RETURN
      C                   ENDIF
- 
+
       * Load branches for export
- 
+
      C                   MOVE      'L'           I#LD
      C                   EXSR      BRCA_FLT
- 
+
       * Load deal type/sub types for export
- 
+
      C                   MOVE      'L'           I#LD
      C                   EXSR      DTST_FLT
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5
@@ -676,4 +678,4 @@
       /COPY MXCPYSRC,MXPSSR
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

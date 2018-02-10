@@ -13,14 +13,15 @@
       *             Customer must have a valid Trust Agreement in     *
       *             place for takings.                                *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSD031             Date 10Apr06               *
-      *  Prev Amend No. BUG1069            Date 28Feb06               *
+      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *                 BUG1069            Date 28Feb06               *
       *                 BUG1069            Date 25Feb06               *
       *                 BUG10675           Date 24Feb06               *
       *                 CSW037A            Date 02May05               *
@@ -34,6 +35,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  BUG10697 - Add condition when checking customer details for  *
       *             deal types LP, LT and FT (Reopen)                 *
@@ -204,4 +206,4 @@
      C                   ENDSR
      C****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

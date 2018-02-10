@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas MS process CMD/MS_CAS_AFT')
@@ -17,14 +17,15 @@
       *                                                               *
       *  Called By: CMD/MS_CAS_AFT                                    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. 219242             Date 01Jul03               *
-      *  Prev Amend No. 219241             Date 01Jul03               *
+      *  Prev Amend No. 219242             Date 01Jul03               *
+      *                 219241             Date 01Jul03               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.00 ---------------- Base -------------------------*
       *                 CQQ005             Date 20May99               *
@@ -32,6 +33,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  219242 - Not possible to create MT103+ payment msg from      *
       *           non-FT transaction (Recompile)                      *
       *  219241 - Defaulting of "Details of Charges" assign a         *
@@ -285,4 +287,4 @@
       ********************************************************************
       /COPY MSCPYSRC,SRERRC
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

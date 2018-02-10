@@ -7,20 +7,22 @@
 /*                                                                  */
 /*        MSC103     Update S.W.I.F.T. Closed Accounts              */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                    */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*        LAST AMEND NO. S01189               DATE 04APR90          */
-/*        PREV AMEND NO. S01117               DATE 23JAN90          */
+/*        PREV AMEND NO. S01189               DATE 04APR90          */
+/*                       S01117               DATE 23JAN90          */
 /*                       S01179               DATE 12/09/88         */
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*     MD046248 - Finastra Rebranding                               */
 /*     S01189  -  STANDARDISE DATABASE ERROR JOB SWITCH SETTINGS    */
 /*     S01117  -  MULTIBRANCHING                                    */
 /*     S01179  -  CHANGE RCVDTAARA TO RTVDTAARA FOR AS400           */
@@ -32,7 +34,7 @@
              PGM
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
              DCL        VAR(&MSG) TYPE(*CHAR) LEN(50) VALUE('FILE +
@@ -77,5 +79,5 @@
              ENDDO
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

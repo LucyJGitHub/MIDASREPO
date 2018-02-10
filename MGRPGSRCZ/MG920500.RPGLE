@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas MG Message deletion processing')                 *
@@ -9,13 +9,15 @@
       *                                                               *
       *   MG920500 - Midas MG Message Deletion Processing             *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD029017           Date 25Nov14               *
-      *  Prev Amend No. CSW213  *CREATE    Date 03Jun13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD029017           Date 25Nov14               *
+      *                 CSW213  *CREATE    Date 03Jun13               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD029017 - Tag 22A value is AMND instead of NEWT             *
       *  CSW213 - SWIFT Changes 2013                                  *
       *                                                               *

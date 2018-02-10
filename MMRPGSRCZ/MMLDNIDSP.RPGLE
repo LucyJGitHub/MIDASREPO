@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MM Loans/deposits display')                      *
@@ -12,10 +12,11 @@
       *  Function:  This module displays the main details screen      *
       *             of the loans and deposits screen input function.  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CGL165             Date 23Feb15               *
-      *  Prev Amend No. CDL096             Date 22Sep14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL165             Date 23Feb15               *
+      *                 CDL096             Date 22Sep14               *
       *                 CSF011A            Date 28Nov11               *
       *                 CRE073             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
@@ -52,6 +53,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
       *           (Recompile)                                         *
@@ -155,82 +157,82 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
-
+ 
      D/COPY ZACPYSRC,STD_D_SPEC
-
+ 
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
-
+ 
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
-
+ 
      D/COPY ZACPYSRC,PSDS
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
-
+ 
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
-
+ 
      D @Z0             S              1    DIM(60) CTDATA PERRCD(60)
      D @NAR            S             40    DIM(2) CTDATA PERRCD(1)
-
+ 
      D @EI             S              1    DIM(60)
-
+ 
      D CGL011          S              1A   IMPORT                                             CGL011
                                                                                               CGL011
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
-
+ 
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
       ** EXTERNAL DS FOR GENERAL LEDGER DETAILS
-
+ 
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** EXTERNAL DS FOR MIDAS MODULE DETAILS
-
+ 
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                    CDE002
       ** External DS for SAR details                                            CDE002
                                                                                 CDE002
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
-
+ 
       *                                                                                       CGL029
      D DSSDY         E DS                  EXTNAME(DSSDY)                                     CGL029
       *                                                                                       CGL029
      D MMLDNI        E DS                  EXTNAME(MMLDNIPD)
      D MMELDN        E DS                  EXTNAME(MMELDNIPD)
      D/COPY WNCPYSRC,MMLDNIXD01
-
+ 
      D                 DS
      D  DDFOTX                 1     40
      D  DDSIDN                10     15
-
+ 
       ** External DS for Customer Details                                                     CER043
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)                                  CER043
                                                                                               CER043
@@ -245,7 +247,7 @@
      D PRTCD           S              7A                                                      CAS001
      D POPTN           S              7A                                                      CAS001
      D PSARD           S              6A                                                      CAS001
-
+ 
       ** Define fields used in CAS005                                                         CAS005
                                                                                               CAS005
      D CAS005          S              1A                                                      CAS005
@@ -1081,7 +1083,7 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 ** @Z0
 000000000000000000000000000000000000000000000000000000000000
 ** @NAR

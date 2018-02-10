@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MX Saved data update - lending module')          *
@@ -11,10 +11,11 @@
       *                                                               *
       *  Function:  This module updates the lending saved data files. *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CLE141             Date 08Feb16               *
-      *  Prev Amend No. AR1097467          Date 01Apr13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE141             Date 08Feb16               *
+      *                 AR1097467          Date 01Apr13               *
       *                 AR1056323          Date 14Nov12               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
@@ -43,6 +44,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE141 - Currency and Location Business Day Convention       *
       *           (Recompile)                                         *
       *  AR1097467 - Expected 15% COB run optimization not met        *
@@ -74,7 +76,7 @@
       *  CMX001 - Meridian Export                                     *
       *                                                               *
       *****************************************************************
-
+ 
      F***CLOANCL   IP   E             DISK    INFSR(*PSSR) PREFIX(L_)                      AR1097467
      F***CLOANCK   IS   E             DISK    INFSR(*PSSR) PREFIX(K_)                      AR1097467
      FCLOANCL   IF   E             DISK    INFSR(*PSSR) PREFIX(L_)                         AR1097467
@@ -84,7 +86,7 @@
      FMXSLECKPD UF A E           K DISK    RENAME(CLOANCKF:MXSLECKP0)
      F                                     INFSR(*PSSR) PREFIX(PK_)
      FMXAKLNPD  O    E             DISK    INFSR(*PSSR)
-
+ 
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
@@ -102,20 +104,20 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
-
+ 
      D/COPY ZACPYSRC,STD_D_SPEC
-
+ 
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
-
+ 
      D/COPY ZACPYSRC,PSDS
-
+ 
       ** Entry Parameter                                                                   AR1097467
                                                                                            AR1097467
      D I#FILE          S             10A                                                   AR1097467
-
+ 
       * CLOANCL
      D LECL          E DS                  EXTNAME(CLOANCL)
      D                                     PREFIX(L_)
@@ -126,28 +128,28 @@
      D                                     PREFIX(K_)
      D P_LECK        E DS                  EXTNAME(MXSLECKPD)
      D                                     PREFIX(PK_)
-
-
+ 
+ 
      D                 DS
      D*AKEY********************1*****10                                                       CLE042
      D AKEY                    1     14                                                       CLE042
      D AK_LTYP                 1      2
      D AK_SUTP                 4      5
      D AK_AMTC                 9     10
-
-
+ 
+ 
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for BANK details
      D DSFDY         E DS                  EXTNAME(DSFDY)
-
-
+ 
+ 
      D MXEXPCTL      E DS                  EXTNAME(MXEXPCTL)
-
-
+ 
+ 
      I***CLOANCLF      01                                                                  AR1097467
      I***CLOANCKF      02                                                                  AR1097467
-
-
+ 
+ 
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7
      C                   PARM                    I#ERMS           30
@@ -155,11 +157,11 @@
       * Start of Month (Y/N)
      C                   PARM                    S_O_Month         1
      C                   PARM                    I#FILE                                    AR1097467
-
+ 
      C                   MOVEL     *BLANK        AKEY
-
+ 
       * If a loan from CLOANCL
-
+ 
      C******in01         IFEQ      '1'                                                     AR1097467
      C                   IF        I#FILE = 'CLOANCL'                                      AR1097467
      C     1             SETLL     CLOANCL                                                 AR1097467
@@ -171,11 +173,11 @@
      C                   MOVEL     L_LTYP        I#LTYP
      C                   MOVEL     L_SUTP        I#SUTP
      C                   EXSR      FILTER
-
+ 
       * If loan is for export
       * Update Saved CLOANCL details
       * Write Start of Month 'Dummy' A/C Key For CLOANCL
-
+ 
      C     Exp_BRCA      IFEQ      'Y'
      C     Exp_LTST      ANDEQ     'Y'
      C                   EXSR      UPD_CL
@@ -188,10 +190,10 @@
      C                   READ      CLOANCL                                                 AR1097467
      C                   ENDDO                                                             AR1097467
      C                   ENDIF
-
+ 
       * If a loan from CLOANCK
       * Update Saved CLOANCK details
-
+ 
      C******in02         IFEQ      '1'                                                     AR1097467
      C                   IF        I#FILE = 'CLOANCK'                                      AR1097467
      C     1             SETLL     CLOANCK                                                 AR1097467
@@ -205,7 +207,7 @@
      C                   READ      CLOANCK                                                 AR1097467
      C                   ENDDO                                                             AR1097467
      C                   ENDIF
-
+ 
      C                   EVAL      *INLR = *ON                                             AR1097467
      C                   RETURN                                                            AR1097467
       *
@@ -214,19 +216,19 @@
       * Filter Loans
       ********************************************************************
      C     FILTER        BEGSR
-
+ 
       * On change of branch
       * Determine if branch is to be included in the export
-
+ 
      C     I#BRCA        IFNE      Prev_BRCA
      C                   MOVE      'D'           I#LD
      C                   EXSR      BRCA_FLT
      C                   MOVEL     I#BRCA        Prev_BRCA         3
      C                   ENDIF
-
+ 
       * On change of loan type/sub type
       * Determine if loan type/sub type is to be included in the export
-
+ 
      C     I#LTYP        IFNE      Prev_LTYP
      C     I#SUTP        ORNE      Prev_SUTP
      C                   MOVE      'D'           I#LD
@@ -234,7 +236,7 @@
      C                   MOVEL     I#LTYP        Prev_LTYP         2
      C                   MOVEL     I#SUTP        Prev_SUTP         2
      C                   ENDIF
-
+ 
      C                   ENDSR
      C********************************************************************
       /SPACE 5
@@ -242,7 +244,7 @@
       * Update Saved CLOANCL details
       ********************************************************************
      C     UPD_CL        BEGSR
-
+ 
      C     L_LNRF        CHAIN     MXSLECLP0                          99        *
      C                   EVAL      P_LECL = LECL
      C                   EVAL      PL_LCD = CURSOM
@@ -267,7 +269,7 @@
      C                   ELSE
      C                   UPDATE    MXSLECLP0
      C                   ENDIF
-
+ 
      C                   ENDSR
      C********************************************************************
       /SPACE 5
@@ -275,7 +277,7 @@
       * Update Saved CLOANCK details
       ********************************************************************
      C     UPD_CK        BEGSR
-
+ 
      C     K_LNRF        CHAIN     MXSLECKP0                          99        *
      C                   EVAL      P_LECK = LECK
      C                   EVAL      PK_LCD = CURSOM
@@ -301,7 +303,7 @@
      C                   ELSE
      C                   UPDATE    MXSLECKP0
      C                   ENDIF
-
+ 
      C                   ENDSR
      C********************************************************************
       /SPACE 5
@@ -309,10 +311,10 @@
       * Write Start of Month 'Dummy' A/C Key For CLOANCL
       ********************************************************************
      C     WRTSOM_CL     BEGSR
-
+ 
      C     L_ORED        IFLT      CURSOM
      C     L_VDAT        ANDLT     CURSOM
-
+ 
      C                   MOVEL     L_LTYP        AK_LTYP
      C                   MOVEL     L_SUTP        AK_SUTP
      C**********         Z-ADD     L_LNRF        LNNO                                         CLE148
@@ -342,9 +344,9 @@
      C                   ENDIF
      C                   MOVEL     L_CCY         ECCY
      C                   WRITE     LKEY1DPF
-
+ 
      C                   ENDIF
-
+ 
      C                   ENDSR
      C********************************************************************
       /SPACE 5
@@ -352,48 +354,48 @@
       * *INZSR - Initial subroutine called automatically at program start
       ********************************************************************
      C     *INZSR        BEGSR
-
+ 
       * Set up constants
-
+ 
      C                   MOVEL     'A'           I#EXTT            1
-
-
+ 
+ 
       **  Access Bank Details
-
+ 
      C                   CALL      'AOBANKR0'
      C                   PARM      '*DBERR  '    @RTCD             7
      C                   PARM      '*FIRST  '    @OPTN             7
      C     SDBANK        PARM      SDBANK        DSFDY
-
-
+ 
+ 
       * Get extract control data
-
+ 
      C     *DTAARA       DEFINE                  MXEXPCTL
      C     *LOCK         IN        MXEXPCTL
      C                   OUT       MXEXPCTL
-
-
+ 
+ 
       * If no save data is required then end
       * (If frequency is 'NEVER'  or
       *  if frequency is 'MONTHLY' but it is not the start of the month)
-
+ 
      C     SDFQLE        IFEQ      'N'
      C     SDFQLE        OREQ      'M'
      C     S_O_Month     ANDNE     'Y'
      C                   SETON                                        LR
      C                   RETURN
      C                   ENDIF
-
+ 
       * Load branches for export
-
+ 
      C                   MOVE      'L'           I#LD
      C                   EXSR      BRCA_FLT
-
+ 
       * Load loan type/sub types for export
-
+ 
      C                   MOVE      'L'           I#LD
      C                   EXSR      LTST_FLT
-
+ 
      C                   ENDSR
       ********************************************************************
       /SPACE 5
@@ -412,4 +414,4 @@
       /COPY MXCPYSRC,MXPSSR
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

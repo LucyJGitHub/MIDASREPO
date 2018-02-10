@@ -7,21 +7,23 @@
 /*                                                                   */
 /*       MEC1320  - Create SPF environment for I/C Reports           */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CAP084             Date 08Jul03              */
+/*       Prev Amend No. CAP084             Date 08Jul03              */
 /* Midas Release 4.01.02 --------------------------------------------*/
-/*       Prev Amend No. 197434             Date 09Oct01              */
+/*                      197434             Date 09Oct01              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      S01435             Date 15Oct93              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CAP084 - Parameter added to ZMUSER for Java wrappers        */
 /*       197434 - Array index error on SF0021. Increase maximum      */
 /*                number of branches from 100 to 900.                */
@@ -33,7 +35,7 @@
 /* Copyright statement defination  */
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /* */
 /* Declare variables */
@@ -49,7 +51,7 @@
 /*           Copyright statement definition - at runtime             */
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /* */
 /* Send Message to MRUNQ */
 /* */

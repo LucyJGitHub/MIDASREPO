@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas ME Work Midas Message Manager Server')
@@ -21,20 +21,22 @@
       *                                                               *
       *  Called By: MEC2100 - Work Midas Message Manager Server       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. 236309             Date 07Nov05               *
+      *  Prev Amend No. 236309             Date 07Nov05               *
       * Midas Release 4.01.02 ----------------------------------------*
-      *  Prev Amend No. 211783 *CREATE     Date 13Nov02               *
+      *                 211783 *C *CREATE  Date 13Nov02               *
       * Midas Release 4.01 -------------------------------------------*
       *                 CSW025  *CREATE    Date 15Apr02               *
       *                                                               *
       *---------------------------------------------------------------*
  
+      *  MD046248 - Finastra Rebranding                               *
       *  236309 - Add new parameter MIDASCOB. QRCVDTAQ will only be   *
       *           called if MIDASCOB <> 'Y'. If MIDASCOB = 'Y',       *
       *           QSNDDTAQ will be called with a new parameter.       *

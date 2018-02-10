@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2009')
+     H COPYRIGHT('(c) Finastra International Limited 2009')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas ME Check if SWIFT 2009 is active')
@@ -14,13 +14,15 @@
       *             feature CSW209 is installed or the run date       *
       *             is greater than or equal to 21st November 2009.   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2009            *
+      *  (c) Finastra International Limited 2009                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Last Amend No. CSW209  *CREATE    Date 01Apr09               *
+      *  Prev Amend No. CSW209  *CREATE    Date 01Apr09               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSW209 - SWIFT Changes 2009                                  *
       *                                                               *
       *****************************************************************

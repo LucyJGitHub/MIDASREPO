@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MM Temp Repo Depot Mvt copy to Temp File')       *
@@ -9,12 +9,13 @@
       *                                                               *
       *  MMRPDMTFL - TEMPORARY REPO DEPOT MVT MOVE TO TEMP FILE       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CSW210             Date 04May10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CSW210             Date 04May10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. 256564             Date 17Sep08               *
+      *                 256564             Date 17Sep08               *
       *                 248773             Date 28Jun07               *
       *                 247785             Date 15May07               *
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -28,6 +29,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSW210 - SWIFT 2010 Changes (Recompile)                      *
       *  256564 - Recompile due to PF changes done by fix 256330      *
       *  248773 - Decimal data error when Repo is repaired. Recompile.*
@@ -180,4 +182,4 @@
      C                   ENDSR
      C****************************************************************
 **  CPY@
-(C) Copyright Misys International Banking Systems Ltd. 2001
+(C) Copyright Finastra International Limited 2001

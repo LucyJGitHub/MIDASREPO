@@ -13,10 +13,11 @@
       *                                                               *
       *  Called By: MMLDNISIN - LDN Inputs                            *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
-      *  Prev Amend No. CGL165             Date 24Feb15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CGL165             Date 24Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 CRE073             Date 06Dec10               *
@@ -61,6 +62,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
@@ -125,7 +127,7 @@
      F                                     COMMIT
      FMMDELDL2  IF   E           K DISK    INFSR(*PSSR)
      FSDCCGRL1  IF   E           K DISK    INFSR(*PSSR)
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -144,32 +146,32 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** Program, procedure and module names for parameters
       ** ==================================================
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       ** Message ID
      D MsgID1          S                   LIKE(#MsgID)
- 
+
       **  Input array for ZA0840
- 
+
      D @F              S              1    DIM(16)
      D @G              S              1    DIM(16)
      D ArrDLNO         S              6    DIM(100) ASCEND
@@ -217,13 +219,13 @@
      D ZMUSER          DS            17
      D  ZMBRCA                11     13
      D  ZMDEPT                14     16
- 
+
      D PCYDP           S              1S 0
      D PNTCE           S              3S 0
- 
+
      D NNDCSP          S              1A   IMPORT
      D S01468          S              1A   IMPORT
- 
+
      D InvFIDT         DS                                                                     209905
      D  ISFDLNO                1      6                                                       209905
      D  ISFCNUM                7     16                                                       209905
@@ -407,7 +409,7 @@
      I              IKFRN4                      FIFRN4
      I              IKFRNT                      FIFRNT                                        209905
      I              IKAFRT                      FIAFRT                                        209905
- 
+
      IDEALSDCF                                                                  176659
      I              TRTP                        DCTRTP                          176659
      IDLCHISD0                                                                                229544
@@ -417,13 +419,13 @@
       *    Main Routine                                               *
       *                                                               *
       *****************************************************************
- 
+
      C                   Exsr      #INIT
- 
+
      C                   Exsr      #MAIN
- 
+
      C                   Exsr      #TERM
- 
+
       *****************************************************************
       *                                                               *
       * SR/#INIT : Initial Processing                                 *
@@ -433,11 +435,11 @@
       * Calls: *PSSR, Y2CLMSC, #HEADR, #FILS, #ENQY                   *
       *                                                               *
       *****************************************************************
- 
+
      C     #INIT         BEGSR
- 
+
       ** Entry List
- 
+
      C     *ENTRY        PList
      C                   Parm                    ##MODE            1
      C                   Parm                    ##DLNO            6
@@ -468,16 +470,16 @@
      C                   Parm                    ##NAR2           60
      C                   Parm                    ##NAR3           60
      C                   Parm                    ##NAR4           60
- 
+
       ** Define KLIST to access PMPORTLL
- 
+
      C     WWPORT        KList
      C**********         KFld                    KFCNUM            6 0                        CSD027
      C                   KFld                    KFCNUM            6                          CSD027
      C                   KFld                    KFPTFR            4
- 
+
       ** Define KLIST to access ACCNT
- 
+
      C     WWACCT        KList
      C**********         KFld                    XXCNUM            6 0                        CSD027
      C                   KFld                    XXCNUM            6                          CSD027
@@ -486,9 +488,9 @@
      C                   KFld                    XXACOD           10 0                        CGL029
      C                   KFld                    XXACSQ            2 0
      C                   KFld                    ##BRCA
- 
+
       ** If deal type is FL allow 100 lines. If DP or LP only one line
- 
+
      C     ##DTYP        IfEq      'FL'
      C                   Z-Add     101           WWFIL             3 0
      C                   Move      *On           *IN51
@@ -498,14 +500,14 @@
      C                   Move      *On           *IN52
      C                   Move      *Off          *IN51
      C                   EndIf
- 
+
       ** Bank Details
- 
+
      C                   CallB     'AOBANKR0'
      C                   Parm      '*DBERR '     @RTCD
      C                   Parm      '*FIRST '     @OPTN
      C     SDBANK        Parm      SDBANK        DSFDY
- 
+
      C     @RTCD         IfNe      *BLANKS
      C     *LOCK         In        LDA
      C                   Move      *On           *INU7
@@ -516,20 +518,20 @@
      C                   Out       LDA
      C                   Exsr      *PSSR
      C                   EndIf
- 
+
       ** Set indicator *IN98 to indicate which date format to use
- 
+
      C     BJDFIN        IfEq      'M'
      C                   Move      *On           *IN98
      C                   EndIf
- 
+
       ** Modules Details
- 
+
      C                   CallB     'AOMMODR0'
      C                   Parm      '*DBERR '     @RTCD
      C                   Parm      '*FIRST '     @OPTN
      C     SDMMOD        Parm      SDMMOD        DSFDY
- 
+
      C     @RTCD         IfNe      *BLANKS
      C     *LOCK         In        LDA
      C                   Move      *On           *INU7
@@ -540,22 +542,22 @@
      C                   Out       LDA
      C                   Exsr      *PSSR
      C                   EndIf
- 
+
      C     BGPFMG        IfEq      'Y'
      C                   Move      *Off          *IN81
      C                   Else
      C                   Move      *On           *IN81
      C                   EndIf
- 
+
       ** ICD Dealing
- 
+
      C**********         CallB     'AODEALR0'                                                 CGL029
      C                   CALLB     'AODEALR1'                                                 CGL029
      C                   Parm      '*DBERR '     @RTCD
      C                   Parm      '*FIRST '     @OPTN
      C*****SDDEAL        Parm      SDDEAL        DSFDY                                        CGL029
      C     SDDEAL        PARM      SDDEAL        DSSDY                                        CGL029
- 
+
      C     @RTCD         IfNe      *BLANKS
      C     *LOCK         In        LDA
      C                   Move      *On           *INU7
@@ -566,14 +568,14 @@
      C                   Out       LDA
      C                   Exsr      *PSSR
      C                   EndIf
- 
+
       ** ICD Retail
- 
+
      C                   CallB     'AORETLR0'
      C                   Parm      '*DBERR '     @RTCD
      C                   Parm      '*FIRST '     @OPTN
      C     SDRETL        Parm      SDRETL        DSFDY
- 
+
      C     @RTCD         IfNe      *BLANKS
      C     *LOCK         In        LDA
      C                   Move      *On           *INU7
@@ -584,15 +586,15 @@
      C                   Out       LDA
      C                   Exsr      *PSSR
      C                   EndIf
- 
+
       ** ICD Portfolio
- 
+
      C     BGPFMG        IfEq      'Y'
      C                   CallB     'AOPORTR0'
      C                   Parm      '*DBERR '     @RTCD
      C                   Parm      '*FIRST '     @OPTN
      C     SDPORT        Parm      SDPORT        DSFDY
- 
+
      C     @RTCD         IfNe      *BLANKS
      C     *LOCK         In        LDA
      C                   Move      *On           *INU7
@@ -604,11 +606,11 @@
      C                   Exsr      *PSSR
      C                   EndIf
      C                   EndIf
- 
+
       ** Retrieve Deal Numbers Record
- 
+
      C     1             Chain     FDDLNMLL                           60
- 
+
      C     *IN60         IfEq      *On
      C     NODLTF        OrEq      '*'
      C     *LOCK         In        LDA
@@ -620,24 +622,24 @@
      C                   Out       LDA
      C                   Exsr      *PSSR
      C                   EndIf
- 
+
       ** A Trust Agrement Status must be input for deal type 'DT'/'LT'
       ** and when feature 'fiduciary loans' is on and for fiduciary
       ** loan deal.
- 
+
      C     ##DTYP        IfEq      'DP'
      C     ##DTYP        OrEq      'LP'
- 
+
       ** Feature Fiduciary Loan
- 
+
      C                   CallB     'AOSARDR0'
      C                   Parm      *BLANKS       @RTCD
      C                   Parm      '*VERIFY'     @OPTN
      C                   Parm      'CDL006'      @SARD
      C     SCSARD        Parm      SCSARD        DSFDY
- 
+
       ** If feature is installed
- 
+
      C     @RTCD         IfEq      *BLANKS
      C                   Move      *On           *IN67
      C                   EndIf
@@ -666,11 +668,11 @@
      C                   ENDIF                                                                209905
                                                                                               209905
      C                   ENDIF                                                                209905
- 
+
      C                   Move      'Y'           WFIRST            1
- 
+
       ** Clear SFL
- 
+
      C     *IN51         IfEq      *On
      C                   Z-Add     1             WWRRN
      C                   Move      *On           *IN61
@@ -682,9 +684,9 @@
      C                   Write     MMFIDDC3
      C                   Move      *Off          *IN63
      C                   EndIf
- 
+
       ** Select the program MSGQ for error msg.
- 
+
      C                   MoveL     '*'           TOPQ
      C                   MoveL     '*PRV'        TOPRQ
      C                   MoveL     '*'           DDPGMQ
@@ -698,31 +700,31 @@
      C                   MoveL     *BLANK        ZAMSID            7
      C                   MoveL     *BLANK        ZAMSDA          132
      C                   MoveL     *BLANK        ZAMSTP            7
- 
+
       ** Initialise program message queue
- 
+
      C                   Call      'Y2CLMSC'
      C                   Parm                    TOPQ             10
      C                   Parm                    TOPRQ             5
- 
+
       ** Setup Screen Headings
- 
+
      C                   Exsr      #HEADR
- 
+
       ** Setup SFL
- 
+
      C     ##MODE        IfEq      'I'
      C                   Exsr      #FILS
      C                   Else
      C                   Exsr      #ENQY
      C                   EndIf
- 
+
       ** Read only to allow rename of fields
- 
+
      C                   Read      SW8OUTP                                90
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *                                                               *
       * SR/#MAIN : Main Processing                                    *
@@ -732,27 +734,27 @@
       * Calls: Y2CLMSC, #TERM, #PREV, ENT1                            *
       *                                                               *
       *****************************************************************
- 
+
      C     #MAIN         BEGSR
- 
+
      C     *INLR         DoWEq     *Off
- 
+
      C                   Write     MMFIDDF1
      C                   Write     MMFIDDC0
- 
+
      C     *IN51         IfEq      *On
      C                   Exfmt     MMFIDDC1
      C                   EndIf
      C     *IN52         IfEq      *On
      C                   Exfmt     MMFIDDC3
      C                   EndIf
- 
+
       ** Initialise program message queue
- 
+
      C                   Call      'Y2CLMSC'
      C                   Parm                    TOPQ
      C                   Parm                    TOPRQ
- 
+
      C                   Select
      C                   When      *IN51 and *IN03
      C                   Exsr      #TERM
@@ -767,11 +769,11 @@
      C                   When      *IN52
      C                   Exsr      #ENT1
      C                   ENDSL
- 
+
      C                   EndDo
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *                                                               *
       * SR/#ENT1 : Enter On Screen                                    *
@@ -782,20 +784,20 @@
       *        ZSEDIT, ZASNMS, #PROT, #UPDT                           *
       *                                                               *
       *****************************************************************
- 
+
      C     #ENT1         BEGSR
- 
+
       ** Setup Error Indicator
- 
+
      C                   Exsr      #SETP
- 
+
      C     ##MODE        IfEq      'I'
      C     WFIRST        IfEq      'Y'
- 
+
       ** Read SFL
- 
+
      C                   Z-Add     *ZEROS        WWTNM            15 0
- 
+
      C     *IN51         IfEq      *On
      C                   Z-Add     1             WWRRN
      C                   Z-Add     WWRRN         WWCUR             4 0
@@ -804,22 +806,22 @@
      C                   Z-Add     1             WWRRN3
      C                   Z-Add     WWRRN3        WWCUR
      C                   EndIf
- 
+
       ** Initialize array and index that will contain all valid deal
       ** numbers.
- 
+
      C                   Z-ADD     0             X
      C                   CLEAR                   ARRDLNO
- 
+
      C     WWCUR         DoWLt     WWFIL
- 
+
      C     *IN51         IfEq      *On
      C     WWRRN         Chain     MMFIDDS1                           82
      C                   EndIf
      C     *IN52         IfEq      *On
      C     WWRRN3        Chain     MMFIDDS3                           82
      C                   EndIf
- 
+
      C     SFDLNO        IfEq      *BLANKS
      C     SFCNUM        AndEq     *BLANKS
      C     SFPTFR        AndEq     *BLANKS
@@ -833,15 +835,15 @@
      C                   Move      *Off          *IN78
      C                   Move      *Off          *IN79
      C                   Move      *Off          *IN80
- 
+
      C     *IN67         IfEq      *On
      C                   Move      *Off          *IN87
      C                   EndIf
- 
+
       ** Update Flag to indicate which records will be outputed in database
- 
+
      C                   MoveL     *BLANKS       SHFLAG
- 
+
      C     *IN51         IfEq      *On
      C                   Update    MMFIDDS1
      C                   Add       1             WWRRN
@@ -852,61 +854,61 @@
      C                   Add       1             WWRRN3
      C                   Z-Add     WWRRN3        WWCUR
      C                   EndIf
- 
+
      C                   Else
- 
+
      C                   Move      *BLANKS       SHDLER
      C                   Move      *BLANKS       SHCNER
      C                   Move      *BLANKS       SHPOER
      C                   Move      *BLANKS       SHAMER
      C                   Move      *BLANKS       SHACER
      C                   Move      *BLANKS       SHSQER
- 
+
      C     *IN52         IfEq      *On
      C                   Move      *BLANKS       SHTAER
      C                   EndIf
- 
+
       ** At least one record processed
- 
+
      C                   Move      *On           *IN86
- 
+
       ** Validation Deal Number
- 
+
      C                   Exsr      #DLNO
      C     *IN74         IfEq      *On
      C                   Move      'E'           SHDLER
      C                   EndIf
- 
+
       ** Validation Customer Number
- 
+
      C                   Exsr      #CNUM
      C     *IN76         IfEq      *On
      C                   Move      'E'           SHCNER
      C                   EndIf
- 
+
       ** Validation Portfolio Reference
- 
+
      C                   Exsr      #PTFR
      C     *IN77         IfEq      *On
      C                   Move      'E'           SHPOER
      C                   EndIf
- 
+
       ** Validation Amount
- 
+
      C                   Exsr      #AMNT
      C     *IN78         IfEq      *On
      C                   Move      'E'           SHAMER
      C                   EndIf
- 
+
       ** Validation Account Code
- 
+
      C                   Exsr      #ACOD
      C     *IN79         IfEq      *On
      C                   Move      'E'           SHACER
      C                   EndIf
- 
+
       ** Validation Account Sequence
- 
+
      C                   Exsr      #ACSQ
      C     *IN79         IfEq      *On
      C     *IN80         AndEq     *On
@@ -916,24 +918,24 @@
      C     *IN80         AndEq     *On
      C                   Move      'E'           SHSQER
      C                   EndIf
- 
+
       ** If fiduciary loan
- 
+
      C     *IN67         IfEq      *On
- 
+
       ** Validation Trust agreement status
- 
+
      C                   Exsr      #TRAS
      C     *IN87         IfEq      *On
      C                   Move      'E'           SHTAER
      C                   EndIf
- 
+
      C                   EndIf
- 
+
       ** Update Flag to indicate which records will be outputed in database
- 
+
      C                   MoveL     'D'           SHFLAG
- 
+
      C     *IN51         IfEq      *On
      C                   Update    MMFIDDS1
      C                   Add       1             WWRRN
@@ -946,21 +948,21 @@
      C                   Z-Add     WWRRN3        WWCUR
      C                   Z-Add     WWRRN3        WWSAVE
      C                   EndIf
- 
+
      C                   EndIf
      C                   EndDo
- 
+
      C     *IN51         IfEq      *On
      C                   Z-Add     1             WWRRN
      C                   EndIf
      C     *IN52         IfEq      *On
      C                   Z-Add     1             WWRRN3
      C                   EndIf
- 
+
       ** Total amounts of takings deals must match the placing deal amount
- 
+
      C     WWTNM         IfNe      ##PCPL
- 
+
      C     *IN51         IfEq      *On
      C                   Z-Add     1             WWRRN
      C                   Z-Add     WWRRN         WWCUR
@@ -969,16 +971,16 @@
      C                   Z-Add     1             WWRRN3
      C                   Z-Add     WWRRN3        WWCUR
      C                   EndIf
- 
+
      C     WWCUR         DoWLt     WWFIL
- 
+
      C     *IN51         IfEq      *On
      C     WWRRN         Chain     MMFIDDS1                           82
      C                   EndIf
      C     *IN52         IfEq      *On
      C     WWRRN3        Chain     MMFIDDS3                           82
      C                   EndIf
- 
+
      C     SHFLAG        IfEq      'D'
      C                   Move      *On           *IN75
      C                   Move      *On           *IN78
@@ -1007,16 +1009,16 @@
      C     SHTAER        IfEq      'E'
      C                   Move      *On           *IN87
      C                   EndIf
- 
+
      C     *IN51         IfEq      *On
      C                   Update    MMFIDDS1
      C                   EndIf
      C     *IN52         IfEq      *On
      C                   Update    MMFIDDS3
      C                   EndIf
- 
+
      C                   EndIf
- 
+
      C     *IN51         IfEq      *On
      C                   Add       1             WWRRN
      C                   Z-Add     WWRRN         WWCUR
@@ -1025,41 +1027,41 @@
      C                   Add       1             WWRRN3
      C                   Z-Add     WWRRN3        WWCUR
      C                   EndIf
- 
+
      C                   EndDo
- 
+
      C     *IN75         IfEq      *On
      C     *IN78         AndEq     *On
- 
+
      C                   MoveL     *BLANKS       ZAMSDA
      C                   Move      *BLANKS       ZFLD15
- 
+
      C                   CallB     'ZSEDIT'
      C                   Parm      WWTNM         ZFLD15
      C                   Parm      ZCDP          ZDECS
      C                   Parm      *BLANKS       ZECODE
      C                   Parm                    ZOUT21
- 
+
      C                   MoveL     ZOUT21        ZAMSDA
      C                   MoveL     'MMA0579'     ZAMSID
      C                   Exsr      ZASNMS
      C                   EndIf
- 
+
      C     WWSAVE        IfEq      *ZEROS
      C                   Z-Add     1             WWSAVE
      C                   EndIf
- 
+
      C     *IN51         IfEq      *On
      C                   Z-Add     WWSAVE        WWRRN
      C                   EndIf
      C     *IN52         IfEq      *On
      C                   Z-Add     1             WWRRN3
      C                   EndIf
- 
+
      C                   EndIf
- 
+
       ** If no error and at least one record redisplay and protect fields
- 
+
      C     *IN75         IfEq      *Off
      C     *IN86         AndEq     *On
      C                   Exsr      #PROT
@@ -1067,22 +1069,22 @@
      C                   Move      *On           *IN85
      C                   Move      'N'           WFIRST
      C                   EndIf
- 
+
      C                   Else
      C                   Exsr      #UPDT
      C                   EndIf
- 
+
      C                   Else
- 
+
       ** Return to MMLDNISIN
- 
+
      C                   Move      *On           *INLR
      C                   Move      *Off          *IN51
      C                   Move      *Off          *IN52
      C                   EndIf
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *                                                               *
       * SR/#SETP : Initialise Indicators                              *
@@ -1092,9 +1094,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     #SETP         BEGSR
- 
+
      C                   Move      *Off          *IN75
      C                   Move      *Off          *IN74
      C                   Move      *Off          *IN76
@@ -1102,16 +1104,16 @@
      C                   Move      *Off          *IN78
      C                   Move      *Off          *IN79
      C                   Move      *Off          *IN80
- 
+
      C     *IN67         IfEq      *On
      C                   Move      *Off          *IN87
      C                   EndIf
- 
+
      C                   Move      *Off          *IN85
      C                   Move      *Off          *IN86
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *                                                               *
       * SR/#DLNO : Validate Deal Number                               *
@@ -1121,18 +1123,18 @@
       * Calls: ZASNMS                                                 *
       *                                                               *
       *****************************************************************
- 
+
      C     #DLNO         BEGSR
- 
+
      C                   Select
      C     SFDLNO        WhenNe    *BLANKS
- 
+
       ** Test if deal entered is numeric
- 
+
      C                   TestN                   SFDLNO               62
      C                   Move      SFDLNO        WTEST             1
      C                   TestZ                   WTEST                    73
- 
+
      C     SFDLNO        IfNe      *BLANKS
      C     *IN62         AndEq     *Off
      C     SFDLNO        OrNe      *BLANKS
@@ -1143,10 +1145,10 @@
      C                   MoveL     *BLANKS       ZAMSDA
      C                   Exsr      ZASNMS
      C                   Else
- 
+
      C                   Move      SFDLNO        WWDLNO            6 0
      C     WWDLNO        Chain     MMWFIDDL0                          90
- 
+
      C     *IN90         IfEq      *Off
      C                   Move      *On           *IN74
      C                   Move      *On           *IN75
@@ -1154,9 +1156,9 @@
      C                   MoveL     *BLANKS       ZAMSDA
      C                   Exsr      ZASNMS
      C                   Else
- 
+
      C     WWDLNO        SetLL     DEALSALL                               65
- 
+
      C     *IN65         IfEq      *On
      C                   Move      *On           *IN74
      C                   Move      *On           *IN75
@@ -1164,9 +1166,9 @@
      C                   MoveL     *BLANKS       ZAMSDA
      C                   Exsr      ZASNMS
      C                   Else
- 
+
       ** Check that the deal number is in the allowed range.
- 
+
      C     WWDLNO        IfLt      NORDLN
      C     WWDLNO        OrEq      999999
      C                   Move      *On           *IN74
@@ -1175,9 +1177,9 @@
      C                   MoveL     *BLANKS       ZAMSDA
      C                   Exsr      ZASNMS
      C                   Else
- 
+
       ** Deal number cannot be equal
- 
+
      C     SFDLNO        IfEq      DDDLNO
      C                   Move      *On           *IN74
      C                   Move      *On           *IN75
@@ -1185,14 +1187,14 @@
      C                   MoveL     *BLANKS       ZAMSDA
      C                   Exsr      ZASNMS
      C                   EndIf
- 
+
      C                   EndIf
      C                   EndIf
      C                   EndIf
      C                   EndIf
- 
+
       ** Copy deal number to the array after passing the validation
- 
+
      C     *IN74         IFEQ      *OFF
      C     *IN75         ANDEQ     *OFF
      C     SFDLNO        LOOKUP    ARRDLNO                                65
@@ -1207,15 +1209,15 @@
      C                   MOVEA     SFDLNO        ARRDLNO(X)
      C                   ENDIF
      C                   ENDIF
- 
+
      C     SFDLNO        WhenEq    *BLANKS
- 
+
       ** Automatic generation is done in MMFIDTUPF
- 
+
      C                   ENDSL
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *                                                               *
       * SR/#CNUM : Validate Customer Number                           *
@@ -1225,18 +1227,18 @@
       * Calls: ZASNMS, MMVCUSTFID                                     *
       *                                                               *
       *****************************************************************
- 
+
      C     #CNUM         BEGSR
- 
+
       ** Must be a valid Customer Number
- 
+
      C                   CallB     'AOCUSTR1'
      C                   Parm      *BLANKS       @RTCD
      C                   Parm      '*KEY   '     @OPTN
      C                   Parm      SFCNUM        @KEY1
      C                   Parm      *BLANKS       @KYST
      C     SDCUST        Parm      SDCUST        DSLDY
- 
+
      C     @RTCD         IfNe      *BLANKS
      C                   Move      *On           *IN76
      C                   Move      *On           *IN75
@@ -1244,9 +1246,9 @@
      C                   MoveL     *BLANKS       ZAMSDA
      C                   Exsr      ZASNMS
      C                   Else
- 
+
       ** Validate Customer
- 
+
      C                   SELECT
      C     ##DTYP        WHENEQ    'FL'
      C                   MOVE      'FT'          PDealType
@@ -1255,10 +1257,10 @@
      C     ##DTYP        WHENEQ    'LP'
      C                   MOVE      'LT'          PDealType
      C                   ENDSL
- 
+
      C**********         Move      BBCUST        PCustNo           6 0                        CSD027
      C                   Move      BBCUST        PCustNo           6                          CSD027
- 
+
      C                   CallB     'MMVCUSTFID'
      C                   Parm                    PDealType         2
      C                   Parm                    PCustNo
@@ -1270,7 +1272,7 @@
      C                   Parm      *BLANKS       PErrMsgID1        7                          209905
      C                   Parm      *BLANKS       PErrMsgID2        7                          209905
      C                   Parm                    PWMsgID1          7
- 
+
      C     PReturnCode   IfNe      *BLANKS
      C                   Move      *On           *IN76
      C                   Move      *On           *IN75
@@ -1283,12 +1285,12 @@
      C                   Exsr      ZASNMS
      C                   EndIf
      C                   EndIf
- 
+
      C                   Move      BBCUST        SHCNUM
      C                   Move      BBCSSN        SHCSSN
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *                                                               *
       * SR/#PTFR : Validate Portfolio Reference                       *
@@ -1298,23 +1300,23 @@
       * Calls: ZASNMS                                                 *
       *                                                               *
       *****************************************************************
- 
+
      C     #PTFR         BEGSR
- 
+
       ** Validate only if PM is on otherwise field is not shown
- 
+
      C     BGPFMG        IfEq      'Y'
- 
+
      C                   CallB     'AOPLCSR0'
      C                   Parm      '        '    @RTCD
      C                   Parm      '*KEY    '    @OPTN
      C                   Parm      SFCNUM        @KEY1
      C     SDPLCS        Parm      SDPLCS        DSSDY
- 
+
       ** If Customer not found it must be blanks
- 
+
      C     @RTCD         IfNe      *BLANKS
- 
+
      C     SFPTFR        IfNe      *BLANKS
      C                   Move      *On           *IN77
      C                   Move      *On           *IN75
@@ -1322,19 +1324,19 @@
      C                   MoveL     *BLANKS       ZAMSDA
      C                   Exsr      ZASNMS
      C                   EndIf
- 
+
      C                   Else
      C                   Move      *On           *IN82
- 
+
       ** If reference is not blanks, it must be a valid portfolio
- 
+
      C     SFPTFR        IfNe      *BLANKS
- 
+
      C     SFPTFR        IfNe      FCR997
      C                   Move      BBCUST        KFCNUM
      C                   MoveL     SFPTFR        KFPTFR
      C     WWPORT        Chain     PMPORTLL                           90
- 
+
      C     *IN90         IfEq      *On
      C                   Move      *On           *IN77
      C                   Move      *On           *IN75
@@ -1342,30 +1344,30 @@
      C                   MoveL     *BLANKS       ZAMSDA
      C                   Exsr      ZASNMS
      C                   EndIf
- 
+
      C                   EndIf
- 
+
       ** If portfolio reference is blanks, retrieve the first reference for
       ** this customer on PMPORTPD or setup with SDPORTPD
- 
+
      C                   Else
- 
+
      C**********         Move      BBCUST        ZZCNUM            6 0                        CSD027
      C                   Move      BBCUST        ZZCNUM            6                          CSD027
      C     ZZCNUM        Chain     PMPORTLL                           90
- 
+
      C     *IN90         IfEq      *On
      C                   MoveL     FCR997        SFPTFR
      C                   Else
      C                   MoveL     PNPTFR        SFPTFR
      C                   EndIf
- 
+
      C                   EndIf
      C                   EndIf
      C                   EndIf
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *                                                               *
       * SR/#AMNT : Validate Amount                                    *
@@ -1375,11 +1377,11 @@
       * Calls: ZASNMS, ZALIGN                                         *
       *                                                               *
       *****************************************************************
- 
+
      C     #AMNT         BEGSR
- 
+
       ** Validate and align Amount
- 
+
      C     SFAMNT        IfEq      *BLANKS
      C                   Move      *On           *IN78
      C                   Move      *On           *IN75
@@ -1387,15 +1389,15 @@
      C                   MoveL     *BLANKS       ZAMSDA
      C                   Exsr      ZASNMS
      C                   Else
- 
+
      C                   Move      *BLANKS       ZFIELD
- 
+
      C                   CallB     'ZALIGN'
      C                   Parm                    ZALIGNOK          1
      C                   Parm      SFAMNT        ZFIELD           16
      C                   Parm      ZCDP          ZADEC             1 0
      C                   Parm      12            ZADIG             2 0
- 
+
      C     ZALIGNOK      IfEq      'N'
      C                   Move      *On           *IN78
      C                   Move      *On           *IN75
@@ -1403,20 +1405,20 @@
      C                   MoveL     *BLANKS       ZAMSDA
      C                   Exsr      ZASNMS
      C                   Else
- 
+
      C                   Move      ZFIELD        SHAMNT
      C     SHAMNT        IfLt      *ZEROS
      C                   Z-Sub     SHAMNT        SHAMNT
      C                   EndIf
- 
+
      C                   Move      ZFIELD        WWTMP            15 0
      C     WWTMP         Add       WWTNM         WWTNM
      C                   EndIf
- 
+
      C                   EndIf
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *                                                               *
       * SR/#ACOD : Validate Account Code                              *
@@ -1426,25 +1428,25 @@
       * Calls: ZASNMS                                                 *
       *                                                               *
       *****************************************************************
- 
+
      C     #ACOD         BEGSR
- 
+
       ** If blanks, default to account code on SDCUSTPD else must be on
       ** SDACODPD
- 
+
      C     SFACOD        IfEq      *BLANKS
- 
+
      C     BBDFAC        IfNe      0
      C                   Move      BBDFAC        SFACOD
      C                   EndIf
      C                   Else
- 
+
      C                   Call      'AOACODR0'
      C                   Parm      *BLANKS       @RTCD
      C                   Parm      '*KEY   '     @OPTN
      C                   Parm      SFACOD        @KEY1
      C     SDACOD        Parm      SDACOD        DSSDY
- 
+
      C     @RTCD         IfNe      *BLANKS
      C                   Move      *On           *IN79
      C                   Move      *On           *IN75
@@ -1452,11 +1454,11 @@
      C                   MoveL     *BLANKS       ZAMSDA
      C                   Exsr      ZASNMS
      C                   EndIf
- 
+
      C                   EndIf
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *                                                               *
       * SR/#ACSQ : Validate Account Sequence                          *
@@ -1466,26 +1468,26 @@
       * Calls: ZASNMS, ZALIGN                                         *
       *                                                               *
       *****************************************************************
- 
+
      C     #ACSQ         BEGSR
- 
+
       ** If blanks, default to account code on SDCUSTPD else must be a
       ** live account
- 
+
      C     SFACSQ        IfEq      *BLANKS
- 
+
      C     BBDFAS        IfNe      0
      C                   Move      BBDFAS        SFACSQ
      C                   EndIf
- 
+
       ** Must be a live account
- 
+
      C                   MOVE      BBCUST        XXCNUM
      C                   MOVE      SFACOD        XXACOD
      C                   MOVE      SFACSQ        XXACSQ
- 
+
      C     WWACCT        Chain     ACCNT                              90
- 
+
      C     *IN90         IfEq      *On
      C     RECI          OrEq      'C'
      C                   Move      *On           *IN80
@@ -1495,17 +1497,17 @@
      C                   MoveL     *BLANKS       ZAMSDA
      C                   Exsr      ZASNMS
      C                   EndIf
- 
+
      C                   Else
- 
+
      C                   Move      *BLANKS       ZFIELD
- 
+
      C                   CallB     'ZALIGN'
      C                   Parm                    ZALIGNOK
      C                   Parm      SFACSQ        ZFIELD
      C                   Parm      *ZEROS        ZADEC
      C                   Parm      2             ZADIG
- 
+
      C     ZALIGNOK      IfEq      'N'
      C                   Move      *On           *IN80
      C                   Move      *On           *IN75
@@ -1513,13 +1515,13 @@
      C                   MoveL     *BLANKS       ZAMSDA
      C                   Exsr      ZASNMS
      C                   Else
- 
+
       ** Must be a live account
- 
+
      C                   Move      BBCUST        XXCNUM
      C                   Move      SFACOD        XXACOD
      C                   Move      SFACSQ        XXACSQ
- 
+
      C     WWACCT        Chain     ACCNT                              90
      C     *IN90         IfEq      *On
      C     RECI          OrEq      'C'
@@ -1530,15 +1532,15 @@
      C                   MoveL     *BLANKS       ZAMSDA
      C                   Exsr      ZASNMS
      C                   Else
- 
+
       ** PM must be on and Customer must be a portfolio customer
- 
+
      C     PTFR          IfEq      '9997'
      C                   Move      FCR997        WWPTFR            4
      C                   Else
      C                   Move      PTFR          WWPTFR
      C                   EndIf
- 
+
      C     BGPFMG        IfEq      'Y'
      C     *IN82         AndEq     *On
      C     WWPTFR        AndNe     SFPTFR
@@ -1549,14 +1551,14 @@
      C                   MoveL     *BLANKS       ZAMSDA
      C                   Exsr      ZASNMS
      C                   EndIf
- 
+
      C                   EndIf
      C                   EndIf
- 
+
      C                   EndIf
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *                                                               *
       * SR/#TRAS : Validate Trust Agreement Status                    *
@@ -1566,9 +1568,9 @@
       * Calls: MMFIDTSTS, #TERM, *PSSR                                *
       *                                                               *
       *****************************************************************
- 
+
      C     #TRAS         BEGSR
- 
+
      C     ##DTYP        IfEq      'LP'
                                                                                               209905
       ** Only blank out screen fields when called from MMLDNISIN                              209905
@@ -1580,7 +1582,7 @@
      C                   Move      *BLANKS       ##NAR3
      C                   Move      *BLANKS       ##NAR4
      C                   ENDIF                                                                209905
- 
+
      C                   Move      SFDLNO        WDLNO             6 0
      C**********         Move      BBCUST        WCUST             6 0                        CSD027
      C                   Move      BBCUST        WCUST             6                          CSD027
@@ -1588,7 +1590,7 @@
      C                   IF        ##TRAS <> SFTRAS                                           209905
      C                   EVAL      ##TRAS = SFTRAS                                            209905
      C                   ENDIF                                                                209905
- 
+
      C                   CallB     'MMFIDTSTS'
      C                   Parm                    PSProcName
      C                   Parm                    ##MODE
@@ -1602,16 +1604,16 @@
      C**********         Parm                    @RTCD                                        209905
      C                   Parm                    PProtect                                     209905
      C                   Parm      *BLANK        @RTCD                                        209905
- 
+
      C     @RTCD         IfEq      *BLANK
      C                   Move      ##TRAS        SFTRAS
      C                   EndIf
- 
+
      C     @RTCD         IfEq      'Y2U9999'
      C                   Move      *On           *IN03
      C                   Exsr      #TERM
      C                   EndIf
- 
+
      C     @RTCD         IfNe      *BLANK
      C     @RTCD         AndNe     'Y2U9999'
      C     @RTCD         AndNe     'USR0790'
@@ -1619,11 +1621,11 @@
      C                   Move      *On           *INU8
      C                   Exsr      *PSSR
      C                   EndIf
- 
+
      C                   EndIf
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *                                                               *
       * SR/#ENQY : Build SFL in Enquiry                               *
@@ -1633,54 +1635,54 @@
       * Calls: ZSEDIT, ZASNMS                                         *
       *                                                               *
       *****************************************************************
- 
+
      C     #ENQY         BEGSR
- 
+
      C                   Move      *On           *IN72
      C                   Move      ##DLNO        ZZLNKN            6 0
      C     ZZLNKN        SetLL     MMDELDL3
      C     ZZLNKN        ReadE     MMDELDL3                               90
- 
+
      C     *IN90         DoWEq     *Off
- 
+
      C     ##MODE        IfEq      'E'
      C     HKTYPE        AndEq     'LT'
      C     ##MODE        OrEq      'E'
      C     HKTYPE        AndEq     'LP'
      C                   Move      *On           *IN67
      C                   EndIf
- 
+
       ** Fill only live records
- 
+
      C     HKDDLT        IfNe      'D'
      C                   MoveL     HKDN38        SFDLNO
      C                   MoveL     HKCNUM        SFCNUM
- 
+
      C     HKPTFR        IfEq      '9997'
      C                   MoveL     FCR997        SFPTFR
      C                   Else
      C                   MoveL     HKPTFR        SFPTFR
      C                   EndIf
- 
+
       ** Swap amount only to display
- 
+
      C     HKAMNP        IfLt      *ZEROS
      C                   Z-Sub     HKAMNP        HKAMNP
      C                   EndIf
- 
+
      C                   Move      *BLANKS       ZFLD15
- 
+
      C                   CallB     'ZSEDIT'
      C                   Parm      HKAMNP        ZFLD15
      C                   Parm      ZCDP          ZDECS
      C                   Parm      *BLANKS       ZECODE
      C                   Parm                    ZOUT21
- 
+
      C                   Move      ZOUT21        SFAMNT
      C                   MoveL     HKDORI        WWCUST
      C                   MoveL     HKCSNM        SFCSSN
      C                   MoveL     *BLANK        SFTRAS
- 
+
      C     *IN67         IfEq      *On
      C     *IN52         AndEq     *On
      C     HKDN38        Chain     MMDELDL2                           89
@@ -1688,10 +1690,10 @@
      C                   MoveL     HKFTST        SFTRAS
      C                   EndIf
      C                   EndIf
- 
+
      C                   MoveL     *BLANKS       SHAMNT
      C                   MoveL     *BLANKS       SHFLAG
- 
+
      C     *IN51         IfEq      *On
      C                   Write     MMFIDDS1
      C                   Add       1             WWRRN
@@ -1700,14 +1702,14 @@
      C                   Write     MMFIDDS3
      C                   Add       1             WWRRN3
      C                   EndIf
- 
+
      C                   EndIf
- 
+
      C     ZZLNKN        ReadE     MMDELDL3                               90
      C                   EndDo
- 
+
       ** Display SFL at Top. If empty display message.
- 
+
      C     *IN51         IfEq      *On
      C     WWRRN         IfEq      1
      C                   Move      *On           *IN64
@@ -1726,9 +1728,9 @@
      C                   EndIf
      C                   Z-Add     1             WWRRN3
      C                   EndIf
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *                                                               *
       * SR/#FILS : Build SFL at Start                                 *
@@ -1738,11 +1740,11 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     #FILS         BEGSR
- 
+
      C                   Z-Add     1             WWCOUN            3 0
- 
+
      C     WWCOUN        DoWLt     WWFIL
      C                   IF        WWCOUN > 99                                                209905
      C                   MoveL     *BLANKS       SFDLNO
@@ -1772,7 +1774,7 @@
      C                   IF        PProtect = 'Y'                                             209905
      C                   EVAL      *IN84 = *ON                                                209905
      C                   ENDIF                                                                209905
- 
+
      C     *IN51         IfEq      *On
      C                   Write     MMFIDDS1
      C                   Add       1             WWRRN
@@ -1781,9 +1783,9 @@
      C                   Write     MMFIDDS3
      C                   Add       1             WWRRN3
      C                   EndIf
- 
+
      C                   Add       1             WWCOUN
- 
+
      C                   EndDo
       *
       ** Display SFL at Top
@@ -1794,9 +1796,9 @@
      C     *IN52         IfEq      *On
      C                   Z-Add     1             WWRRN3
      C                   EndIf
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *                                                               *
       * SR/#REFR : Refresh Subfile                                    *
@@ -1806,15 +1808,15 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     #REFR         BEGSR
- 
+
       ** Display SFL in amend mode
- 
+
      C                   Move      *Off          *IN83
      C                   Move      *Off          *IN85
      C                   Move      'Y'           WFIRST
- 
+
      C                   Z-Add     1             WWCOUN
      C     *IN51         IfEq      *On
      C                   Z-Add     1             WWRRN
@@ -1822,7 +1824,7 @@
      C     *IN52         IfEq      *On
      C                   Z-Add     1             WWRRN3
      C                   EndIf
- 
+
      C     WWCOUN        DoWLt     WWFIL
      C     *IN51         IfEq      *On
      C     WWRRN         Chain     MMFIDDS1                           82
@@ -1830,7 +1832,7 @@
      C     *IN52         IfEq      *On
      C     WWRRN3        Chain     MMFIDDS3                           82
      C                   EndIf
- 
+
      C                   Move      *Off          *IN84
      C     *IN51         IfEq      *On
      C                   Update    MMFIDDS1
@@ -1840,21 +1842,21 @@
      C                   Update    MMFIDDS3
      C                   Add       1             WWRRN3
      C                   EndIf
- 
+
      C                   Add       1             WWCOUN
      C                   EndDo
- 
+
       ** Display SFL at Top
- 
+
      C     *IN51         IfEq      *On
      C                   Z-Add     1             WWRRN
      C                   EndIf
      C     *IN52         IfEq      *On
      C                   Z-Add     1             WWRRN3
      C                   EndIf
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *                                                               *
       * SR/#TERM : Termination                                        *
@@ -1864,22 +1866,22 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     #TERM         BEGSR
- 
+
       ** End of pgm
- 
+
      C     *IN03         IfEq      *On
      C                   Move      'Y2U9999'     ##RTCD
      C                   Else
      C                   Move      *BLANKS       ##RTCD
      C                   EndIf
- 
+
      C                   Move      *On           *INLR
      C                   Return
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *                                                               *
       * SR/#PREV : F12 on SFL                                         *
@@ -1889,11 +1891,11 @@
       * Calls: #REFR                                                  *
       *                                                               *
       *****************************************************************
- 
+
      C     #PREV         BEGSR
- 
+
       **   End of pgm, return to MMLDNISIN
- 
+
      C     *IN72         IfEq      *Off
      C     *IN83         AndEq     *Off
      C     PProtect      OREQ      'Y'                                                        209905
@@ -1901,16 +1903,16 @@
      C                   Move      *On           *INLR
      C                   Return
      C                   EndIf
- 
+
       ** F12 pressed when message "Press enter to update" is displayed
- 
+
      C     *IN72         IfEq      *Off
      C     *IN83         AndEq     *On
      C                   Exsr      #REFR
      C                   EndIf
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *                                                               *
       * SR/#PROT : Protect SFL in Enquiry Mode                        *
@@ -1920,11 +1922,11 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     #PROT         BEGSR
- 
+
       ** Display SFL in protect mode
- 
+
      C                   Z-Add     1             WWCOUN
      C     *IN51         IfEq      *On
      C                   Z-Add     1             WWRRN
@@ -1932,7 +1934,7 @@
      C     *IN52         IfEq      *On
      C                   Z-Add     1             WWRRN3
      C                   EndIf
- 
+
      C     WWCOUN        DoWLt     WWFIL
      C     *IN51         IfEq      *On
      C     WWRRN         Chain     MMFIDDS1                           82
@@ -1940,7 +1942,7 @@
      C     *IN52         IfEq      *On
      C     WWRRN3        Chain     MMFIDDS3                           82
      C                   EndIf
- 
+
      C                   Move      *On           *IN84
      C     *IN51         IfEq      *On
      C                   Update    MMFIDDS1
@@ -1950,22 +1952,22 @@
      C                   Update    MMFIDDS3
      C                   Add       1             WWRRN3
      C                   EndIf
- 
+
      C                   Add       1             WWCOUN
- 
+
      C                   EndDo
- 
+
       ** Display SFL at Top
- 
+
      C     *IN51         IfEq      *On
      C                   Z-Add     1             WWRRN
      C                   EndIf
      C     *IN52         IfEq      *On
      C                   Z-Add     1             WWRRN3
      C                   EndIf
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *                                                               *
       * SR/#HEADR : Setup SFL Header                                  *
@@ -1975,44 +1977,44 @@
       * Calls: *PSSR, ZSEDIT, ZDATE2                                  *
       *                                                               *
       *****************************************************************
- 
+
      C     #HEADR        BEGSR
- 
+
      C                   MoveL     PSUser        USID
      C                   MoveL     PSJobName     WSID
      C                   MoveL     BJMRDT        DDMRDT
      C                   MoveL     ##DLNO        DDDLNO
      C                   Move      ##CNUM        DDCNUM
- 
+
      C     ##NOTD        IfLe      *ZEROS
      C                   MoveL     *BLANKS       DDNOTD
      C                   Else
      C                   Move      *BLANKS       ZFLD15
      C                   Move      ##NOTD        ZFLD15
- 
+
      C                   CallB     'ZSEDIT'
      C                   Parm                    ZFLD15
      C                   Parm      *ZEROS        ZDECS
      C                   Parm      *BLANKS       ZECODE
      C                   Parm                    ZOUT21
- 
+
      C                   Move      ZOUT21        WDNOTD            4
      C                   MoveL     WDNOTD        DDNOTD
      C                   EndIf
- 
+
      C                   Move      ##BRCA        DDBRCA
      C                   Move      ##DTST        DDSTYP
      C                   Move      ##DTYP        DDTYPE
- 
+
       ** Customer shortname
- 
+
      C                   CallB     'AOCUSTR1'
      C                   Parm      *BLANKS       @RTCD
      C                   Parm      '*KEY   '     @OPTN
      C                   Parm      DDCNUM        @KEY1            10
      C                   Parm      *BLANKS       @KYST             7
      C     SDCUST        Parm      SDCUST        DSLDY
- 
+
      C     @RTCD         IfNe      *BLANKS
      C     *LOCK         In        LDA
      C                   Move      *On           *INU7
@@ -2023,18 +2025,18 @@
      C                   Out       LDA
      C                   Exsr      *PSSR
      C                   EndIf
- 
+
      C                   MoveL     BBCSSN        DDCSSN
      C                   MoveL     ##CCY         DDCCY
- 
+
       ** Get Currency Decimal Places
- 
+
      C                   CallB     'AOCURRR0'
      C                   Parm      *BLANKS       @RTCD
      C                   Parm      '*KEY   '     @OPTN
      C                   Parm      DDCCY         @AJCD             3
      C     SDCURR        Parm      SDCURR        DSSDY
- 
+
      C     @RTCD         IfNe      *BLANK
      C     *LOCK         In        LDA
      C                   Move      *On           *INU7
@@ -2045,82 +2047,82 @@
      C                   Out       LDA
      C                   Exsr      *PSSR
      C                   EndIf
- 
+
      C                   Z-Add     A6NBDP        ZCDP              1 0
- 
+
       ** Swap amount only to display
- 
+
      C     ##PCPL        IfLt      *ZEROS
      C                   Z-Sub     ##PCPL        ##PCPL
      C                   EndIf
- 
+
      C                   Move      *BLANKS       ZFLD15
- 
+
      C                   CallB     'ZSEDIT'
      C                   Parm      ##PCPL        ZFLD15
      C                   Parm      ZCDP          ZDECS
      C                   Parm      *BLANKS       ZECODE
      C                   Parm                    ZOUT21
- 
+
      C                   Move      ZOUT21        DDAMNT
- 
+
       ** Deal Date
- 
+
      C     ##DDAT        IfNe      *ZEROS
      C                   CallB     'ZDATE2'
      C                   Parm      ##DDAT        ZDAYNO            5 0
      C                   Parm                    ZDATFM            1
      C                   Parm                    ZDATE             6 0
      C                   Parm                    ZADATE            7
- 
+
      C                   MoveL     ZDATE         DDDATE
      C                   Else
      C                   Move      *BLANKS       DDDATE
      C                   EndIf
- 
+
       ** Value Date
- 
+
      C     ##VDAT        IfNe      *ZEROS
      C                   CallB     'ZDATE2'
      C                   Parm      ##VDAT        ZDAYNO
      C                   Parm                    ZDATFM
      C                   Parm                    ZDATE
      C                   Parm                    ZADATE
- 
+
      C                   MoveL     ZDATE         DDVDAT
      C                   Else
      C                   Move      *BLANKS       DDVDAT
      C                   EndIf
- 
+
       ** Maturity Date
- 
+
      C     ##MDAT        IfNe      *ZEROS
      C                   CallB     'ZDATE2'
      C                   Parm      ##MDAT        ZDAYNO
      C                   Parm                    ZDATFM
      C                   Parm                    ZDATE
      C                   Parm                    ZADATE
- 
+
      C                   MoveL     ZDATE         DDMDAT
      C                   Else
      C                   Move      *BLANKS       DDMDAT
      C                   EndIf
- 
+
       ** Interest rate
- 
+
      C                   Move      *BLANKS       ZFLD15
      C                   Move      ##INTR        ZFLD15
- 
+
      C                   CallB     'ZSEDIT'
      C                   Parm                    ZFLD15           15 0
      C                   Parm      7             ZDECS             1 0
      C                   Parm      *BLANKS       ZECODE            1
      C                   Parm                    ZOUT21           21
- 
+
      C                   Move      ZOUT21        DDRATE
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *                                                               *
       * SR/#UPDT  : Output Record in Work File                        *
@@ -2130,9 +2132,9 @@
       * Calls: *PSSR                                                  *
       *                                                               *
       *****************************************************************
- 
+
      C     #UPDT         BEGSR
- 
+
      C                   Z-Add     1             WWCOUN
      C     *IN51         IfEq      *On
      C                   Z-Add     1             WWRRN
@@ -2140,16 +2142,16 @@
      C     *IN52         IfEq      *On
      C                   Z-Add     1             WWRRN3
      C                   EndIf
- 
+
      C     WWCOUN        DoWLt     WWFIL
- 
+
      C     *IN51         IfEq      *On
      C     WWRRN         Chain     MMFIDDS1                           82
      C                   EndIf
      C     *IN52         IfEq      *On
      C     WWRRN3        Chain     MMFIDDS3                           82
      C                   EndIf
- 
+
      C     SHFLAG        IfEq      'D'
      C                   Clear                   SW8OUTP
      C                   MoveL     IKRCID        FIRCID
@@ -2180,7 +2182,7 @@
      C                   MoveL     IKDDLT        FIDDLT
      C                   MoveL     IKMTYP        FIMTYP
      C                   MoveL     IKDSTS        FIDSTS
- 
+
      C     DDTYPE        IfEq      'FL'
      C                   MoveL     'FT'          FITYPE
      C                   Else
@@ -2192,7 +2194,7 @@
      C                   EndIf
      C                   EndIf
      C                   EndIf
- 
+
      C                   MoveL     IKSTYP        FISTYP
      C                   MoveL     SHCSSN        FICSNM
      C                   Move      SHCNUM        FICNUM
@@ -2265,7 +2267,7 @@
      C                   Z-Add     IKNIPD        FINIPD
      C                   Z-Add     IKMATD        FIMATD
      C                   MoveL     IKORBR        FIORBR
- 
+
      C                   CallB     'AOPRFMR0'
      C                   Parm      *BLANKS       @RTCD
      C                   Parm      IKBOKC        BOOK              2
@@ -2277,13 +2279,13 @@
      C                   Parm      BBACOC        ACOF              2
      C                   Parm      BBCUST        CUST              6
      C                   Parm                    PRFC              4
- 
+
      C     @RTCD         IfEq      *BLANKS
      C                   MoveL     PRFC          FIPRFC
      C                   Else
      C                   MoveL     IKPRFC        FIPRFC
      C                   EndIf
- 
+
      C                   MoveL     DDBRCA        FIPOBR
      C                   MoveL     DDBRCA        FIROBR
      C                   MoveL     IKCVMR        FICVMR
@@ -2304,7 +2306,7 @@
      C                   Move      ##NAR2        FIFRN2
      C                   Move      ##NAR3        FIFRN3
      C                   Move      ##NAR4        FIFRN4
- 
+
      C     BGPFMG        IfEq      'Y'
      C     SFPTFR        IfEq      FCR997
      C                   Move      '9997'        FIPTFR
@@ -2314,9 +2316,9 @@
      C                   Else
      C                   Move      *BLANKS       FIPTFR
      C                   EndIf
- 
+
       ** Calculate total interest of the taking deal
- 
+
      C                   Z-ADD     FICYDP        PCYDP
      C                   Z-ADD     FINTCE        PNTCE
      C                   CALLB     'ZAVTOTINT'
@@ -2375,7 +2377,7 @@
      C                   PARM                    FIRDFC
       ** Decimal separator (1A, from SDDEALPD)
      C                   PARM                    NNDCSP
- 
+
      C     ReturnCode    IfNe      *BLANKS
      C     *LOCK         In        LDA
      C                   Move      *On           *INU7
@@ -2385,14 +2387,14 @@
      C                   Out       LDA
      C                   Exsr      *PSSR
      C                   EndIf
- 
+
       ** Generate the deal number of the placing if it has none yet so
       ** that the associated taking can already be attached to it. Thus,
       ** reducing the possibility of having takings in MMWFIDDPD that
       ** belong to a generic placing, that is, deal '000000'. Make sure
       ** also that the generated deal number is received by the calling
       ** program to avoid re-generation of deal number for the placing.
- 
+
      C     ##DLNO        IFEQ      *BLANKS
      C                   CALLB     'CAGTNXTFID'
      C                   PARM                    ##DTYP
@@ -2400,36 +2402,36 @@
      C                   MOVE      PDealNo       ##DLNO
      C                   ENDIF
      C                   MOVE      ##DLNO        FILNKN
- 
+
      C                   Write     SW8OUTP
- 
+
       ** For fiduciary loan only one record, so use a parameter to pass
       ** the trust agreement status to MMFIDTUPF to setup MMDELDPP
- 
+
      C     *IN67         IfEq      *On
      C                   Move      SFTRAS        ##TRAS
      C                   EndIf
- 
+
      C                   EndIf
- 
+
      C     *IN51         IfEq      *On
      C                   Add       1             WWRRN
      C                   EndIf
      C     *IN52         IfEq      *On
      C                   Add       1             WWRRN3
      C                   EndIf
- 
+
      C                   Add       1             WWCOUN
      C                   EndDo
- 
+
       ** Return to MMLDNISIN
- 
+
      C                   Move      *On           *INLR
      C                   Move      *Off          *IN51
      C                   Move      *Off          *IN52
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *                                                               *
       * SR/ZASNMS : Send Message to Message Queue                     *
@@ -2440,13 +2442,13 @@
       * Calls: Y2SNMGC                                                *
       *                                                               *
       *****************************************************************
- 
+
      C     ZASNMS        BEGSR
- 
+
       ** Message file specified is PMSGF
- 
+
      C                   MoveL     PMSGF         ZAMSGF
- 
+
      C                   Call      'Y2SNMGC'
      C                   Parm                    ZAPGM            10
      C                   Parm                    ZAPGRL            5
@@ -2454,18 +2456,18 @@
      C                   Parm                    ZAMSGF           10
      C                   Parm                    ZAMSDA          132
      C                   Parm                    ZAMSTP            7
- 
+
       ** Clear all fields for default mechanism next time.
- 
+
      C                   MoveL     *BLANK        ZAPGM
      C                   MoveL     *BLANK        ZAPGRL
      C                   MoveL     *BLANK        ZAMSDA
      C                   MoveL     *BLANK        ZAMSTP
      C                   MoveL     *BLANK        ZAMSGF
      C                   MoveL     *BLANK        ZAMSID
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *                                                               *
       * SR/*PSSR  : Error Handling                                    *
@@ -2475,17 +2477,17 @@
       * Calls: DBERRCTL                                               *
       *                                                               *
       *****************************************************************
- 
+
      C     *PSSR         BEGSR
- 
+
      C                   MoveL     '*ERROR'      ##RTCD
      C                   Call      'DBERRCTL'
      C                   Dump
      C                   Move      *On           *INLR
      C                   Return
- 
+
      C                   ENDSR
- 
+
       ****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

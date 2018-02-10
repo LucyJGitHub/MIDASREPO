@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MM Validate automatic rollover indicator')
@@ -17,7 +17,7 @@
       *                                                               *
       *  Component of: MMVALIDTE - MM validation service program      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *    This source is centrally supported and must ONLY be        *
       *    amended by Core Development Personnel                      *
@@ -25,10 +25,11 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. 256564             Date 17Sep08               *
-      *  Prev Amend No. 250359             Date 19Sep07               *
+      *  Prev Amend No. 256564             Date 17Sep08               *
+      *                 250359             Date 19Sep07               *
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       *                 BUG8582            Date 22Sep05               *
@@ -43,6 +44,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  256564 - Recompile due to PF changes done by fix 256330      *
       *  250359 - Always default automatic rollover indicator to "N"  *
       *           even when CDL016 is ON.                             *
@@ -298,4 +300,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

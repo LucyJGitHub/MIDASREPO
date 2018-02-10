@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MS Midas/MMM compression server      *MODULE')
@@ -18,14 +18,15 @@
       *  Calls    : QSNDDTAQ - Send data queue entry                  *
       *             QRCVDTAQ - Receive data queue entry               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. 246533             Date 22Mar07               *
+      *  Prev Amend No. 246533             Date 22Mar07               *
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. 238594             Date 09Mar06               *
+      *                 238594             Date 09Mar06               *
       *                 CSD027             Date 09Dec05               *
       *                 BUG3189 *Reopen    Date 10Jun04               *
       *                 BUG3189            Date 09Jun04               *
@@ -38,6 +39,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  246533 - If PAPER message do not expand destination as it may*
       *           not be a normal BIC and TRAM can't match it up.     *
       *  238594 - Generate exception report when message limit of     *

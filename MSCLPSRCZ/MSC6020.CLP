@@ -9,21 +9,23 @@
 /*                                                                   */
 /*       Written for S01431 - Midas to Merva/2 interface             */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CCB020            Date   06Aug12             */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CCB020             Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No.  CPK009           Date 09Aug99               */
+/*                      CPK009             Date 09Aug99              */
 /*                       089842           DATE 19DEC97               */
 /*                       068102           DATE 24MAR94               */
 /*                                                                   */
 /*---------------------------------------------------------------- --*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*   CCB020 - COB Restructure - Secondary COB Infrastructure         */
 /*       CPK009 - Packaging for DBA3 release. STRCMTCTL values set   */
 /*                to CMTSCOPE(*JOB).                                 */
@@ -53,7 +55,7 @@
 /*************************COPYRIGHT MKI +                            */
 /*************************INTERNATIONAL LTD. 1993')                  */
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /* Global monitor message */
@@ -141,5 +143,5 @@
              MONMSG MSGID(CPF0000 MCH0000)
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

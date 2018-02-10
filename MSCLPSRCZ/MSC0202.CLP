@@ -7,8 +7,9 @@
 /*                                                                   */
 /*     MSC0202 - RECEIVE COMMUNCIATIONS PROGRAM                      */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -16,8 +17,8 @@
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.03 ---------------------------------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*     LAST AMEND NO 120202            DATE 11JUN97                  */
-/*     PREV AMEND.NO CSW001            DATE 20MAR95                  */
+/*       Prev Amend No. 120202             Date 11Jun97              */
+/*                      CSW001             Date 20Mar95              */
 /*                   S01344            DATE 14/10/91                 */
 /*                   S01310            DATE 20/09/91                 */
 /*                   S01259            DATE 13/12/90                 */
@@ -26,6 +27,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*     120202 - AOMGMER0 parameters have changed                     */
 /*     CSW001 - SWIFT ALLIANCE Batch Transmission                    */
 /*              execute program MSC3002 (if TCPF) and go to          */
@@ -61,7 +63,7 @@
              DCL        VAR(&CSW001) TYPE(*CHAR) LEN(1)               /*CSW001*/
              DCL        VAR(&SFMT) TYPE(*CHAR) LEN(200)               /*CSW001*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /*/COPY WNCPYSRC,MSC0202001                                          */
              DCLF       FILE(MS2780DF)
@@ -261,6 +263,6 @@ UPDATE:      CALL       PGM(MS0207)                                   /*S01259*/
  
  END2:                                                                /*CSW001*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

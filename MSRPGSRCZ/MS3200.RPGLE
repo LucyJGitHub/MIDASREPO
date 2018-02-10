@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas MS create o/g messages in DOS-PCC format')       *
@@ -16,13 +16,14 @@
       *                                                               *
       *  Called By: MSC3200 - Alliance automated transmission         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. 240269             Date 19Aug14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. 240269             Date 19Aug14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
-      *  Prev Amend No. 244940             Date 17Jan07               *
+      *                 244940             Date 17Jan07               *
       * Midas Plus 1.3 ----------- Base ------------------------------*
       *                 CSD027             Date 09Dec05               *
       *                 219242             Date 01Jul03               *
@@ -41,6 +42,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  240269 - SWIFT skip a blank character when it falls on the   *
       *           50th position. Applied fix 221026 or 240192.        *
       *  244940 - Applied fix 233575.                                 *
@@ -690,7 +692,7 @@
       ********************************************************************
       /COPY MSCPYSRC,SRERRC
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 ** TAB1                                                                                       CDL008
 :103:                                                                                         CDL008
 :119:                                                                                         CFT014

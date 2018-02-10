@@ -11,10 +11,11 @@
       *  Function:  This program maintains the Outgoing Message Field *
       *             Management                                        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. MD034562           Date 02Jun15               *
-      *  Prev Amend No. CSW215             Date 06Apr15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD034562           Date 02Jun15               *
+      *                 CSW215             Date 06Apr15               *
       *                 CSW213             Date 03Jun13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 256637             Date 17Sep08               *
@@ -34,6 +35,7 @@
       *                                                               *
       *-------------------------------------------------------------- *
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD034562 - ACOUNTLINE and ACOUNTIBAN must be accepted for    *
       *             59F even if CSW215 is OFF                         *
       *  CSW215 - SWIFT Changes 2015                                  *
@@ -1456,7 +1458,7 @@
      C                   ELSE                                                                 CSW215
      C                   Z-ADD     1104001       Y2LSNO                                       CSW215
      C                   ENDIF                                                                CSW215
-                                                                                              CSW215 
+                                                                                              CSW215
      C                   EVAL      SELECTION = *BLANKS                                      BUG14042
      C                   EVAL      WQRYFLD = SOMACTI
      C                   IF        WQRYFLD = '?'
@@ -2392,4 +2394,4 @@
      C                   ENDSR                                                                CSW207
                                                                                               CSW207
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2006
+(c) Finastra International Limited 2006

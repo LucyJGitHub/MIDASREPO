@@ -7,15 +7,16 @@
 /*                                                                   */
 /*       MEC1000 - Control call to selection processing              */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CSC023             Date 30Jan04              */
+/*       Prev Amend No. CSC023             Date 30Jan04              */
 /* Midas Release 4 --------------- Base -----------------------------*/
-/*       Prev Amend No. CPK014             Date 14Nov01              */
+/*                      CPK014             Date 14Nov01              */
 /* Midas DBA 3.03 ---------------------------------------------------*/
 /*                      CFT006             Date 06Sep99              */
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
@@ -24,6 +25,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CSC023 - MidasPlus additional packaging.  SBMJOB change.    */
 /*                OUTQ must always be *JOBD.                         */
 /*       CPK014 - Submit jobs with user *JOBD                        */
@@ -35,7 +37,7 @@
              PGM        PARM(&RTN_CODE &ACTION &BRANCH &FT_PROC)
 /* */
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /* */
 /* Declare variables */
@@ -145,7 +147,7 @@ ABNORMAL:
              RCLRSC     LVL(*CALLER)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
              DLCOBJ     OBJ((MEINMRPD *FILE *EXCL *FIRST))
              MONMSG     MSGID(CPF0000)

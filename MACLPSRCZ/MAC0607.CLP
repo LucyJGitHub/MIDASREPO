@@ -8,23 +8,25 @@
 /*                                                                   */
 /*  MAC0607  - Clear Archived Output Queues                          */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.05 ---------------------------------------------------*/
-/*       Last Amend No. 190517             Date 28Feb01              */
+/*       Prev Amend No. 190517             Date 28Feb01              */
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. 089639             Date 08Jan97              */
+/*                      089639             Date 08Jan97              */
 /*                 089636               DATE 19OCT95                 */
 /*                 S01382               DATE 21JUL92                 */
 /*                 LN1079               DATE 13DEC90                 */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*  190517 - CLROUTQ job is looping. MAC0607 is looking for a value  */
 /*           of either 'Z' or 'C' in dtaara MACHK. Amendment 090061  */
 /*           passes the value 'N' to MACHK instead of 'Z'. Thus the  */
@@ -56,7 +58,7 @@
                           output queue            be cleared? Enter +
                           Y to clear or N to continue processing.')   /*LN1079*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&FMT) TYPE(*CHAR) LEN(200)                /*089636*/
              DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7) VALUE(' ')      /*089636*/
@@ -72,7 +74,7 @@
  
  chgjob     sws(xxxxxx00)
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /* RETRIEVE OPTICAL ICD                                               /*089636*/
                                                                       /*089636*/
              CALL       PGM(AOOPTCR0) PARM(&RTCD &OPTN &FMT)          /*089636*/

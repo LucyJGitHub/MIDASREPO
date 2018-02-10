@@ -7,8 +7,9 @@
 /*                                                                   */
 /*     MEC0600 - OUTGOING MESSAGE DETAIL MAINTENANCE                 */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -16,11 +17,12 @@
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.03 ---------------------------------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Last Amend No. CTK001             DATE 11May99              */
-/*       Prev Amend.No  067460             DATE 01Nov94              */
+/*       Prev Amend No. CTK001             Date 11May99              */
+/*                      067460             Date 01Nov94              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*     CTK001 - Testkey module conversion from DOS to WINDOWS        */
 /*              95/NT (Testkey II)                                   */
 /*     067460 - ME0600 fails trying to generate testkey when not     */
@@ -51,7 +53,7 @@
              DCL        VAR(&X) TYPE(*DEC) LEN(2 0) VALUE(1)
              DCL        VAR(&Y) TYPE(*DEC) LEN(1 0) VALUE(0)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
              DCL        VAR(&MMOD) TYPE(*CHAR) LEN(256)
@@ -159,5 +161,5 @@ PCONO:       ENDDO
 ABNOR:       CHGVAR VAR(&ERR) VALUE('1')
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

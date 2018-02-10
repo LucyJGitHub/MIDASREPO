@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MM Calculate Yield Rate For Bills Bought')       *
@@ -13,7 +13,7 @@
       *             given the value date, maturity date, effective    *
       *             interest rate and calculation method.             *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *    This source is centrally supported and must ONLY be        *
       *    amended by Core Development Personnel                      *
@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD026986           Date 16May14               *
-      *  Prev Amend No. CDL093             Date 07Apr14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD026986           Date 16May14               *
+      *                 CDL093             Date 07Apr14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -34,6 +35,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD026986 - remove changes made by CDL093                     *
       *  CDL093 - MM Interest calculation type 9.                     *
       *  CAP002 - Conversion of MM inputs into modular structure to   *

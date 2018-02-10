@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MM NAs sold validate and update')                *
@@ -26,10 +26,11 @@
       *              process the transaction and bypass the rest of   *
       *              the validation.                                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CDL094             Date 11Jun14               *
-      *  Prev Amend No. CSD095             Date 08Apr14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *                 CSD095             Date 08Apr14               *
       *                 CLE134             Date 01Aug12               *
       *                 CSF011A            Date 28Nov11               *
       *                 259924A            Date 28May09               *
@@ -60,6 +61,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL094 - Enhance Receive Settlement Instructions             *
       *           (Recompile)                                         *
       *  CSD095 - Allow Deal Sub-Type and Branch for MM and FX SSIs   *
@@ -1709,4 +1711,4 @@
       /EJECT
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2003
+(c) Finastra International Limited 2003

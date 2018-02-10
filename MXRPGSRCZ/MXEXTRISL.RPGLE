@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MX Extract Retail Interest Statement Lines')
@@ -12,14 +12,15 @@
       *  Function:  This module extracts retail interest statement    *
       *             lines                                             *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSD027             Date 09Dec05               *
-      *  Prev Amend No. BUG6417            Date 28Mar05               *
+      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 BUG6417            Date 28Mar05               *
       *                 CGL029             Date 01Sep03               *
       *                 CRE008             Date 19Feb02               *
       * Midas Release 4 --------------- Base -------------------------*
@@ -28,6 +29,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  BUG6417- Cash management components are missing in MidasPlus *
       *  CGL029 - Increase Account Code to 10 digits                  *
@@ -1218,7 +1220,7 @@
       /COPY MXCPYSRC,MXPSSR
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 **   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN
 0366073110961461
 **   ZMDY - MONTHS IN DAYS CUMULATIVE THROUGH YEAR

@@ -22,7 +22,7 @@
       *  Calls    : MS8000M - CASmf API wrapper functions             *
       *                                                               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *    This source is centrally supported and must ONLY be        *
       *    amended by Core Development Personnel                      *
@@ -30,8 +30,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. AR976772           Date 23May12               *
-      *  Prev Amend No. CSW212             Date 03May12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR976772           Date 23May12               *
+      *                 CSW212             Date 03May12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 CSW209             Date 01Apr09               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -68,6 +69,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR976772 - Value date century is not populated for all types *
       *  CSW212 - SWIFT 2012 Changes                                  *
       *  CSW209 - SWIFT 2009 Changes                                  *
@@ -1932,7 +1934,7 @@
       /COPY MSCPYSRC,SRERRC
       /COPY MSCPYSRC,CUSAPIDTA
 **CTDATA cpy@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 **CTDATA tabtyp
 100A
 103A

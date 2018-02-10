@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas BIC Directory File Desc Initialise')             *
@@ -9,13 +9,15 @@
       *                                                               *
       *  MS000002 - MIDAS BIC Directory File Desc Initialise          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD022833           Date 11Oct13               *
-      *  Prev Amend No. CFT050  *CREATE    Date 03Jun13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD022833           Date 11Oct13               *
+      *                 CFT050  *CREATE    Date 03Jun13               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *     MD022833 - CFT050 Swiftref - CFFS MEBICFPD Sequence       *
       *                numbers totally different - we may be missing  *
       *                fields on the screen as a result               *
@@ -89,7 +91,7 @@
       ** Added new array Field and Desc                                                     MD022833
       *                                                                                     MD022833
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2013
+(c) Finastra International Limited 2013
 **  Field
 B3FLAG
 B3KEY

@@ -7,22 +7,24 @@
 /*                                                                   */
 /*       MRC0011 - Identify Historic Posting Months                  */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2004           */
+/*       (c) Finastra International Limited 2004                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CMR001             Date 01Sep04              */
+/*       Prev Amend No. CMR001             Date 01Sep04              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CMR001 - MidasPlus Reporting                                */
 /*                                                                   */
 /*********************************************************************/
              PGM
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2004')
  
 /* Global monitor message */
@@ -58,7 +60,7 @@
  
  
 ENDP:        CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              RCLRSC
              MONMSG     MSGID(CPF0000 MCH0000)
              RCLRSC     LVL(*CALLER)

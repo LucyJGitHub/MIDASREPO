@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MX Access Nostro Code')                          *
@@ -11,12 +11,14 @@
       *                                                               *
       *  Function:  This module accesses SD Nostro Code               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. CTI006  *CREATE    Date 31Mar14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CTI006  *CREATE    Date 31Mar14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CTI006 - Trade Finance BF Midas 2.2 Interface                *
       *                                                               *
       *****************************************************************
@@ -97,4 +99,4 @@
       /COPY MXCPYSRC,MXPSSR
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2014
+(c) Finastra International Limited 2014

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas MS Meridian/Alliance AFT Transmission')
@@ -16,14 +16,15 @@
       *                                                               *
       *  Called By: MSC3200 - Alliance automated transmission         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
-      *  Last Amend No. 244940             Date 29Jan07               *
+      *  Prev Amend No. 244940             Date 29Jan07               *
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. 236012 (Bug 8951)  Date 29Mar05               *
+      *                 236012 (B          Date 29Mar05               *
       *                 Bug8952            Date 12Oct05               *
       *                 219242             Date 01Jul03               *
       *                 219241             Date 01Jul03               *
@@ -32,6 +33,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  244940 - Report should not be generated if there are no      *
       *           messages to report                                  *
       *  236012 - Do Not perform deletion Deletion of mXX.nnn file    *

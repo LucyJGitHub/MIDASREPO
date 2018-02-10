@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MM Loans/deposits validation 2')                 *
@@ -12,10 +12,11 @@
       *  Function: This Program Validates MM Deals for Input into     *
       *            the Midas database.                                *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CGL165             Date 23Feb15               *
-      *  Prev Amend No. CDL096             Date 22Sep14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL165             Date 23Feb15               *
+      *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 MD027019           Date 19May14               *
       *                 MD023258           Date 06Nov13               *
@@ -54,6 +55,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
       *           (Recompile)                                         *
@@ -116,8 +118,8 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
-
-
+ 
+ 
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -136,58 +138,58 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
-
+ 
      D/COPY ZACPYSRC,STD_D_SPEC
-
+ 
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
-
+ 
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
-
+ 
      D/COPY ZACPYSRC,PSDS
       ** The following /COPY line includes definitions for the above fields
       ** as #ProcPgm, #ProcMod and #ProcName.  They are based on the
       ** corresponding fields in the PSDS /COPY member, so that member
       ** must be included where this one is used.
-
+ 
      D/COPY ZACPYSRC,PROCPARMS
-
+ 
       **-----------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **-----------------------------------------------------------------
-
+ 
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
-
+ 
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for Bank Details
-
+ 
      D SDDEAL        E DS                  EXTNAME(SDDEALPD)                                  CDL020
       ** External DS for dealing details                                                      CDL020
                                                                                               CDL020
@@ -203,26 +205,26 @@
                                                                                               CDL033
      D DSFDY         E DS                  EXTNAME(DSFDY)
       * First DS for Access Programs, Short Data Structure
-
+ 
      D DSSDY         E DS                  EXTNAME(DSSDY)
       * Second DS for Access Programs, Long Data Structure
-
+ 
      D DSLDY         E DS                  EXTNAME(DSLDY)
       * Third DS for Access Programs, Very Long Data Structure
-
+ 
      D ValidDeal     E DS                  EXTNAME(MMVLDNIPD)
       * Valid Deals layout
-
+ 
      D TranIn        E DS                  EXTNAME(MMLDNIPD)
       * Incoming Transaction
-
+ 
      D InfData       E DS                  EXTNAME(MMLDIFPD)
      D                                     PREFIX(IF_)
       * MM Extra Data - File (D/B) format
-
+ 
      D ExtData       E DS                  EXTNAME(MMLDEXPD)
       * MM Extra Data - File (D/B) format
-
+ 
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                BUG10810
       ** External DS for SAR Details                                                        BUG10810
                                                                                             BUG10810
@@ -235,7 +237,7 @@
       **  Front Office (2 First characters determine System Front Office)
      D FrontOffice     DS            20
      D  W_System               1      2
-
+ 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -244,7 +246,7 @@
      D BChar           DS                                                                     CDL093
      D   BLen                  1      2B 0                                                    CDL093
      D   LenStr                1      2                                                       CDL093
-
+ 
       ** Error message fields received as parameters
      D     Msg1        S                   LIKE(#MsgID)
      D     Msg2        S                   LIKE(#MsgID)
@@ -253,7 +255,7 @@
      D     Msg5        S                   LIKE(#MsgID)
      D     Msg6        S                   LIKE(#MsgID)
      D     Msg7        S                   LIKE(#MsgID)
-
+ 
       ** Warning error message fields received as parameters
      D     WMSGID1     S                   LIKE(#MsgID)
      D     WMSGID2     S                   LIKE(#MsgID)
@@ -262,7 +264,7 @@
      D     WMSGID5     S                   LIKE(#MsgID)
      D     WMSGID6     S                   LIKE(#MsgID)
      D     WMSGID7     S                   LIKE(#MsgID)
-
+ 
       ** Error message substitution data received as a parameter
      D MSGDATA         S                   LIKE(#MsgData)
      D MSGDATA2        S                   LIKE(#MsgData)
@@ -305,13 +307,13 @@
                                                                                               CDL033
       ** Error Flag for call to Standard routines                                             CDL033
      D ErrorFlag       S              1A   INZ('N')                                           CDL033
-
+ 
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
-
+ 
       ** Index for arrays of of warning message ids etc
      D WIdx            S              3P 0
-
+ 
       ** Flags to indicate whether transaction fields are valid
      D OKFlagsDS       DS
      D  DDSOFDOK                      1A
@@ -339,7 +341,7 @@
      D  DDVDatOK                      1A                                                    BUG10810
       *                                                                                       248701
       ** put BUG10810 used fields outside *entry Paramater OKFLAGSDS - end                    248701
-
+ 
       ** Receive / Pay Settlement Currency, Method & Nostro
      D RecSetCcy       S              3A
      D RecSetMeth      S              2S 0
@@ -349,16 +351,16 @@
      D PaySetMeth      S              2S 0
      D PayNostro       S             18A                                                      CDL038
      D*PayNostro*******S             12A                                                      CDL038
-
+ 
       ** Numeric version of spread/rate
      D @SPRD           S             11P 7
-
+ 
       ** A code to indicate the calling function to the lower level modules
      D LDNI            S              4A   INZ('LDNI')
-
+ 
       ** Response Mode, received as a parameter from the common header
      D RespMode        S              1A
-
+ 
       ** Parameter list for ZA0840                                                          BUG24317
       ** =========================                                                          BUG24317
       ** Return code for numeric validation module call                                     BUG24317
@@ -381,7 +383,7 @@
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
-
+ 
      D/COPY ZSRSRC,ZFEB29Z1LE                                                                 CDL093
      D/COPY ZSRSRC,ZDATE9Z2LE                                                                 CDL093
      D/COPY ZSRSRC,ZDATE9Z1LE                                                                 CDL093
@@ -390,7 +392,7 @@
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -401,37 +403,37 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
-
+ 
       * Call Validation Modules in Sequence
-
+ 
       *  *--------------------------*
       *  * Validate Source of Funds *
       *  *--------------------------*
-
+ 
      C     CDL016        IFEQ      'Y'
-
+ 
      C                   EXSR      RESETERRS
-
+ 
      C                   CALLB     'MMVSRCFUND'
      C                   PARM                    ReturnCode
      C                   PARM                    MSG1
      C                   PARM                    DDTYPE
      C                   PARM                    DDSOFD
-
+ 
      C     MSG1          IFNE      *BLANK
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDSOFD'
      C                   EVAL      MsgIDArr(Idx) = MSG1
      C                   ENDIF
-
+ 
       ** Use the return code's value to set the field's OK flag
      C                   CALLB     'ZASETOKFLG'
      C                   PARM                    DDSOFDOK
      C                   PARM                    ReturnCode
      C                   PARM                    WarnGlobal
-
+ 
      C                   ENDIF
-
+ 
                                                                                               CDL019
       *  *------------------------*                                                           CDL019
       *  * Validate Fix Base Rate *                                                           CDL019
@@ -906,17 +908,17 @@
      C                   ENDIF                                                                247452
                                                                                               247452
      C**********         ENDIF                                                         CDL033 259981
-
+ 
       *  *-------------------------------------------------------*
       *  * If no errors set up outstanding fields for valid file *
       *  *-------------------------------------------------------*
-
+ 
      C                   IF        Idx = 0
      C                   EXSR      SetupValid
      C                   ENDIF
-
+ 
      C                   RETURN
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -925,11 +927,11 @@
       *    Valid file record.                                         *
       *                                                               *
       *****************************************************************
-
+ 
      C     SETUPVALID    BEGSR
-
+ 
       ** Set up Source of Funds field if CDL016 is on
-
+ 
      C                   IF        CDL016='Y'
      C                   MOVE      DDSOFD        IKSOFD
      C                   ENDIF
@@ -1043,7 +1045,7 @@
      C                   ENDIF                                                                CDL033
       *                                                                                       CDL033
      C                   ENDIF                                                                CDL033
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1056,9 +1058,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
-
+ 
      C     *INZSR        BEGSR
-
+ 
      C     *ENTRY        PLIST
       * Response mode (1A), from source system common header
      C                   PARM                    RespMode
@@ -1191,7 +1193,7 @@
       ** Set up the name of the MSGF from which the message handler will
       ** get the messages
      C                   EVAL      #MsgFile = 'DRSMM'
-
+ 
                                                                                             BUG10810
       ** Access SAR details file to determine if S01468 (changed                            BUG10810
       ** validation for total interest field) is on.                                        BUG10810
@@ -1247,9 +1249,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
-
+ 
      C     RESETERRS     BEGSR
-
+ 
      C                   RESET                   Msg1
      C                   RESET                   Msg2
      C                   RESET                   Msg3
@@ -1257,16 +1259,16 @@
      C                   RESET                   Msg5
      C                   RESET                   Msg6
      C                   RESET                   Msg7
-
+ 
      C                   RESET                   WMsgID1
      C                   RESET                   WMsgID2
      C                   RESET                   WMsgID3
      C                   RESET                   WMsgID4
-
+ 
      C                   RESET                   MSGDATA
-
+ 
      C                   EVAL      ReturnCode= *Blanks
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1867,5 +1869,5 @@
       /EJECT
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2004
+(c) Finastra International Limited 2004
      X/COPY ZSRSRC,ZDATE9Z4                                                                   CDL093

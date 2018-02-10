@@ -9,19 +9,21 @@
 /*                                                                   */
 /*       WRKMSMIF - Work with Midas/Swift Meridian interface         */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. BUG5980            Date 30Mar05              */
+/*       Prev Amend No. BUG5980            Date 30Mar05              */
 /* Midas Release 4.01 -----------------------------------------------*/
-/*       Prev Amend No. CSW025             Date 15Apr02              */
+/*                      CSW025             Date 15Apr02              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.02 ---------------------------------------------------*/
 /*                      CSW017 *Create     Date 11Feb99              */
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BUG5980 - Change parameter condition for automatic start.   */
 /*       CSW025 - Midas Message Manager                              */
 /*       CSW017 - Midas/SWIFT Meridian interface                     */

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MM Invalid loans/deposits browse')
@@ -13,14 +13,15 @@
       *             One display a list of invalid deals for selection,*
       *             the other picks off the selection made.           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CGL165             Date 23Feb15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL165             Date 23Feb15               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CDL049             Date 11Jul06               *
+      *                 CDL049             Date 11Jul06               *
       *                 CER001             Date 25Apr05               *
       *                 CLE031             Date 26Apr05               *
       *                 CDL038             Date 10May05               *
@@ -51,6 +52,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL049 - Addition of a Reference Rate field (recompile)      *
       *  CER001 - LUX Upgrade to MidasPlus                            *
@@ -114,7 +116,7 @@
      FAPIDSETL1 UF   E           K DISK    INFSR(*PSSR)                         CAP004
      F                                     COMMIT                               CAP004
      F/COPY WNCPYSRC,MMLDNIPF01
-
+ 
       ** API Invalid log file by Type/FO Id/Time                                              CSC011
      FAPILOGL0  UF   E           K DISK    INFSR(*PSSR) USROPN                                CSC011
      F                                     COMMIT                                             CSC011
@@ -148,43 +150,43 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
-
+ 
      D/COPY ZACPYSRC,STD_D_SPEC
-
+ 
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
-
+ 
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
-
+ 
      D/COPY ZACPYSRC,PSDS
-
+ 
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
-
+ 
       *                                                                                       CER001
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)                                  CER001
       *                                                                                       CER001
@@ -197,10 +199,10 @@
                                                                                 CAP014
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
-
+ 
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
-
+ 
       ** Successful Insert Deal Number                                          166907
      D                 DS                                                       166907
      D  DDFOTX                 1     40                                         166907
@@ -226,15 +228,15 @@
      D ErrorText       S             52    DIM(2) CTDATA PERRCD(1)              166907
       ** Array containing messages                                              CAP006
      D/COPY WNCPYSRC,MMLDNIPD01
-
+ 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
-
+ 
       **   Timestamp selected
      D @TMESTPSEL      S             26Z
-
+ 
       ** Message type field for chaining to APIDSETPD; defined in terms         CAP004
       ** of the file field when the file field was changed.                     CAP004
      D @MSGTYPE        S                   LIKE(DDMSGTYPE)                      CAP004
@@ -243,7 +245,7 @@
      D KMsgType        S              8A                                                      CSC011
      D KFrntOffID      S             20A                                                      CSC011
      D KTimeStamp      S                   LIKE(@TMESTPSEL)                                   CSC011
-
+ 
      D CDL006          S              1A                                                      209905
                                                                                               209905
       ** Fields for enhancement CSC022                                                        CSC022
@@ -1034,7 +1036,7 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 **  Array of error messages - ErrorText                                         CAP006
 The last transaction was not applied to the database
 Deal No. 999999 successfully inserted.                                          166907

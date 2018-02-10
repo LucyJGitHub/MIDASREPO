@@ -7,10 +7,11 @@
 /*                                                                   */
 /*       MXC0580 - Balance Accumulation - GENERAL LEDGER Module      */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD022103           Date 28Aug13              */
-/*       Prev Amend No. AR1097467B         Date 17Apr13              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD022103           Date 28Aug13              */
+/*                      AR1097467          Date 17Apr13              */
 /*                      AR1097467          Date 08Apr13              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -25,6 +26,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       MD022103 - MXC0580 Performance Improvement                  */
 /*       AR1097467B - Expected 15% COB run optimization not met      */
 /*       AR1097467 - Expected 15% COB run optimization not met       */
@@ -42,7 +44,7 @@
              DCL        VAR(&RTCD) TYPE(*CHAR) LEN( 7)
              DCL        VAR(&ERMS) TYPE(*CHAR) LEN(30)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /* Global monitor message */
@@ -141,7 +143,7 @@
                MONMSG     MSGID(CPF0000 MCH0000)
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 /*/COPY WNCPYSRC,MXC0580END                                          */
  

@@ -7,18 +7,20 @@
 /*                                                                   */
 /*       MRC0510 - Extract Queries                                   */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2004           */
+/*       (c) Finastra International Limited 2004                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Last Amend No. BUG13251           Date 08Feb07              */
+/*       Prev Amend No. BUG13251           Date 08Feb07              */
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. 237298             Date 06Jan06              */
+/*                      237298             Date 06Jan06              */
 /*                      BUG10885           Date 17Mar06              */
 /*                      CMR001  *CREATE    Date 07Sep04              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BUG13251 - Component failure, library ACNCLIB not found.    */
 /*       237298 - Component failure due to xxUPLIB which cannot be   */
 /*                found by system. Use xxNCLIB for new structure.    */
@@ -31,7 +33,7 @@
              DCL        VAR(&LIB) TYPE(*CHAR) LEN(2)
              DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2004')
              DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)                                 /*BUG13251*/
              DCL        VAR(&SVALK1) TYPE(*CHAR) LEN(20)                                /*BUG13251*/
@@ -145,7 +147,7 @@
              ENDDO
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              RCLRSC
              MONMSG     MSGID(CPF0000 MCH0000)
              RCLRSC     LVL(*CALLER)

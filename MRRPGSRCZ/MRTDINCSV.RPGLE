@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(C) Copyright Midas-Kapiti International Ltd. 2004')
+     H COPYRIGHT('(C) Copyright Finastra International Limited, 2004')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MR Trade Innovation CSV Extract')
@@ -9,16 +9,18 @@
       *                                                               *
       *  RPGLE/MRTDINCSV - Trade Innovation CSV Extract               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CMR001  *CREATE    Date 16Aug04               *
+      *  Prev Amend No. CMR001  *CREATE    Date 16Aug04               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CMR001 - MidasPlus Reporting                                 *
       *                                                               *
       *****************************************************************

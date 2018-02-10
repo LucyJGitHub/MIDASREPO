@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2005')
+     H COPYRIGHT('(c) Finastra International Limited 2005')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MM Validate Forward Yield Curve')
@@ -14,17 +14,19 @@
       *                                                               *
       *  Called By: MMLDNIVL2 - Midas MM Loans/deposits validation 2  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. CRE026             Date 24May06               *
+      *  Prev Amend No. CRE026             Date 24May06               *
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. BUG9607            Date 23Dec05               *
+      *                 BUG9607            Date 23Dec05               *
       *                 CDL033  *CREATE    Date 10Feb05               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CRE026 - Consumer Banking                                    *
       *  BUG9607 - Unable to input CF Floating Rate deal if CAS005    *
       *            is switched off                                    *
@@ -292,4 +294,4 @@
       ********************************************************************
      C/COPY ZACPYSRC,PSSR_ILE
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2005
+(c) Finastra International Limited 2005

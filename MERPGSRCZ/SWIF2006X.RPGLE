@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2006')
+     H COPYRIGHT('(c) Finastra International Limited 2006')
       *****************************************************************
 /*S*D****RPGBASEMOD****************************************************                      CSW206H
 /*STD *  RPGBASEBND                                                   *                      CSW206H
@@ -15,18 +15,20 @@
       *             feature CSW206 is installed or the run date       *
       *             is greater than or equal to 18th November 2006.   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. CCB020             Date 06Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CCB020             Date 06Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSW206H            Date 11Aug06               *
+      *                 CSW206H            Date 11Aug06               *
       *                 CSW206G *Create    Date 11Aug06               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CCB020 - COB Restructure - Secondary COB Infrastructure      *
       *  CSW206H - SWIFT 2006 Standard Changes                        *
       *  CSW206G - SWIFT 2006 Standard Changes                        *

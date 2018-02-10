@@ -7,19 +7,21 @@
 /*                                                                  */
 /*        MEC101     S.W.I.F.T. Accounts Maintenance                */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO.  064773           DATE 28FEB94              */
-/*       PREV AMEND NO.  E40395           DATE 19MAY92              */
+/*       Prev Amend No. 064773             Date 28Feb94              */
+/*                      E40395             Date 19May92              */
 /*                       E38492           DATE 15APR92              */
 /*                                                                  */
 /********************************************************************/
+/*       MD046248 - Finastra Rebranding                              */
 /*       064773 - Condition the call to sdretlpd on retail being    */
 /*                present.                                          */
 /*       E40395 - USE INDICATOR FROM SDMGMEPD NOT MSSTAT            */
@@ -33,7 +35,7 @@
 /*                                                                   */
 /*/COPY WNCPYSRC,MEC101001                                           */
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /*                                                                   */
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
@@ -51,7 +53,7 @@
 /**/
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /***********RTVDTAARA  DTAARA(MSSTAT)  RTNVAR(&MSSTAT)                 *E40395*/
 /**/
 /*********** IF         COND(%SUBSTRING(&MSSTAT 1 1) *EQ 'N') +        *E40395*/

@@ -7,20 +7,22 @@
 /*                                                                   */
 /*       MXC0450 - Clear MXMQ* Files                                 */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. BUG12677           Data 16Nov06              */
-/*       Prev Amend No. CMX013             Data 29Jun06              */
+/*       Prev Amend No. BUG12677           Data 16Nov06              */
+/*                      CMX013             Data 29Jun06              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.05 ---------------------------------------------------*/
 /*                      CMX001  *CREATE    Data 01Jan00              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BUG12677 - Skip abnormal process if there is no error.      */
 /*              Also add error handling.                             */
 /*       CMX013 - Allow Additional Members                           */
@@ -40,7 +42,7 @@
       /*     DCL        VAR(&CNTA) TYPE(*CHAR) LEN(4)            */
  /* CMX013 END   */
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /* Global monitor message */
@@ -100,7 +102,7 @@
  
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 /*/COPY WNCPYSRC,MXC0450END                                          */
  

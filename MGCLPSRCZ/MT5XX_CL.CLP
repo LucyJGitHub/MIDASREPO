@@ -11,21 +11,23 @@
 /*                 SWIFT MT5xx SE Message Generation Switchable      */
 /*                 Feature : S01401.                                 */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CLE134             Date 01Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CLE134             Date 01Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. 103428             DATE 20MAY96              */
+/*                      103428             Date 20May96              */
 /*                      085991             DATE 13APR95              */
 /*                      S01401             DATE 11MAY93              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CLE134 - Past Due Call Loan Processing (Recompile)          */
 /*       103428 - Run initialisation from SCOFMENU                   */
 /*       085991 - Generate POSETDX2 file                             */
@@ -41,7 +43,7 @@
  
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
              DCL        VAR(&RTNCDE) TYPE(*CHAR) LEN(7)               /*103428*/
@@ -133,5 +135,5 @@ ENDDO                                                                 /*103428*/
                           job log for more information') TOPGMQ(*EXT)
  
 ENDPGM:      CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

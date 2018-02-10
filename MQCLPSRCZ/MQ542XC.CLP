@@ -7,19 +7,21 @@
 /*                                                                   */
 /*      MQ542XC - Generates MQ541XPF for OPNQRYF                     */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Last Amend No. CMQ001             Date 31OCT97              */
-/*       Prev Amend No. Xnnnnn             Date ddmmmyy              */
+/*       Prev Amend No. CMQ001             Date 31Oct97              */
+/*                      XNNNNN             Date DDMmmYY              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CMQ001 - MidasQ rationalisation.  Override to copy of file  */
 /*                created in QTEMP.                                  */
 /*                                                                   */
@@ -47,7 +49,7 @@
                           VALUE('KEYFLD((ACODE)) UNIQUEKEY(1)')
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /************DCLF       FILE(QTEMP/MQ544XPF)                            CMQ001*/
@@ -154,6 +156,6 @@ END:         DLTF       FILE(QTEMP/MQ544XPF)
              CHGPFM     FILE(MQ541XPF) MBR(&MQID) TEXT('GEN')
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

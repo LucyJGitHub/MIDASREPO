@@ -13,10 +13,11 @@
       *                                                               *
       *  Called By: MM0089  - LDN Inputs                              *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
-      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 CSF011A            Date 28Nov11               *
@@ -60,6 +61,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
@@ -132,7 +134,7 @@
      FMMVFIDTL0 UF   E           K DISK    INFSR(*PSSR)                                       209905
      F                                     RENAME(MMVFIDTD0:MMVFIDT)                          209905
      FAPVLOGL1  IF   E           K DISK    INFSR(*PSSR)                                       209905
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
      D/COPY ZACPYSRC,PSDS
                                                                                               209905
@@ -177,7 +179,7 @@
                                                                                               209905
      D ExtData       E DS                  EXTNAME(MMLDEXPD)                                  209905
       ** Midas MM LDNI Extra Data Layout File                                                 209905
- 
+
      D Z#BSTS        E DS                  EXTNAME(Z#BST)
      D Z#ASTS        E DS                  EXTNAME(Z#AST)
      D Z#WSTS        E DS                  EXTNAME(Z#WST)
@@ -362,13 +364,13 @@
       *    Main Routine                                               *
       *                                                               *
       *****************************************************************
- 
+
      C                   EXSR      #INIT
- 
+
      C                   EXSR      #MAIN
- 
+
      C                   EXSR      #TERM
- 
+
       *****************************************************************
       *                                                               *
       *  SR/#INIT : Initial Processing                                *
@@ -378,11 +380,11 @@
       *  Calls       : *PSSR                                          *
       *                                                               *
       *****************************************************************
- 
+
      C     #INIT         BEGSR
- 
+
       ** Entry List
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    #PGM             10
      C                   PARM                    @@MODE            1
@@ -390,22 +392,22 @@
      C                   PARM                    @@LNKN            6 0
      C                   PARM                    PAsocID                                      209905
      C                   PARM                    @@RTCD            7
- 
+
       ** Define KLIST to access DLCCGDL0
- 
+
      C     WWDLCC        KLIST
      C                   KFLD                    WWCCY             3
      C                   KFLD                    FDCCOM
- 
+
       ** Access to Deal ICD file to retrieve Placing and Taking range
- 
+
      C**********         CALLB     'AODEALR0'                                                 CGL029
      C                   CALLB     'AODEALR1'                                                 CGL029
      C                   PARM      '*DBERR '     @@RTCD
      C                   PARM      '*FIRST '     @@OPTN
      C*****SDDEAL        PARM      SDDEAL        DSFDY                                        CGL029
      C     SDDEAL        PARM      SDDEAL        DSSDY                                        CGL029
- 
+
      C     @@RTCD        IFNE      *BLANKS
      C     *LOCK         IN        LDA
      C                   MOVE      *ON           *INU7
@@ -416,14 +418,14 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Bank Details
- 
+
      C                   CALLB     'AOBANKR0'
      C                   PARM      '*DBERR '     @@RTCD
      C                   PARM      '*FIRST '     @@OPTN            7
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
      C     @@RTCD        IFNE      *BLANKS
      C     *LOCK         IN        LDA
      C                   MOVE      *ON           *INU7
@@ -434,9 +436,9 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Set indicator *IN98 to indicate which date format to use
- 
+
      C     BJDFIN        IFEQ      'M'
      C                   MOVE      *ON           *IN98
      C                   ENDIF
@@ -505,10 +507,10 @@
      C                   ENDIF                                                                CSC022
                                                                                               CSC022
      C                   ENDIF                                                                CSC022
- 
+
      C/COPY WNCPYSRC,MMFIDTUPC2
      C                   ENDSR
- 
+
       *****************************************************************
       *                                                               *
       *  SR/#MAIN : Main Processing                                   *
@@ -518,35 +520,35 @@
       *  Calls       : #DELET, #INSRT                                 *
       *                                                               *
       *****************************************************************
- 
+
      C     #MAIN         BEGSR
- 
+
       ** Initialize work field used to save deal number of first taking.
- 
+
      C                   MOVE      *BLANK        WUFDEA            1
- 
+
       ** Setup exit parameters WUFDNO (first deal number) and WULDNO
       ** (last deal number) with zeros.
- 
+
      C                   Z-ADD     *ZEROS        WUFDNO
      C                   Z-ADD     *ZEROS        WULDNO
- 
+
       ** Check if delete or insert
- 
+
      C     @@MODE        IFEQ      'D'
      C                   EXSR      #DELET
      C                   ELSE
      C                   EXSR      #INSRT
      C                   ENDIF
- 
+
       **  Setup entry parameters @@LNKN and @@DN38 with values of first
       **  deal number and last deal number.
- 
+
      C                   Z-ADD     WUFDNO        @@LNKN
      C                   Z-ADD     WULDNO        @@DN38
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *                                                               *
       *  SR/#INSRT : Insert Processing                                *
@@ -556,11 +558,11 @@
       *  Calls       : #UPDAT                                         *
       *                                                               *
       *****************************************************************
- 
+
      C     #INSRT        BEGSR
- 
+
       ** Access details of the associated placing deal
- 
+
      C     @@DN38        CHAIN     CADENQLL                           89
      C     *IN89         IFEQ      *ON
      C     *LOCK         IN        LDA
@@ -589,9 +591,9 @@
      C                   OUT       LDA                                                        209905
      C                   EXSR      *PSSR                                                      209905
      C                   ENDIF                                                                209905
- 
+
       ** Read first record with link reference from @SLDS
- 
+
       ** When program name is MMLDNIUPC read from MMVFIDTPD else read from MMWFIDDPD          209905
                                                                                               209905
      C                   MOVEL     @@DN38        W@DN38                                       209905
@@ -633,7 +635,7 @@
      C                   EVAL      WFRONT1 = *BLANK                                           209905
      C                   EVAL      WFRONT2 = *BLANK                                           209905
      C                   ENDIF                                                                209905
- 
+
      C     *IN90         DOWEQ     *OFF
      C                   EXSR      #UPDAT
                                                                                               209905
@@ -704,7 +706,7 @@
      C                   IF        WVLOG = 'Y'                                                209905
      C                   EXSR      SRLOGTRAN                                                  209905
      C                   ENDIF                                                                209905
- 
+
      C                   ENDSR
                                                                                               209905
       *****************************************************************                       209905
@@ -881,7 +883,7 @@
                                                                                               209905
      C                   ENDSR                                                                209905
                                                                                               209905
- 
+
       *****************************************************************
       *                                                               *
       *  SR/#UPDAT : Update File                                      *
@@ -892,24 +894,24 @@
       *                MMLDNIUPM, MMLDNIUPD                           *
       *                                                               *
       *****************************************************************
- 
+
      C     #UPDAT        BEGSR
- 
+
       ** Generate deal number in insert mode only
- 
+
      C     @@MODE        IFNE      'D'
- 
+
       ** Generate Deal Number only if it's blanks
- 
+
      C     IKDN38        IFEQ      *ZEROS
      C                   CALLB     'CAGTNXTFID'
      C                   PARM                    IKTYPE
      C                   PARM      IKDN38        PDealNo           6 0
      C                   Z-ADD     PDealNo       IKDN38
      C                   ENDIF
- 
+
       ** Write a record to reserve one position in the file
- 
+
      C                   CLEAR                   MMDELDP0
      C                   MOVEL     @SLDS         MMDEL
      C                   Z-ADD     IKDN38        HKDN38
@@ -917,13 +919,13 @@
      C                   MOVEL     IKLACT        HKLACT                                       209905
      C                   MOVEL     IKFRNT        HKFRNT                                       209905
      C                   MOVEL     IKAFRT        HKAFRT                                       209905
- 
+
       ** Write a record to extension file
- 
+
      C                   EXSR      #EXTE
- 
+
       ** Delete Mode
- 
+
      C                   ELSE
      C                   MOVE      'IK'          IKRCID
      C                   MOVE      HKDLTF        IKDLTF
@@ -1069,7 +1071,7 @@
      C                   MOVEL     HKLACT        IKLACT                                       209905
      C                   MOVEL     HKFRNT        IKFRNT                                       209905
      C                   MOVEL     HKAFRT        IKAFRT                                       209905
- 
+
      C     @DATE         IFEQ      0
      C                   Z-ADD     0             IKDVSD
      C                   ELSE
@@ -1082,11 +1084,11 @@
      C                   PARM                    @RTCDE            1
      C                   PARM                    IKDVSD
      C                   ENDIF
- 
+
      C                   Z-ADD     HKDDYY        @YEAR
      C                   Z-ADD     HKDDMM        @MNTH
      C                   Z-ADD     HKDDDD        @DAY
- 
+
      C     @DATE         IFEQ      0
      C                   Z-ADD     0             IKDDND
      C                   ELSE
@@ -1099,11 +1101,11 @@
      C                   PARM                    @RTCDE
      C                   PARM                    IKDDND
      C                   ENDIF
- 
+
      C                   Z-ADD     HKNIYY        @YEAR
      C                   Z-ADD     HKNIMM        @MNTH
      C                   Z-ADD     HKNIDD        @DAY
- 
+
      C     @DATE         IFEQ      0
      C                   Z-ADD     0             IKNIPD
      C                   ELSE
@@ -1116,11 +1118,11 @@
      C                   PARM                    @RTCDE
      C                   PARM                    IKNIPD
      C                   ENDIF
- 
+
      C                   Z-ADD     HKSLYY        @YEAR
      C                   Z-ADD     HKSLMM        @MNTH
      C                   Z-ADD     HKSLDD        @DAY
- 
+
      C     @DATE         IFEQ      0
      C                   Z-ADD     0             IKSLID
      C                   ELSE
@@ -1133,11 +1135,11 @@
      C                   PARM                    @RTCDE
      C                   PARM                    IKSLID
      C                   ENDIF
- 
+
      C                   Z-ADD     HKMDYY        @YEAR
      C                   Z-ADD     HKMDMM        @MNTH
      C                   Z-ADD     HKMDDD        @DAY
- 
+
      C     @DATE         IFEQ      0
      C                   Z-ADD     0             IKMATD
      C                   ELSE
@@ -1150,15 +1152,15 @@
      C                   PARM                    @RTCDE
      C                   PARM                    IKMATD
      C                   ENDIF
- 
+
      C                   Z-ADD     HKDTYY        IKDTYY
      C                   Z-ADD     HKDTMM        IKDTMM
      C                   Z-ADD     HKDTDD        IKDTDD
- 
+
      C                   MOVE      'D'           IKDDLT
      C                   MOVE      HKDN38        IKDN38
      C                   ENDIF
- 
+
      C                   CALLB     'MMLDNIUPM'
      C**********         PARM      *BLANK        @@RTCD                                       209905
      C                   PARM      'FIDTUPF'     @@RTCD                                       209905
@@ -1170,27 +1172,27 @@
       ** FRCD Issued Extension details after update                                           CDL033
      C                   PARM      *BLANKS       PAFRCD                                       CDL033
      C/COPY WNCPYSRC,MMFIDTUPC1
- 
+
       ** Error when update database
- 
+
      C     @@RTCD        IFEQ      *BLANK
      C                   CALLB     'MMLDNIUPD'
      C                   PARM      *BLANK        @@RTCD
      C                   PARM                    @SLDS
      C                   ENDIF
- 
+
       ** Error when update database
- 
+
      C     @@RTCD        IFNE      *BLANK
- 
+
      C                   IF        (CSC022 = 'N')                                             CSC022
      C                             OR (CSC022 = 'Y') AND (WCMTSK = 'N')                       CSC022
      C                   ROLBK
      C                   ENDIF                                                                CSC022
      C                   EXSR      *PSSR
- 
+
      C                   ELSE
- 
+
      C                   IF        #PGM = 'MMLDNIUPC'                                         209905
                                                                                               209905
      C                   DELETE    MMVFIDT                                                    209905
@@ -1199,31 +1201,31 @@
                                                                                               209905
       ** Delete record from MMWFIDDPD when update is successful
      C                   DELETE    SW8OUTP
- 
+
      C                   ENDIF                                                                209905
                                                                                               209905
      C                   IF        (CSC022 = 'N')                                             CSC022
      C                             OR (CSC022 = 'Y') AND (WCMTSK = 'N')                       CSC022
      C                   COMMIT
      C                   ENDIF                                                                CSC022
- 
+
      C                   ENDIF
- 
+
       ** Save Deal number of the first taking.
- 
+
      C     WUFDEA        IFEQ      *BLANK
      C     *LIKE         DEFINE    @@LNKN        WUFDNO
      C                   Z-ADD     IKDN38        WUFDNO
      C                   MOVE      'Y'           WUFDEA
      C                   ENDIF
- 
+
       ** Save Deal number of the last taking.
- 
+
      C     *LIKE         DEFINE    @@DN38        WULDNO
      C                   Z-ADD     IKDN38        WULDNO
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *                                                               *
       *  SR/#EXTE  : Output Record in File                            *
@@ -1233,35 +1235,35 @@
       *  Calls       : None                                           *
       *                                                               *
       *****************************************************************
- 
+
      C     #EXTE         BEGSR
- 
+
      C                   MOVE      IKDN38        HKDN38
- 
+
      C/COPY WNCPYSRC,MMFIDTUPC3
       ** Access charge/commission group
- 
+
      C                   MOVE      IKCNUM        WWCNUM            6
      C     WWCNUM        CHAIN     SDCUSTL1                           91
- 
+
       ** ------------------- **
       ** Charges calculation **
       ** ------------------- **
- 
+
      C                   MOVE      *BLANKS       HKFCGC
      C                   MOVE      *BLANKS       IKFCGC
      C                   MOVE      *BLANKS       IKFCGD
      C                   Z-ADD     0             IKFCGA
      C                   Z-ADD     0             IKFCGT
- 
+
      C     BNCHTK        IFEQ      'Y'
      C     BBCHRG        ANDNE     *BLANKS
      C     *IN91         ANDEQ     *OFF
- 
+
      C     BBCHRG        CHAIN     SDCCGRL0                           90
      C     *IN90         IFEQ      *OFF
      C     CCRECI        ANDEQ     'D'
- 
+
      C                   MOVEL     CCCHOD        HKFCGC
      C                   MOVEL     IKCCY         WWCCY
      C     BNCTBC        IFEQ      'Y'
@@ -1269,7 +1271,7 @@
      C                   ENDIF
      C                   MOVEL     HKFCGC        FDCCOM
      C     WWDLCC        CHAIN     DLCCGDL0                           90
- 
+
      C     *IN90         IFEQ      *OFF
      C                   CALLB     'MMFIDTCHG'
      C                   PARM                    PSProcName
@@ -1289,39 +1291,39 @@
      C                   Z-ADD     PFCGA         IKFCGA
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** ---------------------- **
       ** Commission calculation **
       ** ---------------------- **
- 
+
      C                   MOVEL     *BLANKS       HKFCMC
      C                   MOVEL     *BLANKS       IKFCMC
      C                   MOVE      *BLANKS       IKFCMD
      C                   Z-ADD     0             IKFCMA
      C                   Z-ADD     0             IKFCMT
- 
+
      C     BNCOTK        IFEQ      'Y'
      C     *IN91         ANDEQ     *OFF
      C     BBCOMG        ANDNE     *BLANKS
      C     IKMATD        ANDNE     *ZEROS
- 
+
      C     BBCOMG        CHAIN     SDCCGRL0                           90
      C     *IN90         IFEQ      *OFF
      C     CCRECI        ANDEQ     'D'
- 
+
      C                   MOVEL     CCCCOD        HKFCMC
      C                   MOVEL     IKCCY         WWCCY
      C     BNCTBC        IFEQ      'Y'
      C                   MOVE      BJCYCD        WWCCY
      C                   ENDIF
      C                   MOVEL     HKFCMC        FDCCOM
- 
+
      C     WWDLCC        CHAIN     DLCCGDL0                           90
- 
+
      C     *IN90         IFEQ      *OFF
      C                   CALLB     'MMFIDTCOM'
      C                   PARM                    PSProcName
@@ -1347,17 +1349,17 @@
      C                   Z-ADD     PFCMA         IKFCMA
      C                   EndIF
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C/COPY WNCPYSRC,MMFIDTUPC4
      C                   Z-ADD     0             HKBCAM                                       CLE025
      C                   WRITE     MMDELDP0
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *                                                               *
       *  SR/#DELET : Delete Processing                                *
@@ -1367,21 +1369,21 @@
       *  Calls       : #UPDAT                                         *
       *                                                               *
       *****************************************************************
- 
+
      C     #DELET        BEGSR
- 
+
       ** Read first record with link reference from @SLDS
- 
+
      C     @@DN38        SETLL     MMDELDL3
      C     @@DN38        READE     MMDELDL3                               90
- 
+
      C     *IN90         DOWEQ     *OFF
      C                   EXSR      #UPDAT
      C     @@DN38        READE     MMDELDL3                               90
      C                   ENDDO
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *                                                               *
       *  SR/#TERM : Termination Processing                            *
@@ -1391,14 +1393,14 @@
       *  Calls       : None                                           *
       *                                                               *
       *****************************************************************
- 
+
      C     #TERM         BEGSR
- 
+
      C                   MOVE      *ON           *INLR
      C                   RETURN
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *                                                               *
       *  SR/*PSSR : Error Handling                                    *
@@ -1408,16 +1410,16 @@
       *  Calls       : None                                           *
       *                                                               *
       *****************************************************************
- 
+
      C     *PSSR         BEGSR
- 
+
      C                   MOVE      '*ERROR '     @@RTCD                                       209905
      C                   DUMP
      C                   MOVE      *ON           *INLR
      C                   RETURN
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *                                                               *
       *  SR/ZA0770 : This subroutine receives a 8/0 input date -      *
@@ -1441,31 +1443,31 @@
       *              : @@DAT2  - If Date DD/MM/YY Month else Day (2,0)*
       *                                                               *
       *****************************************************************
- 
+
      C     ZA0770        BEGSR
- 
+
      C                   Z-ADD     @@YY          @@YYY
- 
+
       ** Date format = 'D' convert to MMDDYY format
- 
+
      C     BJDFIN        IFEQ      'D'
      C                   Z-ADD     @@DD          @@DAT1
      C                   Z-ADD     @@MM          @@DAT2
      C                   ENDIF
- 
+
       ** Date format = 'M' convert to MMDDYY format
- 
+
      C     BJDFIN        IFEQ      'M'
      C                   Z-ADD     @@DD          @@DAT2
      C                   Z-ADD     @@MM          @@DAT1
      C                   ENDIF
- 
+
       ** Move year part of data structure
- 
+
      C                   MOVE      @@YYY         @@YY
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

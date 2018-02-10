@@ -7,16 +7,17 @@
 /*                                                                   */
 /*   MCC0300 - Create LFs over APOSTPD & GLACPHPD                    */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CPK030             Date 15Apr14              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CPK030             Date 15Apr14              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. 138409             Date 24Nov98              */
+/*                      138409             Date 24Nov98              */
 /*                      121615             Date 01Jun98              */
 /*                  S01408                 DATE 05MAY95              */
 /*                  069474                 DATE 13APR94              */
@@ -24,6 +25,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CPK030 - Clean up of deliverable data library.              */
 /*   138409 - Programs no longer in Midas/Q Library since DBA R2.4.  */
 /*            They are all in Midas core.                            */
@@ -37,7 +39,7 @@
              PGM        PARM(&CGRP &PBAS &ANL)
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&CGRP) TYPE(*CHAR) LEN(2)
              DCL        VAR(&PBAS) TYPE(*CHAR) LEN(1)
@@ -95,7 +97,7 @@
  
 /* Set up copyright                                                  */
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 /* Build Logical file member Names                                   */
  

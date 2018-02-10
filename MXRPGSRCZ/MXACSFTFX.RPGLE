@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MX Access Funds Transfer FX Profit/Loss')        *
@@ -13,14 +13,15 @@
       *  Function:  This module derives the profit/loss in base       *
       *             currency of funds transfer FX transactions        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CFT120             Date 28Sep12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CFT120             Date 28Sep12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. 241970             Data 05Sep06               *
+      *                                    Date                       *
       *                 CSD031             Date 10Apr06               *
       *                 CDL049             Date 11Jul06               *
       *                 CPK022             Data 22Jul05               *
@@ -30,6 +31,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
       *           (Recompile)                                         *
       *  241970 - Recompiled due to change in MXACSPRME.              *
@@ -612,4 +614,4 @@
       /COPY MXCPYSRC,MXPSSR
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2006')
+     H COPYRIGHT('(c) Finastra International Limited 2006')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MM NASP Validate Reference Rate')
@@ -12,16 +12,18 @@
       *  Function:  This module receives a parameter containing the   *
       *             Reference Rate and confirms if valid.             *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *  (c) Finastra International Limited 2006                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CDL049  *CREATE    Date 08May06               *
+      *  Prev Amend No. CDL049  *CREATE    Date 08May06               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL049 - Addition of a Reference Rate field                  *
       *                                                               *
       *****************************************************************
@@ -259,4 +261,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2006
+(c) Finastra International Limited 2006

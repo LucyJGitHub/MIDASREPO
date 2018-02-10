@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MM Invalid deal amendments browse')
@@ -13,14 +13,15 @@
       *             One display a list of invalid deams for selection,*
       *             the other picks off the selection made.           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CLE031             Date 26Apr05               *
-      *  Prev Amend No. CDL022             Date 03Feb04               *
+      *  Prev Amend No. CLE031             Date 26Apr05               *
+      *                 CDL022             Date 03Feb04               *
       *                 CDL020             Date 03Feb04               *
       *                 CDL017             Date 03Feb04               *
       *                 CSC022             Date 24Feb04               *
@@ -41,6 +42,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE031 - Lending Enhancements - Settlement Currency Recompile*
       *  CDL022 - Deal Amendment Changes (Recompile)                  *
       *  CDL020 - Apply Base Rate at Value Date (Recompile)           *
@@ -895,6 +897,6 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 **  Array of error messages - ErrorText                                         CAP006
 The last transaction was not applied to the database

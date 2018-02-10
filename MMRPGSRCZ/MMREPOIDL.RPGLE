@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MM Invalid repo Deals delete')
@@ -9,20 +9,22 @@
       *                                                               *
       *  MMREPOIDL - INVALID REPO DELETE                              *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4.01 -------------------------------------------*
-      *  Last Amend No. CDL038             Date 10May05               *
-      *  Prev Amend No. CSC011             Date 14Mar02               *
+      *  Prev Amend No. CDL038             Date 10May05               *
+      *                 CSC011             Date 14Mar02               *
       *                 CAP067  *CREATE    Date 24Sep01               *
       *                                                               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL038 - Extended Deal Sub Type (Recompile)                  *
       *  CSC011 - 24x7 Midas Availability                             *
       *  CAP067 - Repurchase Agreements API.                          *
@@ -263,4 +265,4 @@
      C****************************************************************
      C/COPY ZACPYSRC,PSSR_ILE                                                                 CSC011
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

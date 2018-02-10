@@ -7,16 +7,17 @@
 /*                                                                   */
 /*     MTC4030 - TESTKEY GENERATION                                  */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*     Last Amend No. BG18886              DATE 28May08              */
+/*       Prev Amend No. BG18886            Date 28May08              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.03 ---------------------------------------------------*/
-/*     Prev Amend No. 175018               DATE 01Aug00              */
+/*                      175018             Date 01Aug00              */
 /*                    174197               DATE 01Aug00              */
 /*                    170748               DATE 01Aug00              */
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
@@ -25,6 +26,7 @@
 /*                    067234               DATE 01NOV94              */
 /*                                                                   */
 /*********************************************************************/
+/*       MD046248 - Finastra Rebranding                              */
 /*    BG18886 - Amend non-standard codes.                            */
 /*     175018 - Input file not being cleared under certain           */
 /*              conditions which results to Testkey value problems   */
@@ -71,7 +73,7 @@
              DCL       VAR(&INPLUP) TYPE(*DEC) LEN(2 0) VALUE(0)      /*174197*/
              DCL       VAR(&OUTLUP) TYPE(*DEC) LEN(2 0) VALUE(0)      /*174197*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
              DCL        VAR(&N#ZTK) TYPE(*CHAR) LEN(100)
@@ -337,5 +339,5 @@ CLRIPF:      CLRPFM     FILE(TKOTIPF)                                  /*174197*
 /**/                                                                   /*174197*/
 /******CHGVAR &BISCPY '(C) COPYRIGHT MKI LIMITED 1994'              */ /*170748*/
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

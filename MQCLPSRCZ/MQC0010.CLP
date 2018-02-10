@@ -7,21 +7,23 @@
 /*                                                                  */
 /*    MQC0010    -  PROGRAM FOR MIDAS/Q SELECTION FROM MIDAS MENU.  */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*    LAST AMEND NO. 120265           DATE 31OCT97                  */
-/*    PREV AMEND NO. 050295           DATE 27APR94                  */
+/*       Prev Amend No. 120265             Date 31Oct97              */
+/*                      050295             Date 27Apr94              */
 /*                   E23515           DATE 12SEP90                  */
 /*                   E22749           DATE 25JUL90                  */
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*    120265 - Override SDCURRL1 to SHARE(*NO) to allow reports to  */
 /*             run interactively.                                   */
 /*    050295 - MIDAS/Q MENU OPTION NOT AVAILABLE AFTER ERROR        */
@@ -39,7 +41,7 @@
              DCL        VAR(&LIBX) TYPE(*CHAR) LEN(10)
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(75)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
 /*   Global monitor message   */
@@ -98,6 +100,6 @@ ABNOR:       CHGVAR     VAR(&MEM) VALUE('MQC0010 - Error has occurred +
 /**/
  ENDPGM:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

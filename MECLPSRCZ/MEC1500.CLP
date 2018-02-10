@@ -7,18 +7,20 @@
 /*                                                                   */
 /*       MEC1500  - Display Contents Translation Table               */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Last Amend No. CFT002  *CREATE    Date 22Apr98              */
+/*       Prev Amend No. CFT002  *CREATE    Date 22Apr98              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CFT002 - Straight Through Processing Phase 1                */
 /*                Based on MEC1500 original references HUB001/S01489 */
 /*                                                                   */
@@ -27,7 +29,7 @@
              PGM        PARM(&RTN_CODE &ACTION &RDATA)
 /* */
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /* */
 /* Declare variables */
@@ -85,7 +87,7 @@ ABNORMAL:
  ENDCLPGM:   RCLRSC     LVL(*CALLER)
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
 /* */
              ENDPGM

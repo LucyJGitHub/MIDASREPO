@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2008')
+     H COPYRIGHT('(c) Finastra International Limited 2008')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MM Validate Original Deal Number & dft date')    *
@@ -10,10 +10,11 @@
       *  MMVORGDLNO -  Midas MM Validate Original Deal Number and     *
       *                default dates                                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. CGL165             Date 15Feb17               *
-      *  Prev Amend No. CDL096             Date 22Sep14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL165             Date 15Feb17               *
+      *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 CER059             Date 19Jul10               *
       *                 BUG23437           Date 20Mar09               *
@@ -21,6 +22,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
       *           (Recompile)                                         *

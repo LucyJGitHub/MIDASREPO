@@ -1,5 +1,5 @@
      H DEBUG FTRANS
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+     H COPYRIGHT('(c) Finastra International Limited 2012')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas MG Format Commodity Trade(Consolidate Fixes)')   *
@@ -9,10 +9,11 @@
       *                                                               *
       *  MG000600  - Midas MG Format Commodity Trade Confirmation     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
-      *  Prev Amend No. CSW216             Date 14Mar16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CSW216             Date 14Mar16               *
       *                 MD035515           Date 19Aug15               *
       *                 MD033754           Date 21Apr15               *
       *                 CGL165             Date 17Feb15               *
@@ -34,6 +35,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CSW216 - SWIFT Changes 2016                                  *
       *  MD035515 - No MT600 generated if branch internal customer is *
@@ -118,24 +120,24 @@
       *           then go on to the next OCUR record and continue     *
       *           this process until the SWIFT message is complete.   *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FMGF600PD  UF   E             DISK
      F                                     COMMIT
       ** MT600 Generation Driver File
- 
+
      FMGOREFL0  IF   E           K DISK
      F                                     RENAME(MGOREFD0:MGREFL0)
       ** MG Message Reference by TRNO
- 
+
      FMGOREFPD  O    E             DISK
      F                                     COMMIT
       ** MG Master Messages Reference File
- 
+
      F***DEALS**   IF   E           K DISK    USROPN                                       AR1097200
      FDEALALL   IF   E           K DISK    USROPN                                          AR1097200
      F                                     IGNORE(DEALSDAF)
@@ -145,36 +147,36 @@
      F                                     IGNORE(DEALSDGF)
      F                                     IGNORE(DEALSDFF)
       ** Midas DL Deals File
- 
+
      FSDCMDTL0  IF   E           K DISK
       ** Midas SD Commodity details
- 
+
      FMGOMSGPD  O    E             DISK
      F                                     COMMIT
       ** MG Master Message Data File
- 
+
      FDLRPIFL1  IF   E           K DISK    USROPN                                           MD024078
                                                                                             MD024078
      F***MGHISTL0  UF A E           K DISK                                                  MD022425
      FMGHISTL7  UF A E           K DISK                                                     MD022425
      F                                     COMMIT
       ** MG Transaction history file
- 
+
      F/COPY WNCPYSRC,MG0600F001
- 
+
      FMGOEXTPD  O    E             DISK
      F                                     COMMIT
       ** Midas MGS MG Message Data extension file
- 
+
      FMG000600P1O    E             PRINTER USROPN
      F                                     OFLIND(*IN99)                                    MD022425
       ** MG Confirmation Formatting Error Report
- 
+
      FMG000600AUO    E             PRINTER USROPN
       ** MG Confirmation Formatting Audit Report
- 
+
      F/COPY WNCPYSRC,MG0600FFP1
- 
+
       ********************************************************************
       /EJECT
       *****************************************************************
@@ -182,58 +184,58 @@
       ** ¦ D-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** Array Containing Copyright statement
      D CPY@            S             80    DIM(1) CTDATA PERRCD(1)
       ** Array Containing Copyright statement
- 
+
      D MSGA            S             60    DIM(9) CTDATA PERRCD(1)
       ** Array Containing Messages
- 
+
      D TABS96          S             22    DIM(18) CTDATA PERRCD(1)
      D TABR96          S             10    DIM(18) ALT(TABS96)
       ** Selection Criteria for the codewrod (SWIFT96)
- 
+
      D TABNST          S              2    DIM(5) CTDATA PERRCD(1)
       ** Codes indicating settlement via nostro
- 
+
      D TABINT          S              2    DIM(5) CTDATA PERRCD(1)
      D/COPY WNCPYSRC,MG0300AE01
      D VALUNI          S              3    DIM(13) CTDATA PERRCD(1)
       ** Codes indicating settlement via internal
- 
+
      D/COPY WNCPYSRC,MG0600E001
- 
+
      D @WRK            S              1    DIM(50)
      D @BTB            S             35    DIM(6)
- 
+
      D/COPY WNCPYSRC,MG0600IIP2
- 
+
      D MULT            DS                  OCCURS(95)
      D  MTAG                   1      5
      D  MFLD                   6     55
      D  MERR                  56    105
       **  Multiple occurrence data structure for message
- 
+
      D EXTN            DS                  OCCURS(45)
      D  MPSN                   1      2  0
      D  MTG                    3      7
      D  MCSI                   8     15
       ** Multiple occurrence data structure for extension file
- 
+
      D                 DS
      D  @MTG                   1      5
      D  FLDTYP                 2      2
      D  FLDTAG                 4      4
       ** Field tag data structure
- 
+
      D @TRN            DS                  OCCURS(16)
      D  @TR1                   1      2
      D  @TR2                   3      8
      D  @TR3                   9     11  0
      D  @TR4                  12     16
       **  Data structure build transaction reference number
- 
+
      D @TRN1           DS                  OCCURS(16)                                       MD022425
      D  @TRN11                 1      2                                                     MD022425
      D  @TRN21                 3      8                                                     MD022425
@@ -248,12 +250,12 @@
      D  @OF87                 17     17
      D  @NOST                 19     22
       **  Data structure to build key to determine codeword
- 
+
      D CODEWD          DS                  OCCURS(22)
      D  CWRD                   1      8
      D  F57U                  10     10
       **  Data structure containing codeword for the new message
- 
+
      D FLD2N           DS                  OCCURS(18)
      D  ZSCCY                  1      3
      D  ZSAMNT                 4     18
@@ -262,23 +264,23 @@
      D  ZSCCY1                 7      9
      D  ZSAMN1                10     24
       **  Data structure containing codeword for FieldS 32B/32B
- 
+
      D ERR3N           DS                  OCCURS(24)
      D  ZCCY                   1      3
      D  ZAMT                   5     17
       **  Erroneous currency & amounts
- 
+
      D @MTAG           DS                  OCCURS(5)
      D  COLON1                 1      1
      D  FLDNO                  2      3
      D  TAG                    4      4
      D  COLON2                 5      5
       **  Data structure constructing message field tag
- 
+
      D MPHAS           DS
      D  STATUS                 1      1
       **  Data structure to check MPHAS for Close of Business
- 
+
      D P@IN            DS           256
      D  I@SNBR                 1      3
      D  I@DSCN                 4      9
@@ -288,7 +290,7 @@
      D  I@FTCS                16     16
      D  I@MMOD                17     18
       ** Data structure for input parameter
- 
+
      D P@OUT           DS           256
      D  O@CNSN                 1      6  0
      D  O@SWSN                 7     18
@@ -304,7 +306,7 @@
      D  O@PCNB                82     87
      D  O@SPRS                88     90
       ** Data structure for ouput parameter
- 
+
      D P@BTB           DS
      D  MGBTB1                 1     35
      D  MGBTB2                36     70
@@ -312,13 +314,13 @@
      D  MGBTB4               106    140
      D  MGBTB5               141    175
      D  MGBTB6               176    210
- 
+
      D @HREF           DS                  OCCURS(16)
      D  HSMODI                 1      2
      D  HSTRAN                 3      8
      D  HSSEQ                  9     11
       **  Data structure for related reference
- 
+
      D @HREF1          DS                  OCCURS(16)                                       MD022425
      D  H1MODI                 1      2                                                     MD022425
      D  H1TRAN                 3      8                                                     MD022425
@@ -349,65 +351,65 @@
       **  Multiple occurrence data structure for reporting party                            MD022425
                                                                                             MD022425
      D/COPY WNCPYSRC,MG0600I001
- 
+
      D SDCSSW        E DS                  EXTNAME(SDCSSWPD)                                MD022425
       **  Data structure for Customer Extensions SWIFT Details                              MD022425
                                                                                             MD022425
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       **  Data structure for bank file
- 
+
      D SDTRAD        E DS                  EXTNAME(SDTRADPD)
       **  Data structure for trading file
- 
+
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
       **  Data structure for customer file
- 
+
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
      D  DFACQQ       E                     EXTFLD(QQDFAC)
       **  Data structure for branch file
- 
+
      D SDBROK        E DS                  EXTNAME(SDBROKPD)
       **  Data structure for broker file
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       **  Data structure for module ICD file
- 
+
      D SDNOST        E DS                  EXTNAME(SDNOSTPD)
      D  ACCDQQ       E                     EXTFLD(QQACCD)
       **  Data structure for nostro file
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       **  Data structure for Currency File
- 
+
      D SDMGME        E DS                  EXTNAME(SDMGMEPD)
       **  Data structure for message management data.
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
       **  Data structure for SAR - Switchable features file
- 
+
      D SDCNST        E DS                  EXTNAME(SDCNSTPD)
       **  Data structure for counterparty nostro file
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       **  Short data structure for access programs
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       **  Long data structure for access programs
- 
+
      D DSLDY         E DS                  EXTNAME(DSLDY)
       ** Third data structure for access programs
- 
+
      D LDA             DS           256
      D  DBFILE               134    141
      D  DBKEY                142    170
      D  DBPGM                171    180
      D  DBASE                181    183  0
       **  Local data area
- 
+
      I/COPY WNCPYSRC,MG0600IIP2
- 
+
       **  Rename conflicting MGOREFL0 fields
- 
+
      IMGREFL0
      I              SYTM                        MSYTM
      I              NWRK                        MNWRK
@@ -428,40 +430,40 @@
      I              CFPF                        MCFPF
      I              TODY                        MTODY
      I              CLSS                        MCLSS
- 
+
      I/COPY WNCPYSRC,MG0600IIP1
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -------------------------------+
       ** ¦                                                            ¦
       ** ¦ Initial processing is performed automatically: the *INZSR  ¦
       ** ¦ is executed at program activation.                         ¦
       ** ¦                                                            ¦
       ** +------------------------------------------------------------+
- 
+
       ** Initial process
- 
+
      C/COPY WNCPYSRC,MG0600CCP3
- 
+
      C                   EXSR      SRINIT
- 
+
      C/COPY WNCPYSRC,MG0600C012
- 
+
       ** Read the first record from the MT600 extract file
- 
+
      C                   READ      MGF600PD                               10
- 
+
       ** Do While records found on the MT600 extract file
- 
+
      C     *IN10         DOWEQ     '0'
- 
+
      C/COPY WNCPYSRC,MG0600C013
- 
+
       ** If DEALING MSG and NETTING access DEALS file
- 
+
      C     CDL002        IFEQ      'Y'
      C     MGMODI        ANDEQ     'DL'
      C                   MOVEL     MGTNUM        KYDLNO            6 0
@@ -476,28 +478,28 @@
      C                   MOVE      *BLANKS       NETBY
      C                   MOVE      *BLANKS       NETSL
      C                   ENDIF
- 
+
       ** Initialise non-constant fields
- 
+
      C                   EXSR      SRINTF
- 
+
       ** Determine message routing
- 
+
      C                   EXSR      SRROUT
- 
+
       ** Format message detail - Sequence A
- 
+
      C                   EXSR      SRFMTA
- 
+
      C                   MOVE      'N'           SEQ15C            1                        MD033754
       ** Format message detail - Sequence B
- 
+
      C     MGPMBC        IFEQ      'Y'
      C                   EXSR      SRFMTB
      C                   ELSE
- 
+
       ** Format message detail - Sequence C
- 
+
      C                   EXSR      SRFMTC
      C                   ENDIF
                                                                                             MD022425
@@ -511,35 +513,35 @@
      C                   EXSR      SRFMTD                                                   MD022425
      C                   ENDIF                                                              MD024078
      C                   ENDIF                                                              MD022425
- 
+
       ** Print incorrectly generated message
- 
+
      C     @ERR          IFEQ      'Y'
      C                   EXSR      SRREPT
      C                   ELSE
- 
+
      C/COPY WNCPYSRC,MG0600CCP5
- 
+
       ** Output correctly generated message
- 
+
      C                   EXSR      SROMSG
- 
+
       ** If confirmation matching switched on, generate feedback record
       ** (at present only produced for dealing)
- 
+
      C     BGCFMT        IFEQ      'Y'
      C     MGMODI        ANDEQ     'DL'
      C                   EXSR      CFMAT
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Delete the processed GDF record.
- 
+
      C                   DELETE    MGF600PD                             16
- 
+
       **  Error on delete of record.
- 
+
      C     *IN16         IFEQ      '1'
      C     *LOCK         IN        LDA
      C                   MOVE      '001'         DBASE
@@ -548,10 +550,10 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       **  Update sequence numbers on transaction record
       **  if no errors have occurred
- 
+
      C     @ERR          IFNE      'Y'
      C     MGACMI        IFEQ      'Y'                                                      MD022425
      C                   CALL      'MG5000'                             24                  MD022425
@@ -572,17 +574,17 @@
      C                   PARM      *ZEROS        MGLSWS            3 0
      C                   PARM      *BLANKS       @ERCD             1
      C                   ENDIF                                                              MD022425
- 
+
       **  Error on access for sequence number
- 
+
      C     @ERCD         IFEQ      'Y'
      C     *LOCK         IN        LDA
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       **  Program missing on call
- 
+
      C     *IN24         IFEQ      '1'
      C     *LOCK         IN        LDA
      C                   MOVE      '002'         DBASE
@@ -590,35 +592,35 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C     *LOCK         IN        LDA
      C                   MOVEL     'MG000600'    DBPGM
      C                   OUT       LDA
- 
+
      C/COPY WNCPYSRC,MG0600C023
- 
+
       ** COMIT all changes since no error on writing the message
- 
+
      C                   COMMIT
- 
+
       ** Read next MT600 extract record
- 
+
      C                   READ      MGF600PD                               10
- 
+
      C                   ENDDO
- 
+
       ** Write end of report, only if the printer file is open
- 
+
      C     *IN50         IFEQ      '1'
      C                   WRITE     EOREPT
      C                   ENDIF
- 
+
      C/COPY WNCPYSRC,MG0600C034
- 
+
      C                   SETON                                        LR
- 
+
       *****************************************************************
      C/EJECT
       *****************************************************************
@@ -628,13 +630,13 @@
       *****************************************************************
       *
      C     SRINIT        BEGSR
- 
+
      C                   MOVEA     CPY@          BIS@             80
- 
+
      C/COPY WNCPYSRC,MG0600C014
- 
+
       ** Set up LDA
- 
+
      C     *DTAARA       DEFINE                  LDA
      C     *LOCK         IN        LDA
      C                   MOVE      *BLANKS       DBFILE
@@ -642,27 +644,27 @@
      C                   MOVEL     'MG000600'    DBPGM
      C                   MOVE      *BLANKS       DBASE
      C                   OUT       LDA
- 
+
       ** Set up MPHAS data area
- 
+
      C     *DTAARA       DEFINE                  MPHAS
      C     *LOCK         IN        MPHAS
      C                   MOVE      STATUS        COB               1
      C                   OUT       MPHAS
- 
+
      C     HSKEY         KLIST
      C                   KFLD                    MGMODI
      C                   KFLD                    HSTRAN
      C                   KFLD                    HSDEST                                     MD022425
      C                   KFLD                    HSMTPY
- 
+
       ** Access SDBANKPD for report title
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      '*MSG   '     @RTCD             7
      C                   PARM      '*FIRST '     @OPTN             7
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C     *LOCK         IN        LDA
      C                   MOVE      '003'         DBASE
@@ -671,14 +673,14 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Access SDTRADPD for trading information
- 
+
      C                   CALL      'AOTRADR0'
      C                   PARM      '*MSG   '     @RTCD             7
      C                   PARM      '*FIRST '     @OPTN             7
      C     SDTRAD        PARM      SDTRAD        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C     *LOCK         IN        LDA
      C                   MOVE      '004'         DBASE
@@ -687,14 +689,14 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Access SDMMODPD for modules available
- 
+
      C                   CALL      'AOMMODR0'
      C                   PARM      '*MSG   '     @RTCD
      C                   PARM      '*FIRST '     @OPTN
      C     SDMMOD        PARM      SDMMOD        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C     *LOCK         IN        LDA
      C                   MOVE      '005'         DBASE
@@ -703,14 +705,14 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Access SDMGMEPD for message management data.
- 
+
      C                   CALL      'AOMGMER0'
      C                   PARM      '*MSG   '     @RTCD
      C                   PARM      '*FIRST '     @OPTN
      C     SDMGME        PARM      SDMGME        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C     *LOCK         IN        LDA
      C                   MOVE      '006'         DBASE
@@ -719,15 +721,15 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Access Switchable Features file for
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CSW012'      @SARD             6
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C     @RTCD         ANDNE     '*NRF   '
      C     *LOCK         IN        LDA
@@ -737,14 +739,14 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C     @RTCD         IFEQ      *BLANKS
      C                   MOVEL     'Y'           CSW012            1
      C                   ELSE
      C                   MOVEL     'N'           CSW012
      C                   ENDIF
      C/COPY WNCPYSRC,MG0600C018
- 
+
       ** Access SAR Details file to determine if CDL002 installed
       *
      C                   CALL      'AOSARDR0'
@@ -767,9 +769,9 @@
      C                   MOVEL     'TO BE '      NETTXT           12
      C                   MOVE      'NETTED'      NETTXT
      C                   ENDIF
- 
+
       **  Initialise constant fields
- 
+
      C                   MOVE      *LOVAL        CR                1
      C                   BITON     '457'         CR
      C                   MOVE      *LOVAL        LF                1
@@ -779,17 +781,17 @@
      C                   MOVE      *BLANKS       @TR4
      C                   MOVE      ':'           COLON1
      C                   MOVE      ':'           COLON2
- 
+
       ** CRLF Control Character for message data records
- 
+
      C                   MOVE      CRLF          CTRC
- 
+
       ** Convert run date to YYMMDD, for Message Generation Date
- 
+
      C                   CALL      'ZM0060'                             15
      C                   PARM      BJRDNB        ZMDAY             5 0
      C                   PARM                    ZMDATE            6
- 
+
      C     *IN15         IFEQ      '1'
      C     *LOCK         IN        LDA
      C                   MOVE      '008'         DBASE
@@ -799,23 +801,23 @@
      C                   EXSR      *PSSR
      C                   ENDIF
      C                   MOVE      ZMDATE        MGDE
- 
+
       ** Set-up Message Generation Century flag
- 
+
      C                   MOVEL     MGDE          YY                2 0
      C     YY            IFLT      72
      C                   MOVE      '2'           CIND
      C                   ELSE
      C                   MOVE      '1'           CIND
      C                   ENDIF
- 
+
       ** Convert history retention date to YYMMDD
- 
+
      C     BJRDNB        ADD       ENDSMN        ZMDAY
      C                   CALL      'ZM0060'                             15
      C                   PARM                    ZMDAY
      C                   PARM                    ZMDATE            6
- 
+
      C     *IN15         IFEQ      '1'
      C     *LOCK         IN        LDA
      C                   MOVE      '009'         DBASE
@@ -825,20 +827,20 @@
      C                   EXSR      *PSSR
      C                   ENDIF
      C                   MOVE      ZMDATE        @HRDT             6
- 
+
       ** Check if SWIFT Changes 1996 (CSW096) is installed
- 
+
      C                   CALL      'SWIFT96'
      C                   PARM      *BLANKS       @RTCD             7
- 
+
      C     @RTCD         IFEQ      'CSW096'
      C                   MOVE      'Y'           CSW096            1
      C                   ELSE
      C                   MOVE      'N'           CSW096
      C                   ENDIF
- 
+
       ** Access Switchable Features file for CEU003
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*VERIFY'     @OPTN
@@ -848,17 +850,17 @@
      C                   ELSE
      C                   MOVEL     'N'           CEU003
      C                   ENDIF
- 
+
      C/COPY WNCPYSRC,MG0600AC24
- 
+
       ** Check if switchable feature CDL008 is switched on
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CDL008'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANK
      C     @RTCD         ANDNE     '*NRF   '
      C     *LOCK         IN        LDA
@@ -868,21 +870,21 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C     @RTCD         IFEQ      *BLANK
      C                   MOVE      'Y'           CDL008            1
      C                   ELSE
      C                   MOVE      'N'           CDL008
      C                   ENDIF
- 
+
       ** Check if switchable feature CSW024 is switched on
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CSW024'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANK
      C     @RTCD         ANDNE     '*NRF   '
      C     *LOCK         IN        LDA
@@ -892,21 +894,21 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C     @RTCD         IFEQ      *BLANK
      C                   MOVE      'Y'           CSW024            1
      C                   ELSE
      C                   MOVE      'N'           CSW024
      C                   ENDIF
- 
+
       ** Access Switchable features file to see if ConCord is switched
       ** ON.
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      '       '     RTCDA             7
      C                   PARM      '*VERIFY'     RTCDB             7
      C                   PARM      'CCF001'      RTCDC             6
- 
+
      C     RTCDA         IFEQ      *BLANK
      C                   MOVE      *ON           *IN25
      C                   ENDIF
@@ -948,10 +950,10 @@
       *                                                               *
       *****************************************************************
      C     SRINTF        BEGSR
- 
+
      C                   MOVE      *BLANKS       AWBA6             6
      C                   MOVEL     MGAWBA        AWBA6
- 
+
      C                   MOVE      *BLANKS       TRNO
      C                   MOVE      '      '      NWRK
      C**********         Z-ADD     0             SECN                                      AR1094963
@@ -972,7 +974,7 @@
      C                   MOVE      *BLANKS       SVDT
      C                   MOVE      *BLANKS       CINDV
      C                   MOVE      *BLANKS       CLSS
- 
+
      C                   MOVE      *BLANKS       @TRN
      C                   MOVE      *BLANKS       @ERR              1
      C                   MOVE      *BLANKS       STELX            10
@@ -988,28 +990,28 @@
      C                   MOVE      *BLANKS       WRKMRS                                     MD024078
      C                   MOVE      *BLANKS       WRKMRL                                     MD024078
      C                   MOVE      *BLANKS       WRKMRA                                     MD024078
- 
+
      C/COPY WNCPYSRC,MG0600C025
- 
+
       ** Initialise field to indicate that the current position
       ** for outputting field :72:, is at line 1
- 
+
      C                   MOVE      'N'           LINE2             1
- 
+
       ** Clear multiple occurrence data structure
- 
+
      C                   Z-ADD     1             X                 2 0
      C     X             OCCUR     MULT
- 
+
      C     X             DOWLE     95
      C     MULT          ANDNE     *BLANKS
      C                   MOVE      *BLANKS       MULT
      C                   ADD       1             X
      C     X             OCCUR     MULT
      C                   ENDDO
- 
+
       ** Clear multiple occurrence DS for the extension file.
- 
+
      C                   Z-ADD     1             V                 2 0
      C     V             OCCUR     EXTN
      C     V             DOWLE     20
@@ -1021,7 +1023,7 @@
      C     V             OCCUR     EXTN
      C                   ENDDO
      C                   Z-ADD     0             V
- 
+
       ** Check if switchable feature CSW213 is switched on                                  MD022425
                                                                                             MD022425
      C**********         CALL      'SWIF2013'                                      MD022425 MD024078
@@ -1033,7 +1035,7 @@
      C**********         ENDIF                                                     MD022425 MD024078
       **********                                                                   MD022425 MD024078
       ** Obtain sequence numbers from transaction record
- 
+
      C     MGACMI        IFEQ      'Y'                                                      MD022425
      C                   CALL      'MG5000'                             24                  MD022425
      C                   PARM      MGTTYP        @MODI             2                        MD022425
@@ -1053,17 +1055,17 @@
      C                   PARM      *ZEROS        MGLSWS            3 0
      C                   PARM      *BLANKS       @ERCD             1
      C                   ENDIF                                                              MD022425
- 
+
       ** Error on access for sequence number
- 
+
      C     @ERCD         IFEQ      'Y'
      C     *LOCK         IN        LDA
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Program missing on call
- 
+
      C     *IN24         IFEQ      '1'
      C     *LOCK         IN        LDA
      C                   MOVE      '010'         DBASE
@@ -1074,11 +1076,11 @@
      C     *LOCK         IN        LDA
      C                   MOVEL     'MG000600'    DBPGM
      C                   OUT       LDA
- 
+
       **  To ensure field 53 if generated when required
- 
+
      C                   SETOFF                                       55
- 
+
      C                   ENDSR
      C/EJECT                                                                                MD024078
       *****************************************************************                     MD024078
@@ -1108,7 +1110,7 @@
       *                                                               *
       *****************************************************************
      C     SRROUT        BEGSR
- 
+
      C                   MOVE      MGBRCA        I@SNBR
      C                   MOVE      *BLANKS       I@DSCN
      C                   MOVE      MGCNUM        I@DSCN
@@ -1117,22 +1119,22 @@
      C                   Z-ADD     0             I@SETT
      C                   MOVE      *BLANK        I@FTCS
      C                   MOVE      MGMODI        I@MMOD
- 
+
       ** Below are two copy sources intended for setting up the custom
       ** parameter (P@ZZ) in the call to MG9900.
       ** One (MG9900CALL) is in ALL MG generation programs and is for use
       ** when a change is required to all of them.
       ** The other is only in this program.
- 
+
      C/COPY WNCPYSRC,MG9900CALL
      C/COPY WNCPYSRC,MG0600ROUT
- 
+
      C                   CALL      'MG9900'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM                    P@IN
      C                   PARM      *BLANKS       P@OUT
      C                   PARM                    P@ZZ            256
- 
+
      C     @RTCD         IFNE      *BLANKS
      C     *LOCK         IN        LDA
      C                   MOVE      '011'         DBASE
@@ -1153,9 +1155,9 @@
      C                   MOVE      O@PCNB        SPCNB
      C                   MOVE      O@PAIN        SPAIN
      C                   ENDIF
- 
+
      C/COPY WNCPYSRC,MG0600C026
- 
+
      C                   MOVEL     *BLANKS       @KEY1
      C     MGACMI        IFEQ      'Y'                                                      MD022425
      C                   MOVEL     MGPTYA        @KEY1                                      MD022425
@@ -1168,7 +1170,7 @@
      C                   PARM                    @KEY1
      C                   PARM      *BLANKS       @KYST
      C     SDCUST        PARM      SDCUST        DSLDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C     *LOCK         IN        LDA
      C                   MOVEL     'AOCUSTR0'    DBFILE
@@ -1190,7 +1192,7 @@
      C                   MOVE      BBRI05        DSRI05           40
      C                   MOVE      BBFUND        DSFUND           34
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -1208,18 +1210,18 @@
      C                   MOVEL     *BLANKS       MGCREF           29
      C                   MOVEL     *BLANKS       MGCMSH           10
      C                   MOVEL     *BLANKS       MGCMUD           30
- 
+
      C                   Z-ADD     *ZERO         X
- 
+
       ** Field :15A: General Information
- 
+
      C                   ADD       1             X
      C     X             OCCUR     MULT
      C                   MOVE      ':15A:'       MTAG
      C                   MOVEL     *BLANK        MFLD
- 
+
       ** Field :20:  Transaction reference number
- 
+
      C                   ADD       1             X
      C     X             OCCUR     MULT
                                                                                             MD022425
@@ -1239,42 +1241,42 @@
      C                   MOVE      MGMODI        @TR1
      C                   MOVEL     MGTNUM        @TR2
      C     MGLSWS        ADD       1             @TR3
- 
+
      C/COPY WNCPYSRC,MG0600C027
- 
+
      C                   MOVE      ':20: '       MTAG
      C                   MOVEL     @TRN          MFLD
- 
+
       ** Store the TRN of the new confirmation message
- 
+
      C                   MOVEL     @TRN          @TRNO            16
      C                   ENDIF                                                              MD022425
- 
+
       ** Determine if the TRN is unique
- 
+
      C     @TRNO         CHAIN     MGREFL0                            11
- 
+
       ** Cannot have duplicate keys, hence error
- 
+
      C     *IN11         IFEQ      '0'
      C                   MOVEL     MSGA(8)       MERR
      C                   MOVE      'Y'           @ERR
      C                   ENDIF
- 
+
       ** Field :21:  Related reference
       ** Determine the message codeword
- 
+
      C                   EXSR      SRCODE
- 
+
      C/COPY WNCPYSRC,MG0600AC28
- 
+
      C                   ADD       1             X
      C     X             OCCUR     MULT
- 
+
      C     CWRD          IFNE      'NEW'
      C                   MOVE      MGLSWC        @TR3
      C                   MOVEL     @TRN          MFLD
- 
+
      C     MGACMI        IFEQ      'Y'                                                      MD022425
      C                   MOVEL     MGCNUM        WDEST             6                        MD022425
      C                   MOVEL     @TRN1         MFLD                                       MD024078
@@ -1283,17 +1285,17 @@
      C                   ENDIF                                                              MD022425
                                                                                             MD022425
       ** Obtain transaction reference of previous MT600
- 
+
      C                   MOVEL     MGTNUM        HSTRAN
      C                   MOVE      '600'         HSMTPY
- 
+
      C                   MOVE      HSTRAN        @HTRN             6
- 
+
      C*****HSKEY         SETGT     MGHISTL0                                                 MD022425
      C**********         READP     MGHISTL0                               56                MD022425
      C     HSKEY         SETGT     MGHISTL7                                                 MD022425
      C                   READP     MGHISTL7                               56                MD022425
- 
+
      C     *IN56         IFEQ      '0'
      C     HSMODI        ANDEQ     MGMODI
      C     HSTRAN        ANDEQ     @HTRN
@@ -1309,21 +1311,21 @@
      C                   MOVEL     @HREF         MFLD
      C                   ENDIF                                                              MD022425
      C                   END
- 
+
      C                   MOVE      ':21: '       MTAG
      C                   ELSE
      C                   MOVEL     'NEW'         MFLD
      C                   MOVE      ':21: '       MTAG
- 
+
      C                   ENDIF
- 
+
      C/COPY WNCPYSRC,MG0600C029
- 
+
       ** Field :22: Code/Common Reference
- 
+
      C                   ADD       1             X
      C     X             OCCUR     MULT
- 
+
      C                   MOVE      *BLANKS       W22                                        MD024068
       *                                                                                     MD024068
      C                   SELECT
@@ -1336,47 +1338,47 @@
      C     CWRD          WHENEQ    'NEW'
      C                   MOVEL     'NEW'         W22
      C                   ENDSL
- 
+
      C     MGTTYP        IFEQ      'OP'
      C     COB           ANDEQ     'C'
      C                   MOVEL     'EXOPTION'    W22
      C                   ENDIF
- 
+
       ** Codeword blank
- 
+
      C     CWRD          IFEQ      *BLANKS
      C                   MOVE      'Y'           @ERR
      C                   MOVEA     MSGA(7)       MERR
      C                   ENDIF
- 
+
      C                   MOVEL     ':22:'        MTAG
- 
+
      C/COPY WNCPYSRC,MG0600C049
- 
+
      C                   MOVE      *BLANKS       ZCREF
- 
+
       ** If SWIFT network, use sender & destination customer
       ** SWIFT address, and the exchange rate to produce
       ** common reference field;  Else use the message TRN
- 
+
      C     NWRK          IFEQ      'SWIFT'
      C     NWRK          OREQ      'STTX'
- 
+
      C     NWRK          IFEQ      'SWIFT'
      C                   MOVEL     NWSN          ZSSWI
      C                   MOVEL     NWDS          ZDSWI
      C                   ENDIF
      C/COPY WNCPYSRC,MG0600C040
      C                   MOVE      MGEXRT        ZRATE
- 
+
       **  Format SWIFT common reference
- 
+
      C                   CALL      'ZM0020'                             15
      C                   PARM                    ZSSWI            12
      C                   PARM                    ZDSWI            12
      C                   PARM                    ZRATE            13 8
      C                   PARM                    ZCREF            16
- 
+
      C     *IN15         IFEQ      '1'
      C     *LOCK         IN        LDA
      C                   MOVE      '012'         DBASE
@@ -1385,24 +1387,24 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C     O@SWSN        IFNE      *BLANKS
      C     O@SWDS        ANDNE     *BLANKS
- 
+
      C                   MOVE      MGEXRT        ZRATE
      C                   MOVEL     O@SWSN        ZSSWI
      C                   MOVEL     O@SWDS        ZDSWI
- 
+
       **  Format SWIFT common reference
- 
+
      C                   CALL      'ZM0020'                             15
      C                   PARM                    ZSSWI            12
      C                   PARM                    ZDSWI            12
      C                   PARM                    ZRATE            13 8
      C                   PARM                    ZCREF            16
- 
+
      C     *IN15         IFEQ      '1'
      C     *LOCK         IN        LDA
      C                   MOVE      '013'         DBASE
@@ -1411,20 +1413,20 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C/COPY WNCPYSRC,MG0600C041
- 
+
      C                   ENDIF
- 
+
      C     W22           CAT       '/':0         W22
      C     ZCREF         IFNE      *BLANKS
      C     W22           CAT       ZCREF:0       MFLD
      C                   ELSE
      C     W22           CAT       @TRNO:0       MFLD
      C                   ENDIF
- 
+
       ** Field :94A: Scope of Operation
- 
+
      C     CSW024        IFEQ      'Y'
      C     DSCORP        ANDEQ     'Y'
      C                   ADD       1             X
@@ -1439,20 +1441,20 @@
      C                   MOVEL     'BILA'        MFLD
      C                   MOVE      ':94A:'       MTAG
      C                   ENDIF
- 
+
       ** Field :82a: Party A
- 
+
      C                   ADD       1             X
      C     X             OCCUR     MULT
- 
+
      C                   CALL      'AOBRCHR0'
      C                   PARM      '*MSG   '     @RTCD
      C                   PARM      '*KEY   '     @OPTN
      C                   PARM      MGBRCA        @BRCD             3
      C     SDBRCH        PARM      SDBRCH        DSSDY
- 
+
       ** Branch record not found - DB Error
- 
+
      C     @RTCD         IFNE      *BLANKS
      C     *LOCK         IN        LDA
      C                   MOVE      '014'         DBASE
@@ -1461,41 +1463,41 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C**********         MOVE      *BLANKS       WBICN             6 0                      MD035515
      C                   MOVE      *BLANKS       WBICN             6                        MD035515
      C                   MOVEL     A8BICN        WBICN
- 
+
      C                   MOVE      *BLANKS       ZDEST
      C                   MOVEL     WBICN         ZDEST
      C                   MOVE      *BLANKS       ACLINE
      C                   MOVE      ' '           TAG
      C                   MOVE      '82'          FLDNO
      C                   EXSR      FSWAD
- 
+
       ** If corporate customer...
- 
+
      C     CSW024        IFEQ      'Y'
      C     DSCORP        ANDEQ     'Y'
- 
+
       ** If BEI output :87A:
- 
+
      C     DSCBEI        IFNE      *BLANK
      C                   ADD       1             X
      C     X             OCCUR     MULT
      C                   MOVE      *BLANK        MFLD
      C                   MOVEL     DSCBEI        MFLD
      C                   MOVE      ':87A:'       MTAG
- 
+
       ** If receiver party info output :87J:
- 
+
      C                   ELSE
      C     DSRI01        IFNE      *BLANK
      C     DSRI02        ORNE      *BLANK
      C     DSRI03        ORNE      *BLANK
      C     DSRI04        ORNE      *BLANK
      C     DSRI05        ORNE      *BLANK
- 
+
      C                   MOVE      *BLANK        DN87              1
      C     DSRI01        IFNE      *BLANK
      C                   ADD       1             X
@@ -1547,66 +1549,66 @@
      C                   MOVE      *BLANK        MFLD
      C                   MOVEL     DSRI05        MFLD
      C                   ENDIF
- 
+
       ** Else output :87D:
- 
+
      C                   ELSE
      C                   ADD       1             X
      C     X             OCCUR     MULT
      C                   MOVE      ':87D:'       MTAG
      C                   MOVEL     DSCNA1        MFLD
- 
+
       ** Address 2
- 
+
      C     DSCNA2        IFNE      *BLANKS
      C                   ADD       1             X
      C     X             OCCUR     MULT
      C                   MOVEL     DSCNA2        MFLD
      C                   ENDIF
- 
+
       ** Address 3
- 
+
      C     DSCNA3        IFNE      *BLANKS
      C                   ADD       1             X
      C     X             OCCUR     MULT
      C                   MOVEL     DSCNA3        MFLD
      C                   ENDIF
- 
+
       ** Address 4
- 
+
      C     DSCNA4        IFNE      *BLANKS
      C                   ADD       1             X
      C     X             OCCUR     MULT
      C                   MOVEL     DSCNA4        MFLD
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
       ** Field :87a: Party B
- 
+
      C                   ADD       1             X
      C     X             OCCUR     MULT
- 
+
      C                   MOVE      *BLANKS       ZDEST
      C                   MOVEL     MGCNUM        ZDEST
      C                   MOVE      *BLANKS       ACLINE
      C                   MOVE      ' '           TAG
      C                   MOVE      '87'          FLDNO
      C                   EXSR      FSWAD
- 
+
      C                   ENDIF
- 
+
       ** Format Field :83a
- 
+
      C/COPY WNCPYSRC,MG0600C044
- 
+
      C                   EXSR      FMT83
- 
+
       ** Field :30:  Trade Date (YYMMDD format)
- 
+
      C                   ADD       1             X
      C     X             OCCUR     MULT
      C     CWRD          IFEQ      'NEW'
@@ -1614,14 +1616,14 @@
      C                   ELSE
      C                   MOVE      BJRDNB        ZMDAY
      C                   ENDIF
- 
+
       ** Convert Midas date to SWIFT date format
- 
+
      C                   CALL      'ZM0065'                             15
      C                   PARM                    ZMDAY             5 0
      C                   PARM                    ZSDATE            6
      C                   PARM                    ZSDATC            8
- 
+
      C     *IN15         IFEQ      '1'
      C     *LOCK         IN        LDA
      C                   MOVE      '015'         DBASE
@@ -1630,18 +1632,18 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   MOVEL     ':30:'        MTAG
      C                   MOVEL     ZSDATE        MFLD
- 
+
      C/COPY WNCPYSRC,MG0600C043
- 
+
      C                   MOVE      *BLANKS       WCRTN
      C                   MOVE      *BLANKS       @NSKYB
      C                   MOVE      *BLANKS       @NSKYE
- 
+
       ** Field :26C: Identification of the Commodity
- 
+
      C                   EVAL      MGALOC = 'UNALL'
      C                   EXSR      SRBTB
      C                   Z-ADD     0             I
@@ -1653,25 +1655,25 @@
      C                   IF        @WRK07 = '/DELIV/'
      C                   MOVE      @WRK10        MGDELV
      C                   ENDIF
- 
+
      C                   IF        @WRK07 = '/ALLOC/'
      C                             AND %SUBST(@WRK12:8:5) <> *BLANKS
      C                   MOVE      @WRK12        MGALOC
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C     MGPMSC        IFEQ      'Y'
      C                   MOVE      MGPUCY        @UNITC            3
      C                   MOVE      MGPSTM        @STM
      C     @STM          LOOKUP    TABNST                                 23
- 
+
      C     MGPONS        IFNE      *BLANKS
      C     *IN23         ANDEQ     '1'
- 
+
       ** Use payment settlement currency to access nostro if not blank.
       ** Otherwise use sell currency.
- 
+
      C     CEU003        IFEQ      'Y'
      C     MGPYCY        ANDNE     *BLANKS
      C                   MOVE      MGPYCY        @NSKYB
@@ -1681,9 +1683,9 @@
      C                   MOVEL     MGPONS        @NSKYE
      C                   ENDIF
      C                   ELSE
- 
+
       ** Test if settlement via nostro
- 
+
      C                   MOVE      MGSLCY        @UNITC            3
      C                   MOVE      MGRSTM        @STM              2
      C     @STM          LOOKUP    TABNST                                 23
@@ -1698,7 +1700,7 @@
      C                   MOVEL     MGRONS        @NSKYE
      C                   ENDIF
      C                   ENDIF
- 
+
      C     @NSKYE        IFNE      *BLANKS
      C                   CALL      'AONOSTR0'
      C                   PARM      '*MSG   '     @RTCD
@@ -1712,18 +1714,18 @@
      C                   PARM      *BLANKS       @KEYG
      C                   PARM      *BLANKS       @KEYH
      C     SDNOST        PARM      SDNOST        DSFDY
- 
+
      C     @RTCD         IFEQ      *BLANKS
      C                   MOVE      *BLANKS       @KEY1
      C                   MOVEL     A7CUST        @KEY1
- 
+
      C                   CALL      'AOCUSTR0'
      C                   PARM      '*MSG   '     @RTCD
      C                   PARM      '*KEY   '     @OPTN
      C                   PARM                    @KEY1            10
      C                   PARM      *BLANKS       @KYST             7
      C     SDCUST        PARM      SDCUST        DSSDY
- 
+
      C     '/'           CAT       BBCRTN        WCRTN            17
      C                   ELSE
      C     '/'           CAT       'UNKNOWN'     WCRTN
@@ -1731,15 +1733,15 @@
      C                   ELSE
      C     '/'           CAT       'UNKNOWN'     WCRTN
      C                   ENDIF
- 
+
      C     WCRTN         CAT       '/'           WCRTN
- 
+
      C                   CALL      'AOCURRR0'
      C                   PARM      '*MSG   '     @RTCD
      C                   PARM      '*KEY   '     @OPTN
      C                   PARM      @NSKYB        @KEY3             3
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C                   EVAL      MGCMSH = A6CYCD + '-' + A6SWCY
      C     MGCMSH        SETLL     SDCMDTL0
      C     MGCMSH        CHAIN     SDCMDTL0                           90
@@ -1753,9 +1755,9 @@
      C                   MOVEL     *BLANKS       MGUNIT
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   MOVE      *BLANKS       WMPTP
- 
+
      C                   SELECT
      C     A6SWCY        WHENEQ    'XAU'
      C                   MOVEL     'GOLD'        WMPTP             8
@@ -1888,7 +1890,7 @@
      C     A6SWCY        WHENEQ    'CV2'
      C                   MOVEL     'VREN10 '     WMPTP
      C                   ENDSL
- 
+
      C                   IF        MGDELV <> *BLANKS
      C                   EVAL      WIDCOM = MGDELV
      C     WIDCOM        CAT       WCRTN:0       WIDCOM
@@ -1896,24 +1898,24 @@
      C                   ELSE
      C     WCRTN         CAT       '/':0         WIDCOM           45
      C                   ENDIF
- 
+
      C     WIDCOM        CAT       MGALOC:0      WIDCOM
      C     WIDCOM        CAT       WMPTP:0       WIDCOM
      C     WIDCOM        CAT       MGDENO:0      WIDCOM
- 
+
      C                   IF        MGFORM <> *BLANKS
      C     WIDCOM        CAT       '//':0        WIDCOM
      C     WIDCOM        CAT       MGFORM:0      WIDCOM
      C                   ENDIF
- 
+
      C                   ADD       1             X
      C     X             OCCUR     MULT
- 
+
      C                   MOVEL     ':26C:'       MTAG
      C                   MOVEL     WIDCOM        MFLD
- 
+
       ** Field 26H Counterparty's reference not output
- 
+
      C                   IF        %SUBST(MGBTB1:1:6) = '/CREF/'
      C                   EVAL      MGCREF = %SUBST(MGBTB1:7:29)
      C                   ADD       1             X
@@ -1921,26 +1923,26 @@
      C                   MOVEL     ':26H:'       MTAG
      C                   MOVEL     MGCREF        MFLD
      C                   ENDIF
- 
+
       ** Price by Unit 33G
- 
+
      C                   ADD       1             X
      C     X             OCCUR     MULT
- 
+
      C/COPY WNCPYSRC,MG0600C042
- 
+
      C                   MOVE      MGEXRT        ZEXRT
- 
+
      C/COPY WNCPYSRC,MG0600C001
- 
+
       ** Exchange rate conversion
- 
+
      C                   CALL      'ZM0030'                             15
      C                   PARM                    ZEXRT            13 8
      C                   PARM                    ZSEXRT           12
- 
+
      C/COPY WNCPYSRC,MG0600C037
- 
+
      C     *IN15         IFEQ      '1'
      C     *LOCK         IN        LDA
      C                   MOVE      '017'         DBASE
@@ -1949,14 +1951,14 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C/COPY WNCPYSRC,MG0600C003
- 
+
      C                   EXSR      SRBTB
- 
+
      C                   Z-ADD     1             I
      C                   MOVE      *BLANKS       @WRK33            5
- 
+
      C     I             DOUGT     6
      C     @BTB(I)       IFNE      *BLANKS
      C     6             SUBST     @BTB(I)       WCHK33            6
@@ -1967,37 +1969,37 @@
      C                   ENDIF
      C                   ADD       1             I
      C                   ENDDO
- 
+
      C                   CALL      'AOCURRR0'
      C                   PARM      '*MSG   '     @RTCD
      C                   PARM      '*KEY   '     @OPTN
      C                   PARM      @UNITC        @KEY3             3
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C                   MOVE      ':33G:'       MTAG
      C     A6SWCY        CAT       ZSEXRT:0      MFLD
- 
+
      C     MFLD          CAT       @WRK33:0      MFLD
- 
+
       ** Field 71C Not output
       ** Field 77H - Agreement
- 
+
      C     MGAGTY        IFNE      *BLANKS
      C                   ADD       1             X
      C     X             OCCUR     MULT
      C                   MOVE      ':77H:'       MTAG
- 
+
      C                   MOVEA     *BLANKS       @WRK
      C                   MOVEA     MGAGTY        @WRK
      C                   Z-ADD     1             Z                 3 0
      C     ' '           LOOKUP    @WRK(Z)                                31
- 
+
      C     MGAGDT        IFNE      *ZEROS
      C                   MOVEA     '/'           @WRK(Z)
      C                   ADD       1             Z
      C                   MOVE      MGAGDT        WNAGDT            8
      C                   MOVEA     WNAGDT        @WRK(Z)
- 
+
      C     MGAGVV        IFNE      *ZEROS
      C     ' '           LOOKUP    @WRK(Z)                                31
      C                   MOVEA     '//'          @WRK(Z)
@@ -2005,35 +2007,35 @@
      C                   MOVE      MGAGVV        WNAGVV            4
      C                   MOVEA     WNAGVV        @WRK(Z)
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   MOVEA     @WRK          MFLD
- 
+
      C                   ENDIF
- 
+
       ** Format field :77D: - Conditions.
- 
+
      C     MGCON1        IFNE      *BLANKS
- 
+
       ** Store the CONDITIONS information for easier use.
- 
+
      C                   MOVE      MGCON1        @BTB(1)
      C                   MOVE      MGCON2        @BTB(2)
      C                   MOVE      MGCON3        @BTB(3)
      C                   MOVE      MGCON4        @BTB(4)
      C                   MOVE      MGCON5        @BTB(5)
      C                   MOVE      MGCON6        @BTB(6)
- 
+
      C                   Z-ADD     0             I
      C                   MOVE      'N'           FLD77O            1
- 
+
       ** Search through all six fields & output if not blank.
- 
+
      C     I             DOWLT     6
- 
+
      C                   ADD       1             I
- 
+
      C     @BTB(I)       IFNE      *BLANKS
      C                   ADD       1             X
      C     X             OCCUR     MULT
@@ -2041,27 +2043,27 @@
      C                   MOVE      ':77D:'       MTAG
      C                   MOVE      'Y'           FLD77O
      C                   ENDIF
- 
+
      C                   MOVEL     @BTB(I)       MFLD
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   ENDIF
- 
+
       ** Field 14C - Year Definitions
- 
+
      C     MGAGTY        IFEQ      'ISDA'
      C                   ADD       1             X
      C     X             OCCUR     MULT
      C                   MOVE      ':14C:'       MTAG
      C                   MOVEL     MGISDA        MFLD
      C                   ENDIF
- 
+
       * Field 72 formatting
- 
+
      C                   EXSR      FLD72
- 
+
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -2072,30 +2074,30 @@
       *****************************************************************
       *
      C     FLD72         BEGSR
- 
+
      C                   MOVE      *BLANKS       @WRK
- 
+
       ** Store the Sender to Receiver information for easier use.
- 
+
      C                   EXSR      SRBTB
- 
+
      C                   Z-ADD     0             I
      C                   MOVE      'N'           FLD72O            1
- 
+
       ** Search through all six fields & output if not blank.
- 
+
      C     I             DOWLT     6
- 
+
      C                   ADD       1             I
      C                   MOVEL     @BTB(I)       @WRK06            6
      C                   MOVEL     @BTB(I)       @WRK07            7
      C                   MOVEL     @BTB(I)       @WRK10           10
- 
+
      C     @BTB(I)       IFNE      *BLANKS
      C     @WRK07        IFNE      '/DELIV/'
      C     @WRK07        ANDNE     '/ALLOC/'
      C     @WRK06        ANDNE     '/CREF/'
- 
+
      C     @WRK06        IFEQ      '/UNIT/'
      C     @WRK10        OREQ      MSGA(9)
      C                   MOVEL     *BLANKS       @UNIT
@@ -2109,7 +2111,7 @@
      C                   MOVE      ':72: '       MTAG
      C                   MOVE      'Y'           FLD72O
      C                   ENDIF
- 
+
      C                   IF        @UNIT = 'OTH'
      C                   EVAL      MFLD = '/UNIT/' + MGCMUD
      C                   ELSE
@@ -2118,41 +2120,41 @@
      C                   ENDIF
      C
      C                   ENDIF
- 
+
      C                   ELSE
      C                   ADD       1             X
      C     X             OCCUR     MULT
- 
+
      C     FLD72O        IFEQ      'N'
      C                   MOVE      ':72: '       MTAG
      C                   MOVE      'Y'           FLD72O
      C                   ENDIF
- 
+
      C                   MOVEL     @BTB(I)       MFLD
      C                   ENDIF
      C                   ELSE
- 
+
      C                   LEAVE
- 
+
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C/COPY WNCPYSRC,MG0600CCP3
- 
+
       ** Output /TELEX/
- 
+
      C/COPY WNCPYSRC,MG0600CCP4
- 
+
      C*****MGBRKC        IFEQ      'TELX'                                                   MD030922
      C**********         MOVEA     '/TELEX/'     @WRK(1)                                    MD030922
      C**********         END                                                                MD030922
- 
+
       ** Output /PHON/
- 
+
      C/COPY WNCPYSRC,MG0600CCP5
- 
+
      C*****MGBRKC        IFEQ      'PHON'                                                   MD030922
      C**********         MOVEA     '/PHON/'      @WRK(1)                                    MD030922
      C**********         END                                                                MD030922
@@ -2229,8 +2231,8 @@
      C**********         END                                                                MD030922
       **********                                                                            MD030922
      C/COPY WNCPYSRC,MG0600CCP8
- 
- 
+
+
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -2241,36 +2243,36 @@
       *****************************************************************
       *
      C     SRFMTB        BEGSR
- 
+
       **  Field :15B: Transaction Details
- 
+
      C                   ADD       1             X
      C     X             OCCUR     MULT
      C                   MOVE      ':15B:'       MTAG
      C                   MOVEL     *BLANK        MFLD
- 
+
       ** 1. Sequence B - Quantity of Commodity - Bought
       ** ------------------------------
- 
+
       ** Field :32F:  Unit, Amount Bought
- 
+
      C                   ADD       1             X
      C     X             OCCUR     MULT
- 
+
       ** Format purchase currency and amount
- 
+
      C                   MOVE      MGPUCY        ZCCY
      C                   MOVE      MGPAMT        ZAMNT
- 
+
      C/COPY WNCPYSRC,MG0600C038
- 
+
      C                   CALL      'ZM0040'                             15
      C                   PARM                    ZAMNT            13 0
      C                   PARM                    ZCCY              3
      C                   PARM                    ZSAMNT           15
      C                   PARM                    ZSCCY             3
      C                   PARM      ' '           ZERR              1
- 
+
      C     *IN15         IFEQ      '1'
      C     *LOCK         IN        LDA
      C                   MOVE      '018'         DBASE
@@ -2279,12 +2281,12 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   MOVE      MGUNIT        ZSCCY
      C                   MOVE      ':32F:'       MTAG
- 
+
       ** Error - indicate erroneous fields
- 
+
      C     ZERR          IFEQ      '1'
      C                   MOVE      'Y'           @ERR
      C                   MOVE      MGPAMT        ZAMT
@@ -2293,13 +2295,13 @@
      C                   ELSE
      C                   MOVEL     FLD2N         MFLD
      C                   ENDIF
- 
+
       ** Field :86a:  Intermediary
- 
+
      C/COPY WNCPYSRC,MG0600C022
- 
+
       ** Intermediary not blank; retrieve customer address
- 
+
      C     MGRIBN        IFNE      *BLANKS
      C                   ADD       1             X
      C     X             OCCUR     MULT
@@ -2312,31 +2314,31 @@
      C                   MOVE      NETBY         CKNETI
      C                   EXSR      FSWAD
      C                   ENDIF
- 
+
       ** Field :87a: Receiver of the Commodity
- 
+
      C/COPY WNCPYSRC,MG0600C007
- 
+
      C                   ADD       1             X
      C     X             OCCUR     MULT
- 
+
       ** Test if settlement via nostro
- 
+
      C                   MOVE      MGRSTM        @STM              2
      C     @STM          LOOKUP    TABNST                                 23
      C     MGRONS        IFNE      *BLANKS
      C     *IN23         ANDEQ     '1'
- 
+
       ** Use receipt settlement currency to access nostro if not blank.
       ** Otherwise use purchase currency.
- 
+
      C     CEU003        IFEQ      'Y'
      C     MGRCCY        ANDNE     *BLANKS
      C                   MOVE      MGRCCY        @NSKYB
      C                   ELSE
      C                   MOVE      MGPUCY        @NSKYB
      C                   ENDIF
- 
+
      C                   MOVEL     MGRONS        @NSKYE
      C                   CALL      'AONOSTR0'
      C                   PARM      '*MSG   '     @RTCD             7
@@ -2350,38 +2352,38 @@
      C                   PARM      *BLANKS       @KEYG            10
      C                   PARM      *BLANKS       @KEYH             1
      C     SDNOST        PARM      SDNOST        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   MOVE      'Y'           @ERR
      C                   MOVEL     MGRONS        MFLD
      C                   MOVEL     MSGA(3)       MERR
      C                   MOVE      ':87 :'       MTAG
      C                   ELSE
- 
+
      C                   MOVE      *BLANKS       ZDEST
      C                   MOVEL     A7CUST        ZDEST
- 
+
      C/COPY WNCPYSRC,MG0600CCP1
- 
+
      C                   MOVEL     *BLANKS       ACLINE
      C                   MOVE      ' '           TAG
      C                   MOVE      '87'          FLDNO
      C                   MOVE      NETBY         CKNETI            1
- 
+
      C/COPY WNCPYSRC,MG0600C015
- 
+
      C                   EXSR      FSWAD
      C                   ENDIF
- 
+
       ** Our receive nostro is blank or settlement internal
- 
+
      C                   ELSE
- 
+
       ** Test if settlement internal
- 
+
      C                   MOVE      MGRSTM        @STM
      C     @STM          LOOKUP    TABINT                                 23
- 
+
      C     *IN23         IFEQ      '1'
      C                   MOVE      *BLANKS       ZDEST
      C                   MOVEL     SECN          ZDEST
@@ -2390,26 +2392,26 @@
      C                   MOVE      '87'          FLDNO
      C                   MOVE      NETBY         CKNETI
      C                   EXSR      FSWAD
- 
+
      C                   ELSE
      C                   MOVE      ':87D:'       MTAG
      C                   MOVEL     'UNKNOWN'     MFLD
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C/COPY WNCPYSRC,MG0600C008
- 
+
       ** 2. 34P Consideration
       ** ----------------------------
- 
+
       **  Field :34P: Value date, currency code and the consideration paid by the Sender
- 
+
      C                   ADD       1             X
      C     X             OCCUR     MULT
- 
+
       **  Format value date to SWIFT standard
- 
+
      C     MGTTYP        IFEQ      'OP'
      C     COB           ANDEQ     'C'
      C                   MOVE      MGOTDT        ZMDAY
@@ -2424,7 +2426,7 @@
      C                   PARM                    ZMDAY             5 0
      C                   PARM                    ZSDAT1            6
      C                   PARM                    ZSDATC            8
- 
+
      C     *IN15         IFEQ      '1'
      C     *LOCK         IN        LDA
      C                   MOVE      '016'         DBASE
@@ -2433,20 +2435,20 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C     X             OCCUR     MULT
      C                   MOVE      MGSLCY        ZCCY
      C                   MOVE      MGSAMT        ZAMNT
- 
+
      C/COPY WNCPYSRC,MG0600C039
- 
+
      C                   CALL      'ZM0040'                             15
      C                   PARM                    ZAMNT            13 0
      C                   PARM                    ZCCY              3
      C                   PARM                    ZSAMN1           15
      C                   PARM                    ZSCCY1            3
      C                   PARM      ' '           ZERR              1
- 
+
      C     *IN15         IFEQ      '1'
      C     *LOCK         IN        LDA
      C                   MOVE      '019'         DBASE
@@ -2455,49 +2457,49 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Error - indicate erroneous fields;
- 
+
      C     ZERR          IFEQ      '1'
      C                   MOVE      'Y'           @ERR
      C                   MOVE      MGSAMT        ZAMT
      C                   MOVE      MGSLCY        ZCCY
      C                   MOVEL     ERR3N         MFLD
      C                   MOVEL     MSGA(4)       MERR
- 
+
      C                   ELSE
      C                   MOVE      ':34P:'       MTAG
      C                   MOVEL     FLD3N         MFLD
      C                   ENDIF
- 
+
      C/COPY WNCPYSRC,MG0600C009
- 
+
       ** Field :53a: Sender's Correspondent
       ** Test if settlement via nostro
- 
+
      C                   MOVE      MGPSTM        @STM
      C     @STM          LOOKUP    TABNST                                 23
- 
+
      C     MGPONS        IFNE      *BLANKS
      C     *IN23         ANDEQ     '1'
- 
+
       ** either A/C with Bank or Receipient entered
       ** or A/C with A/c line = 'DIRECT'
- 
+
      C     MGAWBN        IFNE      *BLANKS
      C     MGRVNO        ORNE      *BLANKS
      C     AWBA6         ANDNE     'DIRECT'
- 
+
       ** Use payment settlement currency to access nostro if not blank.
       ** Otherwise use sell currency.
- 
+
      C     CEU003        IFEQ      'Y'
      C     MGPYCY        ANDNE     *BLANKS
      C                   MOVE      MGPYCY        @NSKYB
      C                   ELSE
      C                   MOVE      MGSLCY        @NSKYB
      C                   ENDIF
- 
+
      C                   MOVEL     MGPONS        @NSKYE
      C                   CALL      'AONOSTR0'
      C                   PARM      '*MSG   '     @RTCD             7
@@ -2511,9 +2513,9 @@
      C                   PARM      *BLANKS       @KEYG            10
      C                   PARM      *BLANKS       @KEYH             1
      C     SDNOST        PARM      SDNOST        DSFDY
- 
+
       **  Nostro customer not found
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   ADD       1             X
      C     X             OCCUR     MULT
@@ -2522,9 +2524,9 @@
      C                   MOVEL     MGPONS        MFLD
      C                   MOVEL     MSGA(3)       MERR
      C                   ELSE
- 
+
       ** Branch Internal Customer cf. Customer number of Our Pay Nostro
- 
+
      C                   MOVEL     SECN          @SECN             6
      C     @SECN         IFNE      A7CUST
      C     MGAWBN        ANDNE     A7CUST
@@ -2535,9 +2537,9 @@
      C                   MOVEL     A7CUST        ZDEST
      C                   ELSE
      C                   MOVEL     MGRVNO        ZDEST
- 
+
      C/COPY WNCPYSRC,MG0600C002
- 
+
      C                   ENDIF
      C                   CALL      'ZM0050'                             15
      C                   PARM                    ZDEST            12
@@ -2549,7 +2551,7 @@
      C                   PARM                    ZSTYPE            1
      C                   PARM      ' '           ZERR              1
      C                   PARM                    ZDBEI             1
- 
+
      C     *IN15         IFEQ      '1'
      C     *LOCK         IN        LDA
      C                   MOVE      '020'         DBASE
@@ -2558,9 +2560,9 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       **  Error when formating address
- 
+
      C     ZERR          IFEQ      '1'
      C                   MOVE      'Y'           @ERR
      C                   MOVE      ':53 :'       MTAG
@@ -2573,12 +2575,12 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C/COPY WNCPYSRC,MG0600C010
- 
+
       ** Field :56a: and :57a: Intermediary and Accnt with Institution
       ** Nostro field blank
- 
+
      C     MGPSTM        IFEQ      00
      C                   ADD       1             X
      C     X             OCCUR     MULT
@@ -2586,23 +2588,23 @@
      C                   MOVEL     'UNKNOWN'     MFLD
      C                   MOVE      'Y'           FLD57U            1
      C                   END
- 
+
       ** Field 57 Seq C is not UNKNOWN
- 
+
      C     FLD57U        IFNE      'Y'
- 
+
       ** Field 56 and Field 57  intermediary and account with inst.
- 
+
      C                   MOVEL     '56'          @TAGI             2
      C                   MOVEL     '57'          @TAGD             2
      C                   EXSR      FMTX1
      C                   END
      C                   MOVE      'N'           FLD57U
- 
+
      C                   MOVE      *BLANK        ZDBEI
- 
+
      C/COPY WNCPYSRC,MG0600C050
- 
+
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -2612,36 +2614,36 @@
       *                                                               *
       *****************************************************************
      C     SRFMTC        BEGSR
- 
+
       **  Field :15C: New Sequence
- 
+
      C                   ADD       1             X
      C     X             OCCUR     MULT
      C                   MOVE      ':15C:'       MTAG
      C                   MOVEL     *BLANK        MFLD
- 
+
       ** 1. Sequence C - Quantity of Commodity - Sold
       ** ------------------------------
- 
+
       **  Field :32F:  Currency, Amount Bought
- 
+
      C                   ADD       1             X
      C     X             OCCUR     MULT
- 
+
       ** Format purchase currency and amount
- 
+
      C                   MOVE      MGSLCY        ZCCY
      C                   MOVE      MGSAMT        ZAMNT
- 
+
      C/COPY WNCPYSRC,MG0600C038
- 
+
      C                   CALL      'ZM0040'                             15
      C                   PARM                    ZAMNT            13 0
      C                   PARM                    ZCCY              3
      C                   PARM                    ZSAMNT           15
      C                   PARM                    ZSCCY             3
      C                   PARM      ' '           ZERR              1
- 
+
      C     *IN15         IFEQ      '1'
      C     *LOCK         IN        LDA
      C                   MOVE      '018'         DBASE
@@ -2650,11 +2652,11 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   MOVE      ':32F:'       MTAG
- 
+
       ** Error - indicate erroneous fields
- 
+
      C     ZERR          IFEQ      '1'
      C                   MOVE      'Y'           @ERR
      C                   MOVE      MGPAMT        ZAMT
@@ -2664,12 +2666,12 @@
      C                   MOVE      MGUNIT        ZSCCY
      C                   MOVEL     FLD2N         MFLD
      C                   ENDIF
- 
+
      C/COPY WNCPYSRC,MG0600C010
- 
+
       ** Field :86a: and :87a: Intermediary and deliverer of the commodity
       ** Nostro field blank
- 
+
      C     MGPSTM        IFEQ      00
      C                   ADD       1             X
      C     X             OCCUR     MULT
@@ -2677,37 +2679,37 @@
      C                   MOVEL     'UNKNOWN'     MFLD
      C                   MOVE      'Y'           FLD57U            1
      C                   END
- 
+
       ** Field 87 Seq C is not UNKNOWN
- 
+
      C                   MOVE      'Y'           SEQ15C                                     MD033754
                                                                                             MD033754
      C     FLD87O        IFNE      'Y'
- 
+
       ** Field 86 and Field 87  intermediary and account with inst.
- 
+
      C                   MOVEL     '86'          @TAGI             2
      C                   MOVEL     '87'          @TAGD             2
      C                   EXSR      FMTX1
      C                   END
      C                   MOVE      'N'           FLD57U
- 
+
      C                   MOVE      *BLANK        ZDBEI
- 
+
      C/COPY WNCPYSRC,MG0600C008
- 
+
       ***2.*34P*Consideration                                                              AR1053647
       ** 2. 34R Consideration                                                              AR1053647
       ** ----------------------------
- 
+
       ***Field*:34P:*Value*date,*currency*code*and*the*consideration*paid*by*the*Sender    AR1053647
       ** Field :34R: Value date, currency code and the consideration paid by the Sender    AR1053647
- 
+
      C                   ADD       1             X
      C     X             OCCUR     MULT
- 
+
       ** Format value date to SWIFT standard
- 
+
      C     MGTTYP        IFEQ      'OP'
      C     COB           ANDEQ     'C'
      C                   MOVE      MGOTDT        ZMDAY
@@ -2722,7 +2724,7 @@
      C                   PARM                    ZMDAY             5 0
      C                   PARM                    ZSDAT1            6
      C                   PARM                    ZSDATC            8
- 
+
      C     *IN15         IFEQ      '1'
      C     *LOCK         IN        LDA
      C                   MOVE      '016'         DBASE
@@ -2731,20 +2733,20 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C     X             OCCUR     MULT
      C                   MOVE      MGSLCY        ZCCY
      C                   MOVE      MGSAMT        ZAMNT
- 
+
      C/COPY WNCPYSRC,MG0600C039
- 
+
      C                   CALL      'ZM0040'                             15
      C                   PARM                    ZAMNT            13 0
      C                   PARM                    ZCCY              3
      C                   PARM                    ZSAMN1           15
      C                   PARM                    ZSCCY1            3
      C                   PARM      ' '           ZERR              1
- 
+
      C     *IN15         IFEQ      '1'
      C     *LOCK         IN        LDA
      C                   MOVE      '019'         DBASE
@@ -2753,28 +2755,28 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Error - indicate erroneous fields;
- 
+
      C     ZERR          IFEQ      '1'
      C                   MOVE      'Y'           @ERR
      C                   MOVE      MGSAMT        ZAMT
      C                   MOVE      MGSLCY        ZCCY
      C                   MOVEL     ERR3N         MFLD
      C                   MOVEL     MSGA(4)       MERR
- 
+
      C                   ELSE
      C**********         MOVE      ':34P:'       MTAG                                      AR1053647
      C                   MOVE      ':34R:'       MTAG                                      AR1053647
      C                   MOVEL     FLD3N         MFLD
      C                   END
- 
+
      C/COPY WNCPYSRC,MG0600C010
- 
+
       ***Field*:86a:*and*:87a:*Intermediary*and*Accnt*with*Institution                     AR1053647
       ** Field :56a: and :57a: Intermediary and Accnt with Institution                     AR1053647
       ** Nostro field blank
- 
+
      C     MGPSTM        IFEQ      00
      C                   ADD       1             X
      C     X             OCCUR     MULT
@@ -2782,24 +2784,24 @@
      C                   MOVEL     'UNKNOWN'     MFLD
      C                   MOVE      'Y'           FLD57U            1
      C                   END
- 
+
       ** Field 57 Seq C is not UNKNOWN
- 
+
      C     FLD57U        IFNE      'Y'
- 
+
       ***Field*86*and*Field*87**intermediary*and*account*with inst.                        AR1053647
       ** Field 56 and Field 57 intermediary and account with inst.                         AR1053647
- 
+
      C                   MOVEL     '56'          @TAGI                                     AR1053647
      C                   MOVEL     '57'          @TAGD                                     AR1053647
      C                   EXSR      FMTX1
      C                   END
      C                   MOVE      'N'           FLD57U
- 
+
      C                   MOVE      *BLANK        ZDBEI
- 
+
      C/COPY WNCPYSRC,MG0600C033
- 
+
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -2810,44 +2812,44 @@
       *****************************************************************
       *
      C     SRCODE        BEGSR
- 
+
      C                   MOVE      *BLANKS       PRNOUT            4
      C                   MOVE      *BLANKS       CODEWD
- 
+
       ** Determine the state of the pay side of the transaction
- 
+
      C                   EXSR      SRPAYE
- 
+
       ** Pay field 87 & Rec our-nostro are BOTH not blank
- 
+
      C     PAY87         IFNE      *BLANK
      C     MGRONS        ANDNE     *BLANK
      C                   MOVE      'BOTH'        PRNOST            4
      C                   ENDIF
- 
+
       ** pay field 87 & rec our-nostro; Both blank/One blank
- 
+
      C     PAY87         IFEQ      *BLANK
      C     MGRONS        OREQ      *BLANK
      C                   MOVE      'B/O '        PRNOST
      C                   ENDIF
- 
+
       ** If sequence number zero (NEW message)
- 
+
      C     MGLSWC        IFEQ      0
      C                   MOVEL     'NEW'         CWRD
- 
+
       ** If both our-nostro fields non-blank the 87 fields are Known
- 
+
      C     PRNOST        IFEQ      'BOTH'
      C                   MOVE      'K'           F57U
- 
+
       ** Both or one our-nostro field(s) are blank, Unknown
- 
+
      C                   ELSE
      C                   MOVE      'U'           F57U
      C                   ENDIF
- 
+
       **  For SWIFT Changes 1996, the two new tables TABS96 and
       **  TABR96 are used to create the CONDITION and RESULT,
       **  as shown in the table below.  The position of the
@@ -2855,7 +2857,7 @@
       **  for the RESULT on TABR96.  Hence when a LOKUP is performed
       **  on TABS96, using the CONDITION as the key, the equivalent
       **  positional RESULT value is placed in TABR96.
- 
+
       **  To retrieve the first 3 fields for the CONDITION, the
       **  last confrimation created for the Transaction number
       **  is accessed.
@@ -2881,12 +2883,12 @@
       **  SENT     AMEND        U      One or both blank  AMEND     U
       **  SENT     AMEND        K      Both non-blank     AMEND     K
       **  SENT     AMEND        K      One or both blank  AMEND     K
- 
+
      C                   ELSE
      C                   MOVE      *BLANKS       SEARCH
- 
+
       ** Retrieve last confirmation for this tranaction number
- 
+
      C     MGACMI        IFEQ      'Y'                                                      MD022425
      C**********         ADD       1             MGLSWC                            MD022425 MD024078
      C                   MOVE      MGLSWC        @TRN41                                     MD022425
@@ -2894,41 +2896,41 @@
      C                   MOVE      MGLSWC        @TR3
      C                   ENDIF                                                              MD022425
      C     @TRN          CHAIN     MGREFL0                            10
- 
+
       ** If a message found build the selection key
- 
+
      C     *IN10         IFEQ      '0'
- 
+
      C     MMGSG         IFEQ      '2'
      C     MMGSG         OREQ      '3'
      C                   MOVEL     'SENT'        @MGST
      C                   ELSE
      C                   MOVEL     'NONREC'      @MGST
      C                   ENDIF
- 
+
      C                   MOVEL     MLSCC         @LSCC
      C                   MOVE      MF57U         @OF87
      C                   MOVE      MCLSS         WCLSS             1
      C                   ENDIF
      C                   MOVE      PRNOST        @NOST
- 
+
       ** Use select table to point to the result table
- 
+
      C     SEARCH        LOOKUP    TABS96        TABR96                   22
- 
+
       ** Key matches select table, outputs the corresponding
       ** result table value to 'TABR96'
- 
+
      C     *IN22         IFEQ      '1'
- 
+
      C                   MOVE      TABR96        CODEWD
- 
+
      C                   ELSE
      C                   MOVEL     'AMEND   '    CWRD
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -2938,26 +2940,26 @@
       *                                                               *
       *****************************************************************
      C     SRPAYE        BEGSR
- 
+
      C                   MOVE      *BLANKS       PAY87             5
- 
+
       ** Known when settlement via nostro (MGAWBN is blank)
- 
+
      C     MGPSTM        IFEQ      02
      C     MGPSTM        OREQ      12
      C                   MOVE      'KNOWN'       PAY87
      C                   ENDIF
- 
+
       ** Known when settlement internal (branch internal customer)
- 
+
      C                   MOVE      MGPSTM        @STM              2
      C     @STM          LOOKUP    TABINT                                 23
      C     *IN23         IFEQ      '1'
      C                   MOVE      'KNOWN'       PAY87
      C                   ENDIF
- 
+
       ** Known when settlement via nostro and MGAWBN entered
- 
+
      C     MGPSTM        IFEQ      01
      C     MGPSTM        OREQ      07
      C     MGPSTM        OREQ      08
@@ -2967,13 +2969,13 @@
      C                   MOVE      'KNOWN'       PAY87
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Unknown when settlement internal
- 
+
      C     MGPSTM        IFEQ      00
      C                   MOVE      *BLANKS       PAY87
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -2983,9 +2985,9 @@
       *                                                               *
       *****************************************************************
      C     FSWAD         BEGSR
- 
+
       ** If NET deal set MFLD to 'TO BE NETTED'
- 
+
      C     CKNETI        IFEQ      'Y'
      C     FLDNO         ANDEQ     '87'
      C                   MOVEL     NETTXT        MFLD
@@ -3002,7 +3004,7 @@
      C                   PARM                    ZSTYPE            1
      C                   PARM      ' '           ZERR              1
      C                   PARM      'Y'           ZDBEI             1
- 
+
      C     *IN15         IFEQ      '1'
      C     *LOCK         IN        LDA
      C                   MOVE      '021'         DBASE
@@ -3011,9 +3013,9 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       **  Error ?
- 
+
      C     ZERR          IFEQ      '1'
      C                   MOVE      'Y'           @ERR
      C                   MOVE      ZSTAG         TAG
@@ -3021,27 +3023,27 @@
      C                   MOVEL     ZDEST         MFLD
      C                   MOVEL     MSGA(6)       MERR
      C                   ELSE
- 
+
       ** Address 1
- 
+
      C     ACLINE        IFNE      *BLANKS
      C                   MOVEL     ACLINE        MFLD
      C                   ELSE
      C                   MOVEL     ZSADD1        MFLD
      C                   ENDIF
- 
+
       ** SWIFT address;  Else full address
- 
+
      C     ZSTAG         IFEQ      'A'
- 
+
      C/COPY WNCPYSRC,MG0600C045
- 
+
      C                   MOVE      'A'           TAG
      C                   MOVE      @MTAG         MTAG
      C                   MOVE      *BLANKS       SAVMTG            5
- 
+
      C/COPY WNCPYSRC,MG0600C046
- 
+
      C     ACLINE        IFNE      *BLANKS
      C                   MOVE      MTAG          SAVMTG
      C                   ADD       1             X
@@ -3049,54 +3051,54 @@
      C                   MOVEL     ZSADD1        MFLD
      C                   ENDIF
      C                   EXSR      SEXTN
- 
+
      C/COPY WNCPYSRC,MG0600C016
- 
+
      C                   ELSE
- 
+
      C/COPY WNCPYSRC,MG0600C047
- 
+
      C                   MOVE      'D'           TAG
      C                   MOVE      @MTAG         MTAG
- 
+
      C/COPY WNCPYSRC,MG0600C048
- 
+
      C     ACLINE        IFNE      *BLANKS
      C                   ADD       1             X
      C     X             OCCUR     MULT
      C                   MOVEL     ZSADD1        MFLD
      C                   ENDIF
- 
+
       ** Address 2
- 
+
      C     ZSADD2        IFNE      *BLANKS
      C                   ADD       1             X
      C     X             OCCUR     MULT
      C                   MOVEL     ZSADD2        MFLD
      C                   ENDIF
- 
+
       ** Address 3
- 
+
      C     ZSADD3        IFNE      *BLANKS
      C                   ADD       1             X
      C     X             OCCUR     MULT
      C                   MOVEL     ZSADD3        MFLD
      C                   ENDIF
- 
+
       ** Address 4
- 
+
      C     ZSADD4        IFNE      *BLANKS
      C                   ADD       1             X
      C     X             OCCUR     MULT
      C                   MOVEL     ZSADD4        MFLD
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
- 
+
      C/COPY WNCPYSRC,MG0600C017
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -3109,7 +3111,7 @@
       *                                                               *
       *****************************************************************
      C     SEXTN         BEGSR
- 
+
      C     SAVMTG        IFNE      *BLANKS
      C                   MOVE      SAVMTG        @MTG
      C                   ELSE
@@ -3125,7 +3127,7 @@
      C                   MOVEL     @MTG          MTG
      C                   MOVEL     ZDEST         MCSI
      C                   ENDIF
- 
+
      C     SEXT9         ENDSR
       *****************************************************************
      C/EJECT
@@ -3136,49 +3138,49 @@
       *                                                               *
       *****************************************************************
      C     FMT83         BEGSR
- 
+
      C**********         Z-ADD     0             WFLD83            6 0                      MD026953
      C                   MOVEL     *BLANKS       WFLD83            6                        MD026953
      C                   Z-ADD     0             WBCUST            6 0
      C                   MOVE      *BLANKS       BBCUST
- 
+
      C     CSW024        IFEQ      'Y'
      C     DSFUND        ANDNE     *BLANK
      C                   ADD       1             X
      C     X             OCCUR     MULT
      C     '/NAME/'      CAT       DSFUND        MFLD
      C                   MOVE      ':83J:'       MTAG
- 
+
      C                   ELSE
- 
+
       ** Access customer file for Beneficiary Customer Number
- 
+
      C     MGBENN        IFNE      *BLANKS
      C                   CALL      'AOCUSTR0'
      C                   PARM      '*MSG   '     @RTCD
      C                   PARM      '*KEY   '     @OPTN
- 
+
      C/COPY WNCPYSRC,MG0600C030
- 
+
      C                   PARM      MGBENN        @KEY2            10
- 
+
      C/COPY WNCPYSRC,MG0600C031
- 
+
      C                   PARM      *BLANKS       @KYST             7
      C     SDCUST        PARM      SDCUST        DSSDY
- 
+
       ** Customer Not found on SDCUSTPD, check the counterparty
       ** Nostro file.
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   CALL      'AOCNSTR0'
      C                   PARM      *BLANKS       @RTCD             7
      C                   PARM      '*KEY'        @OPTN             7
      C                   PARM      MGBENN        @CNCD             8
      C     SDCNST        PARM      SDCNST        DSFDY
- 
+
       ** Customer record not found - database error
- 
+
      C     @RTCD         IFNE      *BLANKS
      C     *LOCK         IN        LDA
      C                   MOVE      '022'         DBASE
@@ -3193,11 +3195,11 @@
      C                   MOVE      BBCUST        WBCUST
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Output this field only if Pay Ordering Bank/Customer
       ** is not the same as Sender, Receiver and Beneficiary
       ** Also, Pay Ordering Customer/Bank must have SWIFT address.
- 
+
      C*****MGPOBN        IFNE      *ZERO                                                   AR1094963
      C*****MGPOBN        ANDNE     WBICN                                                   AR1094963
      C*****MGPOBN        ANDNE     MGCNUM                                                  AR1094963
@@ -3213,7 +3215,7 @@
      C**********         EVAL      WFLD83 = %DEC(MGPOBN:6:0)                      AR1094963 MD026953
      C                   EVAL      WFLD83 = MGPOBN                                          MD026953
      C                   ENDIF                                                             AR1094963
- 
+
      C*****MGPOCN        IFNE      *ZERO                                                   AR1094963
      C*****MGPOCN        ANDNE     WBICN                                                   AR1094963
      C*****MGPOCN        ANDNE     MGCNUM                                                  AR1094963
@@ -3229,12 +3231,12 @@
      C**********         EVAL      WFLD83 = %DEC(MGPOCN:6:0)                      AR1094963 MD026953
      C                   EVAL      WFLD83 = MGPOCN                                          MD026953
      C                   ENDIF                                                             AR1094963
- 
+
      C*****WFLD83        IFNE      *ZERO                                                    MD026953
      C     WFLD83        IFNE      *BLANKS                                                  MD026953
      C                   MOVE      *BLANKS       ZDEST
      C                   MOVEL     WFLD83        ZDEST
- 
+
      C                   CALL      'ZM0050'                             15
      C                   PARM                    ZDEST            12
      C                   PARM                    ZSADD1           35
@@ -3245,7 +3247,7 @@
      C                   PARM                    ZSTYPE            1
      C                   PARM      ' '           ZERR              1
      C                   PARM                    ZDBEI             1
- 
+
      C     *IN15         IFEQ      '1'
      C     *LOCK         IN        LDA
      C                   MOVE      '023'         DBASE
@@ -3254,20 +3256,20 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Error ?
- 
+
      C     ZERR          IFEQ      '1'
      C                   MOVE      'Y'           @ERR
      C                   MOVE      ZSTAG         TAG
      C                   MOVE      @MTAG         MTAG
      C                   MOVEL     ZDEST         MFLD
      C                   MOVEL     MSGA(6)       MERR
- 
+
      C                   ELSE
- 
+
       ** Output only if with SWIFT address.
- 
+
      C     ZSTAG         IFEQ      'A'
      C                   ADD       1             X
      C     X             OCCUR     MULT
@@ -3276,9 +3278,9 @@
      C                   MOVE      '83'          FLDNO
      C                   MOVE      'A'           TAG
      C                   MOVE      @MTAG         MTAG
- 
+
       ** Address 1
- 
+
      C                   MOVE      *BLANKS       SAVMTG            5
      C     ACLINE        IFNE      *BLANKS
      C                   MOVE      MTAG          SAVMTG
@@ -3289,13 +3291,13 @@
      C                   ELSE
      C                   MOVEL     ZSADD1        MFLD
      C                   ENDIF
- 
+
      C                   EXSR      SEXTN
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
       *****************************************************************
      C                   ENDSR
      C/EJECT
@@ -3306,19 +3308,19 @@
       *                                                               *
       *****************************************************************
      C     FMT53         BEGSR
- 
+
       **  A Type address
- 
+
      C     ZSTAG         IFEQ      'A'
      C                   MOVE      ':53A:'       MTAG
      C                   MOVEL     ZSADD1        MFLD
      C                   EXSR      SEXTN
      C                   MOVE      '1'           *IN55
- 
+
      C                   ELSE
- 
+
       ** Access SDCUSTPD using our pay nostro customer number
- 
+
      C                   MOVE      *BLANKS       @KEY1
      C                   MOVEL     A7CUST        @KEY1
      C                   CALL      'AOCUSTR0'
@@ -3327,19 +3329,19 @@
      C                   PARM                    @KEY1            10
      C                   PARM      *BLANKS       @KYST             7
      C     SDCUST        PARM      SDCUST        DSSDY
- 
+
       ** Customer record not found - Error
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   MOVE      'Y'           @ERR
      C                   MOVE      ':53 :'       MTAG
      C                   MOVEL     A7CUST        MFLD
      C                   MOVE      MSGA(2)       MERR
- 
+
      C                   ELSE
- 
+
       ** B Type address
- 
+
      C                   MOVE      BBPCNB        @PCNB             6 0
      C*****SPAIN         IFEQ      'P'                                                     AR1094963
      C*****@PCNB         ANDEQ     SECN                                                    AR1094963
@@ -3351,36 +3353,36 @@
      C                   IF        SPAIN = 'P' AND %CHAR(@PCNB) = SECN                     AR1094963
      C                             OR BBPAIN = 'P' AND A7CUST = SPCNB                      AR1094963
      C                             OR BBPCNB = SPCNB AND BBPCNB <> *BLANKS                 AR1094963
- 
+
      C                   MOVE      ':53B:'       MTAG
      C                   MOVE      *BLANKS       @WRK
      C                   MOVEA     BBCRNM        @WRK(1)
      C                   Z-ADD     22            J                 2 0
      C                   MOVEA     BBCRTN        @WRK(J)
      C                   MOVEA     @WRK          MFLD
- 
+
       ** D Type address
- 
+
      C                   ELSE
      C                   MOVE      ':53D:'       MTAG
      C                   MOVEL     ZSADD1        MFLD
- 
+
       ** Address 2
- 
+
      C     ZSADD2        IFNE      *BLANKS
      C                   ADD       1             X
      C     X             OCCUR     MULT
      C                   MOVEL     ZSADD2        MFLD
- 
+
       ** Address 3
- 
+
      C     ZSADD3        IFNE      *BLANKS
      C                   ADD       1             X
      C     X             OCCUR     MULT
      C                   MOVEL     ZSADD3        MFLD
- 
+
       ** Address 4
- 
+
      C     ZSADD4        IFNE      *BLANKS
      C                   ADD       1             X
      C     X             OCCUR     MULT
@@ -3389,11 +3391,11 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -3405,15 +3407,15 @@
       *                                                               *
       *****************************************************************
      C     FMTX1         BEGSR
- 
+
      C                   MOVE      'N'           FLD87O            1
- 
+
       **  Field :87:  A/C with institution non-blank
- 
+
      C     MGAWBN        IFNE      *BLANKS
- 
+
       **  Field :86:  Pay Intermediary bank
- 
+
      C     MGPIBN        IFNE      *BLANKS
      C                   ADD       1             X
      C     X             OCCUR     MULT
@@ -3425,49 +3427,49 @@
      C                   MOVE      @TAGI         FLDNO
      C                   EXSR      FSWAD
      C                   ENDIF
- 
+
       ** Format Account with institution
- 
+
      C                   ADD       1             X
      C     X             OCCUR     MULT
      C                   MOVE      *BLANKS       ZDEST
      C                   MOVEL     MGAWBN        ZDEST
      C                   MOVEL     *BLANKS       ACLINE
- 
+
      C/COPY WNCPYSRC,MG0600C051
- 
+
      C                   MOVEL     MGBENA        ACLINE
      C                   MOVE      ' '           TAG
      C                   MOVE      @TAGD         FLDNO
- 
+
      C/COPY WNCPYSRC,MG0600C004
- 
+
      C                   MOVE      NETSL         CKNETI
      C                   EXSR      FSWAD
      C                   MOVE      'Y'           FLD87O            1
- 
+
       ** A/C with Inst. blank
- 
+
      C                   ELSE
- 
+
       **  Field 87 = pay nostro customer if settlement via '02' or '12'
       **  OR if A/c with Bank Account line set up as 'DIRECT'
- 
+
      C     MGPSTM        IFEQ      02
      C     MGPSTM        OREQ      12
      C     AWBA6         OREQ      'DIRECT'
      C                   MOVEL     MGPONS        @NONB
- 
+
       ** Use payment settlement currency to access nostro if not blank.
       ** Otherwise use sell currency.
- 
+
      C     CEU003        IFEQ      'Y'
      C     MGPYCY        ANDNE     *BLANKS
      C                   MOVE      MGPYCY        @CYCD
      C                   ELSE
      C                   MOVE      MGSLCY        @CYCD
      C                   ENDIF
- 
+
      C                   CALL      'AONOSTR0'
      C                   PARM      '*MSG   '     @RTCD             7
      C                   PARM      '*KEY   '     @OPTN             7
@@ -3480,9 +3482,9 @@
      C                   PARM      *BLANKS       @CSSN            10
      C                   PARM      *BLANKS       @PNOI             1
      C     SDNOST        PARM      SDNOST        DSFDY
- 
+
       ** Nostro customer not found
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   MOVE      'Y'           @ERR
      C                   ADD       1             X
@@ -3498,9 +3500,9 @@
      C                   MOVE      ':87 :'       MTAG
      C                   ENDIF
      C                   ELSE
- 
+
       ** Format our Pay Nostro Customer Address
- 
+
      C                   ADD       1             X
      C     X             OCCUR     MULT
      C                   MOVE      *BLANKS       ZDEST
@@ -3515,11 +3517,11 @@
      C                   MOVE      NETSL         CKNETI
      C                   EXSR      FSWAD
      C                   ENDIF
- 
+
      C                   ELSE
      C                   MOVE      MGPSTM        @STM
      C     @STM          LOOKUP    TABINT                                 23
- 
+
      C     *IN23         IFEQ      '1'
      C                   ADD       1             X
      C     X             OCCUR     MULT
@@ -3530,23 +3532,23 @@
      C                   MOVE      @TAGD         FLDNO
      C                   MOVE      NETSL         CKNETI
      C                   EXSR      FSWAD
- 
+
      C                   ELSE
- 
+
       ** Use payment settlement currency to access nostro if not blank.
       ** Otherwise use sell currency.
- 
+
      C     CEU003        IFEQ      'Y'
      C     MGPYCY        ANDNE     *BLANKS
      C                   MOVE      MGPYCY        @NSKYB
      C                   ELSE
      C                   MOVE      MGSLCY        @NSKYB
      C                   ENDIF
- 
+
       ** Tag 53 should not be included inside 15C Sequence                                  MD033754
      C     SEQ15C        IFNE      'Y'                                                      MD033754
       ** Field 53 is equal to Our Pay Nostro
- 
+
      C                   MOVEL     MGPONS        @NSKYE
      C                   CALL      'AONOSTR0'
      C                   PARM      '*MSG   '     @RTCD             7
@@ -3560,9 +3562,9 @@
      C                   PARM      *BLANKS       @KEYG            10
      C                   PARM      *BLANKS       @KEYH             1
      C     SDNOST        PARM      SDNOST        DSFDY
- 
+
       ** Nostro customer not found
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   ADD       1             X
      C     X             OCCUR     MULT
@@ -3571,14 +3573,14 @@
      C                   MOVEL     MGPONS        MFLD
      C                   MOVEL     MSGA(3)       MERR
      C                   ELSE
- 
+
       ** Format our Pay Nostro Customer Address
       ** ( only if Tag 53A not yet generated )
- 
+
      C     *IN55         IFEQ      '1'
      C                   MOVE      '0'           *IN55
      C                   ELSE
- 
+
      C                   ADD       1             X
      C     X             OCCUR     MULT
      C                   MOVE      *BLANKS       ZDEST
@@ -3588,13 +3590,13 @@
      C                   MOVE      '53'          FLDNO
      C                   EXSR      FSWAD
      C                   ENDIF
- 
+
      C                   ENDIF
                                                                                             MD033754
      C                   ENDIF                                                              MD033754
- 
+
       ** Settlement 01,07 or 08 with MGAWBN blank or settlement 00
- 
+
      C                   ADD       1             X
      C     X             OCCUR     MULT
      C     @TAGD         IFEQ      '57'
@@ -3603,13 +3605,13 @@
      C                   MOVE      ':87D:'       MTAG
      C                   ENDIF
      C                   MOVEL     'UNKNOWN'     MFLD
- 
+
      C/COPY WNCPYSRC,MG0600CCP2
- 
+
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -3620,15 +3622,15 @@
       *                                                               *
       *****************************************************************
      C     SRREPT        BEGSR
- 
+
      C     *IN50         IFEQ      '0'
      C                   OPEN      MG000600P1
      C                   SETON                                        50
      C                   ENDIF
- 
+
       ** Set up headings and sender/customer information
       ** for the error report
- 
+
      C                   MOVE      '0'           *IN30
      C     @FEED         IFEQ      ' '
      C                   MOVE      '1'           *IN30
@@ -3636,9 +3638,9 @@
      C                   MOVEL     MGTNUM        TNUM              6 0
      C                   WRITE     HEADER
      C                   WRITE     TEXT
- 
+
       ** Process multiple occurrence data structure
- 
+
      C                   Z-ADD     0             I                 2 0
      C     I             DOWLE     X
      C                   ADD       1             I
@@ -3652,7 +3654,7 @@
      C                   WRITE     LINE
      C                   ENDIF                                                              MD022425
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -3664,26 +3666,26 @@
       *****************************************************************
       *
      C     SROMSG        BEGSR
- 
+
       ** Write reference record  (PF/MGOREFPD)
- 
+
      C                   EXSR      SRWREF
- 
+
      C/COPY WNCPYSRC,MG0600CCP6
- 
+
       ** Write multiple occurrence data structure to MGOMSGPD
- 
+
      C                   Z-ADD     1             X
      C     X             OCCUR     MULT
- 
+
      C     X             DOWLE     95
      C     MULT          ANDNE     *BLANKS
      C                   WRITE     MGOMSGD0                             06
- 
+
      C/COPY WNCPYSRC,MG0600CCP7
- 
+
       **  Error on write to PF/MGOMSGPD (message data file)
- 
+
      C     *IN06         IFEQ      '1'
      C     *LOCK         IN        LDA
      C                   MOVE      '024'         DBASE
@@ -3692,23 +3694,23 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C/COPY WNCPYSRC,MG0600C005
- 
+
      C                   ADD       1             X
      C     X             OCCUR     MULT
      C                   ENDDO
- 
+
       ** Write multiple occurrence data structure to MGOEXTPD
- 
+
      C                   Z-ADD     1             V                 2 0
      C     V             OCCUR     EXTN
      C     V             DOWLE     20
      C     MCSI          ANDNE     *BLANKS
      C                   WRITE     MGOEXTD0                             06
- 
+
       ** Error on write to PF/MGOEXTPD (message data extension file)
- 
+
      C     *IN06         IFEQ      '1'
      C     *LOCK         IN        LDA
      C                   MOVE      '027'         DBASE
@@ -3720,7 +3722,7 @@
      C                   ADD       1             V
      C     V             OCCUR     EXTN
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -3731,22 +3733,22 @@
       *                                                               *
       *****************************************************************
      C     CFMAT         BEGSR
- 
+
      C                   CALL      'MG5001'
      C                   PARM      TRNO          @TRNM            16
      C                   PARM      MGBRCA        @BRCA             3
      C                   PARM      *BLANK        @FEED             1
- 
+
      C     @FEED         IFEQ      'Y'
- 
+
      C     *IN50         IFEQ      '0'
      C                   OPEN      MG000600P1
      C                   SETON                                        50U7
      C                   ENDIF
- 
+
       ** Set up headings and sender/customer information
       ** for the error report
- 
+
      C                   MOVE      '1'           *IN30
      C                   MOVEL     MGTNUM        TNUM              6 0
      C                   WRITE     HEADER
@@ -3754,7 +3756,7 @@
      C                   WRITE     FEED
      C                   MOVE      '0'           *IN30
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -3765,7 +3767,7 @@
       *                                                               *
       *****************************************************************
      C     SRWREF        BEGSR
- 
+
      C                   MOVE      *BLANKS       SYTM
      C                   MOVE      MGMODI        MODI
      C                   MOVEL     @TRNO         TRNO
@@ -3790,12 +3792,12 @@
      C                   TIME                    MGTM
      C                   MOVE      BJMRDT        LADT
      C                   MOVE      MGTM          LATM
- 
+
      C     MGST          IFEQ      'RSND'
      C                   MOVE      BJMRDT        RELD
      C                   MOVE      MGTM          RELT
      C                   ENDIF
- 
+
      C                   MOVEL     *BLANKS       RUSR
      C                   MOVEL     *BLANKS       RWSN
      C                   MOVEL     *BLANKS       AMTS
@@ -3807,16 +3809,16 @@
      C                   MOVEL     *BLANKS       SACN
      C                   MOVEL     *BLANKS       AORR
      C                   MOVEL     *BLANKS       DESI
- 
+
       ** Branch details
- 
+
      C                   MOVE      MGBRCA        BRCA
      C                   MOVE      MGPOBR        OTHB
      C     OTHB          IFNE      *BLANKS
      C                   MOVEL     MSGA(1)       OTHT
      C                   ENDIF
      C                   MOVE      MGROBR        RCBR
- 
+
      C                   MOVE      *BLANKS       NETI
      C                   MOVE      *BLANKS       DELC
      C                   MOVE      *BLANKS       DYST
@@ -3827,20 +3829,20 @@
      C                   MOVE      *BLANKS       MIR
      C                   MOVE      *BLANKS       TSKS
      C                   MOVE      *BLANKS       TSKY
- 
+
       ** Set up CLS field when CDL002 is switched on
- 
+
      C     CDL002        IFEQ      'Y'
      C                   MOVE      MGCLSS        CLSS
      C                   ENDIF
      C                   MOVE      MGCHTP        AORR
- 
+
      C/COPY WNCPYSRC,MG0600C035
- 
+
      C                   WRITE     MGOREFD0                             05
- 
+
       ** Error on write to PF/MGOREFPD (message reference file)
- 
+
      C     *IN05         IFEQ      '1'
      C     *LOCK         IN        LDA
      C                   MOVE      '025'         DBASE
@@ -3849,9 +3851,9 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Write transaction history record
- 
+
      C     MGACMI        IFEQ      'Y'                                                      MD022425
      C                   MOVEL     TRNO          @HREF1                                     MD022425
      C                   MOVEL     @HREF1        @HREF                                      MD024078
@@ -3861,11 +3863,11 @@
      C                   MOVEL     TRNO          @HREF
      C                   ENDIF                                                              MD022425
      C                   MOVE      '600'         HSMTPY
- 
+
      C                   WRITE     MGHISTD0                             56
- 
+
       **  Error on write to PF/MGHISTPD
- 
+
      C     *IN56         IFEQ      '1'
      C     *LOCK         IN        LDA
      C                   MOVE      '027'         DBASE
@@ -3874,9 +3876,9 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   END
- 
+
      C/COPY WNCPYSRC,MG0600C006
- 
+
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -4720,24 +4722,24 @@
       *****************************************************************
       *
      C     *PSSR         BEGSR
- 
+
       **  Write database error to report
- 
+
      C                   OPEN      MG000600AU
      C                   WRITE     HEAD
      C                   WRITE     DBERROR
- 
+
      C                   SETON                                        U7U8LR
      C                   DUMP
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************
      C/EJECT
       *****************************************************************
      C/COPY MGCPYSRC,MGSWIFTRAN
 ** CPY@   Object Copyright
-(c) Misys International Banking Systems Ltd. 2012
+(c) Finastra International Limited 2012
 ** MSGA   Messages
 Settlement - pay
 Customer details not found on SDCUSTPD

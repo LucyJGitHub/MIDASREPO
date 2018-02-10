@@ -7,16 +7,18 @@
 /*                                                                   */
 /*       MEC0022 - Midas ME Network Account Description - Caller     */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2003           */
+/*       (c) Finastra International Limited 2003                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CGL013  *CREATE   Date 07May02               */
+/*       Prev Amend No. CGL013  *CREATE    Date 07May02              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CGL013 - MT94x Messages Generation                          */
 /*                                                                   */
 /*********************************************************************/
@@ -29,7 +31,7 @@
              DCL        VAR(&PGM) TYPE(*CHAR) LEN(10)
              DCL        VAR(&MEM) TYPE(*CHAR) LEN(50)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2003')
  
              CHGJOB SWS(XXXXXX00)
@@ -65,7 +67,7 @@
              MONMSG     MSGID(CPF1653)
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              RETURN
              ENDPGM

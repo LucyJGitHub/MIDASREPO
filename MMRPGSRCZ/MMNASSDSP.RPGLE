@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MM NAs Sold Display')                            *
@@ -13,14 +13,15 @@
       *             of the negotiable assets sold screen input        *
       *             function.                                         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CDL038             Date 10May05               *
-      *  Prev Amend No. CGL029             Date 01Sep03               *
+      *  Prev Amend No. CDL038             Date 10May05               *
+      *                 CGL029             Date 01Sep03               *
       * Midas Release 4.01 -------------------------------------------*
       *                 197015             Date 18Jan02               *
       * Midas Release 4 --------------- Base -------------------------*
@@ -29,6 +30,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL038 - Extended Deal Sub Type                              *
       *  CGL029 - Increase Account Code to 10 digits                  *
       *  197015 - Reverse order of sending out messages in the input  *
@@ -531,7 +533,7 @@
       /COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 ** @Z0
 000000000000000000000000000000000000000000000000000000000000
 ** @NAR

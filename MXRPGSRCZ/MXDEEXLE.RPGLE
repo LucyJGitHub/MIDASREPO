@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*XBIA*  OVRDBF FILE(DECLLN) TOFILE(MXDELELPD)                        *
 /*XBIB*  OVRDBF FILE(DECLPS) TOFILE(MXDELELPD)                        *
@@ -15,10 +15,11 @@
       *                                                               *
       *  Function:  This module extracts lending daily events         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR1056323          Date 14Nov12               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR1056323          Date 14Nov12               *
+      *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -40,6 +41,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR1056323 - Revert back changes of CLE134 for LKEY1DP and    *
       *              LKEYFED (Recompile)                              *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
@@ -1190,7 +1192,7 @@
       /COPY MXCPYSRC,MXPSSR
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 ** LNPT - Loan and Parts Purchased Processing Types
 61
 62

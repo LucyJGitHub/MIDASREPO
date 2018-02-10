@@ -7,18 +7,20 @@
 /*                                                                   */
 /*       MRC0010 - Extract Postings                                  */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2004           */
+/*       (c) Finastra International Limited 2004                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
-/*       Last Amend No. CAP204             Date 03Mar10              */
+/*       Prev Amend No. CAP204             Date 03Mar10              */
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Prev Amend No. BG18886            Date 28May08              */
+/*                      BG18886            Date 28May08              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /*                      CMR001             Date 01Sep04              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CAP204  - Retail Account Transfer                           */
 /*       BG18886 - Amend non-standard codes.                         */
 /*       CMR001 - MidasPlus Reporting                                */
@@ -27,7 +29,7 @@
              PGM        PARM(&FILE)
              DCL        VAR(&FILE) TYPE(*CHAR) LEN(1)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2004')
  
 /* Global monitor message */
@@ -139,7 +141,7 @@
  
  
 ENDP:        CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              RCLRSC
              MONMSG     MSGID(CPF0000 MCH0000)
              RCLRSC     LVL(*CALLER)

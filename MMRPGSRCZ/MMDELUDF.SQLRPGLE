@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2009')
+     H COPYRIGHT('(c) Finastra International Limited 2009')
       *****************************************************************
 /*STD *  RPGSQLMOD                                                    *
 /*EXI *  TEXT('Midas MM UDF purging program')
@@ -12,12 +12,14 @@
       *  Function:  This program deletes a record from UDF            *
       *             extension tables                                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2009            *
+      *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. 252554A *CREATE    Date 11Feb09               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. 252554A *CREATE    Date 11Feb09               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  252554A - Delete the corresponding record in the UDF files   *
       *            during COB.                                        *
       *                                                               *
@@ -38,7 +40,7 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
      FGPZONEL2  IF   E           K DISK
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -46,17 +48,17 @@
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ D-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
@@ -69,8 +71,8 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
- 
+
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -81,13 +83,13 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
- 
+
      C                   MOVE      #DLNO         #DDDLNO           6
- 
+
      C                   IF        #API = 'LDNI'
      C                             OR #API = '*ALL'
       *
@@ -134,13 +136,13 @@
       * Called by: Implicitly on program activation                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *Entry        PLIST
      C                   PARM                    #DLNO             6 0
      C                   PARM                    #API              4
- 
+
       *
       ** Get zone.
       *
@@ -151,4 +153,4 @@
      C                   ENDSR
       ********************************************************************
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2009
+(c) Finastra International Limited 2009

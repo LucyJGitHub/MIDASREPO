@@ -8,17 +8,18 @@
 /*                                                                   */
 /*      MAC0010 - Retrieve SPL file attributes                       */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.03 ---------------------------------------------------*/
-/*      Last Amend No. 117974           DATE  6Jan00                 */
+/*       Prev Amend No. 117974             Date 6JAn00               */
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*      Prev Amend No. 084319           DATE 07MAR95                 */
+/*                      084319             Date 07Mar95              */
 /*                     076789           DATE 03OCT94                 */
 /*                     066347           DATE 31JAN94                 */
 /*                     061198           DATE 24SEP93                 */
@@ -28,6 +29,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*      117974 - Use API to retrieve splf attributes                 */
 /*      084319 - Update page length processing for V3+.              */
 /*      076789 - Data area QSS1MRI redundant after V2R3M0.           */
@@ -89,7 +91,7 @@
              DCL        VAR(&PAGLENB) TYPE(*CHAR) LEN(4)              /*117974*/
              DCL        VAR(&PAGLENN) TYPE(*DEC) LEN(3 0)             /*117974*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
  DCLF       FILE(QTEMP/TMPSPLF)
@@ -297,6 +299,6 @@ ABNOR:      CHGVAR     VAR(&ERR) VALUE('Y')
  
 THEEND:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
             ENDPGM

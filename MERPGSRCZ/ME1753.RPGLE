@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas ME SWIFTRef Activate Directory entries')         *
@@ -9,12 +9,14 @@
       *                                                               *
       *  ME1753 - Midas ME SWIFTRef Activate Directory entries        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2015            *
+      *  (c) Finastra International Limited 2015                      *
       *                                                               *
-      *  Last Amend No. CFT051  *CREATE    Date 04Jun15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CFT051  *CREATE    Date 04Jun15               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CFT051 - SWIFTRef Directories 2014                           *
       *                                                               *
       *****************************************************************

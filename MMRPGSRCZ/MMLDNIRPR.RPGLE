@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MM Invalid loans/deposits repair')               *
@@ -12,10 +12,11 @@
       *  Function:  This function allows invalid loans/deposits to be *
       *             'repaired' and applied to the Midas database.     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR701789           Date 26Sep16               *
-      *  Prev Amend No. MD036070           Date 19Oct15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR701789           Date 26Sep16               *
+      *                 MD036070           Date 19Oct15               *
       *                 CGL165             Date 23Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -99,6 +100,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR701789 - Unable to reject a deal amendment. Add a new      *
       *             parameter to indicate reject transaction.         *
       *             Applied for MD041482                              *
@@ -212,12 +214,12 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
      FZATRNERRL0IF   E           K DISK    INFSR(*PSSR)
-
+ 
      FMMILDNIL0 IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(MMILDNID0 : MMILDNIX0)
      FMMILDNIL1 UF   E           K DISK    INFSR(*PSSR)
      F                                     COMMIT
-
+ 
      FAPIDSETL0 IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(APIDSETD0:APIDSETX0)
      FAPIDSETL1 UF   E           K DISK    INFSR(*PSSR)
@@ -227,7 +229,7 @@
      F                                     RENAME(MMIFIDTD0 : MMIFIDTX0)                      209905
      FMMIFIDTL0 UF   E           K DISK    INFSR(*PSSR)                                       209905
      F                                     COMMIT                                             209905
-
+ 
       ** API Invalid log file by Type/FO Id/Time                                              CSC011
      FAPILOGL0  UF   E           K DISK    INFSR(*PSSR) USROPN                                CSC011
      F                                     COMMIT                                             CSC011
@@ -252,7 +254,7 @@
                                                                                               244036
       * Hook to enable non-core files to be included
       /COPY WNCPYSRC,MMLDNIR009
-
+ 
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -271,54 +273,54 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
-
+ 
      D/COPY ZACPYSRC,STD_D_SPEC
-
+ 
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
-
+ 
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
-
+ 
      D/COPY ZACPYSRC,PSDS
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
-
+ 
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
-
+ 
      D @EI             S              1    DIM(60)
      D***Inv_FIDT        S             42    DIM(99)                                   209905 CGL029
      D Inv_FIDT        S             48    DIM(99)                                            CGL029
-
-
+ 
+ 
      D CrDlFilFmt    E DS                  EXTNAME(MMDELDPP)
       * Current Deal in File Format
      D***HKREC**              456    524                                               CAP011 CGL029
@@ -329,11 +331,11 @@
      D**HKPAYEx*            1759   1776                                                CGL029 CDL033
      D  HKRECEx             1756   1773                                                       CDL033
      D  HKPAYEx             1774   1791                                                       CDL033
-
+ 
      D CrDlScnFmt    E DS                  EXTNAME(MMLDNIPD)
       * (Current) Deal in Screen Format
      D                                     PREFIX(@)
-
+ 
      D NwDlFilFmt    E DS                  EXTNAME(MMVLDNIPD)
      D QQDOR1        E                     EXTFLD(QQDORI)                                     CGL029
      D QQMOR1        E                     EXTFLD(QQMORI)                                     CGL029
@@ -351,7 +353,7 @@
      D**IKPAYEx*            1759   1776                                                CGL029 CDL033
      D  IKRECEx             1756   1773                                                       CDL033
      D  IKPAYEx             1774   1791                                                       CDL033
-
+ 
      D NwDlScnFmt    E DS                  EXTNAME(MMLDNIPD)
       * New Deal in Screen Format
                                                                                               CER001
@@ -365,7 +367,7 @@
      D NwDlScnFmtLux E DS                  EXTNAME(MMLDRXPD)                                  CER001
                                                                                               CER001
      D/COPY WNCPYSRC,MMLDNIR013
-
+ 
      D MMELDNI       E DS                  EXTNAME(MMELDNIPD)
       * Error indicators
                                                                                               CDL016
@@ -374,30 +376,30 @@
                                                                                               209905
      D MMInvFIDT     E DS                  EXTNAME(MMIFIDTPD)                                 209905
       ** Invalid Fiduciary Taking Transaction                                                 209905
-
-
+ 
+ 
      D ##RECF        E DS                  EXTNAME(SDESFRPD)
       ** FILE RECEIVE INSTRUCTIONS
      D***FLREC**                1     69                                                      CGL029
      D  FLREC                 21     75                                                       CGL029
-
+ 
      D ##PAYF        E DS                  EXTNAME(SDESFPPD)
       *** FILE PAYMENT INSTRUCTIONS
      D***FLPAY**                1    559                                                      CGL029
      D  FLPAY                 21    565                                                       CGL029
-
+ 
      D ##FRIF        E DS                  EXTNAME(SDESFFPD)
       ** FILE FRA/IRS INSTRUCTIONS
-
+ 
      D ##RECS        E DS                  EXTNAME(SDESSRPD)
       ** SCREEN RECEIVE INSTRUCTIONS
-
+ 
      D ##PAYS        E DS                  EXTNAME(SDESSPPD)
       ** SCREEN PAYMENT INSTRUCTIONS
-
+ 
      D ##FRIS        E DS                  EXTNAME(SDESSFPD)
       ** SCREEN FRA/IRS INSTRUCTIONS
-
+ 
      D CrPaySttmt    E DS                  EXTNAME(SDESSPPD) PREFIX(@)          CAP011
       * Pay Settlement Instructions - Current                                   CAP011
                                                                                 CAP011
@@ -419,7 +421,7 @@
      D  @@PSCY                24     26                                                       CGL029
      D  @@PSTM                27     28  0                                                    CGL029
      D  @@PONS                29     46                                                       CGL029
-
+ 
      D #FPAYF        E DS                  EXTNAME(SDFSFPPD)                                  CDL018
       ** File - Payment Further Settlement Instructions                                       CDL018
                                                                                               CDL018
@@ -432,7 +434,7 @@
      D  @@YY                   1      4  0
      D  @@MM                   5      6  0
      D  @@DD                   7      8  0
-
+ 
      D*@MORPI*****     DS                                                              179510 200400
       ***Midas*Our Receive / Pay  Instructions (for Settl Meth = 04 )                  179510 200400
      D**@@MORI****             1     12                                                179510 200400
@@ -449,10 +451,10 @@
      D WFIDTNAR2              61    120                                                       209905
      D WFIDTNAR3             121    180                                                       209905
      D WFIDTNAR4             181    240                                                       209905
-
+ 
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
-
+ 
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** MIDAS MODULES DETAILS ACCESSED VIA ACCESS PROGRAM
                                                                                               209905
@@ -467,7 +469,7 @@
                                                                                 CDL007
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                    CDL007
       ** EXTERNAL DS FOR SAR DETAILS                                            CDL007
-
+ 
      D SDAPI         E DS                  EXTNAME(SDAPIPD)                     CAP011
       ** EXTERNAL DS FOR API ICD                                                CAP011
                                                                                 CAP011
@@ -491,7 +493,7 @@
                                                                                               CSC011
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)                     CSC011
       ** SD data area                                                                         CSC011
-
+ 
      D SCCMTJOB      E DS                  EXTNAME(SCCMTJOB) DTAARA(SCCMTJOB)                 CSC022
      D  WCMTJOBS               4    103A                                                      CSC022
       ** Commitment Control dataarea                                                          CSC022
@@ -504,7 +506,7 @@
                                                                                               CDL033
      D PICONF          DS           600                                                       CDL033
       ** Maximum of 600 elements of Confirmed Holiday indicators (6A)                         CDL033
-
+ 
      D/COPY QWINDSRC,MMLDNISDTA
                                                                                               CER001
      D DATALUX         DS          1024                                                       CER001
@@ -519,38 +521,38 @@
      D  L1FOTR                45     64                                                       CER001
      D  L1TMST                65     90Z                                                      CER001
      D  #1DEXT                91     91                                                       CER001
-
+ 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
-
+ 
       **   Timestamp selected
      D @TMESTPSEL      S             26Z
                                                                                 CDL007
       **   Old Maturity Date                                                    CDL007
      D OLD_MATD        S              5P 0                                      CDL007
-
+ 
       ** Response Mode, passed as a constant parameter to the VAL module
       ** This is always 'S' for Synchronous
      D RespMode        S              1A   INZ('S')
-
+ 
       ** -------------------------------------------------------------------
       ** Fields for getting the starting field number from file (parameters
       ** to ZAGETFLDNO, plus the offset to the requested field).
      D Format          S             10A   INZ('MMLDNIPD')
-
+ 
      D Field           S             10A   INZ('DDACTN')
      D FieldExt        S             10A   INZ('L6LXLUSU')                                    CER001
-
+ 
      D FieldNo         S              5P 0
-
+ 
      D FldOffset       S              5P 0
      D FldOffsetExt    S              5P 0                                                    CER001
-
+ 
       ** End of fields for getting starting field number
       ** -------------------------------------------------------------------
-
+ 
       ** Message type field for chaining to APIDSETPD; defined in terms         CAP004
       ** of the file field when the file field was changed.                     CAP004
      D @MSGTYPE        S                   LIKE(DDMSGTYPE)                      CAP004
@@ -652,14 +654,14 @@
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
-
+ 
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
       /COPY WNCPYSRC,MMLDNIR010
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -670,23 +672,23 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
-
+ 
       /COPY WNCPYSRC,MMLDNIR001
-
+ 
       * DO SCREEN: BROWSE INVALID DEALS
      C     @SCRN         IFEQ      'B'
      C                   EXSR      SCRN@B
      C                   END
-
+ 
       /COPY WNCPYSRC,MMLDNIR002
-
+ 
       * READ NEXT BROWSE SUBFILE RECORD
      C     @SCRN         IFEQ      'R'
      C                   EXSR      RDNBRW
      C                   END
-
+ 
       /COPY WNCPYSRC,MMLDNIR003
-
+ 
       * DO WHILE SCREEN: MAIN DETAILS
      C     @SCRN         DOWEQ     'M'
      C                   EXSR      SCRN@M
@@ -696,9 +698,9 @@
      C     @SCRN         DOWEQ     'N'                                                        CDL016
      C                   EXSR      SCRN@N                                                     CDL016
      C                   ENDDO                                                                CDL016
-
+ 
       /COPY WNCPYSRC,MMLDNIR004
-
+ 
       ** When CDL006 enhancement is installed                                                 209905
                                                                                               209905
      C                   IF        CDL006 = 'Y' AND @SCRN = 'F'                               209905
@@ -721,30 +723,30 @@
      C     @SCRN         IFEQ      'W'
      C                   EXSR      WINDOW
      C                   END
-
+ 
       /COPY WNCPYSRC,MMLDNIR005
-
+ 
       * DO WHILE SCREEN: SETTLEMENT DETAILS
      C     @SCRN         DOWEQ     'S'
      C                   EXSR      SCRN@S
      C                   END
-
+ 
       /COPY WNCPYSRC,MMLDNIR006
-
+ 
       * SCREEN: CONFIRMATION OF INPUT
      C     @SCRN         IFEQ      'C'
      C                   EXSR      SCRN@C
      C                   END
-
+ 
       /COPY WNCPYSRC,MMLDNIR007
-
+ 
       * DO FILE UPDATES
      C     @SCRN         IFEQ      'U'
      C                   EXSR      UPDATS
      C                   END
-
+ 
       /COPY WNCPYSRC,MMLDNIR008
-
+ 
       * TERMINATE PROGRAM
      C     @SCRN         IFEQ      'T'
      C                   IF        (CSC022 = 'N')                                             CSC022
@@ -756,10 +758,10 @@
      C                   MOVE      '1'           *INLR
      C                   END
       *****************************************************************
-
+ 
       * Hook to enable non-core subroutines to be included
       /COPY WNCPYSRC,MMLDNIR011
-
+ 
       /EJECT
       *****************************************************************
       * SCRN@B - BROWSE INVALID DEALS
@@ -1061,7 +1063,7 @@
       * SNDM@M - SEND A MESSAGE TO MAIN DETAILS SCREEN
       *****************************************************************
      C     SNDM@M        BEGSR
-
+ 
      C                   Z-ADD     Idx           E                 3 0
       *
       ** If there are fundamental errors in this transaction
@@ -3795,11 +3797,11 @@
      C     LUXKEY        KLIST                                                                CER001
      C                   KFLD                    L1TMST                                       CER001
      C                   KFLD                    L1FOTR                                       CER001
-
+ 
       ** Message Type
      C*******************MOVEL     'MMLDNI'      @MSGTYPE          8            CAP004
      C                   MOVEL     'MMLDNI'      @MSGTYPE                       CAP004
-
+ 
       ** Get the field number for the action code field; the screen fields
       ** start from that number.  Subtract one from it to give the value
       ** to subtract from each field's number.
@@ -3808,10 +3810,10 @@
      C                   PARM                    Format
      C                   PARM                    Field
      C                   PARM                    FieldNo
-
+ 
      C                   IF        ReturnCode = *blank
      C                   EVAL      FldOffset = FieldNo - 1
-
+ 
       ** If there was an error default the offset to 13
      C                   ELSE
      C                   EVAL      FldOffset = 13
@@ -3952,7 +3954,7 @@
      C                   ENDIF                                                                CSC011
                                                                                               CSC011
      C                   ENDIF                                                                CSC011
-
+ 
       *                                                                                       CSC022
       ** Access SAR details file to determine if CSC022 switchable feature                    CSC022
       ** is switched on                                                                       CSC022
@@ -4082,7 +4084,7 @@
                                                                                               247888
       *  Hook to enable non-core initial processing to be included
       /COPY WNCPYSRC,MMLDNIR012
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -4096,4 +4098,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

@@ -9,22 +9,24 @@
 /*                                                                   */
 /*       Submitted by MCC0260 - Select Control Groups for Update     */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Last Amend No. 137075             DATE 27Apr99              */
-/*       Prev Amend No. CED002             DATE 19JUN97              */
+/*       Prev Amend No. 137075             Date 27Apr99              */
+/*                      CED002             Date 19Jun97              */
 /*                      CMC001             DATE 28AUG96              */
 /*                      057942             DATE 15JUL94              */
 /*                      048237             DATE 12MAR93              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*   137075 - Ineffective update of Control Group.  Change           */
 /*            DTAMBRS from GLHIBLL1 to GLAVBLPD.                     */
 /*   CED002 - Midas ED Enhancements                                  */
@@ -41,7 +43,7 @@
              PGM        PARM(&GROUPCODE)
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
                           /* Copyright statement */
              DCL        VAR(&GROUPCODE) TYPE(*CHAR) LEN(2) /*Group +
@@ -69,7 +71,7 @@
                           CMDLBL(ERROR))
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /**/
 /* Create LDA if it does not already exist */
 /**/

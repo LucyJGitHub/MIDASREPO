@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2008')
+     H COPYRIGHT('(c) Finastra International Limited 2008')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas MG External Extract Program')                    *
@@ -12,10 +12,11 @@
       *  Function:  This program Extracts the data into Extract file  *
       *             for Multicash format.                             *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. CRE075             Date 06Dec10               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CRE075             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
       *                 263479             Date 20Jan10               *
       *                 BUG26853           Date 15Dec09               *
       *                 BUG26780A          Date 11Dec09               *
@@ -43,6 +44,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CRE075 - Effective Date for Retail Accounts (Recompile)      *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  263479 - GVC code wrong fro some MT942.  Correctly retrieve  *
@@ -2652,7 +2654,7 @@
       *
       *****************************************************************
 **CTDATA CPY@
-(c) Misys International Banking Systems Ltd. 2008
+(c) Finastra International Limited 2008
 **CTDATA TransType
 FP FX Foreign Exch. Purch.
 FS FX Foreign Exch. Sold

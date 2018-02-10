@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas ME SWIFTRef BANK DIRECTORY Plus DB Updater')     *
@@ -18,10 +18,11 @@
       *                                                               *
       *  Called By: MEC001425 and other                               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. CSW216             Date 14Mar16               *
-      *  Prev Amend No. MD034950           Date 08Jul15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CSW216             Date 14Mar16               *
+      *                 MD034950           Date 08Jul15               *
       *                 MD034935           Date 08Jul15               *
       *                 MD034866           Date 02Jul15               *
       *                 MD034877           Date 02Jul15               *
@@ -36,6 +37,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSW216 - SWIFT Changes 2016 (Recompile)                      *
       *  MD034950 - IBAN Details of ISO Country Code is not updated   *
       *             when a delta upload of the IBAN Structure         *
@@ -253,12 +255,12 @@
      D RUNDAT        E DS                  EXTNAME(RUNDAT)
       *
       ** Data Area giving Installation Control Details
-
+ 
       ** The Following /COPY Line Includes All The Defined Fields In
       ** The PSDS.  They Have Meaningful Names, Prefixed By 'PS'.
       *
      D/COPY ZACPYSRC,PSDS
-
+ 
       ** +--------------------------------------+
       ** ¦ Arrays AND Data Structures           ¦
       ** ¦ ==========================           ¦
@@ -825,12 +827,12 @@
      C                   EVAL      SV_B3FIL2 = B_B3FIL2
      C                   EVAL      BIB3DS    = TIB3DS
      C                   EVAL      B_B3UDAT  = ODATE
-
+ 
      C                   IF        NOT %FOUND(MEBIB3L0)
      C                   MOVEL     OLDSEQ        B_B3FIL2
      C                   ADD       1             OLDSEQ
      C                   WRITE     BANKIDX
-
+ 
      C                   ELSEIF    B3FLAG = 'A'
      C                             OR B3FLAG = 'M'
      C                   EVAL      B_B3FIL2 = SV_B3FIL2
@@ -899,7 +901,7 @@
      C                             OR BCFLAG = 'M'
      C                             OR BCFLAG = 'U'
      C                   EVAL      BICCDS = TICCDS
-
+ 
      C                   IF        NOT %FOUND(MEBICCL0)
      C**********         WRITE     CTRYIDX                                                  MD022119
      C                   WRITE(E)  CTRYIDX                                                  MD022119
@@ -932,11 +934,11 @@
      C                             or BCFLAG = 'M' and %Eof(MEISOCL2)
      C                             or BCFLAG = 'U' and %Eof(MEISOCL2)
      C                   EVAL      M3ISOC = BCCNTC
-
+ 
      C**********         IF        NOT %EOF(MEISOCL2)                                       MD022873
      C                   EVAL      M3ISOD = %SUBST(BCCNTY:1:30)
      C**********         ENDIF                                                              MD022873
-
+ 
      C                   EVAL      M3SCHT = 'N'
      C                   EVAL      M3ACJN = PSJobName
      C                   EVAL      M3ACUN = PSUser
@@ -978,29 +980,29 @@
      C                   IF        M3ISOD = '*** NOT FOUND ***'                             MD022873
      C                   EVAL      M3ISOD = %SUBST(BCCNTY:1:30)
      C                   ENDIF                                                              MD022873
-
+ 
      C                   IF        M3SCHT <> 'Y' AND M3SCHT <> 'N'
      C                   EVAL      M3SCHT = 'N'
      C                   ENDIF
-
+ 
      C                   EVAL      M3ACJN = PSJobName
      C                   EVAL      M3ACUN = PSUser
      C                   EVAL      M3ACTM = PSRunTime
      C                   EVAL      M3ACDA = AGMRDT
      C                   EVAL      M3ACTY = 'A'
-
+ 
      C                   IF        M3SCHT <> 'Y' AND M3SCHT <> 'N'
      C                   EVAL      M3EEAM = 'N'
      C                   ENDIF
-
+ 
      C                   IF        M3SCHT <> 'Y' AND M3SCHT <> 'N'
      C                   EVAL      M3FATF = 'N'
      C                   ENDIF
-
+ 
      C                   IF        M3SCHT <> 'Y' AND M3SCHT <> 'N'
      C                   EVAL      M3MFID = 'N'
      C                   ENDIF
-
+ 
      C                   IF        M3SCHT <> 'Y' AND M3SCHT <> 'N'
      C                   EVAL      M3M205 = 'N'
      C                   ENDIF
@@ -1042,7 +1044,7 @@
      C                             OR BUFLAG = 'M'
      C                             OR BUFLAG = 'U'
      C                   EVAL      BICUDS = TICUDS
-
+ 
      C                   IF        NOT %FOUND(MEBICUL0)
      C                   WRITE     CURRIDX
      C                   ELSEIF    B3FLAG = 'A'
@@ -1073,7 +1075,7 @@
      C                             OR BHFLAG = 'M'
      C                             OR BHFLAG = 'U'
      C                   EVAL      BIHLDS = TIHLDS
-
+ 
      C                   IF        NOT %FOUND(MEBIHLL0)
      C                   WRITE     HLDIDX
      C                   ELSEIF    BHFLAG = 'A'
@@ -1438,7 +1440,7 @@
      C                             OR N3FLAG = 'U'
      C                   EVAL      IBN3DS   = TIIBDS
      C                   EVAL      I_N3UDAT = ODATE
-
+ 
      C                   IF        NOT %FOUND(MEIBN3L0)
      C                   WRITE     IBN3IDX
      C                   ELSEIF    N3FLAG = 'A'
@@ -1514,7 +1516,7 @@
      C                             OR NSFLAG = 'U'
      C                   EVAL      IBNSDS   = TIISDS
      C                   EVAL      N_NSUDAT = ODATE
-
+ 
      C                   IF        NOT %FOUND(MEIBNSL0)
      C                   WRITE     IBNSIDX
      C                   ELSEIF    NSFLAG = 'A'
@@ -1564,7 +1566,7 @@
      C                   EVAL      M3FATF = 'N'
      C                   EVAL      M3MFID = 'N'
      C                   EVAL      M3M205 = 'N'
-
+ 
      C     NSCCOD        CHAIN     MEIBN3L1                                                 MD022873
      C                   IF        %FOUND (MEIBN3L1)                                        MD022873
      C                   EVAL      M3ISOD = I2_N3CTY1                                       MD022873
@@ -1577,7 +1579,7 @@
      C                   ELSE
      C                   EVAL      M3IBAC = *Blanks
      C                   ENDIF
-
+ 
      C                   IF        NSCCOD = 'AD'
      C                             OR NSCCOD = 'AT'
      C                             OR NSCCOD = 'BE'
@@ -1624,15 +1626,15 @@
      C                             OR NSCCOD = 'TF'
      C                             OR NSCCOD = 'VA'
      C                   EVAL      M3IBAR = 'Y'
-
+ 
      C                   ELSE
      C                   EVAL      M3IBAR = 'N'
      C                   ENDIF
-
+ 
      C                   IF        CFT051 = 'Y' AND NSCCOD = 'HR'                             CFT051
      C                   EVAL      M3IBAR = 'Y'                                               CFT051
      C                   ENDIF                                                                CFT051
-
+ 
      C                   EVAL      M3SEPA = NSSEPA
                                                                                             MD022827
      C                   EVAL      CPOS1 = %SUBST(NSCPOS:1:1)                               MD022827
@@ -1783,39 +1785,39 @@
       *
      C                   WHEN      BCFLAG = 'M'
      C                             OR BCFLAG = 'U' AND WFound = 'Y'
-
+ 
      C                   IF        M3SCHT <> 'Y' AND M3SCHT <> 'N'
      C                   EVAL      M3SCHT = 'N'
      C                   ENDIF
-
+ 
      C                   EVAL      M3ACJN = PSJobName
      C                   EVAL      M3ACUN = PSUser
      C                   EVAL      M3ACTM = PSRunTime
      C                   EVAL      M3ACDA = AGMRDT
      C                   EVAL      M3ACTY = 'A'
-
+ 
      C                   IF        M3SCHT <> 'Y' AND M3SCHT <> 'N'
      C                   EVAL      M3EEAM = 'N'
      C                   ENDIF
-
+ 
      C                   IF        M3SCHT <> 'Y' AND M3SCHT <> 'N'
      C                   EVAL      M3FATF = 'N'
      C                   ENDIF
-
+ 
      C                   IF        M3SCHT <> 'Y' AND M3SCHT <> 'N'
      C                   EVAL      M3MFID = 'N'
      C                   ENDIF
-
+ 
      C                   IF        M3SCHT <> 'Y' AND M3SCHT <> 'N'
      C                   EVAL      M3M205 = 'N'
      C                   ENDIF
-
+ 
      C                   IF        NSCPOS <>  '00'
      C                   EVAL      M3IBAC = NSCCOD
      C                   ELSE
      C                   EVAL      M3IBAC = *Blanks
      C                   ENDIF
-
+ 
      C                   IF        M3IBAR  <> 'Y' AND M3IBAR <> 'N'
      C                   IF        NSCCOD = 'AD'
      C                             OR NSCCOD = 'AT'
@@ -1863,16 +1865,16 @@
      C                             OR NSCCOD = 'TF'
      C                             OR NSCCOD = 'VA'
      C                   EVAL      M3IBAR = 'Y'
-
+ 
      C                   ELSE
      C                   EVAL      M3IBAR = 'N'
      C                   ENDIF
      C                   ENDIF
-
+ 
      C                   IF        CFT051 = 'Y' AND NSCCOD = 'HR'                             CFT051
      C                   EVAL      M3IBAR = 'Y'                                               CFT051
      C                   ENDIF                                                                CFT051
-
+ 
      C                   EVAL      M3SEPA = NSSEPA
      C                   MOVE      NSCPOS        M3CCSP
      C                   MOVE      NSCLEN        M3CCLN

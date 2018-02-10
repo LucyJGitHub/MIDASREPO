@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /***********BASEMOD                                                   *                       260324
 /*CRT*******CRTRPGMOD                                                 *              260324 MD034876
@@ -18,10 +18,11 @@
       *  Function:  This module reconciles generated entries against  *
       *             generated entries produced for events.            *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD034876           Date 23Jul15               *
-      *  Prev Amend No. LLN022             Date 03Jun15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD034876           Date 23Jul15               *
+      *                 LLN022             Date 03Jun15               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 260324             Date 27May09               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -36,6 +37,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD034876 - BOE Upgrade to FBM2.1 Compatibility Amendments    *
       *           - Created new standard parameter RPGBASEMO2 to cater*
       *             to fix 260324                                     *
@@ -417,7 +419,7 @@
       /COPY MXCPYSRC,MXPSSR
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 ** #_GE
 DL
 LE

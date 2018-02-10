@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*XBIA*  OVRDBF FILE(DEFXDL) TOFILE(MXDEDLPD)                         *
 /*XBIB*  OVRDBF FILE(DELDNI) TOFILE(MXDEDLPD)                         *
@@ -19,14 +19,15 @@
       *                                                               *
       *  Function:  This module extracts dealing daily events.        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. LLN022             Date 03Jun15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. LLN022             Date 03Jun15               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. 241970             Data 05Sep06               *
+      *                                    Date                       *
       *                 CSD031             Date 10Apr06               *
       *                 CSD027             Date 09Dec05               *
       *                 CPK025             Date 16May06               *
@@ -41,6 +42,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  LLN022 - BOE Upgrade to MidasPlus.                           *
       *           Core hooks added:MXDEEXDLD1,MXDEEXDLD2,MXDEEXDL01   *
       *                            MXDEEXDL02                         *
@@ -1489,7 +1491,7 @@
       /COPY MXCPYSRC,MXPSSR
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 ** FXDT - FXDL Deal Types
 FP
 FS

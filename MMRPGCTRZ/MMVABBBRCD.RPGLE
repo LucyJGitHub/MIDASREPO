@@ -12,16 +12,18 @@
       *  Function:  This module defaults the booking branch to the    *
       *             branch of the counterparty of the transaction     *
       *                                                               *
-      *  (C) Copyright Midas-Kapiti International Ltd. 2006           *
+      *  (C) Copyright Finastra International Limited 2006            *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CGL058 *CREATE     Date 30Jun06               *
+      *  Prev Amend No. CGL058 *CREATE     Date 30Jun06               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL058 - Default Branch Code                                 *
       *                                                               *
       *****************************************************************
@@ -247,4 +249,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(C) Copyright Midas-Kapiti International Ltd. 2006
+(C) Copyright Finastra International Limited 2006

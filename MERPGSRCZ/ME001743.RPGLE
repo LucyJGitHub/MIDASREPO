@@ -10,10 +10,11 @@
       *                                                               *
       *  Function:  This program setup FATF code for ISO Country code *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *  (c) Finastra International Limited 2006                      *
       *                                                               *
-      *  Last Amend No. CSW213             Date 03Jun13               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CSW213             Date 03Jun13               *
+      *                 CER059             Date 19Jul10               *
       *                 CER045             Date 20Jul09               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 CSW209             Date 01Apr09               *
@@ -28,6 +29,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSW213 - SWIFT Changes 2013 (Recompile)                      *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  CER045 - German Features - Reporting Bundesbank (Recompile)  *
@@ -418,7 +420,7 @@
       **  FATF                                                                              BUG15045
       ****AEARATAUBEBHBRCACHCNCYCZDEDKEEFIFRGBGRHKHUIEISITJPKWLTLULVMTMXNLNONZOMPLPTQARUSASGBUG15045
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2006
+(c) Finastra International Limited 2006
 **  TRANS
 ADATBEBGBVCHCYCZDEDKESEEFIFRGBGFGIGPGRHUIEISITLILTLULVMCMQMTNLNOPLPMPTREROSESISJSKSMTFVA
 **  MIFID

@@ -7,20 +7,22 @@
 /*                                                                   */
 /*       MLC0120  - Override ZZGBLANG files                          */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CSC017             Date 14Feb03              */
+/*       Prev Amend No. CSC017             Date 14Feb03              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CUT004             Date 25Sep98              */
+/*                      CUT004             Date 25Sep98              */
 /*                      S01516             Date 18Jul94              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CSC017 - Change to 250 library list.                        */
 /*       CUT004 - Allow Core and Non-Core mode of compilation for    */
 /*                Multilanguage                                      */
@@ -52,7 +54,7 @@
              DCL        VAR(&SBMML) TYPE(*CHAR) LEN(10)
              DCL        VAR(&BATINT) TYPE(*CHAR) LEN(1)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
@@ -126,6 +128,6 @@ FIN:                                                                            
              CALL       PGM(QCMDEXC) PARM(&CMD 2764)                                      /*CSC017*/
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
      ENDPGM

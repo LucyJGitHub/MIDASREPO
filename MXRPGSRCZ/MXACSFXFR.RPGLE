@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MX Access Foreign Exchange Forward Rates')
@@ -12,14 +12,15 @@
       *  Function:  This module determine forward FX rates            *
       *             for a supplied currency and date                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. 241970             Data 05Sep06               *
-      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. 241970             Data 05Sep06               *
+      *                 CSD031             Date 10Apr06               *
       *                 226922             Date 06Jun06               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.05 -----------------------------------------------*
@@ -28,6 +29,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  241970 - Recompiled due to change in MXACSPRME.              *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  226922 - Error when FRDDAT and FRVDAT are the same as no     *
@@ -589,7 +591,7 @@
      C*                                                               *
      C*  ZFWDTA - Calculate Working Days Forward.                     *
      C*                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
      C*                                                               *
      C*  LAST AMEND NO. 063791             DATE 15JUL94               *
      C*  PREV AMEND NO. 000000             DATE 0000000               *
@@ -934,7 +936,7 @@
       /COPY MXCPYSRC,MXPSSR
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 **   POWER - POWERS OF 10 FOR CURRENCY CONVERSIONS
 0000001
 0000010

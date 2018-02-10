@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MX Initialisation for Midas Message Manager')
@@ -9,20 +9,22 @@
       *                                                               *
 /*    *  MX010001 - MX Initialisation for Midas Message Manager       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. BUG17937           Date 24Apr08               *
+      *  Prev Amend No. BUG17937           Date 24Apr08               *
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. BUG8319            Date 05Sep05               *
+      *                 BUG8319            Date 05Sep05               *
       * Midas Release 4.01 -------------------------------------------*
       *                 CSW025  *CREATE    Date 18Jun02               *
       *                                    Date                       *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG17937 - SEC3300 is Failing with an error.  Applied fix    *
       *             245268 (Recompile)                                *
       *  BUG8319 - Failed COB component after NextDaySetup            *

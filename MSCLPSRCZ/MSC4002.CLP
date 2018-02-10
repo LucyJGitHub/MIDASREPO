@@ -7,16 +7,17 @@
 /*                                                                  */
 /*     MSC4002 - COMMUNICATIONS/COMPRESSION PROGRAMS TERMINATION.   */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
-/*       Last Amend No. CPK014             Date 06Nov01              */
+/*       Prev Amend No. CPK014             Date 06Nov01              */
 /* Midas DBA 3.03 ---------------------------------------------------*/
-/*       Prev Amend No. 164062             Date 25Nov99              */
+/*                      164062             Date 25Nov99              */
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                   CSW095            DATE 07APR95                 */
 /*                   S01408            DATE 05MAY95                 */
@@ -29,6 +30,7 @@
 /*                   E11801            DATE 18/03/88                */
 /*                                                                  */
 /*********************************************************************/
+/*       MD046248 - Finastra Rebranding                              */
 /*     CPK014 - Release 4 packaging.  Move data queues from XLIB to  */
 /*               DPLIB.                                              */
 /*     164062 - MSC5030 does not end if MSC4010 ends abnormally,     */
@@ -58,7 +60,7 @@
              PGM
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
              DCL        VAR(&XLIB) TYPE(*CHAR) LEN(6) VALUE('  XLIB')
@@ -465,6 +467,6 @@ ALCOBJ4:        ALCOBJ     OBJ((MS4010 *DTAARA *EXCL)) WAIT(30)       /*E11801*/
 /*                                                                   */
 /*/COPY WNCPYSRC,MSC4002002                                          */
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

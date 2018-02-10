@@ -7,22 +7,24 @@
 /*                                                                   */
 /*       MMC5290 - Penalty Termination Maintenance                   */
 /*                                                                   */
-/*       (C) Copyright Misys International Banking Systems Ltd 2008  */
+/*       (C) Copyright Finastra International Limited 2008           */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Last Amend No. 256795   *Create   Date 25Sep08              */
-/*       Prev Amend No. xxxxxx             Date ddmmmyy              */
+/*       Prev Amend No. 256795  *CREATE    Date 25Sep08              */
+/*                      XXXXXX             Date DDMmmYY              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       256795 - Penalty Termination of Time Deposits (CDL052).     */
 /*                                                                   */
 /*********************************************************************/
  
              PGM        PARM(&MODE)
              DCL        VAR(&MKICPY) TYPE(*CHAR) LEN(64) VALUE('(C) +
-                        Copyright Misys International Banking Systems Ltd 2008')
+                        Copyright Finastra International Limited 2008')
  
              DCL        VAR(&MODE)    TYPE(*CHAR) LEN(1)
              DCL        VAR(&ABNOR)   TYPE(*CHAR) LEN(1)
@@ -108,7 +110,7 @@
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000)
  
  END:        RCLRSC
-     CHGVAR &MKICPY '(C) Copyright Misys International Bankings Systems 2008'
+     CHGVAR &MKICPY '(c) Copyright Finastra International Limited 2008'
  
  ENDPGM
  

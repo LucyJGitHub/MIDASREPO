@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MM Loans/deposits DL database update')           *
@@ -9,10 +9,11 @@
       *                                                               *
       *  MMLDNIUPD - LOANS/DEPOSITS DL DATABASE UPDATE                *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
-      *  Prev Amend No. AR784570           Date 21Feb17               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 AR784570           Date 21Feb17               *
       *                 CGL165             Date 23Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 01Sep14               *
@@ -100,6 +101,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  AR784570 - Condition whether internal customer of customer   *
       *             inputted by the user to be used for CI deal.      *
@@ -263,7 +265,7 @@
       ** Midas RE Settled Transaction Index File by Ref No/Pgm Ref                            CRE020
                                                                                               CRE020
      F/COPY WNCPYSRC,MMLDNIDF01
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -282,24 +284,24 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       **  EXTERNALLY DESCRIBED DATA STRUCTURE FOR VALID LOAN/DEPOSIT
      D MMVLDN        E DS                  EXTNAME(MMVLDNIPD)
@@ -315,10 +317,10 @@
                                                                                               CDL096
       ** Business Day Convention fields                                                       CDL096
      D  @MMDET              2148   2181                                                       CDL096
- 
+
       ** Tax Codes                                                                            CGL165
      D  @MMTXC              2182   2185                                                       CGL165
- 
+
       **  DEALS FILE - LOANS/DEPOSITS/NAS ISSUED
      D DEALS         E DS                  EXTNAME(DEALSDC)
      D  @DLREC               429    497
@@ -332,19 +334,19 @@
      D  @DLPY4              1851   1897                                                       CDL033
      D  @DLDET              2350   2383                                                       CDL096
      D  @DLTXC              2384   2387                                                       CGL165
- 
+
       **  Time data structure for DTRIX.
      D                 DS
      D  @XTIME                 1      6  0
      D  DXTIM                  1      4  0
- 
+
       **  Data structure for IKTNTR                                                           CAS005
      D                 DS                                                                     CAS005
      D  IKTNTR2                      15  0                                                    CAS005
      D  IKTNTR_A                     15                                                       CAS005
                                                                                               CAS005
       * DATA STRUCTURES FOR USE WITH ACCESS PROGRAMS
- 
+
      D #FPAYF        E DS                  EXTNAME(SDFSFPPD)                                BUG24144
       ** File - Payment Further Settlement Instructions                                     BUG24144
                                                                                             BUG24144
@@ -353,16 +355,16 @@
                                                                                             BUG24144
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       * DATA STRUCTURE FOR BANK DETAILS
- 
+
      D SDTRAD        E DS                  EXTNAME(SDTRADPD)
       ** External DS for TRADE Details
- 
+
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
       ** External DS for BRANCH Details
- 
+
      D SDBSRT        E DS                  EXTNAME(SDBSRTPD)
       ** External DS for BASE RATE Details
- 
+
      D SDBSHS        E DS                  EXTNAME(SDBSHSPD)                                 BUG5169
       ** External DS for Historic Base Rate details                                          BUG5169
                                                                                              BUG5169
@@ -372,10 +374,10 @@
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CGL011
      D                                     PREFIX(S_)                                         CGL011
       ** External DS for SAR Details                                                          CGL011
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       * FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       * SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
      D/COPY WNCPYSRC,MMLDNIDD02
@@ -400,7 +402,7 @@
       ** Define fields used in CAS004                                                         CAS004
                                                                                               CAS004
      D CAS004          S              1A                                                      CAS004
- 
+
       ** Define fields used in CAS005                                                         CAS005
                                                                                               CAS005
      D CAS005          S              1A                                                      CAS005
@@ -445,18 +447,18 @@
      C* MAIN - MAIN BODY                                              *
      C*                                                               *
      C*****************************************************************
- 
+
      C/COPY WNCPYSRC,MMLDNIDC01
       * EXIT IF NOT INSERTION, AMENDMENT OR REVERSAL
- 
+
      C     IKCHTP        IFNE      'I'
      C     IKCHTP        ANDNE     'A'
      C     IKCHTP        ANDNE     'R'
      C                   RETURN
      C                   END
- 
+
       * INSERT, AMEND, OR REVERSE THE DEAL
- 
+
      C                   MOVE      ' '           RecSd             1                          260363
      C                   MOVE      ' '           PaySd             1                          260363
                                                                                               260363
@@ -464,20 +466,20 @@
      C     IKCHTP        CASEQ     'A'           LDAMD
      C     IKCHTP        CASEQ     'R'           LDDEL
      C                   END
- 
+
      C     AUS007        IFEQ      'Y'                                                        188621
      C     IKRACD        ANDNE     ' '                                                        188621
       *                                                                                       188621
       * UPDATE AUSTRALIAN BROKERAGE RATES FILE
- 
+
      C     IKCHTP        CASEQ     'I'           RATINS
      C     IKCHTP        CASEQ     'R'           RATDEL
      C                   END
      C                   ENDIF                                                                188621
- 
+
      C/COPY WNCPYSRC,MMLDNIDC02
       * SET PAY/RECEIVE INDICATORS TO BE WRITTEN TO DTRIX
- 
+
      C     @@CNRQ        IFEQ      'Y'                                                        246801
      C                   EXSR      PYRCIN
      C                   ELSE                                                                 246801
@@ -485,19 +487,19 @@
      C                   Z-ADD     *ZERO         @@PRI2                                       246801
      C                   Z-ADD     *ZERO         @@PRI3                                       246801
      C                   ENDIF                                                                246801
- 
+
       * WRITE A DTRIX RECORD
- 
+
      C                   EXSR      WRTDTX
- 
+
       * UPDATE THE DTRIX HEADER RECORD
- 
+
      C                   EXSR      UPDDTH
- 
+
      C/COPY WNCPYSRC,MMLDNIDC03
       ** UPDATE THE DEALS FILE TRAILER
       ** ON INSERTS AND REVERSALS
- 
+
      C     IKCHTP        IFEQ      'I'
      C     IKCHTP        OREQ      'R'
      C                   EXSR      UPDTRL
@@ -515,14 +517,14 @@
      C*                                                              *
      C****************************************************************
      C     LDINS         BEGSR
- 
+
       * SET CONFIRMATION REQUIRED INDICATOR
       * TO BE WRITTEN TO DTRIX
- 
+
      C                   EXSR      CNFINS
- 
+
       * INITIALIZE DEAL
- 
+
      C                   CLEAR                   DEALS
       *                                                                                      BUG8874
       ** Initialise fields for CDL033 - Floating Rate CDs Issued feature                     BUG8874
@@ -542,18 +544,18 @@
      C                   Z-ADD     0             XKBSRF                                      BUG8874
      C                   MOVEL     *BLANKS       XKFRCI                                      BUG8874
      C                   MOVEL     *BLANKS       XKFYLD                                      BUG8874
- 
+
       * RECORD ID
- 
+
      C                   MOVEL     'D'           RECI
- 
+
       * DEAL NUMBER & RECORD TYPE
- 
+
      C                   Z-ADD     IKDN38        DLNO
      C                   MOVE      'C'           RCDT
- 
+
       * DEAL RECORD CODE
- 
+
      C     IKMTYP        IFEQ      'IT'
      C     IKMTYP        OREQ      'TD'
      C     IKMTYP        OREQ      'CD'
@@ -575,7 +577,7 @@
      C                   ELSE
      C                   Z-ADD     15            RCDC
      C                   END
- 
+
       ***DEAL*CUSTOMER*-*BICN*OF*BRANCH*IF*CD*ISSUED                                          185914
       *  DEAL CUSTOMER - BICN OF BRANCH IF CD ISSUED                                          202780
       *                                                                                     AR784570
@@ -624,7 +626,7 @@
      C                   ENDIF                                                              AR784570
       *                                                                                     AR784570
      C                   ENDIF                                                              AR784570
- 
+
      C*****IKMTYP        IFEQ      'CI'                                                       185914
      C**********         EXSR      ACSBRN                                                     185914
      C**********         MOVE      A8BICN        CNUM                                         185914
@@ -738,7 +740,7 @@
      C     CDL020        IFEQ      'Y'                                                       BUG5169
      C                   Z-ADD     WkBaseRate    BRTE                                        BUG5169
      C                   ENDIF                                                               BUG5169
- 
+
      C                   END
       *
       * RATE/SPREAD
@@ -755,12 +757,12 @@
      C                   END
       *
       * INTEREST RATE - which will already have the right sign
- 
+
      C                   Z-ADD     IKINTR        INTR
- 
+
       * NOTICE DAYS
      C                   Z-ADD     IKNTCE        NOTD
- 
+
       * REF.NO. OF NA
      C                   MOVE      IKCDRF        RNNA
       *
@@ -3628,4 +3630,4 @@
      C****************************************************************
      C/COPY WNCPYSRC,MMLDNIDC19
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

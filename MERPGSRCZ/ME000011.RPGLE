@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2009')
+     H COPYRIGHT('(c) Finastra International Limited 2009')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas ME Initialisation program for CSW209')           *
@@ -12,14 +12,16 @@
       *  Function:  This program updates MEISOCPD File defaulting     *
       *             Support SWIFT MT205 field to N                    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2009            *
+      *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. CSW213             Date 03Jun13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CSW213             Date 03Jun13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Prev Amend No. CSW209   *CREATE   Date 01Apr09               *
+      *                 CSW209  *CREATE    Date 01Apr09               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSW213 - SWIFT Changes 2013 (Recompile)                      *
       *  CSW209 - SWIFT 2009 Changes                                  *
       *                                                               *
@@ -154,4 +156,4 @@
       /EJECT
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2009
+(c) Finastra International Limited 2009

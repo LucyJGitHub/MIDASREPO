@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  ALWNULL(*USRCTL)                                             *                       CSW034
@@ -27,10 +27,11 @@
       *                                                               *
       *  Called By: MSC6110 - Midas/SWIFT Meridian communications     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR214111           Date 26Jun15               *
-      *  Prev Amend No. 250527             Date 19Aug14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR214111           Date 26Jun15               *
+      *                 250527             Date 19Aug14               *
       *                 251373             Date 30Jan08               *
       *                 MD023406           Date 12Nov13               *
       *                 AR976772           Date 23May12               *
@@ -77,6 +78,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR214111 - Incoming messages were not retrieved properly by  *
       *             MidasPlus. Reveresed part of 257554 to remove the *
       *             checking of the zone as the incoming message does *
@@ -2743,7 +2745,7 @@
      C** tabtyp add MT103                                                       CRE008
       /COPY MSCPYSRC,SRERRC
 **CTDATA cpy@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 **CTDATA tabtyp
 100A
 103A

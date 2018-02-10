@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2008')
+     H COPYRIGHT('(c) Finastra International Limited 2008')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Retrieve and set Meridian Link user options')
@@ -9,14 +9,16 @@
       *                                                               *
       *  RTVNODEREF - Retrieve Node Reference using Host ID - DUMMY   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *  (c) Finastra International Limited 2008                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. 257417  *CREATE    Date 28Oct08               *
+      *  Prev Amend No. 257417  *CREATE    Date 28Oct08               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  257417 - RTVNODEREF program is missing                       *
       *                                                               *
       *****************************************************************

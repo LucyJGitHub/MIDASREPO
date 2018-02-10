@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2008')
+     H COPYRIGHT('(c) Finastra International Limited 2008')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas ME BIC Plus Database Updater')                   *
@@ -14,15 +14,17 @@
       *                                                               *
       *  Called By: MEC1420 - Midas ME BIC Plus loader                *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2008            *
+      *  (c) Finastra International Limited 2008                      *
       *                                                               *
-      *  Last Amend No. 262490             Date 07Nov09               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. 262490             Date 07Nov09               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. CFT040  *CREATE    Date 15Sep08               *
+      *                 CFT040  *CREATE    Date 15Sep08               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  262490 - BIC branch is not being written to MEBICPPD         *
       *  CFT040 - BIC Plus IBAN Utility                               *
       *                                                               *

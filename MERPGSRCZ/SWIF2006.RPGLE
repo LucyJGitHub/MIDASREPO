@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2006')
+     H COPYRIGHT('(c) Finastra International Limited 2006')
       *****************************************************************
 /*S*D****RPGBASEMOD****************************************************                      CSW206H
 /*STD *  RPGBASEBND                                                   *                      CSW206H
@@ -15,17 +15,19 @@
       *             feature CSW206 is installed or the run date       *
       *             is greater than or equal to 18th November 2006.   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *  (c) Finastra International Limited 2006                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSW206H            Date 11Aug06               *
-      *  Prev Amend No. CSW206  *CREATE    Date 03Jul06               *
+      *  Prev Amend No. CSW206H            Date 11Aug06               *
+      *                 CSW206  *CREATE    Date 03Jul06               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSW206H - SWIFT 2006 Standard Changes                        *
       *  CSW206 - SWIFT 2006 Standard Changes                         *
       *                                                               *

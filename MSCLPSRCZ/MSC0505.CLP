@@ -7,8 +7,9 @@
 /*                                                                   */
 /*     MSC0505 - I/C TERMINATION FILE CLEARANCE                      */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -16,13 +17,14 @@
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.03 ---------------------------------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*     LAST AMEND NO. 120202            DATE 11JUN97                 */
-/*     PREV AMEND NO. CSW008            DATE  21OCT96                */
+/*       Prev Amend No. 120202             Date 11Jun97              */
+/*                      CSW008             Date 21Oct96              */
 /*                    S01408            DATE  04SEP96                */
 /*                    S01310            DATE  06DEC90                */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*     120202 - AOMGMER0 parameters have changed                     */
 /*     CSW008 - Midas/CAS interface.                                 */
 /*              Clean up temporary files and data areas              */
@@ -40,7 +42,7 @@
              DCL        VAR(&PFX) TYPE(*CHAR) LEN(2)                  /*CSW008*/
              DCL        VAR(&TFILES) TYPE(*CHAR) LEN(10)              /*CSW008*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /*/COPY WNCPYSRC,MSC0505002                                          */
@@ -103,6 +105,6 @@
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
  ENDPGM:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

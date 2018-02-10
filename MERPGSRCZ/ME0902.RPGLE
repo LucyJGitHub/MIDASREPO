@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2005')
+     H COPYRIGHT('(c) Finastra International Limited 2005')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas ME MT970 Generation Request')                    *
@@ -13,17 +13,19 @@
       *             the generation of MT970 statements based on a     *
       *             value date entered by the user                    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. AR689705           Date 03Jan11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR689705           Date 03Jan11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSW099  *CREATE    Date 28Feb05               *
+      *                 CSW099  *CREATE    Date 28Feb05               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR689705 - Nominal and value settled were missing after      *
       *             enter. Applied fix AR656294 (Child: AR689706)     *
       *  AR656294 - HATS issue                                        *
@@ -567,7 +569,7 @@
       *****************************************************************
  
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2005
+(c) Finastra International Limited 2005
 **  STRARR
 SBMJOB JOB(MGC0970) JOBD(MBATCH) USER(*JOBD) CMD(CALL PGM(MGC0970) PARM('xxxxx')
 ) MSGQ(MOPERQ) RTGDTA(*JOBD) INLLIBL(*JOBD)

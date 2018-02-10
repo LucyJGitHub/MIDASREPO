@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MX Access NAs sold')                             *
@@ -11,10 +11,11 @@
       *                                                               *
       *  Function:  This module accesses NAs sold from DEALSDE.       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
-      *  Prev Amend No. CGL165             Date 15Feb17               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CGL165             Date 15Feb17               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 CER059             Date 19Jul10               *
@@ -43,6 +44,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
@@ -74,14 +76,14 @@
       *  CMX001 - Meridian Export                                     *
       *                                                               *
       *****************************************************************
- 
+
      FDEALSALL  IF   E           K DISK    INFSR(*PSSR)
       * All Deals
- 
+
      FMXSDLDEPD IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(DEALSDEF: MXSDLDEP0)
       * Saved Deals
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
@@ -99,120 +101,120 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
- 
+
+
       * NA Sold
      D NASS          E DS                  EXTNAME(DEALSDE)
- 
- 
+
+
       ** External DS for BANK details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
- 
+
+
      C     *ENTRY        PLIST
      C/COPY MXCPYSRC,MXACSPRMI
- 
- 
+
+
       * Use input link-to field
- 
+
      C                   MOVEL     I#LFD1        A_DLNO            6
- 
+
       * Error if no deal number is supplied
- 
+
      C     A_DLNO        IFEQ      *BLANK
      C     A_DLNO        OREQ      '000000'
      C                   EVAL      I#ERMS = 'INVALID DEAL NUMBER: '
      C                             + A_DLNO
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       * Get the deal from DEALSDE
- 
+
      C                   MOVEL     A_DLNO        DLNO
      C     DLNO          CHAIN     DEALSDEF                           99        *
- 
+
       * If the deal isn't found
       * and this is a current extract
       * it is an error
- 
+
      C     *IN99         IFEQ      '1'
      C     I#EXTT        ANDEQ     'C'
      C                   EVAL      I#ERMS = 'DEAL NOT ON DEALSDE:'
      C                             + A_DLNO
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       * If the deal isn't on DEALSDE
       * Get the deal from DLEHISPD
- 
+
      C     *IN99         IFEQ      '1'
      C                   CLEAR                   NASS
      C                   MOVEL     A_DLNO        DLNO
      C     DLNO          CHAIN     DLEHISD0                           99        *
      C                   ENDIF
- 
+
       * If the deal isn't on DLEHISPD
       * Get the deal from MXSDLDEPD
- 
+
      C     *IN99         IFEQ      '1'
      C                   CLEAR                   NASS
      C                   MOVEL     A_DLNO        DLNO
      C     DLNO          CHAIN     MXSDLDEP0                          99        *
      C                   ENDIF
- 
+
       * If the deal isn't available
       * and this is a driver format
       *  Indicate that deal is not to be extracted
- 
+
      C     *IN99         IFEQ      '1'
      C     CFLFMT        ANDEQ     '*DRIVER   '
      C                   MOVEL     '*NOEXT '     I#RTCD
      C                   ELSE
- 
+
       * If this is a driver format
- 
+
      C     CFLFMT        IFEQ      '*DRIVER   '
- 
+
       * Determine if branch is to be included in the export
- 
+
      C                   MOVE      'D'           I#LD
      C                   MOVEL     BRCA          I#BRCA
      C                   EXSR      BRCA_FLT
- 
+
       * Determine if deal type/sub type is to be included in the export
- 
+
      C                   MOVE      'D'           I#LD
      C                   MOVEL     DTYP          I#DTYP
      C                   MOVEL     DLST          I#DLST
      C                   EXSR      DTST_FLT
- 
+
       * If the branch or deal type/sub type are NOT for export
       *  Indicate that deal is not to be extracted
- 
+
      C     Exp_BRCA      IFNE      'Y'
      C     Exp_DTST      ORNE      'Y'
      C                   MOVEL     '*NOEXT '     I#RTCD
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
       * Set up output data
- 
+
      C                   EVAL      InData = NASS
- 
- 
+
+
       * Return
- 
+
      C                   RETURN
       *
       /SPACE 5
@@ -237,17 +239,17 @@
      C                   PARM      '*DBERR  '    @RTCD             7
      C                   PARM      '*FIRST  '    @OPTN             7
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       * Load branches for export
- 
+
      C                   MOVE      'L'           I#LD
      C                   EXSR      BRCA_FLT
- 
+
       * Load deal type/sub types for export
- 
+
      C                   MOVE      'L'           I#LD
      C                   EXSR      DTST_FLT
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5
@@ -256,4 +258,4 @@
       /COPY MXCPYSRC,MXPSSR
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

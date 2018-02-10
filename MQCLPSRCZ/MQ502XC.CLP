@@ -8,20 +8,22 @@
 /*      MQ502XC - DSPFFD Returns file in RETURN if FIELD is found    */
 /*                in FILE, otherwise returns *BLANKS in RETURN       */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CPK025             Date 11Jul06              */
-/*       Prev Amend No. BUG8856            Date 07Oct05              */
+/*       Prev Amend No. CPK025             Date 11Jul06              */
+/*                      BUG8856            Date 07Oct05              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
 /*                      CMQ001             Date 31OCT97              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CPK025  - File UPCDFDPD is redundant. Use file UPFFDSTPD.   */
 /*       BUG8856 - DSPFFD changed at V5R3. Use core outfile instead  */
 /*       CMQ001 - MidasQ rationalisation.                            */
@@ -40,7 +42,7 @@
              DCLF       FILE(UPFFDSTPD)                                                   /*CPK025*/
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
                                                                                          /*BUG8856*/
 /* Set up outfile QTEMP/TEMP1 */                                                         /*BUG8856*/
@@ -90,6 +92,6 @@
              DLTOVR     FILE(UPFFDSTPD) LVL(*JOB)                                         /*CPK025*/
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000)                                   /*BUG8856*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

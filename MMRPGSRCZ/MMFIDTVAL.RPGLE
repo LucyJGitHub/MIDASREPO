@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MM Fiduciary Takings Validation')
@@ -9,20 +9,22 @@
       *                                                               *
       *  MMFIDTVAL - Fiduciary Takings Validation                     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD033924           Date 27Mar15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD033924           Date 27Mar15               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. BUG9827            Date 27Jan05               *
+      *                 BUG9827            Date 27Jan05               *
       *                 CGL029             Date 01Sep03               *
       * Midas Release 4.01.02 ----------------------------------------*
       *                 209905  *CREATE    Date 25Sep02               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD033924 - Cannot Insert Fiduciary Fixed-Term Placing        *
       *             and Call Placing                                  *
       *  BUG9827 - Fiduciary deal changes for Midas Plus              *

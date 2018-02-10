@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Finastra International Limited 2003')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MM Rollover deals retrieve a record')            *
@@ -11,10 +11,11 @@
       *                                                               *
       *  Function:  This module retrieves a record from the file      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2003            *
+      *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. AR701789           Date 26Sep16               *
-      *  Prev Amend No. CGL165             Date 23Feb15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR701789           Date 26Sep16               *
+      *                 CGL165             Date 23Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 CSF011A            Date 28Nov11               *
@@ -54,6 +55,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR701789 - Unable to reject a deal amendment. Add a new      *
       *             parameter to indicate reject transaction.         *
       *             Applied for MD041482                              *
@@ -105,13 +107,13 @@
       *  CAP084 - API Wrapper project.                                *
       *                                                               *
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
      FSDBRTDL1  IF   E           K DISK    INFSR(*PSSR)
-
+ 
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -123,121 +125,121 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **-----------------------------------------------------------------------
-
+ 
       **-----------------------------------------------------------------------
       ** The following /COPY includes the standard API declares:
      D/COPY ZACPYSRC,STDDECLARE
       **-----------------------------------------------------------------------
-
+ 
       **-----------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **-----------------------------------------------------------------------
-
+ 
       **-----------------------------------------------------------------------
      D/COPY ZACPYSRC,ERR_ARRAYS
       **-----------------------------------------------------------------------
-
+ 
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
-
+ 
       **-----------------------------------------------------------------------
       ** Screen formats
       **-----------------------------------------------------------------------
-
+ 
      D DealScnFmt    E DS                  EXTNAME(MMLDNIPD)
       * Deal in screen format
-
+ 
      D InRecSttmt    E DS                  EXTNAME(SDESSRPD)
       * Receive settlement instructions in screen format
-
+ 
      D InPaySttmt    E DS                  EXTNAME(SDESSPPD)
       * Pay settlement instructions in screen format
-
+ 
      D InFRASttmt    E DS                  EXTNAME(SDESSFPD)
       * FRA/IRS settlement instructions in screen format
-
+ 
       **-----------------------------------------------------------------------
       ** File formats
       **-----------------------------------------------------------------------
-
+ 
      D DealFilFmt    E DS                  EXTNAME(MMDELDPP)
       ** Loans and Deposits in File Format
      D  DELDRecIns           470    524                                                       TCA002
      D  DELDPayIns           539   1083                                                       TCA002
      D**DELDRecIns***********456    524                                                       TCA002
      D**DELDPayIns***********525   1083                                                       TCA002
-
+ 
      D DBRecSttmt    E DS                  EXTNAME(SDESFRPD)
      D**FLREC******************1     69                                                       TCA002
      D  FLREC2                21     75                                                       TCA002
       * Receive settlement instructions in file format
-
+ 
      D DBPaySttmt    E DS                  EXTNAME(SDESFPPD)
      D**FLPAY******************1    559                                                       TCA002
      D  FLPAY2                21    565                                                       TCA002
       * Pay settlement instructions in file format
-
+ 
      D DBFRASttmt    E DS                  EXTNAME(SDESFFPD)
       * FRA/IRS settlement instructions in file format
-
+ 
      D InfData       E DS                  EXTNAME(MMLDIFPD)
       * MM Extra Data - Classe 1 Data - File (D/B) format
      D                                     PREFIX(IF_)
-
+ 
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
-
+ 
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
       ** EXTERNAL DS FOR GENERAL LEDGER DETAILS
-
+ 
      D SDDEAL        E DS                  EXTNAME(SDDEALPD)
       ** EXTERNAL DS FOR DEALING DETAILS
      D  DL_ACCD      E                     EXTFLD(QQACCD)                                     CGL029
-
+ 
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ** EXTERNAL DS FOR CURRENCY DETAILS
-
+ 
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
       ** EXTERNAL DS FOR BRANCH DETAILS
-
+ 
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
-
+ 
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
-
+ 
      D ZMUSER          DS            17
      D  BRC                   11     13
      D  DEPT                  14     16
       **-----------------------------------------------------------------------
-
+ 
       ** Index for arrays of error message IDs, etc.
      D Idx             S              3P 0
-
+ 
       ** Index for arrays of warning message IDs, etc.
      D WIdx            S              3P 0
-
+ 
       ** Front office transaction ID
      D  FOTrID         S                   LIKE(HKFRNT)
-
+ 
       ** Associated front office trasaction ID
      D  FOAsID         S                   LIKE(HKAFRT)
      D/COPY WNCPYSRC,MMRODLRD01
      D ExtData       E DS                  EXTNAME(MMLDEXPD)                                  248297
       *** Ext. data - All Features                                                            248297
-
+ 
      D #TRCCY          S              3A                                                     CSF011A
      D #TPCCY          S              3A                                                     CSF011A
                                                                                              CSF011A
       **-----------------------------------------------------------------------
       **  Start of main processing
       **-----------------------------------------------------------------------
-
+ 
      C     *ENTRY        PLIST
      C                   PARM                    AuthComp          1
      C                   PARM                    FwdBck            1
@@ -248,11 +250,11 @@
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetc           1
-
+ 
       * Set up the name of the primary and secondary message files from
       * which the message handler will get the messages
      C                   EVAL      MsgFArray(1) = 'DRSMM'
-
+ 
       *  Hook to enable non-core message files to be included
      C/COPY WNCPYSRC,MMLDNIM01
       *
@@ -407,7 +409,7 @@
      C                   END
      C                   Z-ADD     A6NBDP        EuroNBDP          1 0
      C                   END
-
+ 
       **  Get ZMUSER to access default branch.
       *
      C     *DTAARA       DEFINE                  ZMUSER
@@ -423,7 +425,7 @@
      C                   MOVEL     'E'           DDACTN
      C                   ENDIF
      C                   ENDIF
-
+ 
      C     FwdBck        IFEQ      'F'
      C                   MOVEL     'Y'           @RDFWD
      C                   MOVEL     'N'           @RDBCK
@@ -436,7 +438,7 @@
      C                   MOVEL     'N'           @RDBCK
      C                   ENDIF
      C                   ENDIF
-
+ 
      C     @RDFWD        IFEQ      'Y'
      C     @RDBCK        OREQ      'Y'
      C                   EXSR      MMLDNIRED
@@ -454,33 +456,33 @@
      C                   EXSR      MMLDNIRTV
       *
      C     Idx           IFEQ      0
-
+ 
       * Convert to screen format
       * ------------------------
       * Deal Details
      C                   EXSR      MMLDNICVT
       * Default rollover details
      C                   EXSR      MMLDNIROD
-
+ 
       * If action (DDRACT) is 'R', blank out DDAMNP as this is only
       * applicable if rolling the deal over to Euro (DDRACT='C').
-
+ 
      C                   IF        DDRACT = 'R'
      C                   EVAL      DDAMNP = *BLANK
      C                   ENDIF
-
+ 
       * Settlement Instructions
      C                   EXSR      ZASETINCVT
      C                   ENDIF
-
+ 
      C                   ENDIF
-
+ 
      C                   IF        ReturnCode <> *BLANK
      C                   MOVEL     '0'           APIRetc
      C                   MOVEL     'DDDLNO'      FldNameArr(1)
      C                   MOVEL     @ERRMS        MsgIDArr(1)
      C                   ENDIF
-
+ 
       * Build buffer with required output
      C                   EVAL                    Buffer = DealScnfmt
      C***                                        + DDRAMN                                     248297
@@ -491,7 +493,7 @@
      C                                           + InRecSttmt
      C                                           + InPaySttmt
      C                                           + ExtData                                    248297
-
+ 
      C                   SETON                                        LR
      C                   RETURN
       **********************************************************************
@@ -524,7 +526,7 @@
      C                   PARM      *BLANK        @DLRED            6
       * Front Office ID read
      C                   PARM                    @FTRED           20
-
+ 
      C                   ENDSR
       **********************************************************************
      C     MMLDNIRTV     BEGSR
@@ -582,11 +584,11 @@
      C                   PARM                    WMsgDtaArr
      C                   PARM                    WIdx
      C/COPY WNCPYSRC,MMRODLRC01
-
+ 
      C                   ENDSR
       **********************************************************************
      C     MMLDNICVT     BEGSR
-
+ 
      C                   CALLB     'MMLDNICVT'
       * INPUTS
       * ------
@@ -602,13 +604,13 @@
      C                   PARM                    DDSTS            24
       * Collateral Status
      C                   PARM                    DDCSTS           10
-
+ 
      C                   ENDSR
       **********************************************************************
       /EJECT
       **********************************************************************
      C     MMLDNIROD     BEGSR
-
+ 
      C                   CALLB     'MMLDNIROD'
       * -------+
       * INPUTS ¦
@@ -681,7 +683,7 @@
      C                   PARM                    DDDLDT            6                         BUG5916
       * Actual Interest Rate                                                                AR848507
      C                   PARM                    DDAIR            12                        AR848507
-
+ 
      C                   ENDSR
       **********************************************************************
       /EJECT
@@ -741,4 +743,4 @@
      C                   ENDSR
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2003
+(c) Finastra International Limited 2003

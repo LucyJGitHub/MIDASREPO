@@ -7,14 +7,15 @@
 /*                                                                   */
 /*       MEC0730 - Message Manager Downloads                         */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2002           */
+/*       (c) Finastra International Limited 2002                     */
 /*                                                                   */
-/*       Last Amend No. AR1031152          Date 06Dec12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR1031152          Date 06Dec12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. 237373             Date 07Apr06              */
+/*                      237373             Date 07Apr06              */
 /*                      227134             Date 18Apr06              */
 /*                      BUG5779            Date 17Feb05              */
 /* Midas Release 4.01 -----------------------------------------------*/
@@ -22,6 +23,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       AR1031152 - No currency download if MMM4 switched on.       */
 /*                   (Child: AR1031154)                              */
 /*       237373 - should only download SE transaction if SE ISO15022 */
@@ -42,7 +44,7 @@
              DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7) VALUE('*FIRST ')                    /*227134*/
              DCL        VAR(&FMT) TYPE(*CHAR) LEN(200)                                    /*227134*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2002')
  
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO ERROR)
@@ -113,5 +115,5 @@ ERROR:       CHGVAR     VAR(&MSG) VALUE('Message Manager Downloads')
  
 END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

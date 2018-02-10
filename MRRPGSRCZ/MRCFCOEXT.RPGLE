@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2005')
+     H COPYRIGHT('(c) Finastra International Limited 2005')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MR Caps, Collars and Floors Extract')
@@ -13,19 +13,21 @@
       *             file.  For each required record from DEALSDG, a   *
       *             record will be written to file MRTRAPPD.          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2005            *
+      *  (c) Finastra International Limited 2005                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSD027A            Date 09May06               *
-      *  Prev Amend No. BUG10240           Date 31Jan06               *
+      *  Prev Amend No. CSD027A            Date 09May06               *
+      *                 BUG10240           Date 31Jan06               *
       *                 CRN001   *CREATE   Date 01Sep05               *
       *                                    Date ddmmmyy               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSD027A - Conversion Of Customer Number to Alpha             *
       *            (recompile)                                        *
       *  BUG10240 - Parameter error                                   *
@@ -1489,4 +1491,4 @@
  
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2005
+(c) Finastra International Limited 2005

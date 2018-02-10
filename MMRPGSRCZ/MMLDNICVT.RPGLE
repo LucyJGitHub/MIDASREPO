@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MM Loans/deposits cnvt file to screen format')   *
@@ -12,10 +12,11 @@
       *  Function:  This module converts the fields of a loan/deposit *
       *             from their format as on file to a screen format.  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD039575           Date 07Jul16               *
-      *  Prev Amend No. MD031617           Date 23Jun15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD039575           Date 07Jul16               *
+      *                 MD031617           Date 23Jun15               *
       *                 CGL165             Date 23Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -70,6 +71,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD039575 - LDNI ERROR in validating Payment Convention fields*
       *             but fields are not available for this Deal        *
       *             (also not sent from the API) nor the Payment      *
@@ -1587,7 +1589,7 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 ** TEXT FOR DEAL STATUS
 COMPLETE
 AUTHORIZED

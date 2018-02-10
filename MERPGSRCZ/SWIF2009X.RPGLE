@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2009')
+     H COPYRIGHT('(c) Finastra International Limited 2009')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas ME Check if SWIFT 2009 is active')               *
@@ -16,14 +16,16 @@
       *             or Rundate is equal to 20th November and          *
       *             MPHAS is not 'A'.                                 *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2009            *
+      *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. CCB020             Date 06Aug12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CCB020             Date 06Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Prev Amend No. CSW209  *CREATE    Date 01Apr09               *
+      *                 CSW209  *CREATE    Date 01Apr09               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CCB020 - COB Restructure - Secondary COB Infrastructure      *
       *  CSW209 - SWIFT 2009 Changes                                  *
       *                                                               *

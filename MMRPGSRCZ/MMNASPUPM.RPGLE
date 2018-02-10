@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MM NAs Purchased MM Database Update')            *
@@ -9,10 +9,11 @@
       *                                                               *
       *  MMNASPUPM - NAS PURCHASED MM DATABASE UPDATE                 *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CGL165             Date 17Feb15               *
-      *  Prev Amend No. CDL096             Date 22Sep14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 AR1044820          Date 17Jul13               *
       *                 CER049             Date 06Dec10               *
@@ -76,6 +77,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
       *           (Recompile)                                         *
@@ -187,19 +189,19 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
-
+ 
      D/COPY ZACPYSRC,STD_D_SPEC
-
+ 
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
-
+ 
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
-
+ 
      D/COPY ZACPYSRC,PSDS
-
+ 
       **------------------------------------------------------------------------CAP006 -------------
       ** The following /COPY line includes the definitions for error and        CAP006
       ** warning message arrays.                                                CAP006
@@ -210,14 +212,14 @@
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
-
+ 
       *****************************************************************
-
+ 
       ** DEFINE FIELDS FOR ZDATE9
      D @DAYN           S              5P 0
      D @YMD            S              8S 0
      D @RETN           S              1A
-
+ 
       ** Timestamp for the transaction                                          CAP006
      D TimeStamp       S               Z                                        CAP006
                                                                                 CAP006
@@ -244,7 +246,7 @@
      D**@IHALPEx            1296   1331                                                TDA012 NAD002
      D**@IHRECEx            1332   1349                                                TDA012 NAD002
      D**@IHPAYEx            1350   1367                                                TDA012 NAD002
-
+ 
      D/COPY WNCPYSRC,MMNASPMD01
       **  DEALS FILE - NEGOTIABLE ASSETS PURCHASED
      D MMDENB        E DS                  EXTNAME(MMDENBPP)
@@ -268,7 +270,7 @@
      D**@HLALPEx            1296   1331                                                TDA012 NAD002
      D**@HLRECEx            1332   1349                                                TDA012 NAD002
      D**@HLPAYEx            1350   1367                                                TDA012 NAD002
-
+ 
       **  DEALS FILE - NEGOTIABLE ASSETS SOLD
      D MMDENS        E DS                  EXTNAME(MMDENSPP)
      D QQDOR2        E                     EXTFLD(DORIQQ)                                     CGL029
@@ -276,7 +278,7 @@
      D QQRON2        E                     EXTFLD(RONSQQ)                                     CGL029
      D QQPON2        E                     EXTFLD(PONSQQ)                                     CGL029
      D  @HMNIY               152    159  0
-
+ 
      D ChkDealFmt    E DS                  EXTNAME(MMDENBPP)                    CAP006
       ** Rename fields for Timestamp checking                                   CAP006
      D                                     PREFIX(CH)                           CAP006
@@ -290,16 +292,16 @@
      D Z#ASTS        E DS                  EXTNAME(Z#AST)
      D Z#WSTS        E DS                  EXTNAME(Z#WST)
      D DLDLQD        E DS                  EXTNAME(DLSTMPPD)                                  CER049
-
-
+ 
+ 
       * DATA STRUCTURES FOR USE WITH ACCESS PROGRAMS
-
+ 
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       * DATA STRUCTURE FOR BANK DETAILS
-
+ 
      D SDDEAL        E DS                  EXTNAME(SDDEALPD)
       * DATA STRUCTURE FOR DEAL DATA CODES
-
+ 
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       * DATA STRUCTURE FOR MODULE DETAILS
                                                                                               CSC011
@@ -337,12 +339,12 @@
                                                                                               CSD015
      D DSFDY         E DS                  EXTNAME(DSFDY)
       * FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
-
+ 
      D DSSDY         E DS                  EXTNAME(DSSDY)                                     CSD015
       * Long DS for Access Programs                                                           CSD015
                                                                                               CSD015
       * RUN DATE & MULTI-BRANCHING INDICATOR
-
+ 
      D RUNDAT          DS
      D  @DLUP                  1      2  0
      D  @MLUP                  3      5
@@ -3314,7 +3316,7 @@
       /EJECT                                                                                  CSD015
       *****************************************************************                       CSD015
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 ** CTDATA XOT - XML Opening Tags for the Compliance Engine.                                   CSD015
 <Receipt Our Nostro>                                                                          CSD015
 <Receipt Inter. Bank>                                                                         CSD015

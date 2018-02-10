@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2012')
+     H COPYRIGHT('(c) Finastra International Limited 2012')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas BIC Directory File Desc Initialise')             *
@@ -9,13 +9,15 @@
       *                                                               *
       *  MS000001 - MIDAS BIC Directory File Desc Initialise          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2012            *
+      *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD025126           Date 17Feb14               *
-      *  Prev Amend No. CMS002  *CREATE    Date 28Sep12               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD025126           Date 17Feb14               *
+      *                 CMS002  *CREATE    Date 28Sep12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD025126 - PF/MEBICFPD issue with SWIFT 2013/CFT050 -        *
       *             conflict with CMS002 (Recompile)                  *
       *  CMS002 - BIC Directory Details Enquiry                       *
@@ -59,4 +61,4 @@
      C                   ENDSR
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2012
+(c) Finastra International Limited 2012

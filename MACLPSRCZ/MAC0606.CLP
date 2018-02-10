@@ -8,14 +8,15 @@
 /*                                                                   */
 /*       MAC0606  - Control Transfer to Tape for Archiving           */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CCB020             Date 06Aug12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CCB020             Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. 122371             DATE 26MAY06              */
+/*                      122371             Date 26May06              */
 /*                      CSC023             Date 30Jan04              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /*                      CPK014             Date 14Nov01              */
@@ -34,6 +35,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CCB020 - COB Restructure - Secondary COB Infrastructure     */
 /*       122371 - Ensure CB0300 reports are included in archive.     */
 /*       CSC023 - MidasPlus additional packaging.  SBMJOB change.    */
@@ -94,7 +96,7 @@
              DCL        VAR(&STIME) TYPE(*CHAR) LEN(6)                /*089639*/
  /**/                                                                 /*LN0736*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  DCLF       file(MAARCHL3)
  
@@ -102,7 +104,7 @@
  
  chgjob     sws(xxxxxx00)
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  chgvar     &eflg    (' ')
  
  

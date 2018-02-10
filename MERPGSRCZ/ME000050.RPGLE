@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas ME MT94x Production on Request')                 *
@@ -12,10 +12,11 @@
       *  Function:  This module enables the user to generate MT941    *
       *             and MT942 on manual request.                      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD023017           Date 29Nov13               *
-      *  Prev Amend No. CGL146A            Date 10Jul13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD023017           Date 29Nov13               *
+      *                 CGL146A            Date 10Jul13               *
       * Bank Fusion Midas 2.1 Base -----------------------------------*
       *                 CER059             Date 19Jul10               *
       *                 CER030             Date 09Jul08               *
@@ -30,6 +31,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD023017 - Validation on Field 21.                           *
       *             Related Reference may not start with a slash and  *
       *             may not contain two consecutive slashes           *

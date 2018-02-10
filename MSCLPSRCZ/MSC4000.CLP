@@ -8,23 +8,25 @@
 /*       MSC4000 - Swift Direct Link I/c termination                 */
 /*                 Terminate Compression & Communication Programs    */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.02 ---------------------------------------------------*/
-/*       Last Amend No. CSW017             Date 11Feb99              */
+/*       Prev Amend No. CSW017             Date 11Feb99              */
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       PREV AMEND NO. 120202             DATE 17SEP97              */
+/*                      120202             Date 17Sep97              */
 /*                      CSW009             DATE 12MAR97              */
 /*                      CSW008             DATE 14NOV96              */
 /*                      CCB001 *CREATE     DATE 01MAR95              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CSW017 - Midas/SWIFT Meridian interface                     */
 /*       120202 - AOMGMER0 parameters have changed                   */
 /*       CSW009 - Midas-SWIFT Alliance Automated File Transfer       */
@@ -37,7 +39,7 @@
 /*/COPY WNCPYSRC,MSC4000INT                                          */
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /************DCL        VAR(&SDMGME) TYPE(*CHAR) LEN(188)             /*120202*/
              DCL        VAR(&SDMGME) TYPE(*CHAR) LEN(800)             /*120202*/
@@ -134,6 +136,6 @@
 /*/COPY WNCPYSRC,MSC4000END                                          */
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2015')
+     H COPYRIGHT('(c) Finastra International Limited 2015')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas ME Initialisation program for CFT051')           *
@@ -12,12 +12,14 @@
       *  Function:  This program updates MEBICFPD File defaulting     *
       *             Field A and Field B1                              *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2015            *
+      *  (c) Finastra International Limited 2015                      *
       *                                                               *
-      *  Last Amend No. CFT051   *CREATE   Date 30Jun15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CFT051  *CREATE    Date 30Jun15               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CFT051 - SWIFTRef Directories 2014                           *
       *                                                               *
       *****************************************************************
@@ -155,4 +157,4 @@
       /EJECT
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2015
+(c) Finastra International Limited 2015

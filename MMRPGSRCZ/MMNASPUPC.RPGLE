@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MM NAs purchased database update controller')    *
@@ -9,10 +9,11 @@
       *                                                               *
       *  MMNASPUPC - NAS PURCHASED CONTROLLER FOR UPDATES             *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. LLN022A            Date 03Jun15               *
-      *  Prev Amend No. LLN022             Date 03Jun15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. LLN022A            Date 03Jun15               *
+      *                 LLN022             Date 03Jun15               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -38,6 +39,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  LLN022A- BOE Upgrade to MidasPlus - incorporate code from    *
       *           /COPY members and add switchability.                *
       *  LLN022 - BOE Upgrade to MidasPlus.                           *
@@ -521,4 +523,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       /EJECT
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

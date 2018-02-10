@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*OVR *  OVRDBF DMAPID DAT                                            *
 /*STD *  RPGBASEMOD                                                   *
@@ -17,7 +17,7 @@
       *                                                               *
       *  Calls    : MSC8020M                                          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *    This source is centrally supported and must ONLY be        *
       *    amended by Core Development Personnel                      *
@@ -25,18 +25,20 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.00 ---------------- Base -------------------------*
-      *  Last Amend No. 119419             Date 17JUN97               *
-      *  Prev Amend No. 118481             Date 27MAY97               *
+      *  Prev Amend No. 119419             Date 17Jun97               *
+      *                 118481             Date 27May97               *
       *                 CSW008 *CREATE     Date 21AUG96               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  119419 - Change shutdown (on toggle) to *SYNCHronous         *
       *  118481 - Midas/CAS interface changes for CASmf v2.1          *
       *           - DMAPID changed from PF to member of source        *
@@ -999,4 +1001,4 @@
       ********************************************************************
       /COPY MSCPYSRC,SRERRC
 **CTDATA cpy@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

@@ -16,16 +16,18 @@
       *                                                               *
       *  Called By: MEC1460 - BIC Database Converter                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2007            *
+      *  (c) Finastra International Limited 2007                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. BUG21300           Date 14Oct08               *
-      *  Prev Amend No. CFT040             Date 15Sep08               *
+      *  Prev Amend No. BUG21300           Date 14Oct08               *
+      *                 CFT040             Date 15Sep08               *
       *                 CFT035  *Create    Date 22Jan07               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG21300 - Address field error                               *
       *  CFT040 - BIC Plus IBAN                                       *
       *  CFT035 - BIC Database Changes                                *
@@ -906,4 +908,4 @@
       *****************************************************************
       *
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2007
+(c) Finastra International Limited 2007

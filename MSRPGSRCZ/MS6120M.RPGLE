@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MS Midas/SWIFT Meridian comms id maintenance')
@@ -16,14 +16,15 @@
       *                                                               *
       *  Calls    : MSC6120M                                          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSW038             Date 13Apr05               *
-      *  Prev Amend No. BUG2843            Date 28May04               *
+      *  Prev Amend No. CSW038             Date 13Apr05               *
+      *                 BUG2843            Date 28May04               *
       * Midas Release 4.01 -------------------------------------------*
       *                 CSW025             Date 15Apr02               *
       * Midas Release 4 --------------- Base -------------------------*
@@ -32,6 +33,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSW038 - Change to allow communication with MMM using        *
       *           MQSeries instead of data queues.  Here we force     *
       *           the maintenance screen to show MQSeries information,*

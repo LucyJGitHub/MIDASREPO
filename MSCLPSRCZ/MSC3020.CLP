@@ -15,20 +15,22 @@
 /*                                                                   */
 /*       Calls : MS3010 - MS Monitor TCP/IP FTP Operation.           */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*     Last Amend No. CPK009           Date 09Aug99                  */
+/*       Prev Amend No. CPK009             Date 09Aug99              */
 /*     LAST AMEND NO.  S01408          DATE 19JUN95                 */
-/*     PREV AMEND NO.  CSW001          DATE 20MAR95 *CREATE*        */
+/*                      CSW001  *CREATE    Date 20Mar95              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*     CPK009 - Packaging for DBA3 release. STRCMTCTL values set     */
 /*              to CMTSCOPE(*JOB).                                   */
 /*     S01408 - Addition of Core Hook MSC3020MP1                     */
@@ -41,7 +43,7 @@
 /**  Copyright statement definition                                */
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /**  Declare variables                                             */
@@ -69,7 +71,7 @@
 /**  Copyright statement definition - at runtime                   */
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 /**  Create Data Area LDA                                          */
  

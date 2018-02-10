@@ -7,10 +7,11 @@
 /*                                                                   */
 /*      MLC0000 - Multiple Language Support Initiation.              */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CPK030             Date 11Apr14              */
-/*       Prev Amend No. MD030772           Date 28Oct14              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. CPK030             Date 11Apr14              */
+/*                      MD030772           Date 28Oct14              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -55,6 +56,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CPK030 - Clean up of deliverable data library.              */
 /*       MD030772 - Switchable features not cached. Call SCC000300   */
 /*                  to update SW features caching file (SCSARHTD).   */
@@ -124,7 +126,7 @@
 /**********  PGM */                                                   /*S01463*/
              PGM        PARM(&PROGRAM &PARM1 &PARM2 &PARM3 &PARM4 +
                           &PARM5)                                     /*S01463*/
-
+ 
 /**Multiple*Language*Support*variables**/                             /*CAAA01*/
 /**********                                                   */      /*CAAA01*/
 /**********  DCL        VAR(&Y2MGFLA8) TYPE(*CHAR) LEN(8)     */      /*CAAA01*/
@@ -168,7 +170,7 @@
 /**********  DCL        VAR(&PMUSRMSG) TYPE(*CHAR) LEN(10) /*S01486*/ /*CAAA01*/
 /**********  DCL        VAR(&LBUSRMSG) TYPE(*CHAR) LEN(10) /*S01498*/ /*CAAA01*/
 /**********  DCL        VAR(&SFUSRMSG) TYPE(*CHAR) LEN(10) /*085173*/ /*CAAA01*/
-
+ 
 /***COPY*MLCPYSRC,MLCOVRDCL                                         */             /*CAAA01 CPK022*/
 /*/COPY GPCPYSRCG,MLCOVRDCL                                         */             /*CAAA01 CPK022*/
                                                                       /*CAAA01*/
@@ -199,11 +201,11 @@
 /**********               VALUE('*OPSYS *CUR  0000*CODE    ')                   */ /*076789 CPK030*/
 /**********  DCL        VAR(&V2R3) TYPE(*CHAR) LEN(1) VALUE('Y')                */ /*076789 CPK030*/
 /* Copyright statement variable */
-
+ 
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
-
+ 
 /* Global monitor */                                                  /*S01463*/
                                                                       /*S01463*/
              MONMSG     MSGID(CPF0000) EXEC(GOTO CMDLBL(ABNOR))       /*S01463*/
@@ -212,7 +214,7 @@
 /* or a batch job */                                                  /*S01463*/
                                                                       /*S01463*/
              RTVJOBA    TYPE(&JOBTYPE)                                /*S01463*/
-
+ 
 /**Retrieve*data*areas*for*Multiple*Language*Support**/               /*CAAA01*/
 /**********                                                   */      /*CAAA01*/
 /**********  RTVDTAARA  DTAARA(Y2MGFLA) RTNVAR(&Y2MGFLA10)    */      /*CAAA01*/
@@ -434,7 +436,7 @@
                                                                       /*147256*/
 /**********  OVRDBF     FILE(MSAFT3PD) MBR(&AFTMBR) */                         /*147256*/ /*CPK018*/
 /**********  OVRDBF     FILE(GPAFT3PD) MBR(&AFTMBR)                             */ /*CPK018 CPK030*/
-
+ 
 /* If the program to be called is 'RETURN' */                         /*S01463*/
                                                                       /*S01463*/
              IF         COND(&PROGRAM *EQ 'RETURN') THEN(DO)          /*S01463*/
@@ -446,10 +448,10 @@
              CALL       PGM(&PROGRAM) PARM(&PARM1 &PARM2 &PARM3 +
                           &PARM4 &PARM5)                              /*S01463*/
                                                                       /*S01463*/
-
+ 
 /* Cache switchable features after switch-on/off */                                     /*MD030772*/
              CALL       PGM(SCC000300)                                                  /*MD030772*/
-
+ 
 /* Go to the end of the program */                                    /*S01463*/
                                                                       /*S01463*/
              GOTO       CMDLBL(ENDPGM)                                /*S01463*/
@@ -490,5 +492,5 @@
                                                                       /*S01463*/
  ENDPGM:                                                              /*S01463*/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

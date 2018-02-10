@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MX Access Base Currency Equivalent Amount')
@@ -12,14 +12,15 @@
       *  Function:  This module derives a base currency equivalent of *
       *             an amount.                                        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. 241970             Data 05Sep06               *
-      *  Prev Amend No. CSD031             Date 10Apr06               *
+      *  Prev Amend No. 241970             Data 05Sep06               *
+      *                 CSD031             Date 10Apr06               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.05 -----------------------------------------------*
       *                 CMX003             Date 05Nov00               *
@@ -27,6 +28,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  241970 - Recompiled due to change in MXACSPRME.              *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CMX003 - Meridian Export Enhancements - Phase 2              *
@@ -344,4 +346,4 @@
       /COPY MXCPYSRC,MXPSSR
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

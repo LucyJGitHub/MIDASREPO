@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2009')
+     H COPYRIGHT('(c) Finastra International Limited 2009')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MX Access customer lending facility FCLTYFM')    *
@@ -11,14 +11,16 @@
       *                                                               *
       *  Function:  This module accesses facilities from FCLTYFM.     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2009            *
+      *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. CLE064             Date 06Dec10               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CLE064             Date 06Dec10               *
+      *                 CER059             Date 19Jul10               *
       *                 CER045  *CREATE    Date 20Jul09               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CLE064 - Enhancement of Lending Frequencies (Recompile)      *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  CER045 - German Features - Reporting Bundesbank              *
@@ -135,4 +137,4 @@
       /COPY MXCPYSRC,MXPSSR
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2009
+(c) Finastra International Limited 2009

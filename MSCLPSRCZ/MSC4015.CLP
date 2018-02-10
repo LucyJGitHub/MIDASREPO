@@ -7,16 +7,17 @@
 /*                                                                   */
 /*     MSC4015 - S.W.I.F.T. MESSAGE TRANSMISSION CLOSEDOWN           */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
-/*       Last Amend No. CPK014             Date 06Nov01              */
+/*       Prev Amend No. CPK014             Date 06Nov01              */
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CSW095             Date 07Apr95              */
+/*                      CSW095             Date 07Apr95              */
 /*                   S01408             DATE 05MAY95                 */
 /*                   S01179             DATE 12/09/88                */
 /*                   E12831             DATE 31/05/88                */
@@ -24,6 +25,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*     CPK014 - Release 4 packaging.  Move data queues from XLIB to  */
 /*               DPLIB.                                              */
 /*     S01408 - Addition of core hook MSC4015MP1                     */
@@ -43,7 +45,7 @@
 /*     DECLARE VARIABLES AND DATA AREA                               */
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/
 /*                                                                   */
@@ -98,6 +100,6 @@ ALCOBJ1:     ALCOBJ     OBJ((MS0200 *DTAARA *EXCL)) WAIT(30)          /*E12831*/
              CALL       PGM(MS4015)
 /*                                                                   */
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

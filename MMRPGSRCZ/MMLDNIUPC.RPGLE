@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MM Loans/deposits database update controller')   *
@@ -9,10 +9,11 @@
       *                                                               *
       *  MMLDNIUPC - LOANS/DEPOSITS DATABASE UPDATE CONTROLLER        *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CGL165             Date 23Feb15               *
-      *  Prev Amend No. CDL096             Date 22Sep14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL165             Date 23Feb15               *
+      *                 CDL096             Date 22Sep14               *
       *                 AR1037730          Date 15Oct12               *
       *                 CRE073             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
@@ -61,6 +62,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
       *           (Recompile)                                         *
@@ -144,7 +146,7 @@
       ** Midas DL Valid Exception FRCD Date Schedule                                          CDL033
      FDLVEFRSCPDO    E             Disk                                                       CDL033
      F                                     RENAME(DLVFRSCD0:DLVFRSCERR)                       CDL033
-
+ 
       * Hook to enable non-core files to be included
       /COPY WNCPYSRC,MMLDNIU010
                                                                                               CER001
@@ -158,7 +160,7 @@
      F                                     IGNORE(DLDLDBD0)                                   244036
      F                                     IGNORE(DLDLDGD0)                                   244036
      F                                     USROPN                                          AR1037730
-
+ 
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -177,19 +179,19 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
-
+ 
      D/COPY ZACPYSRC,STD_D_SPEC
-
+ 
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
-
+ 
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
-
+ 
      D/COPY ZACPYSRC,PSDS
-
+ 
       **------------------------------------------------------------------------CAP006--------------
       ** The following /COPY line includes the definitions for fields           CAP006
       ** used in checking whether there are messages on the data queue.         CAP006
@@ -201,9 +203,9 @@
       ** ¦ =====================================¦
       ** +--------------------------------------+
      D DBerrUpd        C                   CONST('DB error in LDNI API update')
-
+ 
       *****************************************************************
-
+ 
       **  EXTERNALLY DESCRIBED DATA STRUCTURE FOR VALID LOAN & DEPOSIT
      D MMVLDN        E DS                  EXTNAME(MMVLDNIPD)
                                                                                               CDL018
@@ -212,7 +214,7 @@
                                                                                               CDL018
      D #FRECF        E DS                  EXTNAME(SDFSFRPD)                                  CDL018
       ** File - Receive Further Settlement Instructions                                       CDL018
-
+ 
      D MMLDNIUPC       DS             1    DTAARA(MMLDNIUPC)
                                                                                               CDL006
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CDL006
@@ -220,7 +222,7 @@
                                                                                               CDL006
      D DSFDY         E DS                  EXTNAME(DSFDY)                                     CDL006
       ** First DS for access programs, short date structure                                   CDL006
-
+ 
      D Object          S             10A   INZ('MMLDNIUPC')
      D LockObj         S             10A   INZ('MMLDNILCK')                                   201589
      D Lib             S             10A   INZ('*LIBL')
@@ -234,12 +236,12 @@
      D Return2         S              7A                                                      201589
      D Endjob          S              1A   INZ('Y')                                           201589
      D @Timestamp      S             26Z
-
+ 
       ** Dummy message ID and message file fields for use on the calls to
       ** ZAMSGTOOPR
      D DummyMsgID      S                   LIKE(#MsgID)
      D DummyMsgF       S             10A
-
+ 
       ** Work fields for 209905                                                               209905
      D CDL006          S              1A   IMPORT                                             209905
      D PDealNo         S              6P 0                                                    209905
@@ -262,12 +264,12 @@
      D @TYPE           S              1A                                                      CER001
      D @Return         S              6A                                                      CER001
      D ULX600          S              1A                                                      CER001
-
+ 
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
-
+ 
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
@@ -284,16 +286,16 @@
      D MMVLDLX6      E DS                  EXTNAME(MMVLDLX1L1)                                CER001
      D MMVLDLX6S     E DS                  EXTNAME(MMVLDLX1L1)                                CER001
      D                                     PREFIX(SS)                                         CER001
-
+ 
       /EJECT
      C*****************************************************************
      C*                                                               *
      C* MAIN - MAIN BODY                                              *
      C*                                                               *
      C*****************************************************************
-
+ 
       /COPY WNCPYSRC,MMLDNIU001
-
+ 
       ** Set up the name of the server/database updater data queue.             CAP006
      C                   EVAL      DtaQName = 'APLDNIDTQ'                       CAP006
                                                                                 CAP006
@@ -331,32 +333,32 @@
      C                   PARM                    WaitTime
      C                   PARM                    Dlcobj
      C                   PARM                    Return
-
+ 
       /COPY WNCPYSRC,MMLDNIU002
-
+ 
       ** Position file cursor to start of file to prevent problems on
       ** later calls
      C     1             SETLL     MMVLDNIPD
-
+ 
       ** READ VALID LOANS & DEPOSITS
      C                   READ      MMVLDNID0                              99    *
      C     *IN99         DOWEQ     '0'
-
+ 
       /COPY WNCPYSRC,MMLDNIU003
                                                                                               CDL033
      C     CDL033        IFEQ      'Y'                                                        CDL033
      C     IKFRNT        CHAIN     DLVFRSCL0                                                  CDL033
      C                   ENDIF                                                                CDL033
-
+ 
       ** Load the API Dump data area with as many fields from the message
       **  header as are available, so that dumps in any lowere level modules
       **  will include the key information
      C                   EVAL      ARFOTranID = IKFRNT
      C                   EVAL      ARFOAsocID = IKAFRT
      C                   EVAL      ARRprLocn  = IKREPA
-
+ 
       /COPY WNCPYSRC,MMLDNIU004
-
+ 
       ** MM DATABASE UPDATE
      C                   CALLB     'MMLDNIUPM'
      C*******************PARM                    @@RTCD            7            175784
@@ -366,9 +368,9 @@
      C                   PARM                    #FRECF                                       CDL018
      C                   PARM      *BLANKS       PBFRCD          100                          CDL033
      C                   PARM      *BLANKS       PAFRCD          100                          CDL033
-
+ 
       /COPY WNCPYSRC,MMLDNIU005
-
+ 
       ** DL DATABASE UPDATE IF NO ERROR
      C     @@RTCD        IFEQ      '*ERROR '
      C                   ROLBK
@@ -383,9 +385,9 @@
      C     IKCHTP        IFEQ      'I'
      C     IKCHTP        OREQ      'A'
      C     IKCHTP        OREQ      'R'
-
+ 
       /COPY WNCPYSRC,MMLDNIU006
-
+ 
      C                   CALLB     'MMLDNIUPD'
      C                   PARM                    @@RTCD            7
      C                   PARM                    MMVLDN
@@ -403,7 +405,7 @@
      C                   END
      C                   END                                                    CAP006
      C                   END
-
+ 
       /COPY WNCPYSRC,MMLDNIU007
       *                                                                                       CER001
       ** ULX600 - API Luxembourg - Function MMLDNI                                            CER001
@@ -520,7 +522,7 @@
      C                   ENDDO                                                                CDL033
                                                                                               CDL033
      C                   ENDIF                                                                CDL033
-
+ 
       * COMIT UPDATES IF NO ERROR
      C                   SETOFF                                         66      188164
      C     @@RTCD        IFEQ      '*ERROR '
@@ -572,7 +574,7 @@
      C                   COMMIT
      C/COPY WNCPYSRC,MMLDNIUC01
      C                   END
-
+ 
       /COPY WNCPYSRC,MMLDNIU008
       *                                                                                       CER001
       ** If an error has occurred, reaccess record in error and remove                        CER001
@@ -592,7 +594,7 @@
       *                                                                                       CER001
      C                   ENDIF                                                                CER001
       *                                                                                       CER001
-
+ 
      ** If an error has occurred, reaccess record in error and remove from
      ** the file to prevent program processing the same record again
      C     @@RTCD        IFEQ      '*ERROR '
@@ -631,9 +633,9 @@
      C                   PARM                    DBError
      C                   PARM                    DummyMsgID
      C                   PARM                    DummyMsgF
-
+ 
      C                   ENDIF
-
+ 
       ** READ VALID LOANS & DEPOSITS
      C                   READ      MMVLDNID0                              99    *
      C                   END
@@ -648,15 +650,15 @@
      C                   END
       ** End loop for data queue prompt
      C                   END
-
+ 
       /COPY WNCPYSRC,MMLDNIU009
-
+ 
       * EXIT FROM PROGRAM
      C                   RETURN
-
+ 
       * Hook to enable non-core subroutines to be included
       /COPY WNCPYSRC,MMLDNIU012
-
+ 
       *****************************************************************                       244036
       /EJECT                                                                                  244036
       *****************************************************************                       244036
@@ -706,7 +708,7 @@
      C     *LIKE         DEFINE    HHRCIP        KHHRCIP                                      CDL033
      C     KFRSCL5       KLIST                                                                CDL033
      C                   KFLD                    KHHDLNO                                      CDL033
-
+ 
       *  Check if an existing DBU_LDNI job is active in the subsystem.                        201589
                                                                                               201589
      C                   CALL      'SCC0520'                                                  201589
@@ -726,29 +728,29 @@
      C                   PARM                    @TYPE                                        CER001
       *                                                                                       CER001
       *  Lock allocation data area
-
+ 
       *   The data area is allocated *SHRRD here and *EXCL whilst processing
       *    of the valid file is actually taking place.
       *   The function to submit this updater tries to get a *EXCL lock.
       *   The controller tries to get a *SHRRD lock.
-
+ 
       *                         Submitter             Controller
       *                 Lock      Lock     Submitter     Lock     Controller
       *      Status    Status   Successful   Action   Successful    Action
       *      ------    ------   ---------- ---------  ----------  ----------
       *   Not running  None        Yes      Submit       Yes        Prompt
       *                                     updater                 updater
-
+ 
       *   Running not  *SHRRD      No        None        Yes        Prompt
       *    processing                                               updater
-
+ 
       *   Processing   *EXCL       No        None        No         None
-
+ 
       ** Check if Dealing Fiduciary is switched ON                                            CDL006
                                                                                               CDL006
      C                   CALLB     'MMFIDINIT'                                                CDL006
      C                   PARM      *BLANKS       WRTCD             7                          CDL006
-
+ 
      C                   CALLB     'APCALCOBJ'
      C                   PARM                    Object
      C                   PARM                    Lib
@@ -758,7 +760,7 @@
      C                   PARM                    WaitTime
      C                   PARM                    Dlcobj
      C                   PARM                    Return
-
+ 
       ** Create required QTEMP objects
      C                   CALL      'APCCRTQTO'
      C                   PARM                    ReturnCde        10
@@ -775,7 +777,7 @@
      C                   IF        PRTCD = *Blanks                                            CDL033
      C                   EVAL      CDL033 = 'Y'                                               CDL033
      C                   ENDIF                                                                CDL033
-
+ 
       *  Hook to enable non-core initial processing to be included
       /COPY WNCPYSRC,MMLDNIU013
       *                                                                                       CER001
@@ -802,7 +804,7 @@
      C                   OPEN      MMVELDX1PD                                                 CER001
      C                   ENDIF                                                                CER001
       *                                                                                       CER001
-
+ 
      C                   ENDSR
      C****************************************************************
       /EJECT
@@ -811,4 +813,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       /EJECT
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

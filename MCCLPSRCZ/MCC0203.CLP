@@ -7,20 +7,22 @@
 /*                                                                   */
 /*   MCC0203 - Delete Management Accounts for Deleted Control Group  */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       Last Amend No. 121615             DATE 01JUN98              */
-/*       Prev Amend No. CED002             DATE 20JUN97              */
+/*       Prev Amend No. 121615             Date 01Jun98              */
+/*                      CED002             Date 20Jun97              */
 /*                      S01419             DATE 14MAY93              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*   121615 - Do not retrieve MIDASQ dtaara or run MIDASQ pgms if    */
 /*            MIDASQ is not switched on                              */
 /*   CED002 - ED Enhancement for GIB                                 */
@@ -30,7 +32,7 @@
              PGM        PARM(&CGCD)
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
                           /* Copyright statement */
              DCL        VAR(&CGCD) TYPE(*CHAR) LEN(2)
@@ -65,7 +67,7 @@
                           CMDLBL(ABNOR))
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /* Access PF/SDMMODPD to determine which modules are live             /*121615*/
 /**/                                                                  /*121615*/
              CALL       PGM(AOMMODR0) PARM(&RTCD &OPTN &SDMMOD)       /*121615*/

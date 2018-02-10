@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MM Loans/Deposits Support Log Setup Module')     *
@@ -14,10 +14,11 @@
       *             screen format to be used in writing records       *
       *             to the log file.                                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CGL165             Date 23Feb15               *
-      *  Prev Amend No. CDL096             Date 22Sep14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL165             Date 23Feb15               *
+      *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 CSF011A            Date 28Nov11               *
       *                 CRE073             Date 06Dec10               *
@@ -47,6 +48,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
       *           (Recompile)                                         *
@@ -104,15 +106,15 @@
       *    RESET for subsequent passes.                               *
       *                                                               *
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
-
+ 
      FABFUNDL0  IF   E           K DISK    INFSR(*PsSr)
       ** Midas AB Internal Funding Deals by Deal No.
-
+ 
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -124,41 +126,41 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
-
+ 
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
-
+ 
      D TRANFilFmt    E DS                  EXTNAME(MMVLDNIPD)
       ** Internal Loan File Record
-
+ 
      D TRANFilFmt2   E DS                  EXTNAME(MMDELDPP)
      D QQDOR1        E                     EXTFLD(QQDORI)                                     CGL029
      D QQMOR1        E                     EXTFLD(QQMORI)                                     CGL029
@@ -168,55 +170,55 @@
      D QQPON1        E                     EXTFLD(QQPONS)                                     CGL029
      D QQINS1        E                     EXTFLD(QQINSA)                                     CGL029
       ** Internal Deal File Record
-
+ 
      D LDNIScnFmt    E DS                  EXTNAME(MMLDNIPD)
       ** Midas MM API LDNI Format Definition File
-
+ 
      D PAYFilFmt     E DS                  EXTNAME(SDESFPPD)
       ** Midas SD File Extended Settlement Instruction - Pay
-
+ 
      D PAYScnFmt     E DS                  EXTNAME(SDESSPPD)
       ** Midas SD Screen Extended Settlement Instruction - Pay
-
+ 
      D RECFilFmt     E DS                  EXTNAME(SDESFRPD)
       ** Midas SD File Extended Settlement Instruction - Receive
-
+ 
      D RECScnFmt     E DS                  EXTNAME(SDESSRPD)
       ** Midas SD Screen Extended Settlement Instruction - Receive
-
+ 
      D FRIRFilFmt    E DS                  EXTNAME(SDESFFPD)
       ** Midas SD File Extended Settlement Instruction - FRA/IRS
-
+ 
      D FRIRScnFmt    E DS                  EXTNAME(SDESSFPD)
       ** Midas SD Screen Extended Settlement Instruction - FRA/IRS
-
+ 
      D LDNIInfDta    E DS                  EXTNAME(MMLDIFPD)
       ** Midas MM LDNI Interface Data Format Definition Layout
-
+ 
      D LDNIExtDta    E DS                  EXTNAME(MMLDEXPD)
       ** Midas MM LDNI Extra Data Layout File
-
+ 
      D FUNDScnFmt    E DS                  EXTNAME(ABFUNDPD)
       ** Midas AB FUND API Screen Format Definition File
-
+ 
      D FUNDExtDta    E DS                  EXTNAME(ABFUEXPD)
      D                                     PREFIX(F)
       ** Midas AB FUND Internal Funding Deals Extra Data Layout File
-
+ 
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for Bank Details
-
+ 
      D SDDEAL        E DS                  EXTNAME(SDDEALPD)
       ** Midas SD Dealing Data
-
+ 
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** First DS for Access Programs, Short Data Structure
-
+ 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
-
+ 
      D PACTN           S              1A
      D PRTCD           S              7A
      D POPTN           S              7A
@@ -229,7 +231,7 @@
      D WIntLoan        S              6  0
                                                                                               222373
      D CAS004          S              1A                                                      222373
-
+ 
      D #TRCCY          S              3A                                                     CSF011A
      D #TPCCY          S              3A                                                     CSF011A
       *                                                                                       CGL029
@@ -240,17 +242,17 @@
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
       *****************************************************************
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** Convert file fields into screen format
-
+ 
      C                   EXSR      SRPROC
-
+ 
      C                   RETURN
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -263,34 +265,34 @@
       *                                                               *
       *****************************************************************
      C     SRPROC        BEGSR
-
+ 
      C                   EVAL      TRANSDTL = *BLANKS
      C                   EVAL      TRANFilFmt2 = *BLANKS
      C
      C                   EVAL      DDACTN = PACTN
-
+ 
       ** Process Internal Funding deals
-
+ 
      C                   IF        IKMTYP = 'ID' OR
      C                             IKMTYP = 'IL'
-
+ 
      C                   IF        IKMTYP = 'ID'
-
+ 
       ** Access internal loan
-
+ 
      C                   MOVEL     IKDADN        WIntLoan
-
+ 
      C     WIntLoan      CHAIN     ABFUNDL0                           01
-
+ 
      C                   IF        *IN01 = *ON
      C                   EVAL      DBKEY = IKDADN
      C                   EVAL      DBFILE = 'ABFUNDL0'
      C                   EVAL      DBASE = 001
      C                   EXSR      *PSSR
      C                   ENDIF
-
+ 
      C                   CALLB     'ABFUNDCVT'
-
+ 
      C                   PARM                    RetCodeOut
      C                   PARM                    PACTN
      C                   PARM                    TRANFilFmt2
@@ -302,35 +304,35 @@
      C                   PARM                    PSTSA
      C                   PARM                    PCDES
      C                   PARM                    PCDES2
-
+ 
      C                   IF        RetCodeOut <> *Blanks
      C                   EVAL      RetCodeIn = '*ERROR'
      C                   ELSE
      C                   EVAL      TRANSDTL = FUNDScnFmt + FUNDExtDta
      C                   ENDIF
-
+ 
      C                   ENDIF
-
+ 
       ** Process Loans and Deposits deals
-
+ 
      C                   ELSE
-
+ 
      C                   EXSR      SRSETD
-
+ 
      C                   CALLB     'MMLDNICVT'
-
+ 
      C                   PARM                    RetCodeOut
      C                   PARM                    TRANFilFmt
      C                   PARM                    LDNIScnFmt
      C                   PARM                    PSTS
      C                   PARM                    PCSTS
-
+ 
      C                   IF        RetCodeOut <> *Blanks
      C                   EVAL      RetCodeIn = '*ERROR'
      C                   ELSE
-
+ 
      C                   CALLB     'ZASETINCVT'
-
+ 
      C                   PARM                    PAYFilFmt
      C                   PARM                    RECFilFmt
      C                   PARM      *BLANKS       FRIRFilFmt
@@ -339,17 +341,17 @@
      C                   PARM      *BLANKS       FRIRScnFmt
      C                   PARM      DDCCY         #TRCCY                                      CSF011A
      C                   PARM      DDCCY         #TPCCY                                      CSF011A
-
+ 
      C                   EVAL      TRANSDTL = LDNIScnFmt + RECScnFmt +
      C                                        PAYScnFmt + LDNIInfDta +
      C                                        LDNIExtDta
-
+ 
      C                   ENDIF
-
+ 
      C                   ENDIF
-
+ 
      C                   ENDSR
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -362,9 +364,9 @@
       *                                                               *
       *****************************************************************
      C     SRSETD        BEGSR
-
+ 
       ** Payment Fields
-
+ 
      C                   EVAL      FLPSTM = IKPSTM
      C                   EVAL      FLPONS = IKPONS
      C                   EVAL      FLPIBN = IKPIBN
@@ -392,9 +394,9 @@
      C                   EVAL      FLCVMR = IKCVMR
      C                   EVAL      FLPSCY = IKSTCY
      C                   EVAL      FLIC72 = IKIC72
-
+ 
       ** Receipt Fields
-
+ 
      C                   EVAL      FLRSTM = IKRSTM
      C                   EVAL      FLRONS = IKRONS
      C                   EVAL      FLRIBN = IKRIBN
@@ -403,9 +405,9 @@
      C                   EVAL      FLROCN = IKROCN
      C                   EVAL      FLROBR = IKROBR
      C                   EVAL      FLRSCY = IKSTCY
-
+ 
      C                   ENDSR
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -417,68 +419,68 @@
       *  Calls    : None                                              *
       *                                                               *
       *****************************************************************
-
+ 
      C     *INZSR        BEGSR
-
+ 
      C     *ENTRY        PLIST
-
+ 
       ** INPUT
       ** =====
-
+ 
       ** Return Code
      C                   PARM                    RetCodeIn
-
+ 
       ** Action Code
      C                   PARM                    PACTN
-
+ 
       ** Midas MM Valid loan/deposit file record
      C                   PARM                    TRANFilFmt
-
+ 
       ** OUTPUT
       ** ======
-
+ 
       ** Data Replication Details Screen Format
      C                   PARM                    TRANSDTL
-
+ 
       ** Access Bank Details
-
+ 
      C                   CALL      'AOBANKR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*FIRST '     POPTN
      C     SDBANK        PARM      SDBANK        DSFDY
-
+ 
       ** Database Error
-
+ 
      C                   IF        PRTCD <> *BLANK
      C                   EVAL      DBKEY = POPTN
      C                   EVAL      DBFILE = 'SDBANKPD'
      C                   EVAL      DBASE = 900
      C                   EXSR      *PSSR
      C                   ENDIF
-
+ 
       ** Access Dealing ICD Details
-
+ 
      C**********         CALL      'AODEALR0'                                                 CGL029
      C                   CALL      'AODEALR1'                                                 CGL029
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*FIRST '     POPTN
      C*****SDDEAL        PARM      SDDEAL        DSFDY                                        CGL029
      C     SDDEAL        PARM      SDDEAL        DSSDY                                        CGL029
-
+ 
       ** Database Error
-
+ 
      C                   IF        PRTCD <> *BLANK
      C                   EVAL      DBKEY = POPTN
      C                   EVAL      DBFILE = 'SDDEALPD'
      C                   EVAL      DBASE = 901
      C                   EXSR      *PSSR
      C                   ENDIF
-
+ 
       ** Program, module and procedure names for dbase error processing
       ** ==============================================================
       ** The following /COPY sets these values.
       /COPY ZACPYSRC,DBFIELDS
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -491,4 +493,4 @@
       /COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

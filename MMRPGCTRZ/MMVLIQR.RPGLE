@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MM Validate Liquidity/Premium Rate and Sign')    *
@@ -13,12 +13,13 @@
       *             rate and sign of all MM Loans/Deposits and        *
       *             NAs Purchased transactions.                       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. 245692             Date 12Dec13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. 245692             Date 12Dec13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Prev Amend No. 256564             Date 17Sep08               *
+      *                 256564             Date 17Sep08               *
       *                 249031             Date 20Jul07               *
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
@@ -28,6 +29,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  245692 - Incorrect validation of rates when the decimal se-  *
       *           parator in the Dealing ICD was defined as "," ins-  *
       *           tead of ".".                                        *
@@ -362,4 +364,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2002
+(c) Finastra International Limited 2002

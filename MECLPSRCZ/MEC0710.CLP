@@ -7,14 +7,15 @@
 /*                                                                   */
 /*       MEC0710 - Stop meridian links                               */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2002           */
+/*       (c) Finastra International Limited 2002                     */
 /*                                                                   */
-/*       Last Amend No. AR1031152          Date 06Dec12              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR1031152          Date 06Dec12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. BUG12602A          Date 27Nov06              */
+/*                      BUG12602A          Date 27Nov06              */
 /*                      218954             Date 02Nov06              */
 /*                      BUG12602           Date 09Nov06              */
 /*                      236309             Date 03Nov05              */
@@ -25,6 +26,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       AR1031152 - Error issuing WRKMMMSVR command which calls     */
 /*                   program MEC2100. Issue command when CSW038 is   */
 /*                   switched OFF. (Child: AR1031154)                */
@@ -52,7 +54,7 @@
              DCL        VAR(&MERIDDBLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&CURLIB) TYPE(*CHAR) LEN(10)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2002')
  
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO ERROR)
@@ -138,5 +140,5 @@ ERROR:
  
 END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

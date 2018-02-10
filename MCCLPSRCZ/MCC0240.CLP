@@ -7,14 +7,15 @@
 /*                                                                   */
 /*   MCC0240 - OPNQRYF for Rework DR/CR Average Balances             */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. BUG12454           Date 06Nov06              */
-/*       Prev Amend No. BUG5976            Date 17Feb05              */
+/*       Prev Amend No. BUG12454           Date 06Nov06              */
+/*                      BUG5976            Date 17Feb05              */
 /*                      CGL029             Date 01Sep03              */
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
@@ -24,6 +25,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BUG12454 - Changed OPNQRYF statements for alpha customer    */
 /*                  number                                           */
 /*   BUG5976 - Cannot copy query file UPDBALPD to MCPOSTPD *NOCHK as */
@@ -42,7 +44,7 @@
              PGM        PARM(&GRPC &RETC)
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&GRPC) TYPE(*CHAR) LEN(2) /* Group Code */
              DCL        VAR(&RETC) TYPE(*CHAR) LEN(1) /* Return Code */
@@ -98,7 +100,7 @@
  
 /* Set up copyright                                                  */
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /***Create*GLPOSTL5X*if*is*does*not*exist*to*speedup*OPNQRYF  */      /*048237*/
  
 /*********** RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)           /*048237*/

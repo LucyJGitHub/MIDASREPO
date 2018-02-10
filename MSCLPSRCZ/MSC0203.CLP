@@ -8,8 +8,9 @@
 /*     MSC0203 - COMMUNICATIONS/COMPRESSION PROGRAM SUBMISSION      */
 /*               CONTROL                                            */
 /*                                                                  */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -17,9 +18,9 @@
 /* Midas Release 4.01 -----------------------------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.02 ---------------------------------------------------*/
-/*     Last Amend No CSW017            Date 11Feb99                 */
+/*       Prev Amend No. CSW017             Date 11Feb99              */
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*     PREV AMEND.NO CSW009            DATE 12MAR97                 */
+/*                      CSW009             Date 12Mar97              */
 /*                   CSW008            DATE 14NOV96                 */
 /*                   S01431            DATE 23SEP93                 */
 /*                   E38960            DATE 23/04/92                */
@@ -27,6 +28,7 @@
 /*                                                                  */
 /********************************************************************/
 /*                                                                  */
+/*       MD046248 - Finastra Rebranding                              */
 /*     CSW017 - Midas/SWIFT Meridian interface                      */
 /*     CSW009 - Midas-SWIFT Alliance Automated File Transfer        */
 /*     CSW008 - Processing added for SWIFT interface startup        */
@@ -38,7 +40,7 @@
              PGM
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
        /*    DCLF       FILE(SDMSDLL1)       E38960*/
@@ -105,6 +107,6 @@
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
  END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

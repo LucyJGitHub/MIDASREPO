@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('SWIFTRef - Copy to old Files')                         *
@@ -15,14 +15,16 @@
       *             Loader = 2 : This program Copy MEIBNSPD Records   *
       *             to old version of Iban Structure file : MEBICSPD. *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD036453           Date 12Nov15               *
-      *  Prev Amend No. MD022738           Date 08Oct13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD036453           Date 12Nov15               *
+      *                 MD022738           Date 08Oct13               *
       *                 CFT050  *CREATE    Date 03Jun13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD036453 - Last 5 characters of B3CPS1 CPS 1 from MEBIB3PD   *
       *             are dropped when moved to BDLOC1 Location 1.      *
       *  MD022738 - The file MEBICDPD must only be loaded with records*

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2011')
+     H COPYRIGHT('(c) Finastra International Limited 2011')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MR MBI Write to IFS')                            *
@@ -12,12 +12,14 @@
       *  Function: This program is used to write to the integrated    *
       *            File System.                                       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2011            *
+      *  (c) Finastra International Limited 2011                      *
       *                                                               *
-      *  Last Amend No. AR844222 *CREATE   Date 30Sep11               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR844222 *CREATE   Date 30Sep11               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR844222 - MBI signal file format update (CCR003)            *
       *                                                               *
       *****************************************************************
@@ -196,4 +198,4 @@
       /EJECT
       *****************************************************************
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2011
+(c) Finastra International Limited 2011

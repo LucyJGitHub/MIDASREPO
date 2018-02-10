@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas ME Network A/c MT94x Dtl Desc.- Key Validat°')   *
@@ -16,10 +16,11 @@
       *             Note that this module should only be called for   *
       *             "Insert".                                         *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD040941           Date 05Sep16               *
-      *  Prev Amend No. BUG22523           Date 03Feb09               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD040941           Date 05Sep16               *
+      *                 BUG22523           Date 03Feb09               *
       *                 BUG22481           Date 02Feb09               *
       *                 BUG22418           Date 02Feb09               *
       *                 BG21987            Date 22Jan09               *
@@ -40,6 +41,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD040941 - Non Swift-BIC is not accepted in Network accounts.*
       *             Introduce a new system value to control whether   *
       *             non SWIFT-BIC & non customer numbers are allowed. *
@@ -63,7 +65,7 @@
       *  CGL013 - MT94x Message Generation                            *
       *                                                               *
       *****************************************************************
-
+ 
      FGLNW94L1  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(GLNW94D0:GLNW94D1)
       ** Midas GL Network Accounts - MT94x - Retrieval
@@ -99,11 +101,11 @@
       * 99 - Multi-purpose                                            *
       *                                                               *
       *****************************************************************
-
+ 
       ** Automatically included D-specs
       ** ==============================
       *
-
+ 
       ** The following /COPY line includes the LDA layout,
       ** the copyright array definition,
       ** and the following named constants:
@@ -115,52 +117,52 @@
       **    RunBefore  1A (for the PSSR)
       *
      D/COPY ZACPYSRC,STD_D_SPEC
-
+ 
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
       *
      D/COPY ZACPYSRC,PSDS
-
+ 
       ** Manually included D-specs
       ** =========================
       *
-
+ 
       ** Named constants
       ** ---------------
       *
-
+ 
       ** Arrays and Data Structures
       ** --------------------------
       *
-
+ 
      D NewFilRcd     E DS                  EXTNAME(GLNW94PD)
       ** New Network Account MT94x Detais File Record (i.e. new state after amendments)
       *
-
+ 
      D ScrLayout     E DS                  EXTNAME(ME002320DF:ME002320F0)
       ** Key Screen Layout
       *
-
+ 
      D DsNWRK        E DS                  EXTNAME(SDNWRKPD)
       ** Network details record format data structure
       *
-
+ 
      D DsCUST        E DS                  EXTNAME(SDCUSTPD)
       ** Midas SD Customer Details record layout
       *
-
+ 
      D DsCNST        E DS                  EXTNAME(SDCNSTPD)
       ** Midas SD Counterparty Nostro Details record layout
       *
-
+ 
      D DsBICD        E DS                  EXTNAME(MEBICDPD)
       ** Midas BIC Directory Details record layout
       *
-
+ 
      D DSLDY         E DS                  EXTNAME(DSLDY)
       ** DS (longest) used as output parameter for Access Objects
       *
-
+ 
       *                                                                                       CER030
       ** Short data structure                                                                 CER030
       *                                                                                       CER030
@@ -174,10 +176,10 @@
       *
       ** Destination Second format
      D DSTNScdFmt      S                   LIKE(F0DSTN)
-
+ 
       ** Destination Key Field
      D K0DSTN          S                   LIKE(F0DSTN)
-
+ 
       ** Error Indicators Array
       *
      D IN40_TO_70      S              1    DIM(31)
@@ -195,7 +197,7 @@
      D WPos            S              2S 0                                                    CER030
      D WDstn8          S              8A                                                     BG21986
      D WChk#           S              1S 0                                                  BUG22523
-
+ 
       *                                                                                     BUG22523
       ** Constants                                                                          BUG22523
      D CDigits         C                   '0123456789'                                     BUG22523
@@ -228,7 +230,7 @@
       ** C Spec. Declaratives
       ** ====================
       *
-
+ 
       ** Entry Parameters
       *
      C     *ENTRY        PLIST
@@ -238,7 +240,7 @@
      C                   PARM                    ScrLayout
      C                   PARM                    IN40_TO_70
      C                   PARM                    NewFilRcd
-
+ 
       ** Key lists
       *
      C     KGLNW94L1     KLIST
@@ -264,17 +266,17 @@
      C     KGLNW94L10    KLIST                                                              BUG22418
      C                   KFLD                    F0NWRK                                     BUG22418
      C                   KFLD                    F0DSTN                                     BUG22418
-
+ 
       *========================================================================*
       *              M  A  I  N     P  R  O  C  E  S  S  I  N  G               *
       *========================================================================*
-
+ 
       ** Init processing uses the standard *INZSR SR
-
+ 
       *------------------------------------------------------------------------*
       *                         Key Fields Validation                          *
       *------------------------------------------------------------------------*
-
+ 
       ** Destination Id.
       *
       ** -- The field is mandatory
@@ -326,13 +328,13 @@
      C                   ELSE                                                                BG21986
       *                                                                                       CER030
      C**********         IF        ZAMSID = *BLANKS                                   CER030 BG21986
-
+ 
       ** -- The field must contain a live SWIFT BIC or customer number
       **    Also, the BIC is only allowed for a "*SWIFT" network protocol
       *
      C                   MOVEL     F0DSTN        @BICC
      C                   MOVE      F0DSTN        @BICB
-
+ 
      C                   CALL      'ME1400'
      C                   PARM      *Blanks       @RtCd                          I:Return code
      C                   PARM                    @BICC             8            I:Bic Code
@@ -343,23 +345,23 @@
      C                   PARM      *Blanks       @ICUST            1            O:Customer found
      C                   PARM      *Blanks       @ICNST            1            O:Counterparty fd
      C                   PARM      *Blanks       @IBICD            1            O:Bic found
-
+ 
  B2  C                   IF        EDPROT = '*SWIFT'
-
+ 
  B3  C                   IF        @ICUST <> 'Y' AND @IBICD <> 'Y'
  B3  C                             OR @ICUST = 'Y' AND BBCSID = *BLANKS
      C                   MOVE      'ME00056'     ZAMSID
      C                   MOVE      *On           *IN41
  E3  C                   ENDIF
-
+ 
      ** Do not convert automatically the customer number in SWIFT address
       *
  B3  C*******            IF        @ICUST = 'Y' AND BBCSID <> *BLANKS
      C*******            MOVEL(P)  BBCSID        F0DSTN              Load SWIFT address
  E3  C*******            ENDIF
-
+ 
  X2  C                   ELSE
-
+ 
      C                   MOVE      'N'           ZWARN             1                        MD040941
  B3  C                   IF        @ICUST <> 'Y'
      C                   IF        WSysVal01 = 'N'                                          MD040941
@@ -370,9 +372,9 @@
      C                   MOVE      'Y'           ZWARN                                      MD040941
      C                   ENDIF                                                              MD040941
  E3  C                   ENDIF
-
+ 
  E2  C                   ENDIF
-
+ 
       ** Retrieve the second format of the destination
       *
      C                   IF        @ICUST = 'Y'
@@ -382,10 +384,10 @@
      C                   EVAL      DSTNScdFmt = BBCSID
      C                   ENDIF
      C                   ENDIF
-
+ 
      C                   ENDIF                                                                CER030
  E1  C                   ENDIF
-
+ 
       ** -- If an error was found
       *
      C**********         IF        *IN41                                                    MD040941
@@ -433,15 +435,15 @@
       *                                                                                       CER030
      C**********         ENDIF                                                       CER030 BUG22481
       *                                                                                       CER030
-
+ 
       ** End the module if any error encountered
       *
      C   40              EXSR      $ExitMod
-
+ 
       *------------------------------------------------------------------------*
       *                  Database Keys Consistency Validation                  *
       *------------------------------------------------------------------------*
-
+ 
       ** Check if the key already exists in the database with the second format of the
       ** Destination.
       *
@@ -455,12 +457,12 @@
      C                   MOVE      *On           *IN40
      C                   MOVE      *On           *IN41
      C                   ENDIF
-
+ 
       ** Check if the key already exists in the database
       *
      C                   EVAL      K0DSTN = F0DSTN
      C     KGLNW94L1     CHAIN     GLNW94D1                           99
-
+ 
       ** -- The record already exists ==> error if it is not deleted,
       **                    otherwise change the Action Code to Amend
       *
@@ -477,21 +479,21 @@
  E2  C                   ENDIF
       *
  E1  C                   ENDIF
-
+ 
       ** End of the module
       *
      C                   EXSR      $ExitMod
-
+ 
       *========================================================================*
       *                    S  U  B  R  O  U  T  I  N  E  S                     *
       *========================================================================*
-
+ 
       *========================================================================*
       * $ZaSndMsg : Send message to the program message queue                  *
       *------------------------------------------------------------------------*
      C     $ZaSndMsg     BEGSR
       *    ----------    ------
-
+ 
      C                   CALL      'Y2SNMGC'
      C                   PARM                    ZAPGM
      C                   PARM                    ZAPGRL
@@ -501,7 +503,7 @@
      C                   PARM                    ZAMSTP
       *    ----------    ------
      C     @ZaSndMsg     ENDSR
-
+ 
       *========================================================================*
       * $ExitMod  : Exit from the module                                       *
       *------------------------------------------------------------------------*
@@ -510,12 +512,12 @@
       ** Return the current values of the error indicators
       *
      C                   MOVEA     *IN(40)       IN40_TO_70
-
+ 
      C                   MOVE      *On           *INLR
      C                   RETURN
       *    ----------    ------
      C     @ExitMod      ENDSR
-
+ 
       *========================================================================*
       * *INZSR    : Init Processing                                            *
       *========================================================================*
@@ -524,42 +526,42 @@
       ** Initialise Copyright Array
       *
      C                   MOVEA     CPY@          CPY@@            80
-
+ 
       ** Define fields used by the message sending function
       *
       ** -- If no named caller --> set-up ZAPGM with the current program name
       *
      C                   IF        CallerIn = *Blanks
      C                   MOVEL     PSProcPgm     ZAPGM            10
-
+ 
       ** -- Otherwise set-up ZAPGM with the caller name
       *
      C                   ELSE
      C                   MOVEL     CallerIn      ZAPGM
      C                   ENDIF
-
+ 
      C                   MOVEL     'MEMSG'       ZAMSGF           10
      C                   MOVEL     '*SAME'       ZAPGRL            5
      C                   MOVEL     *Blanks       ZAMSID            7
      C                   MOVEL     *Blanks       ZAMSDA          132
      C                   MOVEL     *Blanks       ZAMSTP            7
-
+ 
       ** Initialize error indicators with the values passed by the caller
       *
      C                   MOVEA     IN40_TO_70    *IN(40)
-
+ 
       ** Reset general error indicator
       *
      C                   MOVE      *OFF          *IN40
-
+ 
       ** Clear the return code
       *
      C                   EVAL      RetCodeOut = *Blanks
-
+ 
       ** Clear the second format of the destination
       *
      C                   EVAL      DSTNScdFmt = *Blanks
-
+ 
       ** Retrieve the associated network record
       *
      C                   CALLB     'AONWRKR1'
@@ -567,7 +569,7 @@
      C                   PARM      '*KEY'        @Optn
      C                   PARM      F0NWRK        @NWRK             6
      C     DsNWRK        PARM                    DSLDY
-
+ 
      C                   IF        @RtCd <> *Blanks
      C     *LOCK         IN        LDA
      C                   EVAL      DBFile = 'SDNWRKPD'                          *=======*
@@ -637,24 +639,24 @@
                                                                                             MD040941
       *    ----------    ------
      C     @INZSR        ENDSR
-
+ 
       *========================================================================*
       * *PSSR     : Program exception error subroutine                         *
       *------------------------------------------------------------------------*
      C     *PSSR         BEGSR
       *    ----------    ------
      C                   DUMP
-
+ 
      C                   EVAL      *INU7 = *On
      C                   EVAL      *INU8 = *On
-
+ 
      C                   CALLB     'DBERRCTL'                           99
-
+ 
      C                   MOVEL(P)  '*ERROR'      RetCodeOut
      C                   EXSR      $ExitMod
       *    ----------    ------
      C     @PSSR         ENDSR
-
+ 
       *========================================================================*
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2002
+(c) Finastra International Limited 2002

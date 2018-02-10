@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MM Repo rollover maintenance')                   *
@@ -12,10 +12,11 @@
       *  Function:  This is the main screen input function            *
       *             for Repo rollovers.                               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR701789           Date 26Sep16               *
-      *  Prev Amend No. MD036070           Date 19Oct15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR701789           Date 26Sep16               *
+      *                 MD036070           Date 19Oct15               *
       *                 CGL165             Date 23Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -74,6 +75,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR701789 - Unable to reject a deal amendment. Add a new      *
       *             parameter to indicate reject transaction.         *
       *             Applied for MD041482                              *
@@ -149,7 +151,7 @@
       *  CSE006 - Repurchase Agreements (REPOs) enhancement           *
       *                                                               *
       *****************************************************************
-
+ 
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -161,57 +163,57 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
-
+ 
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
-
-
+ 
+ 
      D CrDlFilFmt    E DS                  EXTNAME(MMDELDPP)
       * Current Deal in File Format
-
+ 
      D InfData       E DS                  EXTNAME(MMLDIFPD)
      D                                     PREFIX(IF_)
       * MM Extra Data - File (D/B) format
-
+ 
      D NwDlFilFmt    E DS                  EXTNAME(MMVLDNIPD)
       * New Deal in File Format
      D QQDOR1        E                     EXTFLD(QQDORI)                                     CGL029
@@ -229,38 +231,38 @@
      D**IKPAYEx*****        1759   1776                                               CGL029 BUG8949
      D  IKRECEx             1756   1773                                                      BUG8949
      D  IKPAYEx             1774   1791                                                      BUG8949
-
+ 
      D NwDlScnFmt    E DS                  EXTNAME(MMLDNIPD)
       * New Deal in Screen Format
-
+ 
      D MMELDNI       E DS                  EXTNAME(MMELDNIPD)
       * Error indicators
-
+ 
      D**  Data structure of Depot Movement File                                               CAP087
      D DPTXX         E DS                  EXTNAME(DPTMVDL1) PREFIX(D)                        CAP087
-
+ 
      D ##RECF        E DS                  EXTNAME(SDESFRPD)
       ** FILE RECEIVE INSTRUCTIONS
      D**FLREC**                1     69                                                       CGL029
      D  FLREC                 21     75                                                       CGL029
-
+ 
      D ##PAYF        E DS                  EXTNAME(SDESFPPD)
       *** FILE PAYMENT INSTRUCTIONS
      D**FLPAY**                1    559                                                       CGL029
      D  FLPAY                 21    565                                                       CGL029
-
+ 
      D ##FRIF        E DS                  EXTNAME(SDESFFPD)
       ** FILE FRA/IRS INSTRUCTIONS
-
+ 
      D ##RECS        E DS                  EXTNAME(SDESSRPD)
       ** SCREEN RECEIVE INSTRUCTIONS
-
+ 
      D ##PAYS        E DS                  EXTNAME(SDESSPPD)
       ** SCREEN PAYMENT INSTRUCTIONS
-
+ 
      D ##FRIS        E DS                  EXTNAME(SDESSFPD)
       ** SCREEN FRA/IRS INSTRUCTIONS
-
+ 
      D @SETIN          DS
       ** Receive / Pay Settlement Currency, Method & Nostro
      D  @@RSCY                 1      3
@@ -273,28 +275,28 @@
      D  @@PSCY                24     26                                                       CGL029
      D  @@PSTM                27     28  0                                                    CGL029
      D  @@PONS                29     46                                                       CGL029
-
+ 
      D                 DS
       **  Data structure for date in, to change format.
      D  DateIn                 1      8  0
      D  @@YY                   1      4  0
      D  @@MM                   5      6  0
      D  @@DD                   7      8  0
-
+ 
      D*@MORPI*****     DS                                                              179510 200400
       ***Midas*Our Receive / Pay  Instructions (for Settl Meth = 04 )                  179510 200400
      D**@@MORI****             1     12                                                179510 200400
      D**@@MOPI****            13     24                                                179510 200400
-
+ 
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
-
+ 
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** MIDAS MODULES DETAILS ACCESSED VIA ACCESS PROGRAM
-
+ 
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
-
+ 
      D ExtData       E DS                  EXTNAME(MMLDEXPD)
       * MM (LDNI) Extra Data - File (D/B) format
      D #FPAYF        E DS                  EXTNAME(SDFSFPPD)                                  CDL033
@@ -302,18 +304,18 @@
                                                                                               CDL033
      D #FRECF        E DS                  EXTNAME(SDFSFRPD)                                  CDL033
       ** File - Receive Further Settlement Instructions                                       CDL033
-
+ 
      D/COPY QWINDSRC,MMLDNISDTA
-
+ 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
-
+ 
       ** Response Mode, passed as a constant parameter to the VAL module
       ** This is always 'S' for Synchronous
      D RespMode        S              1A   INZ('S')
-
+ 
       ** Export variable - Repo transaction if 'Y'
      D RepoFlag        S              1A   INZ('Y') EXPORT
                                                                                               CAP087
@@ -331,20 +333,20 @@
      D BlankBRCA       S              3A                                                      CSD095
                                                                                               CSD095
      D/COPY WNCPYSRC,MMREPOWD01
-
-
+ 
+ 
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
-
+ 
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
       /COPY WNCPYSRC,MMREPOO009
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -355,74 +357,74 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
-
+ 
       /COPY WNCPYSRC,MMREPOO001
-
+ 
       * DO SCREEN: BROWSE ROLLOVER DEALS
      C     @SCRN         IFEQ      'B'
      C                   EXSR      SCRN@B
      C                   END
-
+ 
       /COPY WNCPYSRC,MMREPOO002
-
+ 
       * READ NEXT BROWSE SUBFILE RECORD
      C     @SCRN         IFEQ      'R'
      C                   EXSR      RDNBRW
      C                   END
-
+ 
       /COPY WNCPYSRC,MMREPOO003
-
+ 
       * DO WHILE SCREEN: MAIN DETAILS
      C     @SCRN         DOWEQ     'M'
      C                   EXSR      SCRN@M
      C                   END
-
+ 
       /COPY WNCPYSRC,MMREPOO004
-
+ 
       * SCREEN: WINDOW
      C     @SCRN         IFEQ      'W'
      C                   EXSR      WINDOW
      C                   END
-
+ 
       /COPY WNCPYSRC,MMREPOO005
-
+ 
       * DO WHILE SCREEN: SETTLEMENT DETAILS
      C     @SCRN         DOWEQ     'S'
      C                   EXSR      SCRN@S
      C                   END
-
+ 
       /COPY WNCPYSRC,MMREPOO006
-
+ 
       * DO WHILE SCREEN: REPO DELIVERY
      C     @SCRN         DOWEQ     'D'
      C                   EXSR      SCRN@D
      C                   END
-
+ 
       /COPY WNCPYSRC,MMREPOO007
-
+ 
       * SCREEN: CONFIRMATION OF INPUT
      C     @SCRN         IFEQ      'C'
      C                   EXSR      SCRN@C
      C                   END
-
+ 
       /COPY WNCPYSRC,MMREPOO008
-
+ 
       * DO FILE UPDATES
      C     @SCRN         IFEQ      'U'
      C                   EXSR      UPDATS
      C                   END
-
+ 
       /COPY WNCPYSRC,MMREPOO009
-
+ 
       * TERMINATE PROGRAM
      C     @SCRN         IFEQ      'T'
      C                   MOVE      '1'           *INLR
      C                   END
       *****************************************************************
-
+ 
       * Hook to enable non-core subroutines to be included
       /COPY WNCPYSRC,MMREPOO010
-
+ 
       /EJECT
       *****************************************************************
       * SCRN@B - BROWSE ROLLOVER DEALS
@@ -1750,10 +1752,10 @@
       *
      C                   MOVEL     'B'           @SCRN             1
       *
-
+ 
       *  Hook to enable non-core initial processing to be included
       /COPY WNCPYSRC,MMREPOO011
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1766,4 +1768,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

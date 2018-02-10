@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas MS check success of FTP operation')              *
@@ -18,11 +18,12 @@
       *  Called By: MSC3200 - Alliance automated transmission         *
       *             MSC3250 - Alliance automated receive              *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CPK030             Date 14Apr14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CPK030             Date 14Apr14               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Prev Amend No. 257515             Date 11Nov08               *
+      *                 257515             Date 11Nov08               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
@@ -37,6 +38,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CPK030 - Clean up of deliverable data library.               *
       *  257515 - Swift message can't be found in swift alliance.     *
       *  CSW027 - Midas message manager AFT interface                 *

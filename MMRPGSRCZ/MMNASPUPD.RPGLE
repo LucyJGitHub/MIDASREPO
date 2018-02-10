@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MM NAs Purchased DL Database Update')            *
@@ -9,10 +9,11 @@
       *                                                               *
       *  MMNASPUPD - NAS PURCHASED DL DATABASE UPDATE                 *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
-      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 01Sep14               *
       *                 MD025244           Date 09May14               *
@@ -55,6 +56,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
@@ -127,24 +129,24 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       *
       **  EXTERNALLY DESCRIBED DATA STRUCTURE FOR VALID NAS PURCHASED
@@ -175,16 +177,16 @@
       *
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** DATA STRUCTURE FOR BANK DETAILS
- 
+
      D SDTRAD        E DS                  EXTNAME(SDTRADPD)
       ** External DS for TRADE Details
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ** External DS for CURRENCY Details
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       * FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       * SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
                                                                                               CAS001
@@ -198,7 +200,7 @@
      D PRTCD           S              7A                                                      CAS001
      D POPTN           S              7A                                                      CAS001
      D PSARD           S              6A                                                      CAS001
- 
+
       ** Define fields used in CAS005                                                         CAS005
                                                                                               CAS005
      D CAS005          S              1A                                                      CAS005
@@ -1810,4 +1812,4 @@
      C                   ENDSR
      C****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

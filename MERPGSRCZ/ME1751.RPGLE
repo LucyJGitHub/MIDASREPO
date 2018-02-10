@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2006')
+     H COPYRIGHT('(c) Finastra International Limited 2006')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas ME Outgoing Message Field Management Report')
@@ -15,12 +15,13 @@
       *                                                               *
       *  Called By: ME1751 - ME Outgoing Message Field Management     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2006            *
+      *  (c) Finastra International Limited 2006                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. BUG14042           Date 24May07               *
-      *  Prev Amend No. CSW207             Date 07Jul07               *
+      *  Prev Amend No. BUG14042           Date 24May07               *
+      *                 CSW207             Date 07Jul07               *
       *                 BUG13798           Date 24Apr07               *
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
@@ -28,6 +29,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG14042 - CFT032 errors ; applied fix 13798 (Recompile)     *
       *  CSW207 - SWIFT 2007 Standard Changes                         *
       *  BUG13978 - CFT032 errors (Recompile)                         *

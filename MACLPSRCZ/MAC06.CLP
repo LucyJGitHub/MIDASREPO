@@ -10,12 +10,13 @@
 /*                                                                   */
 /*  MAC06    - Archive Batch job Control                             */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. AR1097467A         Date 12Apr13              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. AR1097467          Date 12Apr13              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. BUG1804            Date 25May04              */
+/*                      BUG1804            Date 25May04              */
 /* Midas Release 4.01 -----------------------------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.05 ---------------------------------------------------*/
@@ -32,6 +33,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*  AR1097467A - Expected 15% COB run optimization not met           */
 /*  BUG1804 - Only perform delay job if Correspondence Manager is    */
 /*            switched off as CM generates XML output and not SPLF.  */
@@ -63,7 +65,7 @@
  DCL        VAR(&FMT) TYPE(*CHAR) LEN(200)                            /*165866*/
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&FMT)  TYPE(*CHAR) LEN(200)               /*175941*/
              DCL        VAR(&CGDTA)  TYPE(*CHAR) LEN(512)             /*175941*/
@@ -151,7 +153,7 @@ CHKRUN:      RTVDTAARA  DTAARA(CGDTA)   RTNVAR(&CGDTA)                /*175941*/
  
  chgjob     sws(XXXXXX00)
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
  
 /* Retrieve Archiving Status                                       */

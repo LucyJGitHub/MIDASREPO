@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas ME SWIFTRef BANK DIRECTORY Plus Converter')      *
@@ -15,14 +15,16 @@
       *                                                               *
       *  Called By: MEC001425 and other                               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. CFT051             Date 02Jun15               *
-      *  Prev Amend No. MD023533           Date 18Nov13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CFT051             Date 02Jun15               *
+      *                 MD023533           Date 18Nov13               *
       *                 CFT050  *CREATE    Date 03Jun13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CFT051 - SWIFTRef Directories 2014                           *
       *  MD023533 - GOC0100 seq 00199 failed in COB (Recompile)       *
       *  CFT050 - SWIFTRef Directories upload                         *
@@ -518,7 +520,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
-
+ 
      C                   OPEN      METIB3PD                             99
      C     *IN99         IFEQ      '1'
      C     *LOCK         IN        LDA
@@ -528,7 +530,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
-
+ 
      C                   READ      MEDWB3PD                               71
       *
      C     *IN71         IFEQ      '1'
@@ -635,9 +637,9 @@
       *
      C                   OPEN      MEDWCUPD                             99
      C     *IN99         IFEQ      '1'
-
+ 
       ** No File/No Data - Ignore
-
+ 
      C                   ELSE
      C                   OPEN      METICUPD                             99
      C     *IN99         IFEQ      '1'
@@ -652,9 +654,9 @@
      C                   READ      MEDWCUPD                               71
       *
      C     *IN71         IFEQ      '1'
-
+ 
       ** No File/No Data - Ignore
-
+ 
      C                   ELSE
       *
       ** Convert in EBCDIC and write in METICUPD each formatted records
@@ -694,9 +696,9 @@
       *
      C                   OPEN      MEDWHLPD                             99
      C     *IN99         IFEQ      '1'
-
+ 
       ** No File/No Data - Ignore
-
+ 
      C                   ELSE
      C                   OPEN      METIHLPD                             99
      C     *IN99         IFEQ      '1'
@@ -711,9 +713,9 @@
      C                   READ      MEDWHLPD                               71
       *
      C     *IN71         IFEQ      '1'
-
+ 
       ** No File/No Data - Ignore
-
+ 
      C                   ELSE
       *
       **  Convert in EBCDIC and write in METIHLPD each formatted records
@@ -753,9 +755,9 @@
       *
      C                   OPEN      MEDWTZPD                             99
      C     *IN99         IFEQ      '1'
-
+ 
       ** No File/No Data - Ignore
-
+ 
      C                   ELSE
      C                   OPEN      METITZPD                             99
      C     *IN99         IFEQ      '1'
@@ -770,9 +772,9 @@
      C                   READ      MEDWTZPD                               71
       *
      C     *IN71         IFEQ      '1'
-
+ 
       ** No File/No Data - ignore
-
+ 
      C                   Else
       *
       ** Convert in EBCDIC and write in METITZPD each formatted records
@@ -1521,7 +1523,7 @@
      C                   EVAL      BCFLAG = DATA(2)
      C                   EVAL      BCCNTC = DATA(3)
      C                   EVAL      BCCNTY = DATA(4)
-
+ 
      C                   WRITE     @BICCPD
       *
      C                   ENDSR
@@ -1631,7 +1633,7 @@
      C                   EVAL      N3FLB2 = %SUBST(TMP105:36:35)
       *
      C                   WRITE     MEIBN3D0
-
+ 
      C                   ENDSR
       *
       /EJECT

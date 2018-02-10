@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MM Loans/deposits rollover validation')          *
@@ -12,10 +12,11 @@
       *  Function:  This module validates the rollover attributes of a*
       *             deal that would roll over a given deal.           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR701789           Date 26Sep16               *
-      *  Prev Amend No. CGL165             Date 23Feb15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR701789           Date 26Sep16               *
+      *                 CGL165             Date 23Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 CDL093             Date 08Apr14               *
@@ -69,6 +70,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR701789 - Unable to reject a deal amendment. Add a new      *
       *             parameter to indicate reject transaction.         *
       *             Applied for MD041482                              *
@@ -138,8 +140,8 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
-
-
+ 
+ 
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -151,57 +153,57 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
-
+ 
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
-
+ 
      D CrDlFilFmt    E DS                  EXTNAME(MMDELDPP)
       * Current Deal in File Format
      D  Z_HKCCY      E                     EXTFLD(HKCCY)
      D  Z_HKCYDP     E                     EXTFLD(HKCYDP)
-
+ 
      D SDBSRT        E DS                  EXTNAME(SDBSRTPD)
       ** EXTERNAL DS FOR BASE RATE DETAILS
-
+ 
      D SDCURR        E DS                  EXTNAME(SDCURRPD)                                  238592
       ** EXTERNAL DS FOR CURRENCY DETAILS                                                     238592
                                                                                               238592
@@ -209,18 +211,18 @@
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
      D DSSDY         E DS                  EXTNAME(DSSDY)                       CSD006
       ** SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                     CSD006
-
+ 
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                MD025680
       ** External DS for SAR Details                                                        MD025680
-
+ 
      D/COPY WNCPYSRC,MMLDNIYD01
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
-
+ 
      D HKCYDP          S              1S 0
-
+ 
       ** Index for arrays of error message ids etc
      D Ix              S              3P 0
      D Wx              S              3P 0
@@ -247,7 +249,7 @@
      D ddDCSGOK        S              1A                                                      CRE073
      D WWBRTT          S             11P 7                                                    CRE073
      D WDDBRTT         S             12A                                                      CRE073
-
+ 
      D CER016          S              1A                                                    MD025680
      D PRtCd           S              7A                                                    MD025680
      D POptn           S              7A                                                    MD025680
@@ -1106,4 +1108,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

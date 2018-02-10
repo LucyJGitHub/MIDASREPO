@@ -7,16 +7,18 @@
 /*                                                                   */
 /*       MXC0460 - Midas MX Add Export Member                        */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2006           */
+/*       (c) Finastra International Limited 2006                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CMX013  *CREATE    Date 29Jun06              */
+/*       Prev Amend No. CMX013  *CREATE    Date 29Jun06              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CMX013 - Allow additional members                           */
 /*                                                                   */
 /*********************************************************************/
@@ -25,7 +27,7 @@
              DCL        VAR(&RTCDE) TYPE(*CHAR) LEN(7)
              DCL        VAR(&MBR) TYPE(*CHAR) LEN(10)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2006')
  
 /* Global monitor message */
@@ -84,7 +86,7 @@
              DSPJOB     OUTPUT(*PRINT)
              CHGVAR     VAR(&RTCDE) VALUE('*ERROR')
  
- END:        CHGVAR     VAR(&CPYFLD) VALUE('(c) Misys International +
-                          Banking Systems Ltd.')
+ END:        CHGVAR     VAR(&CPYFLD) VALUE('(c) Finastra International +
+                          Limited')
  
 ENDPGM

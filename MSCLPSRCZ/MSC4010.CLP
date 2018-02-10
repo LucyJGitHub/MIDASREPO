@@ -7,16 +7,17 @@
 /*                                                                   */
 /*     MSC4010 - COMMUNICATIONS WITH S.T.S. DEVICE.                  */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
-/*     Last Amend No. CPK014           Date 10Oct01                  */
+/*       Prev Amend No. CPK014             Date 10Oct01              */
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*     Prev Amend No. CPK009           Date 09Aug99                  */
+/*                      CPK009             Date 09Aug99              */
 /*                   100505            DATE 28MAY96                  */
 /*                   089131            DATE 28MAY96                  */
 /*                   068102            DATE 20JAN94                  */
@@ -32,6 +33,7 @@
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*     CPK014 - Release 4 packaging:                                 */
 /*              - Removal of ST200 related programs.                 */
 /*     CPK009 - Packaging for DBA3 release. STRCMTCTL values set     */
@@ -75,7 +77,7 @@
              DCL        VAR(&MEM2) TYPE(*CHAR) LEN(50)                /*S01259*/
 /************DCL********VAR(&SWII) TYPE(*CHAR) LEN(1)           /*S01259S01310*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /**/                                                                  /*S01436*/
              DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)                 /*S01436*/
@@ -237,5 +239,5 @@ MISSERR:                                                              /*S01250*/
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
 /*                                                                   */
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  END:        ENDPGM

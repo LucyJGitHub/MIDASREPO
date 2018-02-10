@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MM Validate Midas Taxable indicator')            *
@@ -15,7 +15,7 @@
       *             If it is valid the 10A return code will be blank, *
       *             if it is not it will contain  'Error'             *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *    This source is centrally supported and must ONLY be        *
       *    amended by Core Development Personnel                      *
@@ -23,8 +23,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CER069             Date 03Jul14               *
-      *  Prev Amend No. MD028368           Date 19Aug14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CER069             Date 03Jul14               *
+      *                 MD028368           Date 19Aug14               *
       *                 CLE134             Date 01Aug12               *
       *                 AR762349A          Date 08Jun11               *
       *                 AR762349           Date 03Jun11               *
@@ -57,6 +58,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CER069 - German Tax Enhancement                              *
       *  MD028368 - Taxable Indicator defaulted to 'T' if             *
       *             counterparty is taxable.                          *
@@ -1197,4 +1199,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

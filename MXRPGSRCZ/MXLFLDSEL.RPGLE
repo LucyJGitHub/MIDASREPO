@@ -1,6 +1,6 @@
      H DEBUG
 /*XBIF*: OVRDBF FILE(MXEXFFZZ) TOFILE(MXEXFFPD) SHARE(*NO)          : *
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MX Link Fields Selection')
@@ -13,19 +13,21 @@
       *  Function:  This module allows selection and enquiry          *
       *             of link fields                                    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. 251519             Date 20Nov07               *
+      *  Prev Amend No. 251519             Date 20Nov07               *
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.05 -----------------------------------------------*
-      *  Prev Amend No. CMX001  *CREATE    Date 01Jan00               *
+      *                 CMX001  *CREATE    Date 01Jan00               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  251519 - Moved SUBFLCTL record format after FOOTER to prevent*
       *           WF0092 application error from occurring in the      *
       *           webface screen. Patterned after CAAA03. Also, moved *
@@ -631,4 +633,4 @@
       /COPY MXCPYSRC,MXPSSR
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

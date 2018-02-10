@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MM Validate next interest date')                 *
@@ -15,7 +15,7 @@
       *             will be blank; if it is not it will contain       *
       *             'Error'                                           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *    This source is centrally supported and must ONLY be        *
       *    amended by Core Development Personnel                      *
@@ -23,8 +23,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. CGL165             Date 23Feb15
-      *  Prev Amend No. CDL096I01               03Nov14
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL165             Date 23Feb15               *
+      *                                    Date                       *
       *                 CDL096             Date 22Sep14               *
       *                 AR1078867          Date 29Jan13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -44,6 +45,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096I01 - Fix incorrect message data                       *
       *  CDL096 - Business Day Conventions on MM Deals                *
@@ -68,7 +70,7 @@
       *           use as APIs.                                        *
       *                                                               *
       *****************************************************************
-
+ 
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -87,61 +89,61 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
-
+ 
      D/COPY ZACPYSRC,STD_D_SPEC
-
+ 
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
-
+ 
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
-
+ 
      D/COPY ZACPYSRC,PSDS
-
+ 
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
-
+ 
       **  Array for SR. IDATE1 - Days in a month.  (Compile time array)
      D @M              S              2  0 DIM(12) CTDATA PERRCD(12)
-
+ 
       ** External data structure for access programs (short)
      D DSFDY         E DS                  EXTNAME(DSFDY)
-
+ 
       ** External data structure for access programs (long)
      D DSSDY         E DS                  EXTNAME(DSSDY)
-
+ 
       ** External data structure for book codes file
      D SDNOST        E DS                  EXTNAME(SDNOSTPD)
-
+ 
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-
+ 
      D ZAVDATE         C                   CONST('ZAVDATE')
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
-
+ 
      D @RTCDE          S              1A
      D @KEYF           S              3A
      D @KEYG           S             10A
@@ -152,23 +154,23 @@
      D DDTYPE          S              2A
      D DDACTN          S              1A
      D DDCCY           S              3A
-
+ 
       ** Next intereset payment date received as a parameter
      D DDNDAT          S              6A
-
+ 
       ** Value date received as a parameter
      D DDVDAT          S              6A
-
+ 
       ** Intereset payment frequency received as a parameter
      D DDIPFQ          S              1A
-
+ 
       ** Error message code 1 returned to caller
      D Msgid1          S                   LIKE(#MsgID)
-
+ 
       ** Warning messages returned to caller
      D WMsgid1         S                   LIKE(#MsgID)
      D WMsgid2         S                   LIKE(#MsgID)
-
+ 
      D PMERCD          S            150A
      D***PMPONS*         S             12A                                                    CGL029
      D PMPONS          S             18A                                                      CGL029
@@ -177,21 +179,21 @@
      D PMRONS          S             18A                                                      CGL029
      D PMRSTM          S              2S 0
      D @KEYC           S             10A                                                      CGL029
-
+ 
       ** Location code for holiday checking
      D ZLOC            S              3A
-
+ 
       ** Holiday indicator
      D ZIND            S              1A
-
+ 
       ** Next interest date converted to Midas day number format
      D @NDYNO          S              5  0
-
+ 
       ** Deal file version of next interest date
      D IKNIPD          S                   LIKE(@NDYNO)
                                                                                 CDL006
      D CDL006          S              1A   IMPORT                               CDL006
-
+ 
      D IKSLID          S                   LIKE(@NDYNO)                         209738
      D BJRDNB          S                   LIKE(@NDYNO)                         209738
      D ValdateMDN      S                   LIKE(@NDYNO)                         209738
@@ -232,7 +234,7 @@
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
      C
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
@@ -240,7 +242,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
-
+ 
       ** Reset the error flag to prevent problems on subsequent calls
      C                   RESET                   ErrorFound
      C                   RESET                   WarnFound
@@ -249,7 +251,7 @@
      C                   RESET                   WMsgid2
      C                   RESET                   WMsgid3                                      CDL096
      C                   RESET                   WMsgDta3                                     CDL096
-
+ 
      C**   Processing for interest frequency 'N'.
      C**   Calculate NDAT using VDAT.
      C*
@@ -537,12 +539,12 @@
      C                   MOVE      *BLANKS       DDNDAT
      C                   END
      C*
-
+ 
       ** Return code set in /COPY
      C/COPY ZACPYSRC,SETRETCDE
-
+ 
      C                   RETURN
-
+ 
       *****************************************************************
       /EJECT
      C*****************************************************************
@@ -578,9 +580,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
-
+ 
      C     *INZSR        BEGSR
-
+ 
      C     *entry        PLIST
       ** Return code (10A)
      C                   PARM                    ReturnCode
@@ -625,16 +627,16 @@
      C                   Parm                    PCurrency                                    CDL096
      C                   PARM                    WMsgid3                                      CDL096
      C                   Parm                    WMsgDta3                                     CDL096
-
+ 
       ** Program, module and procedure names for database error processing.
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
-
+ 
      C/COPY ZACPYSRC,DBFIELDS
-
+ 
      C                   ENDSR                                                  *** InzEnd ***
-
+ 
       *****************************************************************
       /EJECT
       ********************************************************************
@@ -704,6 +706,6 @@
                                                                                               CDL096
      P                 E                                                                      CDL096
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 ** @M  USED BY SR. IDATE1 - DAYS IN A MONTH
 312831303130313130313031

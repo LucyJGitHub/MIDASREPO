@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MM NAs Sold Retr + Act/Deal Validation')         *
@@ -14,10 +14,11 @@
       *             from the database. As it does so, it validates the*
       *             action code and deal number.                      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
-      *  Prev Amend No. CDL098             Date 27Jul17               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CDL098             Date 27Jul17               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -65,6 +66,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CDL098 - Cancelled Deal Numbers                              *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -156,7 +158,7 @@
      F                                     RENAME(ABDEALP0:ABDEALX0)                          259924
      F                                     RENAME(FXDEALP0:FXDEALX0)                          259924
      F                                     RENAME(DEALSDGF:DEALSGX0)                          259924
-
+ 
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -175,64 +177,64 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
-
+ 
      D/COPY ZACPYSRC,STD_D_SPEC
-
+ 
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
-
+ 
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
-
+ 
      D/COPY ZACPYSRC,PSDS
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
-
+ 
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-
-
+ 
+ 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
-
+ 
       **  Data structure for file status of MM deals file.
      D INFDS           DS
      D  RECORD           *RECORD
-
+ 
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
-
+ 
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
       ** EXTERNAL DS FOR GENERAL LEDGER DETAILS
-
+ 
      D SDDEAL        E DS                  EXTNAME(SDDEALPD)
       ** EXTERNAL DS FOR DEALING DETAILS
      D  QQACCD1      E                     EXTFLD(QQACCD)                                     CGL029
-
+ 
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
       ** EXTERNAL DS FOR BRANCH DETAILS
                                                                                               CSD015
@@ -250,54 +252,54 @@
                                                                                               CSD015
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
-
+ 
      D ZMUSER          DS            17
      D  ZUSER                  1     10                                                       CDL010
      D  BRC                   11     13
      D  DEPT                  14     16
-
+ 
      D DealFilFmt    E DS                  EXTNAME(MMDENSPP)
       ** Deal in File Format
      D/COPY WNCPYSRC,MMH00091
-
+ 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
-
+ 
       ** Index for arrays of of error message ids etc
      D Ix              S              3P 0
-
+ 
       ** Mode of operation
      D ModeOfOp        S              6A
-
+ 
       ** Action code
      D DDACTN          S              1A
-
+ 
       ** Front office transaction ID
      D  FOTrID         S                   LIKE(HMFRNT)
-
+ 
       ** Associated front office trasaction ID
      D  FOAsID         S                   LIKE(HMFRNT)
-
+ 
       ** Deal number
      D DDDLNO          S              6A
-
+ 
       ** Associated deal number
      D DDDADN          S                   LIKE(DDDLNO)
-
+ 
       ** Booking branch
      D DDBRCA          S                   LIKE(HMBRCA)
-
+ 
       ** Action code OK flag
      D OKActn          S              1A
-
+ 
       ** Deal number OK flag
      D OKDlNo          S                   LIKE(OKActn)
-
+ 
       ** Booking branch OK flag
      D OKBrcA          S                   LIKE(OKActn)
-
+ 
       ** Response mode (1A, from caller (A=Asynchronous, S=Synchronous))
      D RespMode        S              1A
                                                                                               CSD015
@@ -364,14 +366,14 @@
       *****************************************************************
       /EJECT
       **************************************************************
-
+ 
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *inzsr is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
-
+ 
       *
       * INITIALISATION
       *
@@ -556,7 +558,7 @@
      C                   EVAL      MsgDtaArr(Ix) = LenStr +%TRIM(FOTRID)                    MD000091
      C                   GOTO      EVFRNT
      C                   ENDIF
-
+ 
      C                   ELSE
       *
       * IF NOT INSERT, FRONT OFFICE TRANSACTION ID MUST BE PRESENT
@@ -575,7 +577,7 @@
       * IF NOT INSERT, UPDATE MIDAS DEAL NUMBER
       *
      C                   MOVEL     HMDN38        DDDLNO
-
+ 
      C                   ENDIF
      C     ModeofOp      IFEQ      '*FRONT'                                                  259924A
       *
@@ -594,15 +596,15 @@
      C                   EVAL      MsgDtaArr(Ix) = LenStr +%TRIM(FOASID)                    MD000091
      C                   GOTO      EVFRNT
      C                   END
-
+ 
       * UPDATE MIDAS ASSOCIATED DEAL NUMBER
       **ONLY*IF*NOT*CALLED FROM MIDASPLUS                                              223917 TCA090
      C*****JAVAUSER******IFEQ      'N'                                                 223917 TCA090
      C                   MOVEL     HLDN38        DDDADN
      C*******************END                                                           223917 TCA090
-
+ 
       ** Set the branch code equal to the branch code of the NA purchased
-
+ 
      C                   EVAL      DDBRCA = HLBRCA
      C                   ENDIF                                                               259924A
       *
@@ -613,7 +615,7 @@
       * VAL - VALIDATION OF ACTION CODE AND DEAL NUMBER
       *****************************************************************
      C     VAL           BEGSR
-
+ 
       **  Check that the action code is valid; if authorisations are
       **  not in the system, then action code X is not allowed.
      C     BNMMAU        IFEQ      'N'
@@ -629,7 +631,7 @@
      C                   MOVEL     'MMM0161'     MsgIdArr(Ix)
      C                   ENDIF
      C                   ELSE                                                                 176841
-
+ 
      C*****BNMMAU        IFNE      'N'                                                        176841
      C     DDACTN        IFNE      *BLANK                                                     176841
      C     DDACTN        ANDNE     'I'
@@ -643,7 +645,7 @@
      C                   MOVEL     'MMM0160'     MsgIdArr(Ix)
      C                   ENDIF
      C                   END                                                                  176841
-
+ 
       **  If the deal number is not blank, check that it is numeric.
      C                   TESTN                   DDDLNO               98
      C                   MOVE      DDDLNO        @@TEST            1
@@ -656,9 +658,9 @@
      C                   ADD       1             Ix
      C                   MOVEL     'DDDLNO'      FldNameArr(Ix)
      C                   MOVEL     'MMM0162'     MsgIdArr(Ix)
-
+ 
      C                   ELSE
-
+ 
       **  Set up the deal number as a numeric field.
      C                   MOVE      DDDLNO        @@DLNO            6 0
      C                   ENDIF
@@ -670,7 +672,7 @@
       * VALACE - VALIDATION OF ACTION CODE 'E'
       *****************************************************************
      C     VALACE        BEGSR
-
+ 
       **  If the deal number is blank, it is an error.
      C     DDDLNO        IFEQ      *BLANKS
      C                   MOVE      'N'           OKDLNO
@@ -679,10 +681,10 @@
      C                   MOVEL     'MMM0111'     MsgIdArr(Ix)
      C                   GOTO      EVALAE
      C                   ENDIF
-
+ 
       **  If there is no valid record on MMDEALLL, it is an error.
      C     @@DLNO        CHAIN     MMDEALLL                           65
-
+ 
       **  Check that the correct record format has been accessed.
      C     RECORD        IFNE      'MMDENSP0'
      C     *IN65         ANDEQ     '0'
@@ -692,7 +694,7 @@
      C                   MOVEL     'MMM0158'     MsgIdArr(Ix)
      C                   GOTO      EVALAE
      C                   ENDIF
-
+ 
       **  Check for a valid record.
      C     *IN65         IFEQ      '1'
      C     HMDLTF        ORNE      *BLANKS
@@ -702,7 +704,7 @@
      C                   MOVEL     'MMM0167'     MsgIdArr(Ix)
      C                   GOTO      EVALAE
      C                   ELSE
-
+ 
       **  If the deal status is not C,A, R or M, it is an error.
      C     HMDSTS        IFNE      'C'
      C     HMDSTS        ANDNE     'A'
@@ -715,7 +717,7 @@
      C                   GOTO      EVALAE
      C                   ENDIF
      C                   ENDIF
-
+ 
      C     EVALAE        ENDSR
       *****************************************************************
       /EJECT
@@ -723,7 +725,7 @@
       * VALACX - VALIDATION OF ACTION CODE 'X'
       *****************************************************************
      C     VALACX        BEGSR
-
+ 
       **  If the deal number is blank, it is an error.
      C     DDDLNO        IFEQ      *BLANKS
      C                   MOVE      'N'           OKDLNO
@@ -732,11 +734,11 @@
      C                   MOVEL     'MMM0111'     MsgIdArr(Ix)
      C                   GOTO      EVALAX
      C                   ENDIF
-
+ 
       **  If there is no valid, undeleted record on MMDEALLL, it is an
       **  error.
      C     @@DLNO        CHAIN     MMDEALLL                           65
-
+ 
       **  Check that the correct record format has been accessed.
      C     RECORD        IFNE      'MMDENSP0'
      C     *IN65         ANDEQ     '0'
@@ -746,7 +748,7 @@
      C                   MOVEL     'MMM0158'     MsgIdArr(Ix)
      C                   GOTO      EVALAX
      C                   ENDIF
-
+ 
       **  Check for a valid record.
      C     *IN65         IFEQ      '1'
      C     HMDLTF        ORNE      *BLANK
@@ -757,7 +759,7 @@
      C                   MOVEL     'MMM0165'     MsgIdArr(Ix)
      C                   GOTO      EVALAX
      C                   ELSE
-
+ 
       **  If the deal status is not C or R, it is an error.
      C     HMDSTS        IFNE      'C'
      C     HMDSTS        ANDNE     'R'
@@ -767,11 +769,11 @@
      C                   MOVEL     'MMM0171'     MsgIdArr(Ix)
      C                   GOTO      EVALAX                                                     208100
      C                   ELSE
-
+ 
       ** Use the deal's related deal number to access the related deal.
      C                   MOVE      HMDADN        @@RDNO            6 0
      C     @@RDNO        CHAIN     MMDEALLL                           65
-
+ 
       **  Check that the correct record format has been accessed.
      C     RECORD        IFNE      'MMDENBP0'
      C     *IN65         ANDEQ     '0'
@@ -781,7 +783,7 @@
      C                   MOVEL     'MMM0158'     MsgIdArr(Ix)
      C                   GOTO      EVALAX
      C                   ENDIF
-
+ 
       **  If no valid record is found, or the record does not have a
       **  status of 'A' or 'R', it is an error.
       ** - If associated deal is not found (already historic)
@@ -798,7 +800,7 @@
      C                   MOVEL     'DDDLNO'      FldNameArr(Ix)
      C                   MOVEL     'MMM0173'     MsgIdArr(Ix)
      C                   GOTO      EVALAX                                                     208100
-
+ 
       ****Chain*to*the*deals file, to set up the file fields with the                         208100
       ****current*deal's*values.                                                              208100
      C*****@@DLNO        CHAIN     MMDEALLL                           65                      208100
@@ -842,7 +844,7 @@
       **  Chain to the deals file, to set up the file fields with the                         208100
       **  current deal's values.                                                              208100
      C     @@DLNO        CHAIN     MMDEALLL                           65                      208100
-
+ 
       ** If Compliance Watch is enabled, check for pending cases.                             CSD015
      C                   IF        CSD015 = 'Y' AND                                           CSD015
      C                             W1EWLC = 'Y'                                               CSD015
@@ -882,7 +884,7 @@
       * VALACI - VALIDATION OF ACTION CODE 'I'
       *****************************************************************
      C     VALACI        BEGSR
-
+ 
       **  Check that the deal does not exist on any Deals File
       **  Midas or DRS. If it does it's an error.
      C     @@DLNO        SETLL     DEALSALL                               65
@@ -920,7 +922,7 @@
      C                   END                                                    CAP006
      C                   ENDIF
      C                   ENDIF                                                              AR996631
-
+ 
      C     EVALAI        ENDSR
       *****************************************************************
       /EJECT
@@ -928,7 +930,7 @@
       * VALACA - VALIDATION OF ACTION CODE 'A'
       *****************************************************************
      C     VALACA        BEGSR
-
+ 
       **  If the deal number is blank, it is an error.
      C     DDDLNO        IFEQ      *BLANKS
      C                   MOVE      'N'           OKDLNO
@@ -937,11 +939,11 @@
      C                   MOVEL     'MMM0111'     MsgIdArr(Ix)
      C                   GOTO      EVALAA
      C                   ENDIF
-
+ 
       **  If there is no valid, undeleted record on MMDEALLL, it is an
       **  error.
      C     @@DLNO        CHAIN     MMDEALLL                           65
-
+ 
       **  Check that the correct record format has been accessed.
      C     RECORD        IFNE      'MMDENSP0'
      C     *IN65         ANDEQ     '0'
@@ -951,7 +953,7 @@
      C                   MOVEL     'MMM0158'     MsgIdArr(Ix)
      C                   GOTO      EVALAA
      C                   ENDIF
-
+ 
       **  Check for a valid record.
      C     *IN65         IFEQ      '1'
      C     HMDLTF        ORNE      *BLANK
@@ -961,7 +963,7 @@
      C                   MOVEL     'MMM0167'     MsgIdArr(Ix)
      C                   GOTO      EVALAA
      C                   ENDIF
-
+ 
       **  If the deal has been deleted, then it may not be amended.
      C     HMDDLT        IFNE      *BLANK
      C                   MOVE      'N'           OKDLNO
@@ -970,7 +972,7 @@
      C                   MOVEL     'MMM0172'     MsgIdArr(Ix)
      C                   GOTO      EVALAA
      C                   ENDIF
-
+ 
       **  If the record exists, its status must be C,A or R.
      C     HMDSTS        IFNE      'C'
      C     HMDSTS        ANDNE     'A'
@@ -981,7 +983,7 @@
      C                   MOVEL     'MMM0166'     MsgIdArr(Ix)
      C                   GOTO      EVALAA
      C                   ENDIF
-
+ 
      C     EVALAA        ENDSR
       *****************************************************************
       /EJECT
@@ -989,7 +991,7 @@
       * VALACD - VALIDATION OF ACTION CODE 'D'
       *****************************************************************
      C     VALACD        BEGSR
-
+ 
       **  If the deal number is blank, it is an error.
      C     DDDLNO        IFEQ      *BLANKS
      C                   MOVE      'N'           OKDLNO
@@ -998,11 +1000,11 @@
      C                   MOVEL     'MMM0111'     MsgIdArr(Ix)
      C                   GOTO      EVALAD
      C                   ENDIF
-
+ 
       **  If there is no valid, undeleted record on MMDEALLL, it is an
       **  error.
      C     @@DLNO        CHAIN     MMDEALLL                           65
-
+ 
       **  Check that the correct record format has been accessed.
      C     RECORD        IFNE      'MMDENSP0'
      C     *IN65         ANDEQ     '0'
@@ -1012,7 +1014,7 @@
      C                   MOVEL     'MMM0158'     MsgIdArr(Ix)
      C                   GOTO      EVALAD
      C                   ENDIF
-
+ 
       **  Check for a valid record.
      C     *IN65         IFEQ      '1'
      C     HMDLTF        ORNE      *BLANK
@@ -1022,7 +1024,7 @@
      C                   MOVEL     'MMM0167'     MsgIdArr(Ix)
      C                   GOTO      EVALAD
      C                   ENDIF
-
+ 
       **  If a valid record exists and the deal deleted indicator is
       **  not blank, it is an error.
      C     HMDDLT        IFNE      *BLANK
@@ -1032,7 +1034,7 @@
      C                   MOVEL     'MMM0172'     MsgIdArr(Ix)
      C                   GOTO      EVALAD
      C                   ENDIF
-
+ 
       **  Disallow deletion of Internal Funding Deals
      C     HMTYPE        IFEQ      'IL'
      C     HMTYPE        OREQ      'ID'
@@ -1042,7 +1044,7 @@
      C                   MOVEL     'MMM0112'     MsgIdArr(Ix)
      C                   GOTO      EVALAD
      C                   ENDIF
-
+ 
       **  The deal status must be C or A.
      C     HMDSTS        IFNE      'C'
      C     HMDSTS        ANDNE     'A'
@@ -1052,7 +1054,7 @@
      C                   MOVEL     'MMM0169'     MsgIdArr(Ix)
      C                   GOTO      EVALAD
      C                   ENDIF
-
+ 
       **  Access the deal amendments file; if a live amendment exists
       **  for the deal, this is an error.
       **  Set the deam file pointer to be before any deam for the deal.
@@ -1062,11 +1064,11 @@
      C                   MOVE      *ZEROS        @VDDD
      C                   MOVE      *ZEROS        @DEAMS
      C     @DEAMK        SETLL     MMLVDMLL
-
+ 
       **  Read the next record on file.
      C                   READ      MMLVDMLL                               65
      C                   MOVE      HNDA38        @DA38             6
-
+ 
       **  Read through the deal amendments until one of the following
       **  conditions obtains...
       **  - the end of file has been reached.
@@ -1085,7 +1087,7 @@
      C                   ENDIF
      C                   READ      MMLVDMLL                               65
      C                   ENDDO
-
+ 
      C     EVALAD        ENDSR
       *****************************************************************
       /EJECT
@@ -1093,7 +1095,7 @@
       * ACSSEC - ACCESS SECURITY CHECKING
       *****************************************************************
      C     ACSSEC        BEGSR
-
+ 
       ** If not multi-branching, check authority to only action code
      C     BJSBRC        IFNE      *BLANK
      C                   CALL      'ZVACTU'
@@ -1108,7 +1110,7 @@
      C                   GOTO      EACSSE
      C                   ENDIF
      C                   ENDIF
-
+ 
       ** If multi-branching, check authority to booking branch
      C     BJSBRC        IFEQ      *BLANK
      C     DDACTN        IFEQ      'I'
@@ -1146,7 +1148,7 @@
      C                   PARM                    @@ERR             1 0
      C     @@ERR         IFEQ      1
      C                   MOVE      'N'           OKACTN
-
+ 
       ** (If Insert then highlight branch field else deal number)
      C     DDACTN        IFEQ      'I'
      C                   MOVE      'N'           OKBRCA
@@ -1160,7 +1162,7 @@
      C                   ENDIF
      C     @@ERR         IFEQ      2
      C                   MOVE      'N'           OKACTN
-
+ 
       ** (If Insert then highlight branch field else deal number)
      C     DDACTN        IFEQ      'I'
      C                   MOVE      'N'           OKBRCA
@@ -1172,7 +1174,7 @@
      C                   MOVEL     'FXM0291'     MsgIdArr(Ix)
      C                   GOTO      EACSSE
      C                   ENDIF
-
+ 
       ** Check authority to originating branch
      C     BKOBUV        IFEQ      'Y'
      C     DDACTN        ANDNE     'E'
@@ -1198,7 +1200,7 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
-
+ 
      C     EACSSE        ENDSR
       *****************************************************************
       /EJECT
@@ -1227,7 +1229,7 @@
      C     *ENTRY        PLIST
       * Return code
      C                   PARM                    RetCodeIn
-
+ 
       ** Received parameters
       ** -------------------
       * Mode = '*FRONT' (front office transaction interface)
@@ -1245,7 +1247,7 @@
      C                   PARM                    DDDLNO
       * (Midas) Associated Deal Number
      C                   PARM                    DDDADN
-
+ 
       ** Returned parameters
       ** -------------------
       ** (Current) deal in file format
@@ -1260,13 +1262,13 @@
      C                   PARM                    MsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM                    Ix
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY sets the values of program, module and
       ** procedure names for database error processing.
      C/COPY ZACPYSRC,DBFIELDS
       **--------------------------------------------------------------------------------------------
-
+ 
       * Key Lists
      C     @DEAMK        KLIST
      C                   KFLD                    @DEAMN            6 0
@@ -1600,4 +1602,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

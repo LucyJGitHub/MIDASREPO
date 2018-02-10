@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MM Deal amendment retr + act/repo validation')   *
@@ -14,10 +14,11 @@
       *             the database for Repo Margin Calls. As it does    *
       *             it validates the action code, deal number etc.    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
-      *  Prev Amend No. CGL165             Date 15Feb17               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CGL165             Date 15Feb17               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 CRE073             Date 06Dec10               *
@@ -51,6 +52,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
@@ -113,7 +115,7 @@
      F                                     RENAME(DEALSDDF:DEALSHDF)
      F                                     RENAME(DEALSDEF:DEALSHEF)
      F                                     RENAME(DEALSDGF:DEALSHGF)
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -132,25 +134,25 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
@@ -158,56 +160,56 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D @DT2            S              2    DIM(15) CTDATA PERRCD(15)
      D**  ARRAY TO LOOK UP MIDAS DEAL TYPE FOR VALIDATION.
      D*
       **  Data structure for file status of MM deals file.
      D INFDS           DS
      D  RECORD           *RECORD
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
       ** EXTERNAL DS FOR GENERAL LEDGER DETAILS
- 
+
      D SDDEAL        E DS                  EXTNAME(SDDEALPD)
       ** EXTERNAL DS FOR DEALING DETAILS
      D  QQACCD1      E                     EXTFLD(QQACCD)                                     CGL029
- 
+
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
       ** EXTERNAL DS FOR BRANCH DETAILS
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D ZMUSER          DS            17
      D  BRC                   11     13
      D  DEPT                  14     16
- 
+
      D DeamFilFmt    E DS                  EXTNAME(MMDEAMPP)
       ** Deam in File Format
      D  @DMVYR                51     52
      D  @DMVMT                53     54
      D  @DMVDY                55     56
- 
+
       **  Data Structure to split value date used in key to deams file
      D                 DS
      D  @KVALD                 1      8  0 INZ(0)
@@ -242,36 +244,36 @@
      D  @DMVD                  1      2
      D  @DMVM                  3      4
      D  @DMVY                  5      6
- 
+
       ** Valid Value Date reformatted returned as a parameter from MMVVLDT
      D IGVDYY          S              4S 0
      D IGVDMM          S              2S 0
      D IGVDDD          S              2S 0
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of of error message ids etc
      D Ix              S              3P 0
- 
+
       ** Fields used by Module ZDATE10 to change date format.
      D DateIn          S              8S 0
      D DateOut         S              5  0
- 
+
       ** Error message code 1 sent as a parameter
      D Msgid1          S                   LIKE(#MSGID)
      D Msgid2          S                   LIKE(#MSGID)
- 
+
       ** Warning message code 1 sent as a parameter
      D WMsgid1         S                   LIKE(#MSGID)
       *                                                                                       CGL029
      D DSSDY         E DS                  EXTNAME(DSSDY)                                     CGL029
       *                                                                                       CGL029
- 
- 
- 
+
+
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -469,7 +471,7 @@
       *
      C                   MOVE      FOASID        OrigDealNo       20
      C                   MOVE      FOTRID        UniqDeamID       20
- 
+
      C     FrntOfKey     CHAIN     MMDEAMOI                           99
       *
       * IF INSERT
@@ -1344,7 +1346,7 @@ E2   C                   ENDDO
      C                   Z-SUB     HNAMNP        HNAMNP
      C                   END
      C*
- 
+
      C     H@AMNP        IFLT      *ZERO
      C                   MOVE      'N'           OKACTN
      C                   MOVE      'Y'           ErrorFound
@@ -1717,6 +1719,6 @@ E2   C                   ENDDO
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 ** @DT2  ARRAY OF POSSIBLE MIDAS DEAL TYPES
 ITIPTDTICILNCDCLDLC1C2BPBDILID

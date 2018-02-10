@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*XBIF*: OVRDBF FILE(MXDGECL1X) TOFILE(MXDGECL1) SHARE(*NO)         : *
 /*STD *  RPGBASEMOD                                                   *
@@ -12,19 +12,21 @@
       *                                                               *
       *  Function:  This module maintains data group event categories *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CAAA03             Date 12Mar04               *
+      *  Prev Amend No. CAAA03             Date 12Mar04               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.05 -----------------------------------------------*
-      *  Prev Amend No. CMX001  *CREATE    Data 01Jan00               *
+      *                         *CREATE    Date                       *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CAAA03 - Webfacing Changes                                   *
       *  CMX001 - Meridian Export                                     *
       *                                                               *
@@ -474,7 +476,7 @@
       /COPY MXCPYSRC,MXPSSR
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 ** #_CATC
 0102030405060708091011121314151617181920
 2122232425262728293031323334353637383940

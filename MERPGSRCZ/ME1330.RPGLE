@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       **********************************************************************
 /*STD *  RPGBASEMOD                                                        *
 /*EXI *  TEXT('Midas ME Map a translated value')
@@ -18,14 +18,15 @@
       *  will be mapped, no validity checks are performed at this          *
       *  stage.                                                            *
       *                                                                    *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                                    *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Last Amend No. BUG25808           Date 01Sep09               *
+      *  Prev Amend No. BUG25808           Date 01Sep09               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD027             Date 09Dec05               *
       *                 CGL029             Date 01Sep03               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.03 -----------------------------------------------*
@@ -35,6 +36,7 @@
       *                                                                    *
       *--------------------------------------------------------------------*
       *                                                                    *
+      *  MD046248 - Finastra Rebranding                               *
       *  BUG25808 - General ledger format incorrectly converted       *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CGL029 - Increase Account Code to 10 digits                  *
@@ -553,4 +555,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

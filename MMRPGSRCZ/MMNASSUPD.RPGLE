@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MM NAs sold DL database update')                 *
@@ -9,10 +9,11 @@
       *                                                               *
       *  MMNASSUPD - NAS SOLD DL DATABASE UPDATE                      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
-      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 01Sep14               *
       *                 MD025244           Date 09May14               *
@@ -50,6 +51,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
@@ -90,12 +92,12 @@
       *           use as APIs.                                        *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FMMDELULL  UF A E           K DISK
      F                                     COMMIT
      F                                     INCLUDE(DEALSDDF :
@@ -110,7 +112,7 @@
       ** Midas RE Settled Transaction Index File by Ref No/Pgm Ref                            CRE020
                                                                                               CRE020
      F/COPY WNCPYSRC,MMNASSDF01
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -122,39 +124,39 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       **  EXTERNALLY DESCRIBED DATA STRUCTURE FOR VALID NAS SOLD
      D MMVNAS        E DS                  EXTNAME(MMVNASSPD)
      D  @MMREC               314    382
@@ -204,35 +206,35 @@
       *
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** DATA STRUCTURE FOR BANK DETAILS
- 
+
      D SDTRAD        E DS                  EXTNAME(SDTRADPD)
       ** External DS for TRADE Details
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ** External DS for CURRENCY Details
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CRE020
      D  SCLCD        E                     EXTFLD(LCD)                                        CRE020
       ** External DS for Switchable Feature Details                                           CRE020
                                                                                               CRE020
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -240,18 +242,18 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ I-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      IDEALSDDF
      I              MDAT                        PUMDAT
      I              PUPR                        PUPUPR
      I              PCLI                        PUPCLI
      I              PSZE                        PUPSZE
- 
+
       /EJECT
      C*****************************************************************
      C*                                                               *
@@ -1243,7 +1245,7 @@
       ** procedure names for database error processing.
      C/COPY ZACPYSRC,DBFIELDS
       **--------------------------------------------------------------------------------------------
- 
+
      C                   ENDSR
      C****************************************************************
       /EJECT
@@ -1276,4 +1278,4 @@
       **--------------------------------------------------------------------------------------------
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

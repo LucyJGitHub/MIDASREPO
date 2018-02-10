@@ -7,17 +7,19 @@
 /*                                                                   */
 /*       MRC0225 - Copy TRAP Data to Extracted To Date TRAP          */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2004           */
+/*       (c) Finastra International Limited 2004                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. BUG6543            Date 08Apr05              */
-/*       Prev Amend No. CMR001  *CREATE    Date 07Sep04              */
+/*       Prev Amend No. BUG6543            Date 08Apr05              */
+/*                      CMR001  *CREATE    Date 07Sep04              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BUG6543 - MRTRAPXPD file is not purged.                     */
 /*       CMR001 - MidasPlus Reporting                                */
 /*                                                                   */
@@ -26,7 +28,7 @@
  
              DCL        VAR(&JOBTYPE) TYPE(*CHAR) LEN(1)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2004')
  
 /* Global monitor message */
@@ -88,7 +90,7 @@
              ENDDO
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              RCLRSC
              MONMSG     MSGID(CPF0000 MCH0000)
              RCLRSC     LVL(*CALLER)

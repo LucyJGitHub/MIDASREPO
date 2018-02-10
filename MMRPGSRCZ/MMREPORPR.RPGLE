@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MM Invalid repos repair')                        *
@@ -12,10 +12,11 @@
       *  Function:  This function allows invalid loans/deposits to be *
       *             'repaired' and applied to the Midas database.     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. AR701789           Date 26Sep16               *
-      *  Prev Amend No. MD036070           Date 19Oct15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR701789           Date 26Sep16               *
+      *                 MD036070           Date 19Oct15               *
       *                 CGL165             Date 23Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -62,6 +63,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR701789 - Unable to reject a deal amendment. Add a new      *
       *             parameter to indicate reject transaction.         *
       *             Applied for MD041482                              *
@@ -128,18 +130,18 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
      FZATRNERRL0IF   E           K DISK    INFSR(*PSSR)
-
+ 
      FMMIRPLDL2 IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(MMIRPLDD0 : MMIRPLDX0)
      F                                     PREFIX(DD:2)
-
+ 
      FAPIDSETL0 IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(APIDSETD0:APIDSETX0)
      FAPIDSETL1 UF   E           K DISK    INFSR(*PSSR)
      F                                     COMMIT
-
+ 
      FZAFLDNPD  IT   F   15        DISK    INFSR(*pssr)
-
+ 
       ** FX/MM/FRA/IRS Extension files                                                        247888
      FDLDEALL5  UF A E           K DISK    PREFIX(DX_)                                        247888
      F                                     INFSR(*pssr)                                       247888
@@ -148,7 +150,7 @@
       * Hook to enable non-core files to be included
       */C*PY*WNCPYSRC,MMLDNIR009***************************************                       216200
       /COPY WNCPYSRC,MMREPOR011                                                               216200
-
+ 
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -167,39 +169,39 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
-
+ 
      D/COPY ZACPYSRC,STD_D_SPEC
-
+ 
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
-
+ 
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
-
+ 
      D/COPY ZACPYSRC,PSDS
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
-
+ 
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
-
+ 
      D ##CN1           S              1    DIM(81) CTDATA PERRCD(81)
      D ##CT1           S              1    DIM(81) CTDATA PERRCD(81)
      D ##OX1           S              1    DIM(78) CTDATA PERRCD(78)
@@ -211,27 +213,27 @@
      D ##OX7           S              1    DIM(68) CTDATA PERRCD(68)
      D ##OX8           S              1    DIM(71) CTDATA PERRCD(71)
      D ##OX9           S              1    DIM(71) CTDATA PERRCD(71)
-
+ 
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
-
+ 
      D @EI             S              1    DIM(60)
-
-
+ 
+ 
      D CrDlFilFmt    E DS                  EXTNAME(MMDELDPP)
       * Current Deal in File Format
-
+ 
      D CrDlScnFmt    E DS                  EXTNAME(MMLDNIPD)
       * (Current) Deal in Screen Format
      D                                     PREFIX(@)
-
+ 
      D NwDlFilFmt    E DS                  EXTNAME(MMVLDNIPD)
       * New Deal in File Format
      D QQDOR1        E                     EXTFLD(QQDORI)                                     CGL029
@@ -249,50 +251,50 @@
      D  IKRECEx             1756   1773                                                       247785
      D**IKPAYEx*************1759   1776                                                 CGL029247785
      D  IKPAYEx             1774   1791                                                       247785
-
+ 
      D NwDlScnFmt    E DS                  EXTNAME(MMLDNIPD)
       * New Deal in Screen Format
-
+ 
      D MMELDNI       E DS                  EXTNAME(MMELDNIPD)
       * Error indicators
-
+ 
      D MMIRPTR       E DS                  EXTNAME(MMIRPTRPD)
       * Error indicators
-
+ 
      D ##RECF        E DS                  EXTNAME(SDESFRPD)
       ** FILE RECEIVE INSTRUCTIONS
      D**FLREC**                1     69                                                       CGL029
      D  FLREC                 21     75                                                       CGL029
-
+ 
      D ##PAYF        E DS                  EXTNAME(SDESFPPD)
       *** FILE PAYMENT INSTRUCTIONS
      D**FLPAY**                1    559                                                       CGL029
      D  FLPAY                 21    565                                                       CGL029
-
+ 
      D ##FRIF        E DS                  EXTNAME(SDESFFPD)
       ** FILE FRA/IRS INSTRUCTIONS
-
+ 
      D ##RECS        E DS                  EXTNAME(SDESSRPD)
       ** SCREEN RECEIVE INSTRUCTIONS
-
+ 
      D ##PAYS        E DS                  EXTNAME(SDESSPPD)
       ** SCREEN PAYMENT INSTRUCTIONS
-
+ 
      D ##FRIS        E DS                  EXTNAME(SDESSFPD)
       ** SCREEN FRA/IRS INSTRUCTIONS
-
+ 
      D**  Data structure of Temporary Depot Movement Extension File
      D SEDX1         E DS                  EXTNAME(DPTMVDY1) PREFIX(Y)
-
+ 
      D**  Data structure of Temporary Depot Movement Extension File
      D SEDX2         E DS                  EXTNAME(DPTMVDY2) PREFIX(Y)
-
+ 
      D**  Data structure of Temporary Repo Loan/Deposits file
      D MMTRPLN       E DS                  EXTNAME(MMTRPLNPD) PREFIX(T1)
-
+ 
      D**  Data structure of Temporary Repo Depot Movements file
      D MMTRPDM       E DS                  EXTNAME(MMTRPDMPD) PREFIX(T2)
-
+ 
      D**  Data structure of Depot Movement File                                               CAP087
      D DPTXX         E DS                  EXTNAME(DPTMVDL1) PREFIX(D)                        CAP087
                                                                                               CAP087
@@ -308,87 +310,87 @@
      D  @@PSCY                24     26                                                       CGL029
      D  @@PSTM                27     28  0                                                    CGL029
      D  @@PONS                29     46                                                       CGL029
-
+ 
      D                 DS
       **  Data structure for date in, to change format.
      D  DateIn                 1      8  0
      D  @@YY                   1      4  0
      D  @@MM                   5      6  0
      D  @@DD                   7      8  0
-
+ 
      D @MORPI          DS
       ** Midas Our Receive / Pay  Instructions (for Settl Meth = 04 )
      D**@@MORI*                1     12                                                       CGL029
      D**@@MOPI*               13     24                                                       CGL029
      D  @@MORI                 1     18                                                       CGL029
      D  @@MOPI                19     36                                                       CGL029
-
-
+ 
+ 
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
-
+ 
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** MIDAS MODULES DETAILS ACCESSED VIA ACCESS PROGRAM
-
+ 
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
       ** EXTERNAL DS FOR SAR DETAILS
-
+ 
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
-
+ 
      D InfData       E DS                  EXTNAME(MMLDIFPD)
      D                                     PREFIX(IF_)
       * MM (LDNI) Extra Data - File (D/B) format
-
+ 
      D ExtData       E DS                  EXTNAME(MMLDEXPD)
       * MM (LDNI) Extra Data - File (D/B) format
-
+ 
      D/COPY QWINDSRC,MMLDNISDTA
-
+ 
      D/COPY ZACPYSRC,APICTLARR
-
+ 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
-
+ 
       **   Timestamp selected
      D @TMESTPSEL      S             26Z
-
+ 
       **   Old Maturity Date
      D OLD_MATD        S              5P 0
-
+ 
       ** Response Mode, passed as a constant parameter to the VAL module
       ** This is always 'S' for Synchronous
      D RespMode        S              1A   INZ('S')
-
+ 
       ** -------------------------------------------------------------------
       ** Fields for getting the starting field number from file (parameters
       ** to ZAGETFLDNO, plus the offset to the requested field).
      D Format          S             10A   INZ('MMLDNIPD')
-
+ 
      D Field           S             10A   INZ('DDACTN')
-
+ 
      D FieldNo         S              5P 0
-
+ 
      D FldOffset       S              5P 0
-
+ 
       ** End of fields for getting starting field number
       ** -------------------------------------------------------------------
-
+ 
       ** Message type field for chaining to APIDSETPD; defined in terms
       ** of the file field when the file field was changed.
      D @MSGTYPE        S                   LIKE(DDMSGTYPE)
-
+ 
      D** Mode used when updating Temporary Loan/Deposit file
      D RPLNMode        S              1A
-
+ 
      D** Mode used when updating Temporary Depot Movements file
      D RPDMMode        S              1A
-
+ 
      D** Associated Front Office Transaction ID Number
      D @@AFRT          S             20A
-
+ 
      D RepoFlag        S              1A
                                                                                               CAP087
       ** Flag to indicate caller of MMRPDLUPD                                                 CAP087
@@ -405,12 +407,12 @@
                                                                                               CSD095
      D BlankSTYP       S              2A                                                      CSD095
      D BlankBRCA       S              3A                                                      CSD095
-
+ 
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
-
+ 
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
@@ -422,7 +424,7 @@
      I              QQINSA                      QQINS2                                        CGL029
                                                                                               CGL029
       /COPY WNCPYSRC,MMREPOR010
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -433,82 +435,82 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
-
+ 
       /COPY WNCPYSRC,MMREPOR001
-
-
+ 
+ 
       * DO SCREEN: BROWSE INVALID DEALS
      C     @SCRN         IFEQ      'B'
      C                   EXSR      SCRN@B
      C                   ENDIF
-
-
+ 
+ 
       /COPY WNCPYSRC,MMREPOR002
-
+ 
       * READ NEXT BROWSE SUBFILE RECORD
      C     @SCRN         IFEQ      'R'
      C                   EXSR      RDNBRW
      C                   ENDIF
-
-
+ 
+ 
       /COPY WNCPYSRC,MMREPOR003
-
+ 
       * DO WHILE SCREEN: MAIN DETAILS
      C     @SCRN         DOWEQ     'M'
      C                   EXSR      SCRN@M
      C                   ENDDO
-
-
+ 
+ 
       /COPY WNCPYSRC,MMREPOR004
-
+ 
       * SCREEN: WINDOW
      C     @SCRN         IFEQ      'W'
      C                   EXSR      WINDOW
      C                   ENDIF
-
-
+ 
+ 
       /COPY WNCPYSRC,MMREPOR005
-
+ 
       * DO WHILE SCREEN: SETTLEMENT DETAILS
      C     @SCRN         DOWEQ     'S'
      C                   EXSR      SCRN@S
      C                   ENDDO
-
-
+ 
+ 
       /COPY WNCPYSRC,MMREPOR006
-
+ 
       * INSERT LOAN/DEPOSIT IN TEMP FILE
      C     @SCRN         IFEQ      '1'
      C                   EXSR      TLDNI
      C                   ENDIF
-
-
+ 
+ 
       /COPY WNCPYSRC,MMREPOR007
-
+ 
       * PROCESS DEPOT MOVEMENT
      C     @SCRN         IFEQ      'D'
      C                   EXSR      PDPMT
      C                   ENDIF
-
-
+ 
+ 
       /COPY WNCPYSRC,MMREPOR008
-
+ 
       * DO FILE UPDATES TO THE PERMANENT FILES
      C     @SCRN         IFEQ      'U'
      C                   EXSR      UPDATS
      C                   ENDIF
-
-
+ 
+ 
       /COPY WNCPYSRC,MMREPOR009
-
+ 
       * TERMINATE PROGRAM
      C     @SCRN         IFEQ      'T'
      C                   EXSR      TERM
      C                   ENDIF
-
+ 
       * Hook to enable non-core subroutines to be included
       /COPY WNCPYSRC,MMREPOR010
-
+ 
       /EJECT
       *****************************************************************
       * SCRN@B - BROWSE INVALID DEALS
@@ -774,7 +776,7 @@
       * SNDM@M - SEND A MESSAGE TO MAIN DETAILS SCREEN
       *****************************************************************
      C     SNDM@M        BEGSR
-
+ 
      C                   Z-ADD     Idx           E                 3 0
       *
       ** If there are fundamental errors in this transaction
@@ -801,17 +803,17 @@
       ** and set OK flag for field to 'N'
       *
      C     *IN99         DOWEQ     '0'
-
+ 
      C     ABFIELDNAM    LOOKUP    FieldArr                               20
-
+ 
      C                   IF        *IN20 = '0'
-
+ 
      C                   ADD       1             G
      C                   MOVEL     ABFIELDNAM    GFldNameAr(G)
      C                   MOVEL     ABMSGID       GMsgIdAr(G)
-
+ 
      C                   ELSE
-
+ 
      C                   ADD       1             E
      C                   MOVEL     ABFIELDNAM    FldNameArr(E)
      C                   MOVEL     ABMSGID       MsgIdArr(E)
@@ -822,9 +824,9 @@
      C                   Z-ADD     1             F
      C                   ENDIF
      C                   MOVE      'N'           @EI(F)
-
+ 
      C                   ENDIF
-
+ 
      C     ZATRNKD0      READE     ZATRNERRD0                             99    *
      C                   ENDDO
       *
@@ -958,13 +960,13 @@
      C     VAL@M         BEGSR
       *
      C                   IF        @OPSEL = 'U'
-
+ 
      C     'APM0110'     LOOKUP    MsgIdArr                               20
-
+ 
      C                   IF        *IN20 = '0'
      C                   EXSR      VALM
      C                   ENDIF
-
+ 
      C                   ELSE
      C                   MOVEL     'D'           @SCRN
      C                   ENDIF
@@ -1012,7 +1014,7 @@
       * IF CK/10 TAKEN, GO ONTO UPDATES
       *
      C     @INKJ         IFEQ      '1'
-
+ 
      C                   MOVEL     'U'           @SCRN
       *
       **Delete*depot*movements*************************************************************** 240659
@@ -1032,11 +1034,11 @@
      C                   PARM                    NwDlScnFmt                                   240659
      C                   PARM      *BLANKS       OldDlNo           6                          240659
      C                   PARM      *BLANKS       ReturnCode                                   240659
-
+ 
      C                   ENDIF
-
+ 
      C                   GOTO      EVAL@M
-
+ 
      C                   ENDIF
       *
       *----------------------------------------------------------------
@@ -1132,8 +1134,8 @@
      C                   PARM      'Y'           @@RSTE            1
       *
      C                   ENDIF
-
-
+ 
+ 
       * Validate deal details
       *
      C                   CALLB     'MMLDNIVAL'
@@ -1418,7 +1420,7 @@
                                                                                               CAS004
      C                   PARM                    WIdx                                         CAS004
      C/COPY WNCPYSRC,MMREPORC03
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1986,7 +1988,7 @@
       * DEALS UPDATES
       *
      C     @RTCD         IFEQ      *BLANK
-
+ 
      C                   CALLB     'MMLDNIUPD'
      C                   PARM                    @RTCD
      C                   PARM                    NwDlFilFmt
@@ -2073,7 +2075,7 @@
      C                   PARM                    DPTXX                                        CAP087
      C                   PARM      'N'           DepotPos                                     CAP087
      C                   ENDIF
-
+ 
      C                   ENDIF
       *
       *
@@ -2196,30 +2198,30 @@
       **ERRORS
      C                   PARM                    GFldNameAr
      C                   PARM                    GMsgIdAr
-
+ 
      C                   SELECT
-
+ 
      C                   WHEN      RCODE = 'UPD'
      C                   MOVE      'U'           @SCRN
-
+ 
       *Go back to the loans screen
      C                   WHEN      RCODE = 'F12'
      C                   MOVE      'M'           @SCRN
-
+ 
       *Terminate Program
      C                   WHEN      RCODE = 'F3'
      C                   MOVE      'T'           @SCRN
-
+ 
       *Back to Browse subfile
      C                   WHEN      RCODE = 'SFL'
      C                   MOVE      'R'           @SCRN
-
+ 
       *Error on call
      C                   OTHER
      C                   EXSR      *PSSR
-
+ 
      C                   ENDSL
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2338,10 +2340,10 @@
      C                   KFLD                    @MSGTYPE
      C                   KFLD                    @TMESTPSEL
      C                   KFLD                    @FOTRANSEL
-
+ 
       ** Message Type
      C                   MOVEL     'MMRPLD'      @MSGTYPE
-
+ 
       ** Get the field number for the action code field; the screen fields
       ** start from that number.  Subtract one from it to give the value
       ** to subtract from each field's number.
@@ -2350,10 +2352,10 @@
      C                   PARM                    Format
      C                   PARM                    Field
      C                   PARM                    FieldNo
-
+ 
      C                   IF        ReturnCode = *blank
      C                   EVAL      FldOffset = FieldNo - 1
-
+ 
       ** If there was an error default the offset to 13
      C                   ELSE
      C                   EVAL      FldOffset = 13
@@ -2390,7 +2392,7 @@
      C     @RTCD         IFEQ      *BLANKS
      C                   MOVEL     'Y'           CAP051            1
      C                   ENDIF
-
+ 
                                                                                               247888
       ** Check if CLE025 is installed                                                         247888
                                                                                               247888
@@ -2409,7 +2411,7 @@
       *  Hook to enable non-core initial processing to be included
       */C*PY*WNCPYSRC,MMLDNIR012***************************************                       216200
       /COPY WNCPYSRC,MMREPOR012                                                               216200
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2422,7 +2424,7 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 ** ##CN1
 CPYF FROMFILE(SECRTNTPPD) TOFILE(QTEMP/SECRTNTPPD) CRTFILE(*YES) MBROPT(*REPLACE)
 ** ##CT1

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MM Effective Interest Rate Details Update')      *
@@ -9,10 +9,11 @@
       *                                                               *
       *  MM004610 - Midas MM Efective Interest Rate Details Update    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
-      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *    
+      *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 CDL093             Date 08Apr14               *
@@ -42,6 +43,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
@@ -81,7 +83,7 @@
       *****************************************************************
       ** Midas MM Effective Interest Rate Details File
      FMMEIRDL3  UF   E           K DISK    INFSR(*PSSR)
- 
+
       ** Midas MM Deals File
      FDEALS     IF   E           K DISK    INFSR(*PSSR)
      F                                     IGNORE(DEALSDAF)
@@ -90,31 +92,31 @@
      F                                     IGNORE(DEALSDGF)
      F                                     IGNORE(DEALSDFF)
      F                                     INFDS(FSDS)                                       BUG9473
- 
+
       ** Midas MM Cash Flows by MFDLNO and MFDATE
      FMMCFLSL0  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(MMCFLSD0 : MMCFLSD1)
- 
+
       ** Midas LE Effective Interest Rate Amortisation file
      FMMEIRAL3  IF   E           K DISK    INFSR(*PSSR)
- 
+
       ** Midas DL Fees History File
      FDLFHSTL0  IF   E           K DISK    INFSR(*PSSR)
- 
+
       ** Midas MM Cash Flows
      FMMCFSFL0  IF   E           K DISK    INFSR(*PSSR)
- 
+
       ** Midas DL Fees File
      FDLFEEDLA  IF   E           K DISK    INFSR(*PSSR)
- 
+
       ** Midas MM EIR Present Cash Flows
      FMMEIRPL0  UF A E           K DISK    INFSR(*PSSR)
      F*                                    RENAME(MMEIRPD0 : ZAEIRPD0)
- 
+
       ** Midas MM EIR Future Cash Flows
      FMMEIRFL0  UF A E           K DISK    INFSR(*PSSR)
      F*                                    RENAME(MMEIRFD0 : ZAEIRFD0)
- 
+
       ** Midas LE Cashflows File for Amortisation Calc                                        232928
      FMMAMRTL0  UF A E           K DISK    INFSR(*PSSR)                                       232928
                                                                                               232928
@@ -125,55 +127,55 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the
       ** appended error arrays, including the named constant giving the size
       ** of the arrays.
      D/COPY ZACPYSRC,ERR_XARRYS
       **--------------------------------------------------------------------------------------------
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Layout for the RUNDAT data area
      D RUNDAT        E DS                  EXTNAME(RUNDAT) DTAARA(RUNDAT)
- 
+
       ** Short Data Structure for Access Programs
      D DSFDY         E DS                  EXTNAME(DSFDY)
                                                                                               CAS011
      D DSSDY         E DS                  EXTNAME(DSSDY)                                     CAS011
- 
+
       ** Fee Codes Details
      D SDFEE         E DS                  EXTNAME(SDFEEPD)
- 
+
       ** Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** General Ledger ICD Details
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
- 
+
       ** Hedging ICD Details
      D SDHEDG        E DS                  EXTNAME(SDHEDGPD)
- 
+
       ** ZAEIRF Data Structure                                                                232928
      D ZAEIRF        E DS                  EXTNAME(ZAEIRFPD)                                  232928
                                                                                               232928
@@ -188,39 +190,39 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Parameters for access objects
- 
+
      D PRTCD           S              7
      D POPTN           S              7
      D*PFECD****       S              2  0                                                  BUG12989
      D PFECD           S              2                                                     BUG12989
- 
+
       ** Parameters for ZINTDY
- 
+
      D PRetCodeOut     S             10
      D ZZINDY          S              5  0
      D ZZBEG           S              5  0
      D ZZEND           S              5  0
      D ZZCALC          S              1
      D INT6DY          S             15  9                                                    242286
- 
+
       ** Parameters for ZAEIRCALC
- 
+
      D PInpTNRF        S              6S 0
      D PInpStartEff    S              5  0
      D PInpEndEff      S              5  0
      D*POutEIR**       S             14 12                                                    262654
      D POutEIR         S             15P10                                                    262654
      D PReturnCode     S              7
- 
+
      D WEvCtlDt        S              5  0
- 
+
       ** Override SDBRSHL0
      D CMDLEN          S             15  5 INZ(80)
      D***CMD             S             80    DIM(4) CTDATA PERRCD(1)                          232928
      D CMD             S             80    DIM(8) CTDATA PERRCD(1)                            232928
- 
+
      D/COPY ZSRSRC,ZDATE9Z1LE                                                                 CDL093
      D/COPY ZSRSRC,ZFEB29Z1LE                                                                 CDL093
      D WAllFeePaidTdy  S             17P 0                                                    232928
@@ -255,7 +257,7 @@
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
      D/COPY ZSRSRC,ZDATE9Z2LE                                                                 CDL093
       *****************************************************************
       /EJECT
@@ -264,31 +266,31 @@
       *                M A I N  P R O C E S S I N G                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *LOVAL        SETLL     MMEIRDL3
      C                   READ      MMEIRDL3
      C                   DOW       NOT %EOF(MMEIRDL3)
- 
+
       ** Access Deals file to get deal's details
- 
+
      C                   EXSR      SRDEALS
- 
+
       ** Generate Present Cash Flows
- 
+
      C                   EXSR      SRPresentCF
- 
+
       ** Generate Future Cash Flows
- 
+
      C                   EXSR      SRFutureCF
- 
+
       ** Calculate EIR
- 
+
      C                   EXSR      SREIRCalc
- 
+
       ** Reset EIR recalculation indicator
- 
+
      C                   EVAL      EIRCAL = *BLANKS
- 
+
       ** Compute for Amortisation adjustment if last amortisation                             232928
       ** date is not *ZERO                                                                    232928
      C                   IF        EILADT <> *ZERO                                            232928
@@ -296,20 +298,20 @@
      C                   ENDIF                                                                232928
                                                                                               232928
       ** Update Files
- 
+
      C                   EXSR      SRUpdate
- 
+
       ** Read next record of EIR Details
- 
+
      C                   READ      MMEIRDL3
- 
+
      C                   ENDDO
- 
+
       **   Exit from program
- 
+
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -318,9 +320,9 @@
       *                                                               *
       *****************************************************************
      C     SRDEALS       BEGSR
- 
+
      C     EITRAN        CHAIN     DEALS                                01
- 
+
      C                   IF        *IN01 = *ON
      C                   EVAL      DBKEY = @OPTN
      C                   MOVE      EITRAN        DBKEY
@@ -328,7 +330,7 @@
      C                   EVAL      DBASE = 4
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C**********         EVAL      EPTNMR = EITRAN                                            CLE148
      C**********         EVAL      EFTNMR = EITRAN                                            CLE148
      C                   MOVEL     EITRAN        EPTNMR                                       CLE148
@@ -338,7 +340,7 @@
                                                                                              BUG9667
      C     *LIKE         DEFINE    EIFDPA        WFDPA                                       BUG9667
      C                   EVAL      wFDPA = 0                                                 BUG9667
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -350,9 +352,9 @@
       *                                                               *
       *****************************************************************
      C     SRPresentCF   BEGSR
- 
+
       ** Get current principal then write details to MMEIRPPD
- 
+
      C*****KRUND         SETLL     MMCFLSL0                                                   232928
      C*****EITRAN        READE     MMCFLSL0                               01                  232928
      C*****KRUND         SETLL     MMCFLSL0                                                   232928
@@ -366,14 +368,14 @@
      C**********         IF        NOT %EOF(MMHISTL0) AND HDLNRF = EITRAN              232928 CLE148
      C                   MOVEL     HDLNRF        HDLNRF2                                      CLE148
      C                   IF        NOT %EOF(MMHISTL0) AND HDLNRF2 = EITRAN                    CLE148
- 
+
       ** Cashflow date
      C                   EVAL      EPFLDT = EISTDT
- 
+
       ** Cash flow amount
      C**********         EVAL      EPCAMT = MFCPAM                                            232928
      C                   EVAL      EPCAMT = HDCPAM                                            232928
- 
+
       ** Incoming/Outgoing Indicator
      C                   IF        DTYP = 'IT' OR DTYP = 'TD' OR
      C                             DTYP = 'CI' OR DTYP = 'CD'
@@ -381,26 +383,26 @@
      C                   ELSE
      C                   EVAL      EPIOIN = 'O'
      C                   ENDIF
- 
+
       ** Number of days in Interest Year
      C                   EXSR      SRNDYY
- 
+
       ** Call ZINTDY passing EIR Start and End Date as parameters
       ** for No. of days from end of effectivity period
      C                   EVAL      ZZBEG = EISTDT
      C                   EVAL      ZZEND = EIENDT
      C                   EXSR      SRZINTDY
      C                   EVAL      EPNDEI = ZZINDY
- 
+
      C                   WRITE     ZAEIRPD0
- 
+
      C                   IF        RCDT = 'D'
      C                             AND DISA <> 0
       ** Cash flow amount
      C                   EVAL      EPCAMT = DISA
                                                                                              BUG9667
      C                   EVAL      wFDPA = wFDPA + DISA                                      BUG9667
- 
+
       ** Incoming/Outgoing Indicator
      C                   IF        DTYP = 'IT' OR DTYP = 'TD' OR
      C                             DTYP = 'CI' OR DTYP = 'CD'
@@ -408,23 +410,23 @@
      C                   ELSE
      C                   EVAL      EPIOIN = 'I'
      C                   ENDIF
- 
+
      C                   WRITE     ZAEIRPD0
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Get Fee paids details then write details to MMEIRPPD
- 
+
      C     EITRAN        SETLL     DLFEEDLA
      C     EITRAN        READE     DLFEEDLA                               02
- 
+
      C                   DOW       *IN02 = *OFF
- 
+
       ** Do only adjustment to yield fees
      C                   IF        DFRECI = 'D' AND DFADJY = 'Y'
      C                             OR DFRECI = 'M' AND DFADJY = 'Y'                           232928
- 
+
       ** Cashflow date
                                                                                               232928
       ** Only need Fees settled on EIR Start Date                                             232928
@@ -438,7 +440,7 @@
      C                   ELSE                                                                 232928
      C                   EVAL      EPFLDT = DFPSTD
      C                   ENDIF                                                                232928
- 
+
       ** Cash flow amount
      C                   IF        DFFCCY = CCY
      C                   EVAL      EPCAMT = DFFAMT
@@ -450,7 +452,7 @@
      C                   ENDIF
                                                                                              BUG9667
      C                   EVAL      wFDPA = wFDPA + EPCAMT                                    BUG9667
- 
+
       ** Incoming/Outgoing Indicator
      C                   IF        DFDTYP = 'IT' OR DFDTYP = 'TD' OR
      C                             DFDTYP = 'CI' OR DFDTYP = 'CD'
@@ -458,10 +460,10 @@
      C                   ELSE
      C                   EVAL      EPIOIN = 'I'
      C                   ENDIF
- 
+
       ** Number of days in Interest Year
      C                   EXSR      SRNDYY
- 
+
       ** Call ZINTDY passing Fee Start and End Date as parameters
       ** for No. of days from end of effectivity period
      C**********         EVAL      ZZBEG = DFPSTD                                             232928
@@ -469,7 +471,7 @@
      C                   EVAL      ZZEND = EIENDT
      C                   EXSR      SRZINTDY
      C                   EVAL      EPNDEI = ZZINDY
- 
+
       ** Compute for all paid fees on run date for net principal                              232928
      C                   IF        DFRECI <> 'R' AND                                          232928
      C                             DFADJY = 'Y'                                               232928
@@ -482,23 +484,23 @@
      C                   ENDIF                                                                232928
                                                                                               232928
      C                   WRITE     ZAEIRPD0
- 
+
      C                   ENDIF                                                                232928
      C                   ENDIF
- 
+
      C     EITRAN        READE     DLFEEDLA                               02
      C                   ENDDO
- 
+
       ** Get accrued interest then write details to MMEIRPPD
- 
+
       ** Cashflow date
      C                   EVAL      EPFLDT = VDAT
- 
+
       ** Cash flow amount
      C**********         EVAL      EPCAMT = AIPD + AIAP                                       232928
       ** Accured interest not settled                                                         232928
      C                   EVAL      EPCAMT = HDAITC - HDIPRD                                   232928
- 
+
       ** Incoming/Outgoing Indicator
      C                   IF        DTYP = 'IT' OR DTYP = 'TD' OR
      C                             DTYP = 'CI' OR DTYP = 'CD'
@@ -508,10 +510,10 @@
      C**********         EVAL      EPIOIN = 'I'                                               232928
      C                   EVAL      EPIOIN = 'O'                                               232928
      C                   ENDIF
- 
+
       ** Number of days in Interest Year
      C                   EXSR      SRNDYY
- 
+
       ** Call ZINTDY passing EIR Start and End Date as parameters
       ** for No. of days from end of effectivity period
      C**********         EVAL      ZZBEG = VDAT                                               232928
@@ -520,11 +522,11 @@
      C                   EVAL      ZZEND = EIENDT                                             232928
      C                   EXSR      SRZINTDY
      C                   EVAL      EPNDEI = ZZINDY
- 
+
      C                   IF        EPCAMT <> 0                                                232928
      C                   WRITE     ZAEIRPD0
      C                   ENDIF                                                                232928
- 
+
       ***Get*Amortised to date then write details to MMEIRPPD                                 232928
       **********                                                                              232928
       ***Cashflow date                                                                        232928
@@ -552,13 +554,13 @@
      C**********         EVAL      EPNDEI = ZZINDY                                            232928
       **********                                                                              232928
      C**********         WRITE     ZAEIRPD0                                                   232928
- 
+
       ** Get Fee paids details then write details to MMEIRPPD
- 
+
      C     EITRAN        SETLL     DLFHSTL0
      C     EITRAN        READE     DLFHSTL0                               04
      C                   DOW       *IN04 = *OFF
- 
+
      C                   MOVE      HIFCOD        PFECD                                     BUG12989
       *                                                                                    BUG12989
      C                   CALL      'AOFEER0'
@@ -567,15 +569,15 @@
      C**********         PARM      HIFCOD        PFECD                                     BUG12989
      C                   PARM                    PFECD                                     BUG12989
      C     SDFEE         PARM      SDFEE         DSFDY
- 
+
      C                   IF        AUADJY = 'Y'
- 
+
       ** Cashflow date
      C                   EVAL      EPFLDT = HIHDAT
- 
+
       ** Cash flow amount
      C                   EVAL      EPCAMT = HIAMTS
- 
+
       ** Incoming/Outgoing Indicator
      C**********         IF        DFDTYP = 'IT' OR DFDTYP = 'TD' OR             BUG12989   BUG13385
      C**********                   DFDTYP = 'CI' OR DFDTYP = 'CD'                BUG12989   BUG13385
@@ -585,17 +587,17 @@
      C                   ELSE                                                               BUG12989
      C                   EVAL      EPIOIN = 'I'                                             BUG12989
      C                   ENDIF                                                              BUG12989
- 
+
       ** Number of days in Interest Year
      C                   EXSR      SRNDYY
- 
+
       ** Call ZINTDY passing EIR Start and End Date as parameters
       ** for No. of days from end of effectivity period
      C                   EVAL      ZZBEG = EISTDT
      C                   EVAL      ZZEND = EIENDT
      C                   EXSR      SRZINTDY
      C                   EVAL      EPNDEI = ZZINDY
- 
+
      C                   IF        EIRCAL = 'Y'                                            BUG12989B
      C                   EVAL      wFDPA = wFDPA + EPCAMT                                  BUG12989B
      C                   ENDIF                                                             BUG12989B
@@ -603,11 +605,11 @@
      C                   WRITE     ZAEIRPD0
      C                   ENDIF                                                                232928
      C                   ENDIF
- 
+
      C     EITRAN        READE     DLFHSTL0                               04
- 
+
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -617,9 +619,9 @@
       *                                                               *
       *****************************************************************
      C     SRNDYY        BEGSR
- 
+
       ** If FSNDYR from SDHEDGPD is blank
- 
+
      C                   IF        FSNDYR = *BLANKS
      C                   SELECT
      C                   WHEN      ICBS = 1 OR ICBS = 4
@@ -631,9 +633,9 @@
      C                   EVAL      EPNDYY = 366
      C                   ENDSL
      C                   MOVE      ICBS          ZZCALC
- 
+
      C                   ELSE
- 
+
      C                   MOVE      FSNDYR        EPNDYY
      C                   SELECT
      C                   WHEN      EPNDYY = 360
@@ -644,7 +646,7 @@
      C                   EVAL      ZZCALC = '6'
      C                   ENDSL
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -654,15 +656,15 @@
       *                                                               *
       *****************************************************************
      C     SRFutureCF    BEGSR
- 
+
      ** Get the current principal amount from the history file
- 
+
      C*****KRUND         SETGT     MMCFSFL0                                                   232928
      C**********         READP     MMCFSFL0                               03                  232928
                                                                                               232928
      C*****KEY001        SETGT     MMCFSFL0                                         232928 BUG13385A
      C***********        READ      MMCFSFL0                               03        232928 BUG13385A
- 
+
      C**********         DOW       *IN03 = *OFF AND MFFLDT < EIENDT                           232928
      C**********         DOW       *IN03 = *OFF AND MFFLDT <= EIENDT                232928 BUG13385A
      C**********                   AND MFFLDT >= EISTDT AND MFDLNO = EITRAN                BUG13385A
@@ -689,21 +691,21 @@
      C                             MFFTYP <> 'SFBN' AND                                    BUG13385A
      C                             MFFTYP <> 'SAMT'                                        BUG13385A
      C**********         IF        MFFLDT <> VDAT                                          BUG13385A
- 
+
      C                   EVAL      EFFLDT = MFFLDT
      C                   EVAL      EFCAMT = MFCAMT
- 
+
       ** Incoming/Outgoing
- 
+
      C                   EVAL      EFIOIN = MFIOIN
                                                                                               232928
      C                   IF        MFIOIN = 'S'                                               232928
      C                   EVAL      EFIOIN = 'I'                                               232928
      C                   ENDIF                                                                232928
- 
+
       ** No. of days in interest year
       ** No. of days from end of effectivity period
- 
+
      C                   EVAL      EFNDYY = MFNDYY
      C                   EVAL      ZZBEG = MFFLDT
      C                   EVAL      ZZEND = EIENDT
@@ -718,7 +720,7 @@
      C                   EVAL      wFDPA = wFDPA + EFCAMT                                    BUG9667
      C                   ENDIF                                                               BUG9667
      C                   ENDIF                                                             BUG13385A
- 
+
      C                   WRITE     ZAEIRFD0
                                                                                               232928
      C                   CLEAR                   ZAAMRT                                       232928
@@ -766,11 +768,11 @@
      C                   ENDIF                                                                232928
      C                   ENDIF
      C                   ENDIF                                                              BUG12955
- 
+
      C**********         READ      MMCFSFL0                               03
      C     EITRAN        READE     MMCFSFL0
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -780,35 +782,35 @@
       *                                                               *
       *****************************************************************
      C     SREIRCalc     BEGSR
- 
+
       * Override ZAEIRFPD and ZAEIRPPD
- 
+
      C                   CALL      'QCMDEXC'
      C                   PARM                    CMD(1)
      C                   PARM                    CMDLEN
- 
+
      C                   CALL      'QCMDEXC'
      C                   PARM                    CMD(2)
      C                   PARM                    CMDLEN
- 
+
      C                   CALL      'ZAEIRCALC'
      C                   PARM      EITRAN        PInpTNRF
      C                   PARM      EISTDT        PInpStartEff
      C                   PARM      EIENDT        PInpEndEff
      C                   PARM                    POutEIR
      C                   PARM                    PReturnCode
- 
+
      C                   CALL      'QCMDEXC'
      C                   PARM                    CMD(3)
      C                   PARM                    CMDLEN
- 
+
      C                   CALL      'QCMDEXC'
      C                   PARM                    CMD(4)
      C                   PARM                    CMDLEN
                                                                                               232928
       ** Save Effective Interest Rate for Adjustment Computation                              232928
      C                   EVAL      WEffIntRate = POutEIR                                      232928
- 
+
      C                   ENDSR
       ****************************************************************                        232928
       /EJECT                                                                                  232928
@@ -906,11 +908,11 @@
       *                                                               *
       *****************************************************************
      C     SRUpdate      BEGSR
- 
+
      C                   EVAL      EIEIR = POutEIR
      C                   EVAL      EIFDPA = wFDPA                                            BUG9667
      C                   UPDATE    MMEIRDD0
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -920,7 +922,7 @@
       *                                                               *
       *****************************************************************
      C     SRZINTDY      BEGSR
- 
+
      C                   Z-ADD     ZZBEG         ZZBEG9            5 0                        CDL093
      C                   Z-ADD     ZZEND         ZZEND9            5 0                        CDL093
      C                   CALLB     'ZINTDY'
@@ -954,7 +956,7 @@
      C                   END                                                                  CDL093
       *                                                                                       CDL093
      C                   ENDIF                                                                CDL093
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -963,27 +965,27 @@
       *****************************************************************
       * *INZSR - Inital processing (Only done first time through)
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
       **  Set up Local Data Area
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = *BLANKS
      C                   EVAL      DBKEY = *BLANKS
      C                   EVAL      DBPGM = *BLANKS
      C                   EVAL      DBASE = *ZERO
      C                   OUT       LDA
- 
+
       ** Access Bank Details
- 
+
      C                   CALLB     'AOBANKR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*FIRST '     POPTN
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Database Error
- 
+
      C                   IF        PRTCD <> *BLANKS
      C                   EVAL      DBFILE = 'SDBANKPD'
      C                   EVAL      DBASE = 1
@@ -991,18 +993,18 @@
      C                   EVAL      DBPGM = 'LE002250'
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Call access program for General Ledger details
- 
+
      C**********         CALL      'AOGELRR0'                                                 CAS011
      C                   CALL      'AOGELRR1'                                                 CAS011
      C                   PARM      '*DBERR '     PRTCD
      C                   PARM      '*FIRST '     POPTN
      C*****SDGELR        PARM      SDGELR        DSFDY                                        CAS011
      C     SDGELR        PARM      SDGELR        DSSDY                                        CAS011
- 
+
       ** Database Error
- 
+
      C                   IF        PRTCD <> *BLANKS
      C                   EVAL      DBFILE = 'SDGELRPD'
      C                   EVAL      DBASE = 2
@@ -1010,34 +1012,34 @@
      C                   EVAL      DBPGM = 'IR001957'
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EVAL      WEvCtlDt = BJDNWD - 1
      C                   IF        BKAPDT < WEvCtlDt
      C                   EVAL      WEvCtlDt = BKAPDT
      C                   ENDIF
- 
+
       ** Access Midas SD Hedging ICD File
- 
+
      C                   CALL      'AOHEDGR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*FIRST '     POPTN
      C     SDHEDG        PARM      SDHEDG        DSFDY
- 
+
       ** Database Error
- 
+
      C                   IF        PRTCD <> *BLANKS
      C                   EVAL      DBKEY  =  POPTN
      C                   EVAL      DBFILE =  'SDHEDGPD'
      C                   EVAL      DBASE  =  3
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IN        RUNDAT
- 
+
      C     KRUND         KLIST
      C                   KFLD                    EITRAN
      C                   KFLD                    AGRDNB
- 
+
      C     KFSEQ         KLIST
      C                   KFLD                    EITRAN
      C                   KFLD                    DFFSEQ
@@ -1049,23 +1051,23 @@
      C     KEY002        KLIST                                                                CLE148
      C                   KFLD                    WTRAN2            6                          CLE148
      C                   KFLD                    EISTDT                                       CLE148
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** The following /COPY contains the standard program status
       ** subroutine, including a bound call to the DBERRCTL module.
- 
+
       /COPY ZACPYSRC,PSSR_ILE
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2004
+(c) Finastra International Limited 2004
 ** CMD
 OVRDBF FILE(ZAEIRPL0) TOFILE(MMEIRPL0) SEQONLY(*YES 500)
 OVRDBF FILE(ZAEIRFL0) TOFILE(MMEIRFL0) SEQONLY(*YES 500)

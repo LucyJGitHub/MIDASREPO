@@ -7,19 +7,21 @@
 /*                                                                   */
 /*     MSC1020 - INCOMING MESSAGES ENQUIRY                           */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*     LAST AMEND NO. S01310            DATE 06DEC90                 */
-/*     PREV AMEND NO. S01259            DATE 20AUG90                 */
+/*       Prev Amend No. S01310             Date 06Dec90              */
+/*                      S01259             Date 20Aug90              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*     S01310 - SWIFT RATIONALISATION                                */
 /*     S01259 - If SWIFT II on call MS5015 else call MS1020          */
 /*                                                                   */
@@ -36,7 +38,7 @@
              DCL        VAR(&MEM2) TYPE(*CHAR) LEN(50)                /*S01259*/
 /************DCL******  VAR(&SWII) TYPE(*CHAR) LEN(1)           /*S01259S01310*/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /*                                                                   */
 /* Global monitor message                                            */
@@ -89,5 +91,5 @@
 /*                                                                   */
  END:        RCLRSC
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
              ENDPGM

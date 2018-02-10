@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MM Validate notice days')
@@ -16,7 +16,7 @@
       *                                                               *
       *  Component of: MMVALIDTE - MM validation service program      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *    This source is centrally supported and must ONLY be        *
       *    amended by Core Development Personnel                      *
@@ -24,20 +24,22 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.03 -----------------------------------------------*
-      *  Last Amend No. 162955             Date 07Jul00               *
+      *  Prev Amend No. 162955             Date 07Jul00               *
       * Midas DBA 3.01 -----------------------------------------------*
-      *  Prev Amend No. CDL006             Date 26Apr99               *
+      *                 CDL006             Date 26Apr99               *
       * Midas DBA 3.00 ---------------- Base -------------------------*
       *                 CAP002  *CREATE    Date 03Sep97               *
       *                                    Date ddmmmyy               *
       *                                                               *
       *---------------------------------------------------------------*
+      *  MD046248 - Finastra Rebranding                               *
       *  162955   The problem is the notice days are not set          *
       *           to -999 when the maturity date is input on a call   *
       *           deal.  Fix is to set notice days to -999 when the   *
@@ -319,4 +321,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

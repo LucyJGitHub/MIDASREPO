@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas ME Incoming MT920 Enquiry')
@@ -11,16 +11,18 @@
       *                                                               *
       *  Function: This module displays the Incoming MT920.           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CGL013 *CREATE     Date 10Jun02               *
+      *  Prev Amend No. CGL013 *CREATE     Date 10Jun02               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL013 - MT94x Message Generation                            *
       *                                                               *
       *****************************************************************
@@ -745,6 +747,6 @@
       **********************************************************************
      C/COPY ZACPYSRC,PSSR_ILE
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2002
+(c) Finastra International Limited 2002
 ** MONTHS - Months Short Names
 JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MM Deal amendments database update')             *
@@ -9,12 +9,13 @@
       *                                                               *
       *  MMDEAMUPM - DEAL AMENDMENTS MM DATABASE UPDATE               *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CGL165             Date 17Feb15               *
-      *  Prev Amend No. CDL096             Date 22Sep14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 30May14               *
       *                 AR1044820          Date 17Jul13               *
       *                 AR821086           Date 30Aug11               *
@@ -82,6 +83,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
       *           (Recompile)                                         *
@@ -3118,7 +3120,7 @@
       ** Automatic Authorisation      HNAUTH   NO                               CAP051
       ****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 ** CTDATA XOT - XML Opening Tags for the Compliance Engine.                                   CSD015
 <Receipt Our Nostro>                                                                          CSD015
 <Receipt Inter. Bank>                                                                         CSD015

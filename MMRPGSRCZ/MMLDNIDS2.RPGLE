@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MM Loans/deposits display screen 2')             *
@@ -12,10 +12,11 @@
       *  Function:  This module displays the main details screen 2    *
       *             of the loans and deposits screen input function.  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. CGL165             Date 23Feb15               *
-      *  Prev Amend No. CDL096             Date 22Sep14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CGL165             Date 23Feb15               *
+      *                 CDL096             Date 22Sep14               *
       *                 CSF011A            Date 28Nov11               *
       *                 CRE073             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
@@ -34,6 +35,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
       *           (Recompile)                                         *
@@ -53,14 +55,14 @@
       *  CDL016 - Autumatic Rollover of Fixed Term Loan/Deposit       *
       *                                                               *
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
-
+ 
      FMMLDNID2F CF   E             WORKSTN
-
+ 
       *****************************************************************
       *                                                               *
       * ID F  C  H  L    FUNCTION OF INDICATORS                       *
@@ -86,7 +88,7 @@
       *       97  Subfile end                                         *
       *****************************************************************
       /EJECT
-
+ 
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -105,72 +107,72 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
-
+ 
      D/COPY ZACPYSRC,STD_D_SPEC
-
+ 
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
-
+ 
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
-
+ 
      D/COPY ZACPYSRC,PSDS
-
+ 
       **------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **------------------------------------------------------------------------
-
+ 
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
-
+ 
      D @Z0             S              1    DIM(60) CTDATA PERRCD(60)
      D @NAR            S             40    DIM(1) CTDATA PERRCD(1)
-
+ 
      D @EI             S              1    DIM(60)
-
+ 
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
       ** External DS for SAR details
-
+ 
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** First DS for Access Programs, Short Data Structure
-
+ 
      D MMLDNI        E DS                  EXTNAME(MMLDNIPD)
      D MMELDN2       E DS                  EXTNAME(MMELDN2PD)
-
+ 
      D                 DS
      D  DDFOTX                 1     40
      D  DDSIDN                10     15
-
+ 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
-
+ 
       ** Switchable Feature                                                                   CDL033
      D CDL033          S              1A                                                      CDL033
                                                                                               CDL033
@@ -197,7 +199,7 @@
      C     @INKC         IFEQ      '1'
      C                   SETON                                        LR
      C                   ENDIF
-
+ 
      C                   RETURN
       *
       *****************************************************************
@@ -399,7 +401,7 @@
       * *INZSR - INITIAL PROCESSING
       *****************************************************************
      C     *INZSR        BEGSR
-
+ 
      C     *ENTRY        PLIST
       *
       ** INPUT PARAMETERS
@@ -480,11 +482,11 @@
       ** Write screen with no read indicator
      C                   PARM                    WriteOnly         1
      C                   PARM                    RepoFlag          1
-
+ 
       *
       ** Initialize program name
      C                   MOVEL     'MMLDNIDS2'   DBPGM
-
+ 
       ** Move workstation ID to screen field.
      C                   MOVEL     PsJobName     DDWID
       *
@@ -536,7 +538,7 @@
      C     CDL020        IFNE      'Y'                                                        CDL020
      C                   EVAL      *IN82 = *ON                                                CDL020
      C                   ENDIF                                                                CDL020
-
+ 
       ** Check if CDL033 feature is installed                                                 CDL033
                                                                                               CDL033
      C                   CALLB     'AOSARDR0'                                                 CDL033
@@ -553,7 +555,7 @@
       ** Message subfile control
      C                   MOVE      '1'           *IN97
      C                   MOVEL     '*'           DDPGMQ
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -566,7 +568,7 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2004
+(c) Finastra International Limited 2004
 ** @Z0
 000000000000000000000000000000000000000000000000000000000000
 ** @NAR

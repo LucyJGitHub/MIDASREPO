@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2002')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas ME Network A/c MT94x Dtl Desc.- Dtl 2 Valid°')   *
@@ -15,10 +15,11 @@
       *             details screen of a Network Account MT94x Details *
       *             record.                                           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2002            *
+      *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. AR870148           Date 24Nov11               *
-      *  Prev Amend No. MD023237           Date 05Nov13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. AR870148           Date 24Nov11               *
+      *                 MD023237           Date 05Nov13               *
       *                 CGL146             Date 10Jul13               *
       *                 CER059             Date 19Jul10               *
       *                 BUG26381           Date 09Oct09               *
@@ -32,6 +33,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  AR870148 - Statement freq blank not accepted (Child:AR870149)*
       *  MD023237 - Database error encountered when amending          *
       *             Generate Message to 'Y'. (Recompile)              *
@@ -679,4 +681,4 @@
  
       *========================================================================*
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2002
+(c) Finastra International Limited 2002

@@ -7,9 +7,10 @@
 /*                                                                   */
 /*  MAC0130 - Inform the PC that download may commence.              */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*  Last Amend No. 251701                 Date 08Apr13               */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. 251701             Date 08Apr13              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -17,10 +18,11 @@
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.05 ---------------------------------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*  Prev Amend No. S01382                DATE 30APR92                */
+/*                      S01382             Date 30Apr92              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*  251701 - Emergency workaround to stop ORF download failure       */
 /*           at monthend - don't use QDLS                            */
 /*         - Applied for AR1097431                                   */
@@ -37,7 +39,7 @@
              DCL        VAR(&FOLDER) TYPE(*CHAR) LEN(17)
 /*/COPY WNCPYSRC,MAC0130001                                          */
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
              DCL        VAR(&DPLIB) TYPE(*CHAR) LEN(10)                                   /*251701*/
              DCL        VAR(&TOPATH) TYPE(*CHAR) LEN(50)                                  /*251701*/
@@ -70,7 +72,7 @@
  
              CHGJOB     SWS(XXXXXX00)
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /*/COPY WNCPYSRC,MAC0130002                                          */
  
              CALL       PGM(AOSVALR0) PARM(&RTNCDE 'StopORFFailure' +

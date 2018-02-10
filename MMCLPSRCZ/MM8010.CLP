@@ -7,15 +7,16 @@
 /*                                                                   */
 /*       MM8010  -  START OF DAY REORGANISATION CONTROL              */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*           1989                                                    */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Last Amend No. BG18886            Date 28May08              */
+/*       Prev Amend No. BG18886            Date 28May08              */
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CDL033             Date 10Feb05              */
+/*                      CDL033             Date 10Feb05              */
 /*                      CDL022             Date 03Feb04              */
 /*                      CDL020             Date 03Feb04              */
 /*                      CDL019             Date 03Feb04              */
@@ -45,6 +46,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BG18886 - Amend non-standard codes.                         */
 /*       CDL033 - Floating Rate CDs Issued                           */
 /*       CDL022 - Deal Amendment Changes (Recompile)                 */
@@ -108,7 +110,7 @@
              DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(10)               /*E22273*/
 /**/
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
 /*/COPY WNCPYSRC,MM8010005                                           */
              DCL        VAR(&PRTCD) TYPE(*CHAR) LEN(7)                                    /*CDL033*/
@@ -583,7 +585,7 @@
  END:        RETURN
  
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
 /**/
 /*PROCESSING WHEN ERROR HAS OCCURRED                                */
  ERROR:      CHGJOB     SWS(XXXXX1XX)

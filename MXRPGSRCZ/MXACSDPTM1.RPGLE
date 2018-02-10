@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MX Access Depot Movements Extention 1')
@@ -11,20 +11,22 @@
       *                                                               *
       *  Function:  This module accesses depot movement extentions    *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. 222727             Date 05Nov03               *
+      *  Prev Amend No. 222727             Date 05Nov03               *
       * Midas Release 4.01 -------------------------------------------*
-      *  Prev Amend No. 200292             Data 10Oct01               *
+      *                                    Date                       *
       * Midas Release 4 --------------- Base -------------------------*
       *                 CSE029  *CREATE    Data 26Jul01               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  222727 - Release 5.0 errors  (Recompile)                     *
       *  200292 - Need to pick up the extention file at start         *
       *  CSE029 - ISO15022 Message Generation                         *
@@ -126,4 +128,4 @@
       /COPY MXCPYSRC,MXPSSR
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

@@ -7,21 +7,23 @@
 /*                                                                   */
 /*       MEC1461 - ME Process Downloaded SWIFT Files in QGPL         */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2008           */
+/*       (c) Finastra International Limited 2008                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
-/*       Last Amend No. CFT040  *CREATE    Date 15Sep08              */
+/*       Prev Amend No. CFT040  *CREATE    Date 15Sep08              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       CFT040 - BIC Plus IBAN                                      */
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&ERRTYP)
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2008')
              DCL        VAR(&ERRTYP) TYPE(*CHAR) LEN(1) VALUE('0')
              DCL        VAR(&INHDR) TYPE(*CHAR) LEN(6) VALUE(*BLANK)
@@ -233,6 +235,6 @@ LOOP1:
  
  END:
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
              ENDPGM

@@ -7,20 +7,22 @@
 /*                                                                   */
 /*       MAC0652  - ORDER OPTICAL DISK HEADERS                       */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2001           */
+/*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND.NO. 108447             DATE 29JAN98              */
-/*       PREV AMEND.NO. 056401             DATE 27JAN94              */
+/*       Prev Amend No. 108447             Date 29Jan98              */
+/*                      056401             Date 27Jan94              */
 /*                      S01382             DATE 05AUG92              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       108447 - Check that MAOPTFPD is available before calling    */
 /*                MA0652.                                            */
 /*       056401 - Remove the checking of existence of PF/MAOPTFPD    */
@@ -38,7 +40,7 @@
              PGM
  
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /* DECLARE OUTFILE FOR DSPFD *MBRLIST */
@@ -50,7 +52,7 @@
  
              CHGJOB     SWS(00000000)
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 /* OBTAIN MEMBER LIST OF MAOPTDPD. THIS IS A LIST OF ARCHIVE IDS */
  

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2013')
+     H COPYRIGHT('(c) Finastra International Limited 2013')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas Bank Directory Plus Details Enquiry')            *
@@ -24,10 +24,11 @@
       *                                                               *
       *  Called By: Directly from MIDAS MENU                          *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2013            *
+      *  (c) Finastra International Limited 2013                      *
       *                                                               *
-      *  Last Amend No. MD024108           Date 16Dec13               *
-      *  Prev Amend No. MD023398           Date 12Nov13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD024108           Date 16Dec13               *
+      *                 MD023398           Date 12Nov13               *
       *                 MD023143A          Date 06Nov13               *
       *                 MD023856           Date 28Nov13               *
       *                 MD022084           Date 05Sep13               *
@@ -35,6 +36,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD024108 - Functions of F12 & F15 keys in IBAN Plus Direc-   *
       *             tory Enquiry are interchanged                     *
       *  MD023398 - Mainlist view should be displayed after pressing  *

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MM Deal amendment retr + act/deal validation')   *
@@ -14,10 +14,11 @@
       *             the database. As it does so, it validates the     *
       *             action code, deal number, value date & seq.       *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
-      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 MD021204           Date 12Jul13               *
@@ -84,7 +85,7 @@
       *                 CAP002  *CREATE    Date 22Sep97               *
       *                                                               *
       *---------------------------------------------------------------*
-      *  CDL099 - Split Value Date (Recompile)                        *
+      *  MD046248 - Finastra Rebranding                               *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
       *           (Recompile)                                         *
@@ -212,7 +213,7 @@
       ** Midas AP API Configuration                                                           CAP185
      FAPICFGL0  IF   E           K DISK    INFSR(*PSSR)                                       CAP185
      F/COPY WNCPYSRC,MMDEAMIF01
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -231,25 +232,25 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
@@ -257,25 +258,25 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
      D*PSysVal1        C                   CONST('OMEIndicator')                       CSC024 CSC054
      D PSysVal1        C                   CONST('PEAIndicator')                              CSC054
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D***@DT2***         S              2    DIM(15) CTDATA PERRCD(15)                        CDL033
      D @DT2            S              2    DIM(16) CTDATA PERRCD(16)                          CDL033
      D**  ARRAY TO LOOK UP MIDAS DEAL TYPE FOR VALIDATION.
@@ -286,21 +287,21 @@
       **  Data structure for file status of MM deals file.
      D INFDS           DS
      D  RECORD           *RECORD
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
       ** EXTERNAL DS FOR GENERAL LEDGER DETAILS
- 
+
      D SDDEAL        E DS                  EXTNAME(SDDEALPD)
       ** EXTERNAL DS FOR DEALING DETAILS
      D  QQACCD1      E                     EXTFLD(QQACCD)                                     CGL029
- 
- 
+
+
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
       ** EXTERNAL DS FOR BRANCH DETAILS
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                    CSE006
       ** EXTERNAL DS FOR SWITCHABLE FEATURES FILE                               CSE006
                                                                                 CSE006
@@ -315,18 +316,18 @@
                                                                                               CSD015
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D ZMUSER          DS            17
      D  ZUSER                  1     10                                                       CDL010
      D  BRC                   11     13
      D  DEPT                  14     16
- 
+
      D DeamFilFmt    E DS                  EXTNAME(MMDEAMPP)
       ** Deam in File Format
      D  @DMVYR                51     52
      D  @DMVMT                53     54
      D  @DMVDY                55     56
- 
+
       **  Data Structure to split value date used in key to deams file
      D                 DS
      D  @KVALD                 1      8  0 INZ(0)
@@ -334,14 +335,14 @@
      D  @VYEAR                 3      4  0
      D  @VDMM                  5      6  0
      D  @VDDD                  7      8  0
- 
+
      D                 DS
       **  Data Structure for screen value date
      D  ValueDate              1      6
      D  @DSPD                  1      2
      D  @DSPM                  3      4
      D  @DSPY                  5      6
- 
+
      D                 DS
      D**  Data Structure for input start/last interest date
      D  H@SLDT                 1      8  0 INZ(0)
@@ -400,15 +401,15 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of of error message ids etc
      D Ix              S              3P 0
- 
+
       ** Fields used by Module ZDATE10 to change date format.
      D DateIn          S              8S 0
      D DateOut         S              5  0
      D CDL006          S              1A   IMPORT                               CDL006
- 
+
       *                                                                                       CGL029
      D DSSDY         E DS                  EXTNAME(DSSDY)                                     CGL029
       *                                                                                       CGL029
@@ -670,7 +671,7 @@
       *
      C                   MOVE      FOASID        OrigDealNo       20
      C                   MOVE      FOTRID        UniqDeamID       20
- 
+
      C     FrntOfKey     CHAIN     MMDEAMOI                           99
       *
       * IF INSERT
@@ -1881,7 +1882,7 @@ E2   C                   ENDDO
      C                   Z-SUB     HNAMNP        HNAMNP
      C                   END
      C*
- 
+
      C     H@AMNP        IFLT      *ZERO
      C                   MOVE      'N'           OKACTN
      C                   MOVE      'Y'           ErrorFound
@@ -2538,7 +2539,7 @@ E2   C                   ENDDO
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001
 ** @DT2  ARRAY OF POSSIBLE MIDAS DEAL TYPES
 ITIPTDTICILNCDCLDLC1C2BPBDILIDCF                                                             BUG8114
 ** FIDTYP Array for Fiduciary Deal Types                                        CDL006

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MX Access Loans/Deposits (ignore if not fnd)')   *
@@ -12,10 +12,11 @@
       *  Function:  This module accesses loans/deposits from DEALSDC  *
       *             but will not fall over if not found.              *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. CDL099             Date 06Oct17               *
-      *  Prev Amend No. CGL165             Date 15Feb17               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *                 CGL165             Date 15Feb17               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 CRE073             Date 06Dec10               *
@@ -49,6 +50,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
@@ -87,14 +89,14 @@
       *  CSE029 - ISO15022 Message Generation                         *
       *                                                               *
       *****************************************************************
- 
+
      FDEALSALL  IF   E           K DISK    INFSR(*PSSR)
       * All Deals
- 
+
      FMXSDLDCPD IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(DEALSDCF: MXSDLDCP0)
       * Saved Deals
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
@@ -112,102 +114,102 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
- 
+
+
       * Loan/Deposit
      D LDNI          E DS                  EXTNAME(DEALSDC)
- 
- 
+
+
       ** External DS for BANK details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
- 
+
+
      C     *ENTRY        PLIST
      C/COPY MXCPYSRC,MXACSPRMI
- 
- 
+
+
       * Use input link-to field
- 
+
      C                   MOVEL     I#LFD1        A_DLNO            6
- 
+
       * Return blank record if no deal number is supplied
- 
+
      C     A_DLNO        IFEQ      *BLANK
      C     A_DLNO        OREQ      '000000'
      C                   CLEAR                   LDNI
      C                   ELSE
- 
+
       * Get the deal from DEALSDC
- 
+
      C                   MOVEL     A_DLNO        DLNO
      C     DLNO          CHAIN     DEALSDCF                           99        *
- 
+
       * If the deal isn't found
       * and this is a current extract
       * it is an error
- 
+
      C     *IN99         IFEQ      '1'
      C     I#EXTT        ANDEQ     'C'
      C                   CLEAR                   LDNI
      C                   ELSE
- 
+
       * If the deal isn't on DEALSDC
       * Get the deal from DLCHISPD
- 
+
      C     *IN99         IFEQ      '1'
      C                   CLEAR                   LDNI
      C                   MOVEL     A_DLNO        DLNO
      C     DLNO          CHAIN     DLCHISD0                           99        *
      C                   ENDIF
- 
+
       * If the deal isn't on DLCHISPD
       * Get the deal from MXSDLDCPD
- 
+
      C     *IN99         IFEQ      '1'
      C                   CLEAR                   LDNI
      C                   MOVEL     A_DLNO        DLNO
      C     DLNO          CHAIN     MXSDLDCP0                          99        *
      C                   ENDIF
- 
+
       * If the deal isn't available
       * and this is a driver format
       *  Indicate that deal is not to be extracted
- 
+
      C     *IN99         IFEQ      '1'
      C     CFLFMT        ANDEQ     '*DRIVER   '
      C                   MOVEL     '*NOEXT '     I#RTCD
      C                   ELSE
- 
+
       * If this is a driver format
- 
+
      C     CFLFMT        IFEQ      '*DRIVER   '
- 
+
       * Determine if branch is to be included in the export
- 
+
      C                   MOVE      'D'           I#LD
      C                   MOVEL     BRCA          I#BRCA
      C                   EXSR      BRCA_FLT
- 
+
       * Determine if deal type/sub type is to be included in the export
- 
+
      C                   MOVE      'D'           I#LD
      C                   MOVEL     DTYP          I#DTYP
      C                   MOVEL     DLST          I#DLST
      C                   EXSR      DTST_FLT
- 
+
       * If the branch or deal type/sub type are NOT for export
       *  Indicate that deal is not to be extracted
- 
+
      C     Exp_BRCA      IFNE      'Y'
      C     Exp_DTST      ORNE      'Y'
      C                   MOVEL     '*NOEXT '     I#RTCD
@@ -216,14 +218,14 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
       * Set up output data
- 
+
      C                   EVAL      InData = LDNI
- 
- 
+
+
       * Return
- 
+
      C                   RETURN
       *
       /SPACE 5
@@ -248,17 +250,17 @@
      C                   PARM      '*DBERR  '    @RTCD             7
      C                   PARM      '*FIRST  '    @OPTN             7
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       * Load branches for export
- 
+
      C                   MOVE      'L'           I#LD
      C                   EXSR      BRCA_FLT
- 
+
       * Load deal type/sub types for export
- 
+
      C                   MOVE      'L'           I#LD
      C                   EXSR      DTST_FLT
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5
@@ -267,4 +269,4 @@
       /COPY MXCPYSRC,MXPSSR
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

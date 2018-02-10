@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas ME Check if SWIFT 2014 is active')               *
@@ -14,12 +14,14 @@
       *             feature CSW214 is installed or the run date       *
       *             is greater than or equal to 16th November 2014.   *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2014            *
+      *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. CSW214  *CREATE    Date 25Nov14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CSW214  *CREATE    Date 25Nov14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSW214 - SWIFT Changes 2014                                  *
       *                                                               *
       *****************************************************************

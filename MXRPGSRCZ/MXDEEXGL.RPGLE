@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /***********BASEMOD                                                   *                       260324
 /*CRT *  CRTRPGMOD                                                    *                       260324
@@ -16,14 +16,15 @@
       *                                                               *
       *  Function:  This module extracts general ledger daily events  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Last Amend No. 260324             Date 27May09               *
+      *  Prev Amend No. 260324             Date 27May09               *
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. 242925             Date 10Oct06               *
+      *                 242925             Date 10Oct06               *
       *                 241970             Data 05Sep06               *
       *                 CSD031             Date 10Apr06               *
       *                 CSD027             Date 09Dec05               *
@@ -35,6 +36,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  260324 - Recompile with FIXNBR(*NONE) to prevent endless     *
       *           joblogs ni MXC0500. Internalised Create Parameters. *
       *  242925 - Increase Account Code to 10 digits Signed (not P)   *
@@ -1061,4 +1063,4 @@
       /COPY MXCPYSRC,MXPSSR
       *****************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

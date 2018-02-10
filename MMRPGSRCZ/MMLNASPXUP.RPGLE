@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 1988, 1996')
+     H COPYRIGHT('(c) Finastra International Limited 1988, 1996')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MM NA''s Purchased BoE Extra Data Update')       *
@@ -9,14 +9,16 @@
       *                                                               *
       *  MMLNASPXUP - NAS PURCHASED MM EXTRA DATA UPDATE              *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2000            *
+      *  (c) Finastra International Limited 2000                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Midas Plus 1.4 Base ------------------------------------------*
-      *  Last Amend No. LLN022             Date 24Jan05               *
-      *  Prev Amend No. LLN016             Date 09May00               *
+      *  Prev Amend No. LLN022             Date 24Jan05               *
+      *                 LLN016             Date 09May00               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  LLN022 - BOE Upgrade to MidasPlus                            *
       *  LLN016 - Upgrade BoE to DBAR3                                *
       *                                                               *
@@ -276,4 +278,4 @@
      C*****************************************************
      C/EJECT
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2000
+(c) Finastra International Limited 2000

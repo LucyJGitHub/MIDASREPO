@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2009')
+     H COPYRIGHT('(c) Finastra International Limited 2009')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas Extended Narrative validation program')          *
@@ -12,10 +12,11 @@
       *  Function : This program validates, formats the extended      *
       *             narrative input based on the Network Account      *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2009            *
+      *  (c) Finastra International Limited 2009                      *
       *                                                               *
-      *  Last Amend No. MD044271           Date 21Mar17               *
-      *  Prev Amend No. MD000091           Date 14May13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD044271           Date 21Mar17               *
+      *                 MD000091           Date 14May13               *
       *                 CER059             Date 19Jul10               *
       *                 BUG26840           Date 11Dec09               *
       *                 BUG26511           Date 29Oct09               *
@@ -30,6 +31,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD044271 - (1) if MT940 is not to be generated, default      *
       *             network to PAPER                                  *
       *             (2) allow ':' as valid character for PAPER network*
@@ -1284,7 +1286,7 @@
       /COPY ZACPYSRC,PSSR_ILE
       *****************************************************************
 ** CPY@
-(c) Misys International Banking Systems Ltd. 2009
+(c) Finastra International Limited 2009
 ** ArrExtName
 DDEX1
 DDEX2

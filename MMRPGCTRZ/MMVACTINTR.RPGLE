@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2004')
+     H COPYRIGHT('(c) Finastra International Limited 2004')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MM Validate Actual Interest Rate')               *
@@ -14,7 +14,7 @@
       *             If it is valid the 10A return code will be blank; *
       *             if it is not it will contain 'Error'.             *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2004            *
+      *  (c) Finastra International Limited 2004                      *
       *                                                               *
       *    This source is centrally supported and must ONLY be        *
       *    amended by Core Development Personnel                      *
@@ -22,8 +22,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD031119           Date 18Feb15               *
-      *  Prev Amend No. MD023416           Date 16Nov13               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD031119           Date 18Feb15               *
+      *                 MD023416           Date 16Nov13               *
       *                 MD023121           Date 05Nov13               *
       *                 AR891660           Date 12Jan12               *
       *                 AR876535           Date 12Dec11               *
@@ -41,6 +42,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD031119 - Interest History Enquiry shows a wrong plus sign  *
       *             for accrued interest even the rate is negative.   *
       *             Ensure that INTR is negative, HKNGVI set to Y     *
@@ -462,4 +464,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2004
+(c) Finastra International Limited 2004

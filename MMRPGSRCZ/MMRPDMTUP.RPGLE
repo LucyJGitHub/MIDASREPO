@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MM Temporary Repo Depot Mvt update')
@@ -9,12 +9,13 @@
       *                                                               *
       *  MMRPDMTUP - TEMPORARY REPO DEPOT MVT UPDATE                  *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. 256564             Date 17Sep08               *
-      *  Prev Amend No. 247785             Date 15May07               *
+      *  Prev Amend No. 256564             Date 17Sep08               *
+      *                 247785             Date 15May07               *
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       *                 CSD027             Date 09Dec05               *
@@ -25,6 +26,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  256564 - Recompile due to PF changes done by fix 256330      *
       *  247785 - Recompile on MMTRPDMPD.                             *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
@@ -283,4 +285,4 @@
      C                   ENDSR
      C****************************************************************
 **  CPY@
-(C) Copyright Misys International Banking Systems Ltd. 2001
+(C) Copyright Finastra International Limited 2001

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas ME Message tags / FT fields selection')
@@ -19,20 +19,22 @@
       *         AOCREPT  - Add message to program sfl message queue   *
       *         MEC1150  - Extract message information                *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.03 -----------------------------------------------*
-      *  Last Amend No. CFT006  *CREATE    Date 03Nov99               *
-      *  Prev Amend No.                    Date ddmmmyy               *
+      *  Prev Amend No. CFT006  *CREATE    Date 03Nov99               *
+      *                                    Date DDMmmYY               *
       * Midas DBA 3.00 ---------------- Base -------------------------*
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CFT006 - MT101/2 message addtion for outgoing/incoming RFT   *
       *                                                               *
       *****************************************************************
@@ -407,4 +409,4 @@
       *
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

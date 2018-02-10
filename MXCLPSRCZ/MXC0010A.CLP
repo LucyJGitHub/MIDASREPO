@@ -8,15 +8,17 @@
 /*       MXC0010A - COB Bulk Extract - 'Current' Composites or       */
 /*                  Formats                                          */
 /*                                                                   */
-/*       (c) Misys International Banking Systems Ltd. 2008           */
+/*       (c) Finastra International Limited 2008                     */
 /*                                                                   */
+/*       Last Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
-/*       Last Amend No. BUG26673           Date 04Nov09              */
-/*       Prev Amend No. CCB016  *Create    Date 28May08              */
+/*       Prev Amend No. BUG26673           Date 04Nov09              */
+/*                      CCB016  *CREATE    Date 28May08              */
 /*      Midas Plus 1.4 Base -----------------------------------------*/
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD046248 - Finastra Rebranding                              */
 /*       BUG26673 - No header descriptions for other fixes (not new) */
 /*       CMX011 - Enable Meridian Export to use data queue as well   */
 /*                as MQ queue.                                       */
@@ -54,7 +56,7 @@
              DCL        VAR(&RTCD) TYPE(*CHAR) LEN( 7)
              DCL        VAR(&ERMS) TYPE(*CHAR) LEN(30)
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
-                          Misys International Banking Systems Ltd. +
+                          Finastra International Limited +
                           2001')
  
 /* Global monitor message */
@@ -172,7 +174,7 @@
  
  
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
-                          Misys International Banking Systems Ltd.')
+                          Finastra International Limited')
  
 /*/COPY WNCPYSRC,MXC0010END                                          */
  

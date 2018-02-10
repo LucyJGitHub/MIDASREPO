@@ -15,20 +15,22 @@
       *                                                               *
       *  Called By: Message Generation and SWIFT processing           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSC022             Date 24Feb04               *
+      *  Prev Amend No. CSC022             Date 24Feb04               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.03 -----------------------------------------------*
-      *  Prev Amend No. CSW200 *Create     Date 21Aug00               *
+      *                 CSW200 *C *CREATE  Date 21Aug00               *
       *                                    Date ddmmmyy               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  CSC022 - Commitment Control Changes for MidasPlus            *
       *  CSW200 - SWIFT 2000 Changes                                  *
       *                                                               *
@@ -234,4 +236,4 @@
       *
      C/COPY MECPYSRC,SRERRC_ILE
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

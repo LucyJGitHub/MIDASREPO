@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2001')
+     H COPYRIGHT('(c) Finastra International Limited 2002')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Midas MM: MM0089 S/R to calculate interest')           *
@@ -15,7 +15,7 @@
       *             From these it calulates the interest which it     *
       *             returns as another parameter.                     *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2001            *
+      *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *    This source is centrally supported and must ONLY be        *
       *    amended by Core Development Personnel                      *
@@ -23,8 +23,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD027087           Date 20May14               *
-      *  Prev Amend No. MD026986           Date 16May14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD027087           Date 20May14               *
+      *                 MD026986           Date 16May14               *
       *                 CDL093             Date 07Apr14               *
       *                 CER059             Date 19Jul10               *
       *                 CER016A            Date 19May08               *
@@ -42,6 +43,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046248 - Finastra Rebranding                               *
       *  MD027087 - revert back the changes for CDL093                *
       *  MD026986 - remove changes made by CDL093                     *
       *  CDL093 - MM Interest calculation type 9.                     *
@@ -358,4 +360,4 @@
      C/COPY ZACPYSRC,PSSR_ILE
       ********************************************************************
 **  CPY@
-(c) Misys International Banking Systems Ltd. 2001
+(c) Finastra International Limited 2001

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD044087           Date 15Feb17               *
+      *  Last Amend No. MD043754A          Date 22Aug17               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD044087           Date 15Feb17               *
       *                 CGL183             Date 09Dec16               *
       *                 MD041469           Date 29Sep16               *
       *                 MD035554           Date 25May16               *
@@ -72,6 +73,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD043754A - 2O'clock amounts included in balance. Reverse    *
+      *              MD020159 and do not process AR802820 when CGL131 *
+      *              is on.                                           *
       *  MD046248 - Finastra Rebranding                               *
       *  MD044087 - Database Error Control is encountered when        *
       *             accessing account via Account Movements           *
@@ -831,7 +835,7 @@
       ** Execute SR/SRAVAL if CRE023 is on.                                                   CRE023
       *                                                                                       CRE023
      C           CRE023    IFEQ 'Y'                                                           CRE023
-     C           CGL131    ANDNE'Y'                                                         MD020159
+     C********** CGL131    ANDNE'Y'                                               MD020159 MD043745A
      C                     EXSR SRAVAL                                                        CRE023
      C                     ENDIF                                                              CRE023
       *                                                                                       CRE023
@@ -1019,6 +1023,13 @@
       *                                                                                       CGL131
      C           PERR01    IFEQ *BLANKS                                                       CGL131
      C           CAP207    ANDEQ'Y'                                                           CGL131
+      *                                                                                    MD043754A
+     C           CRE023    IFEQ 'Y'                                                        MD043754A
+     C           GTFLG     ANDNE'0'                                                        MD043754A
+     C           GPAMT     ANDNE0                                                          MD043754A
+     C                     ADD  GPAMT     PAVLBA                                           MD043754A
+     C                     ENDIF                                                           MD043754A
+      *                                                                                    MD043754A
      C                     Z-ADDPAVLBA    ZFLD15                                              CGL131
      C                     EXSR ZFRPED                                                        CGL131
      C                     MOVE ZOUT22    CLBLD                                               CGL131
@@ -1033,6 +1044,12 @@
      C                     ENDIF                                                              CGL131
      C                     ADD  HELD      DSPBAL           Held items                         CGL131
       *                                                                                       CGL131
+     C           CRE023    IFEQ 'Y'                                                        MD043754A
+     C           GTFLG     ANDNE'0'                                                        MD043754A
+     C           GPAMT     ANDNE0                                                          MD043754A
+     C                     ADD  GPAMT     DSPBAL                                           MD043754A
+     C                     ENDIF                                                           MD043754A
+      *                                                                                    MD043754A
      C           ATYP      IFEQ 'R'                                                           CGL131
      C           DSPBAL    IFNE 0                                                             CGL131
      C                     Z-ADDA6NBDP    ZDECS                                               CGL131
@@ -2384,6 +2401,8 @@
      C           CLBL      ADD  GPAMT     CLBL                                                CRE023
      C                     ENDIF                                                           AR792734A
      C                     ENDIF                                                              CRE023
+      *                                                                                    MD043754A
+     C           CGL131    IFNE 'Y'                                                        MD043754A
       *                                                                                     AR802820
       ** Held Balance                                                                       AR802820
       *                                                                                     AR802820
@@ -2403,6 +2422,8 @@
      C                     ENDDO                                                            AR802820
      C                     SUB  WKODLN    CLBL                                              AR802820
      C                     ENDIF                                                            AR802820
+      *                                                                                    MD043754A
+     C                     ENDIF                                                           MD043754A
       *                                                                                       CRE023
      C                     ENDSR                                                              CRE023
       *

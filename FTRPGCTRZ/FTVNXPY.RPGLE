@@ -19,8 +19,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CFT120             Date 28Sep12               *
+      *  Last Amend No. 255944             Date 23Jan18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
       *                 AR702741           Date 02Feb11               *
       *                 CRE067             Date 05Oct10               *
@@ -46,6 +47,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  255944 - Pgm dumps/loops ultimately causing machine failure  *
+      *         - Applied for MD-46181.                               *
       *  MD046248 - Finastra Rebranding                               *
       *  CFT120 - FT IN/OP - Charges to DR of Account Currency        *
       *           (Recompile)                                         *
@@ -75,7 +78,7 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -94,79 +97,79 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(20)
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array of Fields in error.
      D FldNamXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of error message IDs
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of error message data.
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
       ** Array of Warning in error.
      D WFldNmXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of Warning message IDs
      D WMsgIDXAr       S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of Warning message data.
      D WMsgDtaXAr      S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
       * Incoming Transaction
      D TranInPrim    E DS                  EXTNAME(FTOPY1PD)
- 
+
       ** Flags to indicate whether transaction fields are valid
      D OKFlagsDS     E DS                  EXTNAME(FTEOPY1PD)
- 
+
       * Validation Work Fields
      D Val@Fields    E DS                  EXTNAME(FTV@OPAYPD)
- 
+
       * External DS for Bank details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** External data structure for General Ledger ICD Details
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
- 
+
       * First DS for access programs, short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
      D#DATE            DS             6
      D ODD                     1      2
      D OMM                     3      4
@@ -181,18 +184,18 @@
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of warning message ids etc
      D WIx             S              3P 0
- 
+
       * This prog only
      D WDATE           S              6P 0
      D ZDATIN          S              6A
@@ -205,7 +208,7 @@
      D ZMDAY           S              2P 0
      D ZERR            S              1A
      D ZHIND           S              1A
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -220,9 +223,9 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initialization
- 
+
      C                   Eval      RetCodeIn = *Blanks
      C                   Eval      FldNamXAr = *Blanks
      C                   Eval      MsgIDXAr  = *Blanks
@@ -232,7 +235,7 @@
      C                   Eval      WMsgDtaXAr = *Blanks
      C                   Eval      Idx = 0
      C                   Eval      WIx = 0
- 
+
       * Validate Final Payment date
      C                   Exsr      VNXTDAT
       *
@@ -260,22 +263,24 @@
      C*
      C*
      C     VNXTDAT       BEGSR
- 
+
      C                   If        SPYTP = 'RP'
- 
+
      C                   If        SNDAT = *Blanks or
      C                             SNDAT = *All'0'
- 
+
      C                   If        SACTION = 'I'
      C                   Eval      SNDAT = SPYDT
- 
+
       *  Next payment date not set up if settle value date blank and
       *  pay value date entered
      C                   If        @SLDT <= BJRDNB
+      * Check if Settlement currency is not blank and valid.                                  255944
+     C                   If        SSMCY <> *BLANKS AND OKSMCY <> 'N'                         255944
      C                   Eval      ZDAYNO =  BJRDNB
      C                   Eval      ZCCY = SSMCY
      C                   Eval      ZFREQ = 'D'
- 
+
      C                   CALLB     'ZFREQB'
      C                   Parm      ' '           ZERR
      C                   Parm                    ZFREQ
@@ -285,18 +290,18 @@
      C                   Parm                    ZMDAY
      C                   Parm                    BJDFIN
      C     SDGELR        Parm                    SDGELR
- 
+
      C                   Eval      @NPDT = ZDAYNO
- 
+
      C                   CALLB     'ZDATE2'
      C                   Parm                    ZDAYNO
      C                   Parm                    BJDFIN
      C                   Parm                    ZDATE
      C                   Parm                    ZADATE
- 
+
      C                   Eval      @NPDTD1 = ZDATE
      C                   Eval      WZDATE = ZDATE
- 
+
       * Format Date
      C                   If        BJDFIN <> 'M'
      C                   Eval      OYY = ZDD
@@ -307,16 +312,17 @@
      C                   Eval      OYY = ZMM
      C                   Eval      ODD = ZYY
      C                   End
- 
+
      C                   Move      #DATE         WDATE
      C                   Eval      @NPDTD3 = WDATE
- 
+
      C                   If        ZYN < 72
      C                   Eval      @NPDTD2 = 20
      C                   Else
      C                   Eval      @NPDTD2 = 19
      C                   End
- 
+     C                   ENDIF                                                                255944
+
      C                   Else
      C                   Eval      @NPDT = @SLDT
      C                   Eval      @NPDTD1 = @SLDTD1
@@ -325,7 +331,7 @@
      C                   End
      C*
      C                   Move      @NPDTD1       SNDAT
- 
+
      C                   Else
       * Send error to screen
      C                   Move      'N'           OKNdat
@@ -333,17 +339,17 @@
      C                   Movel     'SNDAT'       FldNamXAr(Idx)
      C                   Movel     'MMA1005'     MsgIdXAr(Idx)
      C                   End
- 
+
       * If date not blank
      C                   Else
      C                   Eval      @NDAT = SNDAT
- 
+
      C                   CALLB     'ZDATE1'
      C                   Parm      SNDAT         ZDATIN
      C                   Parm      0             ZDAYNO
      C                   Parm                    BJDFIN
      C                   Parm      'N'           ZERR
- 
+
       * The next payment date must not be a holiday in local currency
      C                   Eval      ZCCY = BJLCCY
      C                   CALLB     'ZCHKH'
@@ -361,14 +367,14 @@
      C                   Movel     'SNDAT'       WFldNmXAr(WIx)
      C                   Movel     'MMA1006'     WMsgIdXAr(WIx)
      C                   End
- 
+
      C                   If        ZERR = 'Y'
       * Send error to screen
      C                   Move      'N'           OKNdat
      C                   Add       1             Idx
      C                   Movel     'SNDAT'       FldNamXAr(Idx)
      C                   Movel     'MMA1007'     MsgIdXAr(Idx)
- 
+
      C                   Else
      C                   If        ZDAYNO <= BJRDNB or
      C                             ZDAYNO > @FDAT
@@ -379,14 +385,14 @@
      C                   Movel     'MMA1008'     MsgIdXAr(Idx)
      C                   End
      C                   End
- 
+
      C                   If        OKNdat <> 'N'
- 
+
      C                   Move      ZDATIN        ZDATE
      C                   Eval      @NPDTD1 = ZDATE
      C                   Eval      WZDATE = ZDATE
      C                   Eval      @NPDT = ZDAYNO
- 
+
       * Format Date for D3
      C                   If        BJDFIN <> 'M'
      C                   Eval      OYY = ZDD
@@ -397,10 +403,10 @@
      C                   Eval      OYY = ZMM
      C                   Eval      ODD = ZYY
      C                   End
- 
+
      C                   Move      #DATE         WDATE
      C                   Eval      @NPDTD3 = WDATE
- 
+
       * Find Century
      C                   If        ZYN < 72
      C                   Eval      @NPDTD2 = 20
@@ -409,7 +415,7 @@
      C                   End
      C                   End
      C                   End
- 
+
       * If this is a non-regular payment, Next Payment date must be blank
      C                   Else
      C                   If        SPYTP = 'OP'
@@ -420,7 +426,7 @@
      C                   Add       1             Idx
      C                   Movel     'SNDAT'       FldNamXAr(Idx)
      C                   Movel     'MMA1009'     MsgIdXAr(Idx)
- 
+
      C                   Else
      C                   Clear                   @NPDT
      C                   Clear                   @NPDTD1
@@ -428,10 +434,10 @@
      C                   Clear                   @NPDTD3
       *
      C                   End
- 
+
      C                   End
      C                   End
- 
+
      C                   ENDSR
      C*
      C************************************************************
@@ -442,32 +448,32 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
- 
+
       * INPUTS
       *  Return Code
      C                   Parm                    RetCodeIn
- 
+
       *  Screen fields
      C                   Parm                    TranInPrim
- 
+
       * OUTPUTS
       *  Error fields/message IDs/message data (arrays) from/to caller
      C                   Parm                    FldNamXAr
      C                   Parm                    MsgIDXAr
      C                   Parm                    MsgDtaXAr
- 
+
      C                   Parm                    WFldNmXAr
      C                   Parm                    WMsgIDXAr
      C                   Parm                    WMsgDtaXAr
- 
+
       *  OK Flags
      C                   Parm                    OKFlagsDS
- 
+
       *  Validation Work Fields
      C                   Parm                    Val@Fields
- 
+
       ** ACCESS BANK DETAILS
       *
      C                   CALL      'AOBANKR0'
@@ -489,9 +495,9 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR                                                  *** InzEnd ***
       *****************************************************************
       /EJECT

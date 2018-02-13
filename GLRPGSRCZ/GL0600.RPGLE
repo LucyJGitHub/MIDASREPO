@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL184             Date 07Dec16               *
+      *  Last Amend No. MD048056           Date 16Jan18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL184             Date 07Dec16               *
       *                 CGL154             Date 13Oct14               *
       *                 256758             Date 21Jun16               *
       *                 MD038510           Date 20Jun16               *
@@ -181,6 +182,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD048056 - GPAMT of REOUTLPD should also be updated when     *
+      *             holiday is before next working day                *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL184 - New Frequencies for Account Statements              *
       *  CGL154 - FATCA Reporting (Recompile)                         *
@@ -614,11 +617,11 @@
      F                                     COMMIT
      FREHISBL   UF   E           K DISK
      F                                     COMMIT
- 
+
      F/COPY WNCPYSRC,GL0600FFP1
- 
+
      F/COPY WNCPYSRC,GL0600FFP2
- 
+
      F/COPY WNCPYSRC,GL0600F003
      F/COPY WNCPYSRC,GL0600F004
      FACCNTL0   UF A F  687    24AIDISK    COMMIT
@@ -632,7 +635,7 @@
      F                                     EXTIND(*INU5)
      F***GL0600AU  O    F  132        PRINTER                                               MD021994
      FGL0600AU  O    E             PRINTER USROPN                                           MD021994
- 
+
       ** Core hook for externalisation.
      F/COPY WNCPYSRC,GL0600FFPG
      FREACX1PD  IF   E           K DISK
@@ -642,12 +645,12 @@
      FSTMTAH    UF A E             DISK    COMMIT                                           MD038510
      FGLOUTLPT  UF A E             DISK    COMMIT
      F                                     EXTIND(*INU4)
- 
+
       ** Outward Clearing Transaction Types
      FRETTYPL0  IF   E           K DISK    EXTIND(*INU4)
- 
+
      D/COPY WNCPYSRC,GL0600EEP1
- 
+
      D REC_CTR         S             10U 0 INZ                                              MD021994
      D CBTASKSP      E DS                  DTAARA(CBTASKSP)                                 MD021994
      D                                     EXTNAME(CBTASKSP)                                MD021994
@@ -668,7 +671,7 @@
      D RTT             S              5    DIM(1000)
      D COI             S              1    DIM(1000)
      D WRun            S              1A
- 
+
       ** Standard local data area fields
      D LDA            UDS           256
      D  DBFILE               134    141
@@ -685,13 +688,13 @@
      D  WBRCA                 22     24
      D  WALT5                 11     21
      D  WALT10                 1     10  0
- 
+
       ** Data Structure for ACNK using 10 digit A/C code
      D ACNK            DS
      D  WNOCC1                 1      9
      D  WACOD1                10     19  0
      D  WSEQ1                 20     21  0
- 
+
       ** Data Structure for ACPOKY using 10 digit A/C code
      D ACPOKY          DS
      D  WNOCC2                 1      9
@@ -699,60 +702,60 @@
      D  WSEQ2                 20     21  0
      D/COPY WNCPYSRC,GL0600I009
      D RUNDT           DS
- 
+
       ** Data area rundat
      D  RUNA                   1      7
      D  RUND                   8     10P 0
      D  SSF                   11     11
      D  DATF                  12     12
      D  MBIN                  13     13
- 
+
      D SDACOD        E DS                  EXTNAME(SDACODPD)
- 
+
       ** External DS for Bank Details
      D  QQACC1       E                     EXTFLD(QQACCD)
- 
+
       ** External DS for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** External DS for Branch Codes
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
      D  QQDFA1       E                     EXTFLD(QQDFAC)
- 
+
       ** External DS for General Ledger Details
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
      D  QQACC2       E                     EXTFLD(QQACCD)
- 
+
      ** External DS for Midas Module Details
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
- 
+
       ** Retail Details
      D SDRETL        E DS                  EXTNAME(SDRETLPD)
- 
+
       ** Retail Transaction Types Details
      D SDRETR        E DS                  EXTNAME(SDRETRPD)
- 
+
       ** Data Structure for access to Customer Details.
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
- 
+
       ** Midas SC Switchable feaures descriptions
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
      D  LCD_SARC     E                     EXTFLD(LCD)
- 
+
      D/COPY WNCPYSRC,GL0600IIP1
- 
+
       ** First DS for Access Programs, Short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Third DS for Access Programs, Very long data structure
      D DSLDY         E DS                  EXTNAME(DSLDY)
- 
+
      D/COPY ZSRSRC,ZHOLILE
      D DSSDY         E DS                  EXTNAME(DSSDY)
                                                                                             MD031057
       ** Outward Clearing Trailer File structure                                            MD031057
      D GLOUTLDS        DS                  INZ LIKEREC( GLOUTLT0 : *OUTPUT )                MD031057
- 
+
       ** Second DS for Access Programs, long data structure
      D DSCOMK          DS
      D  CNUM                   1      6
@@ -760,7 +763,7 @@
      D  ACOD                  10     19  0
      D  ACSQ                  20     21  0
      D  BRCA                  22     24
- 
+
       ** Data Structure to hold update details for ACCNTAB
      D DSACCNTAB_O     DS
      D  AREC1O                 1    200
@@ -893,12 +896,12 @@
      D  CCSG                 676    676
      D  CRMT                 677    683
      D  CRFD                 684    687
- 
+
      D/COPY WNCPYSRC,GL0600IIP2
- 
+
      D PSYSVL          C                   CONST('AllowCOBGLTlrImblnce')
      I/COPY ZSRSRC,ZHOLELE
- 
+
      IZACCNTAB  NS  02    1 CD
      I         OR   02    1 CC
      I                                  1    1  RECIAM
@@ -906,11 +909,11 @@
      I                                  8   10  CCY
      I                                 11   14 0ACODQQ
      I                                 15   16 0ACSQ
- 
+
      I                                  2   10  WNOCC1
      I                                 15   16 0WSEQ1
      I                                554  563 0WACOD1
- 
+
      I                                 23   25  BRCA              02
      I                                 26   26  ATYP
      I                                 27   27  ASTYP
@@ -944,9 +947,9 @@
      I                             P  178  183 7CDIR
      I                             P  184  189 7CCIR
      I                                190  199 0ACNO
- 
+
      I/COPY WNCPYSRC,GL0600IIP3
- 
+
      I                                200  200  RETB
      I                                201  201  ODSC
      I                             P  202  207 0ODLN
@@ -959,9 +962,9 @@
      I                             P  228  233 0MINB
      I                             P  234  236 0LACD
      I                             P  237  238 0LISP
- 
+
      I/COPY WNCPYSRC,GL0600I002
- 
+
      I                                242  243 0DRIB
      I                             P  244  249 7DRIS
      I                             P  250  252 0DRCD
@@ -1051,17 +1054,17 @@
      I                                676  676  CCSG
      I                                677  683  CRMT
      I                                684  687  CRFD
- 
+
      I/COPY WNCPYSRC,GL0600I004
- 
+
      I                                  1  200  AREC1
- 
+
      I/COPY WNCPYSRC,GL0600I005
- 
+
      I                                201  687  AREC2
- 
+
      I/COPY WNCPYSRC,GL0600I006
- 
+
      I          NS  03    1 CX
      I                                  1    1  RECIAM
      I                                  2    7  CNUM
@@ -1207,17 +1210,17 @@
      I                                684  687  CRFD
      I                                  1  200  AREC1
      I                                201  687  AREC2
- 
+
      ISACPO     NS  05    1 CP
      I                                  2    7  CNUM
      I                                  8   10  CCY
      I                                 11   14 0ACODQQ
      I                                 15   16 0ACSQ
- 
+
      I                                  2   10  WNOCC2
      I                                 15   16 0WSEQ2
      I                                590  599 0WACOD2
- 
+
      I                                 23   32 0ACNOP
      I                             P   33   35 0PSTD
      I                             P   36   38 0VALD
@@ -1243,12 +1246,12 @@
      I                                272  272  REBI
      I                             P  273  279 0CHGA
      I                             P  310  316 0ORAMT
- 
+
      I/COPY WNCPYSRC,GL0600I007
- 
+
      I                                  1  250  LOTSA1
      I                                251  331  LOTSA2
- 
+
      I                                 11   14 0ACODQQ
      I                                147  147 0LTAI
      I                             P  310  316 0ORAMT
@@ -1275,24 +1278,24 @@
      I                                574  589  FDTRID
      I                                590  599 0ACOD
      I                                600  620  OTRF
- 
+
       ** Rate change posting
      I          NS  06    1 CR
      I                                  2    7  CNUM
      I                                  8   10  CCY
      I                                 11   14 0ACODQQ
      I                                 15   16 0ACSQ
- 
+
      I                                  2   10  WNOCC2
      I                                 15   16 0WSEQ2
      I                                161  170 0WACOD2
- 
+
      I                                 23   32 0ACNOP
      I                             P   33   35 0PSTD
      I                             P   36   38 0VALD
- 
+
      I/COPY WNCPYSRC,GL0600I003
- 
+
      I                             P  239  241 0RRNM
      I                                 81   81 0DRCR
      I                                 96  102  SPOS
@@ -1325,12 +1328,12 @@
      I                                541  560  EXCHNG
      I                                561  573 2NOMINL
      I                                574  589  FDTRID
- 
+
       ** Catchall
      I          NS  07
- 
+
      I/COPY WNCPYSRC,GL0600I008
- 
+
       ** REIAC - Retail interest and charges
      IREIAC     NS
      I                                  1    1  RECI
@@ -1346,7 +1349,7 @@
      I                                177  197  WCACP
      I                                198  218  WCHAC
      I                                  1  143  LOTIAC
- 
+
       ** REIAC2 - Retail interest and charges for alternate account
      IREIACD2F
      I              RECI                        RECI2
@@ -1358,50 +1361,50 @@
      I              CACP                        WCACP2
      I              CHAC                        WCHAC2
      I              BRCA                        BRCA2
- 
+
      IREACR     NS  10    1 CD
      I                                  1    1  RECI
      I                                  2    7  CNUM
      I                                 11   14 0ACODQQ
      I                                 17   19  BRCA
      I                                182  191 0ACOD
- 
+
      I                                  1  172  LOTACR
- 
+
       ** Trailer
      I          NS  11    1 CZ
      I                             P   31   33 0TNLU
      I                                 34   34  IRRI
      I                             P   35   37 0NREC
- 
+
      I                                  1  128  LOTACZ
- 
+
       ** Catchall
      I          NS
      I                                  1    1  RECI
- 
+
      IGLSYSOXF
      I              NORE1                       NORESY
- 
+
      IGLCLEAZF
      I              NORE1                       NORECL
      I              HRWN                        HRWNCL
      I              HRDC                        HRDCCL
- 
+
      I***GLOUTLT0                                                                           MD031057
      I**********    GNREC                       LNORE                                       MD031057
      I**********    GHWNP                       HWNP                                        MD031057
      I**********    GHDCP                       HDCP                                        MD031057
      I**********    GHWNT                       HWNT                                        MD031057
      I**********    GHDCT                       HDCT                                        MD031057
- 
+
      IACCNTL0   NS
      I                             P   56   63 0O_LDBL
      I                                  1  200  AREC3
      I                                201  687  AREC4
- 
+
      IRECOMDF       17
- 
+
       ** Rename ACNUMABF Format fields - ACNUM file
      IACNUMABF
      I              RECI                        RRRECI
@@ -1432,7 +1435,7 @@
      I              CRIF                        #CRIF
      I              LCID                        #LCID
      I              STYP                        #STYP
- 
+
       ** Rename fields from REHISBL
      IREHISPPF
      I              RECI                        BRECI
@@ -1481,37 +1484,37 @@
      I              VALL                        BVALL
      I              LINK                        BLINK
      I              ZZ008                       BZ008
- 
+
      IACCBAABF
      I              EFAC                        EFAC2
- 
+
      I/COPY WNCPYSRC,GL0600I001
- 
+
      C     *DTAARA       DEFINE                  LDA
- 
+
      C     COMKEY        KLIST
      C                   KFLD                    BRCA
      C                   KFLD                    CNUM
      C                   KFLD                    CCY
      C                   KFLD                    ACOD
      C                   KFLD                    ACSQ
- 
+
      C                   Z-ADD     0             RRN               9 0
- 
- 
+
+
      C/COPY WNCPYSRC,GL0600CCP6
- 
+
      C     KEYAC         KLIST
      C                   KFLD                    CNUM
      C                   KFLD                    CCY
      C                   KFLD                    ACOD
      C                   KFLD                    ACSQ
      C                   KFLD                    BRCA
- 
+
      C                   EXSR      FIRST1
      C   U7
      CAN U8              GOTO      END
- 
+
      C     1             SETLL     GLACPOPD                                                 MD021994
      C                   READ      GLACPOPD                                                 MD021994
      C                   IF        %EOF(GLACPOPD)                                           MD021994
@@ -1523,75 +1526,75 @@
      C                   SETOFF                                       0203
      C                   READ      ZACCNTAB
      C                   DOW       NOT %EOF(ZACCNTAB) AND RRN <= GLTERN
- 
+
       ** Setup Output Image of ACCNTAB from Driver File
- 
+
      C                   EVAL      AREC1O = AREC1
      C                   EVAL      AREC2O = AREC2
- 
+
      C     DSCOMK        CHAIN     ACCNTL0
      C                   IF        %FOUND(ACCNTL0)
      C                   Z-ADD     O_LDBL        SVLDBL           15 0
      C                   ENDIF
- 
+
      C/COPY WNCPYSRC,GL0600CCP7
- 
+
      C                   SETOFF                                       8081
- 
+
       ** Ind 38 should retain setting to enable re-opened A/CS to be
       ** output to S/SYSOP if required
- 
+
      C                   SETOFF                                       3637
      C                   SETOFF                                       838485
      C                   SETOFF                                       86  88
- 
+
      C/COPY WNCPYSRC,GL0600CADO
- 
+
       ** Set on indicator for existing account.
- 
+
      C  N02
      CANN03              GOTO      END
- 
+
      C     ATYP          COMP      'R'                                    20
      C/COPY WNCPYSRC,GL0600C018
      C     NSTD          COMP      0                                      43
- 
+
       ** ACCUM. Ledger balance on I/P S/ACCNT
- 
+
      C     LDBL          DIV       1000          ZZAMT                  41
      C   41              Z-SUB     ZZAMT         ZZAMT
      C   41              Z-ADD     11            X                 2 0
      C  N41              Z-ADD     12            X
      C                   EXSR      HASH
- 
+
      C     TNRR          ADD       1             TNRR
      C     TNRW          ADD       1             TNRW
      C     RECIAM        COMP      'D'                                    25
      C**********         IF        (*IN25 = *ON AND *INU1 = *ON)                           AR1097218
      C*****TNOA*         ADD       1             TNOA                                      AR1097218
      C**********         ENDIF                                                             AR1097218
- 
+
      C/COPY WNCPYSRC,GL0600C013
      C/COPY WNCPYSRC,GL0600CCPG
- 
+
      C     TMSTX         IFEQ      *BLANKS
      C                   MOVE      TSTAMP        TMST
      C                   ENDIF
- 
+
       ** Postings
- 
+
      C     T1POST        TAG
- 
+
      C                   SETOFF                                       767778
- 
+
      C     DSCOMK        SETLL     SACPO
      C     DSCOMK        READE     SACPO                                  32
      C     *IN32         DOWEQ     *OFF
      C                   SETON                                        76
- 
+
       ** Account Master with Posting
       ** Reopen if Non-Retail Account closed
- 
+
      C     *IN78         IFEQ      *OFF
      C  N03
      CANN25
@@ -1607,7 +1610,7 @@
      CANN20              EXSR      REOPEN
      C                   SETON                                        78
      C                   ENDIF
- 
+
      C     DRCR          COMP      0                                  3535
      C     SPOS          COMP      '  GE-DL'                              30
      C  N30SPOS          COMP      '  GE-CL'                              30
@@ -1618,42 +1621,42 @@
      C  N30SPOS          COMP      '  GE-ST'                              30
      C  N30SPOS          COMP      '  GE-FF'                              30
      C  N30SPOS          COMP      '  GE-CM'                              30
- 
+
      C/COPY WNCPYSRC,GL0600CP13
- 
+
      C  N30              MOVE      '      '      DLNO
      C   30SUSI          COMP      'SUS'                                  30
      C   30              MOVE      SUSN          DLNO
- 
+
       ** If posting is Security Trading or Customer Exchange then
       ** move the first six characters of the Original Transaction
       ** Reference (from SACPO) into the Deal Number.
- 
+
      C     SPOS          COMP      '  GE-ST'                              31
      C  N31SPOS          COMP      '  GE-CE'                              31
      C   31              MOVEL     OTRF          DLNO
- 
+
       ** If Deal Number is not numeric then set it to blanks.
- 
+
      C                   MOVEL     DLNO          TEST              7
      C                   MOVE      '0'           TEST
      C                   TESTN                   TEST                 3131
      C  N31              MOVE      '      '      DLNO
- 
+
      C     TNPR          ADD       1             TNPR
      C   38              GOTO      T5A
- 
+
      C     TMSTX         IFEQ      *BLANKS
      C                   MOVE      TSTAMP        TMST
      C                   ENDIF
- 
+
      C  N03              GOTO      T6
      C   77              GOTO      T6
      C                   SETON                                        77
- 
+
       ** Posting for non-retail account which does not exist - so open it
       ** database error if retail A/C to be Opened.
- 
+
      C     ATYPP         COMP      'R'                                    99
      C   99              MOVE      *BLANK        DBERR
      C   99              MOVEL     ACPOKY        W@ACKY
@@ -1663,24 +1666,24 @@
      C   99              MOVEL     '021'         DBASE
      C   99              EXSR      *PSSR
      C   99              GOTO      END
- 
+
      C/COPY WNCPYSRC,GL0600CP20
- 
+
       ** Set off ind to signify non-retail.
      C                   SETOFF                                       20
- 
+
       ** Zeroise balances and interest rates
- 
+
      C                   Z-ADD     0             CLBL
      C                   Z-ADD     0             LDBL
      C                   Z-ADD     0             CCIR
      C                   Z-ADD     0             CDIR
      C                   Z-ADD     0             LMVD
- 
+
      C/COPY WNCPYSRC,GL0600C014
- 
+
      C/COPY ZSRSRC,DFTTSTAMPE
- 
+
      C                   MOVE      *BLANKS       ADREF1
      C                   MOVE      *BLANKS       ADREF2
      C                   MOVEL     'B'           ADREF1
@@ -1691,22 +1694,22 @@
      C                   Z-ADD     RUND          DACO
      C                   MOVE      BKDSFC        STFQ
      C                   Z-ADD     RUND          LSTD
- 
+
      C/COPY WNCPYSRC,GL0600CP17
- 
+
      C                   Z-ADD     BKAPDT        NSTD
- 
+
       ** Calculate next statement date if daily accruals
- 
+
      C                   Z-ADD     RUND          ZDAYNO
      C                   MOVE      STFQ          ZFREQ
      C                   MOVE      CCY           ZCCY
- 
+
       ** Move the system location to the ZLOC field.
- 
+
      C                   MOVE      BJSLCD        ZLOC
      C                   EXSR      ZFREQS
- 
+
      C     *IN99         IFEQ      '1'
      C                   MOVE      '1'           *INLR
      C                   MOVE      '1'           *INU7
@@ -1714,12 +1717,12 @@
      C                   GOTO      END
      C                   ENDIF
      C                   Z-ADD     ZDAYNO        NSTD
- 
+
       ** If not daily post and accrual date before DNWD, set NSTD to DNWD
- 
+
      C  NU1
      CANN23BJDNWD        COMP      BKAPDT                             47
- 
+
      C     *INU1         IFEQ      '0'
      C     *IN23         ANDEQ     '0'
      C     *IN47         ANDEQ     '1'
@@ -1727,12 +1730,12 @@
      C                   EXSR      ZFREQS
      C                   Z-ADD     ZDAYNO        NSTD
      C                   ENDIF
- 
+
      C/COPY WNCPYSRC,GL0600CP18
- 
+
      C                   BITOFF    '01234567'    GLBT
      C                   BITOFF    '01234567'    RETB
- 
+
      C                   BITON     '2'           GLBT
      C                   MOVE      ATYPP         ATYP
      C                   Z-ADD     RUND          LCD
@@ -1747,41 +1750,41 @@
      C                   Z-ADD     0             EPNO
      C                   Z-ADD     0             ECFB
      C                   MOVE      'I'           CHTP
- 
+
      C                   MOVEL     *BLANK        BRTCA
      C                   MOVEL     *BLANK        NACSG
- 
+
      C                   MOVEL     *BLANKS       IBAN
      C                   MOVEL     *BLANKS       IBSEQN
- 
+
      C     TNAO          ADD       1             TNAO
      C     TNOA          ADD       1             TNOA
      C     TNRW          ADD       1             TNRW
- 
+
       ** Initialise A/C subtype to blank when opening an account
- 
+
      C                   MOVE      *BLANKS       ASTYP
- 
+
      C/COPY WNCPYSRC,GL0600CCP1                                           S01408
- 
+
      C     T5A           TAG
      C  N35              Z-ADD     PSTA          PSTAOP           13 0
      C   35              Z-SUB     PSTA          PSTAOP
- 
+
      C/COPY WNCPYSRC,GL0600CP10                                           S01408
- 
+
       ** If Posting_Amount_Equal_Zeros_DONOT_Update_Last_Activity_Date
- 
+
      C     PSTA          IFNE      *ZEROS
      C                   Z-ADD     RUND          LACD
      C                   ENDIF
- 
+
      C                   Z-ADD     ACNOP         ACNO
      C                   SETON                                        25
- 
+
       ** Obtain account name for new accounts
       ** from account codes on table file
- 
+
      C     *IN38         IFEQ      '0'
      C                   MOVEL     ACOD          ACODX            10
      C                   CALLB     'AOACODR0'
@@ -1806,40 +1809,40 @@
      C                   MOVE      A5ACTY        ATYPP
      C                   ENDIF
      C                   ENDIF
- 
+
      C     ATYP          IFEQ      'N'
      C     ATYP          OREQ      'R'
      C                   MOVE      *ON           *IN29
      C                   ELSE
      C                   MOVE      *OFF          *IN29
      C                   ENDIF
- 
+
      C     STFQ          IFEQ      'Z'
      C                   Z-ADD     *ZEROS        NSTD
      C                   MOVE      *ON           *IN43
      C                   ENDIF
- 
+
      C                   SETOFF                                       38
      C                   SETON                                        85
- 
+
       ** When opening new accounts in ACCNTAB, write a corresponding
       ** record in the account details extension file GLACNTQD
- 
+
      C     KGLACT        KLIST
      C                   KFLD                    F1CNUM
      C                   KFLD                    F1CCY
      C                   KFLD                    F1ACOD
      C                   KFLD                    F1ACSQ
      C                   KFLD                    F1BRCA
- 
+
      C                   MOVE      CNUM          F1CNUM
      C                   MOVE      CCY           F1CCY
      C                   Z-ADD     ACOD          F1ACOD
      C                   Z-ADD     ACSQ          F1ACSQ
      C                   MOVE      BRCA          F1BRCA
- 
+
      C     KGLACT        CHAIN     GLACNTD0                           82
- 
+
      C     *IN82         IFEQ      *ON
      C                   Z-ADD     *ZERO         F1FCHD
      C                   Z-ADD     *ZERO         F1LFCD
@@ -1857,16 +1860,16 @@
      C                   WRITE     GLACNTD0
      C/COPY WNCPYSRC,GLH00527
      C                   ENDIF
- 
+
      C/COPY WNCPYSRC,GL0600C005
- 
+
       ** Processing Postings
- 
+
      C     T6            TAG
- 
+
       ** Make sure posting and account to be posted have the same branch
       ** code, otherwise, data base error.
- 
+
      C     BRCDP         COMP      BRCA                               9999
      C     *IN99         IFEQ      '1'
      C                   MOVE      *BLANK        DBERR
@@ -1878,21 +1881,21 @@
      C                   EXSR      *PSSR
      C                   GOTO      END
      C                   ENDIF
- 
+
       ** Sort retail from non-retail postings and balance from rate changes
- 
+
      C   05              GOTO      T19
- 
+
       ** Rate change posting - update relevant rate change dates
- 
+
      C   35              MOVE      VALD          CRCD
      C   35              MOVE      VALD          OLCR
      C  N35              MOVE      VALD          DRCD
      C  N35              MOVE      VALD          OLDR
      C                   GOTO      T21
- 
+
       ** Postings Update
- 
+
      C     T19           TAG
 0133
 0133  ** Determine if posting to be written to account
@@ -1911,19 +1914,19 @@
      C                   Z-ADD     7             X
      C     PSTA          DIV       1000          ZZAMT
      C                   EXSR      HASH
- 
+
       ** Check amounts & dates
- 
+
      C     T19A          TAG
- 
+
       ** Retrieve customer-originated indicator of transaction type
- 
+
      C                   MOVE      *BLANKS       WCOIN             1
      C     TRAT          IFNE      '00000'
      C     TRAT          ANDNE     *BLANKS
      C                   EXSR      SDRET
      C                   ENDIF
- 
+
      C                   TESTB     '4'           PRIN                 60
      C**N60*****         SETOFF                                       22           MD028392 MD037046
      C***60*****         SETON                                        22           MD028392 MD037046
@@ -1937,20 +1940,22 @@
      CAN 61VALD          COMP      BKAPDT                               6161
      C  N20              SETON                                        61
      C/COPY WNCPYSRC,GL0600C009
- 
+
       ** If next working date outward clearing.
- 
+
      C     *INU4         IFEQ      *ON
      C                   SETOFF                                       18
-     C  N61VALD          COMP      NWKD                                   18
+     C**********N61VALD  COMP      NWKD                                   18                MD048056
+      ** Set on IN18 when value date is less than or equal to NWKD.                         MD048056
+     C  N61VALD          COMP      NWKD                                 1818                MD048056
      C                   ENDIF
      C     PSTD          COMP      LMVD                               62
      C   62
      CAN 60              Z-ADD     PSTD          LMVD
      C   35              GOTO      T20
- 
+
       ** Process debit
- 
+
      C   60
      CAN 05
      CANN27LDBL          ADD       PSTA          LDBL
@@ -1961,7 +1966,7 @@
      C     *INU4         IFEQ      *ON
      C     *IN27         IFEQ      *OFF
      C     *IN05         ANDEQ     *ON
- 
+
      C   18
      COR 61              EXSR      ACCROU
      C   18
@@ -1970,16 +1975,16 @@
      CANN36GRCLT         COMP      'Y'                                    36
      C   18
      CAN 36GPAMT         SUB       PSTA          GPAMT            15 0
- 
+
      C                   ENDIF
      C                   ENDIF
- 
+
      C  N27              Z-ADD     5             X
      C   27              Z-ADD     13            X
      C                   GOTO      T21
- 
+
       ** Process Credits
- 
+
      C     T20           TAG
      C   60
      CAN 05
@@ -1991,7 +1996,7 @@
      C     *INU4         IFEQ      *ON
      C     *IN27         IFEQ      *OFF
      C     *IN05         ANDEQ     *ON
- 
+
      C   18
      COR 61              EXSR      ACCROU
      C   18
@@ -2000,75 +2005,75 @@
      CANN36GOCLR         COMP      'Y'                                    36
      C   18
      CAN 36GPAMT         ADD       PSTA          GPAMT
- 
+
      C                   ENDIF
      C                   ENDIF
- 
+
      C  N27              Z-ADD     6             X
      C   27              Z-ADD     14            X
- 
+
      C     PSTD          COMP      LRCR                               35
- 
+
       ** The following part finds out whether or not the credit
       ** movement is customer originated. this is done so that
       ** the bank can differentiate between a bank credit
       ** movement and a customer credit movement and hence will
       ** be able to tell when an account is dormant i.e. when
       ** it has been 'X' months since an account has last been used
- 
+
      C   35              TESTB     '0'           PRIN                     63
- 
+
       ** Revalidate if posting is customer originated of not.
- 
+
      C     *IN35         IFEQ      '1'
      C     *IN63         ANDEQ     '0'
      C     WCOIN         ANDEQ     'Y'
      C                   MOVE      '1'           *IN63
      C                   ENDIF
- 
+
      C   35
      CAN 63              TESTB     '4'           PRIN                 63
      C   35
      CAN 63              Z-ADD     PSTD          LRCR
      C  N35              SETON                                        35
- 
+
      C     T21           TAG
      C   05PSTA          DIV       1000          ZZAMT
      C   60
      CAN 05              EXSR      HASH
      C**********         TESTB     '0'           PRIN                     63                  256758
      C                   MOVE      '0'           *IN63                                        256758
- 
+
      C******IN63         IFEQ      '0'                                                        256758
      C*****WCOIN         ANDEQ     'Y'                                                        256758
      C     WCOIN         IFEQ      'Y'                                                        256758
      C     *IN05         ANDEQ     '1'
      C                   MOVE      '1'           *IN63
      C                   ENDIF
- 
+
      C   63              TESTB     '4'           PRIN                 63
      C   63PSTD          COMP      LACD                               63
- 
+
       ** If Posting amount equal zeros DO NOT Update Last Activity Date
- 
+
      C     PSTA          IFNE      *ZEROS
- 
+
      C   63              Z-ADD     PSTD          LACD
      C     *IN63         IFEQ      '1'                                                        240699
      C     *IN20         ANDEQ     '1'                                                        240699
      C                   BITOFF    '4'           RETB                                         240699
      C                   ENDIF                                                                240699
- 
+
      C                   ENDIF
      C/COPY WNCPYSRC,GL0600C015
- 
+
       ** Database error if retail posting & not main post or eop post
- 
+
      C   20
      CANNU5              SETON                                        99
- 
+
       ** If posting for retail a/c not in correct post
- 
+
      C   99              MOVEL     ACNK          W@ACKY
      C   99              MOVE      BRCA          W@ACKY
      C   99              MOVE      *BLANK        DBERR
@@ -2077,17 +2082,17 @@
      C   99              MOVEL     '004'         DBASE
      C   99              EXSR      *PSSR
      C   99              GOTO      END
- 
+
       ** Set on indicator to signify post
- 
+
      C                   BITON     '4'           PRIN
- 
+
       ** Set BIT 6 off on CLEARPD to enable future CLBL Update.
- 
+
      C                   BITOFF    '6'           PRIN
- 
+
       ** Output Retail to clear, only if balance posting
- 
+
      C                   MOVE      *OFF          *IN88                                        CRE095
      C  N61
      CAN 20
@@ -2102,27 +2107,27 @@
      C   88              EXSR      HASH
      C   88
      CAN U5              EXCEPT    EXCPT4
- 
+
      C/COPY WNCPYSRC,GL0600CP22
- 
+
       ** File controls for last posting for this account, or account with
       ** no posting
- 
+
      C                   SETOFF                                       0506                  MD020105
      C     DSCOMK        READE     SACPO                                  32
      C                   ENDDO
- 
+
      C     T24           TAG
- 
+
       ** Set on ind to output to acord.
- 
+
      C     ATYP          IFNE      'R'
      C                   Z-ADD     0             ACNO
      C                   ENDIF
      C                   SETON                                        81
- 
+
      C/COPY WNCPYSRC,GL0600CP12
- 
+
      C                   IF        (*IN03 = *OFF AND SVLDBL <> LDBL)
      C                   Z-ADD     SVLDBL        ZZAMTSUB         15 0
      C     SVLDBL        COMP      0                                    75
@@ -2131,7 +2136,7 @@
      C  N75              Z-ADD     4             X
      C                   EXSR      HASHSUB
      C                   ENDIF
- 
+
      C                   IF        *IN03 = *ON  OR (*IN03 = *OFF
      C                             AND SVLDBL <> LDBL)
      C     LDBL          DIV       1000          ZZAMT
@@ -2141,22 +2146,22 @@
      C  N75              Z-ADD     4             X
      C                   EXSR      HASH
      C                   ENDIF
- 
+
      C/COPY WNCPYSRC,GL0600CP11
- 
+
       ** Hash Total for S/Outcl
- 
+
      C     *INU4         IFEQ      *ON
      C     GPAMT         COMP      0                                  39
      C  N39GTAMT         COMP      0                                  39
      C   39LNORE         ADD       1             LNORE
      C   39              EXSR      LHASH
      C                   ENDIF
- 
+
      C  NU1              GOTO      END
- 
+
       ** Daily processing - check to see if account flagged for closing
- 
+
      C     CSD023        IFEQ      'Y'
      C                   MOVE      CNUM          @CUST1            6
      C                   MOVE      @CUST         @CUST2            6
@@ -2174,145 +2179,145 @@
      C                   UPDATE    ACCBAABF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   SETOFF                                       70
      C     RECIAM        IFEQ      'D'
      C     ACST          ANDEQ     'C'
      C                   MOVE      '1'           *IN70
- 
+
       ** Check if account can be closed. Produce statement regardless.
- 
+
      C     LDBL          COMP      0                                  5656
      C  N56CLBL          COMP      0                                  5656
- 
+
       ** If A/C has postings in clearing, do not close it
- 
+
      C  N56
      CAN 53              SETON                                        56
- 
+
      C     WPB004        IFEQ      'Y'
      C                   EXSR      REPLIC
      C                   ENDIF
- 
+
       ** Unsuccessful closure of accounts
- 
+
      C   56TNFTCA        ADD       1             TNFTCA
      C   56              MOVE      ' '           ACST
      C   56              Z-ADD     0             DACC
- 
+
       ** Successful closure of accounts
- 
+
      C  N56              MOVE      'C'           RECIAM
      C  N56              Z-ADD     RUND          DACC
      C  N56LMVD          COMP      LSTD                               52
      C  N56
      CAN 52              BITON     '1'           GLBT
      C  N56TNOA          SUB       1             TNOA
- 
+
       ** If retail account, note account closed date on subsidiary files
       ** only if closed.
- 
+
      C   20
      CANN56              EXSR      CLORET
      C   99              GOTO      END
      C                   ENDIF
- 
+
      C/COPY WNCPYSRC,GL0600CCP2
- 
+
       ** Produce no statement for closed accounts not closed today
- 
+
      C/COPY WNCPYSRC,GL0600CP14
- 
+
      C     RECIAM        IFEQ      'D'
      C     *IN70         OREQ      '1'
- 
+
       ** If STFQ is N, set c/fwd statement balance equal to ledger balance
- 
+
      C     STFQ          IFEQ      'N'
      C                   Z-ADD     LDBL          CFSB
      C                   Z-ADD     BJDNWD        NSTD
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C/COPY WNCPYSRC,GL0600CP15
- 
+
       ** Updating Account Master
- 
+
      C  N20              GOTO      END
- 
+
       ** Clear A/C work indicator
- 
+
      C                   SETOFF                                       53
- 
+
       ** Days O/D now updated in RE0860
- 
+
      C                   GOTO      END
- 
+
       ** Updating file controls on trailer
- 
+
      C     T33           TAG
- 
+
       ** Output trailer.
       ** to allow for GL0600 being run more than once a day
- 
+
      C  NU1              GOTO      END
- 
+
      C     END           TAG
      C   37              MOVE      RECIAM        RECI
      C                   EVAL      DDIS_O = *BLANKS
      C                   EVAL      CDIS_O = *BLANKS
- 
+
       ** Write/Update Account Master File
- 
+
      C                   IF        *IN03 = *ON
      C                   EXCEPT    EXCPT6
      C                   EXSR      WRTSTMT                                                  MD038510
      C                   ELSE
- 
+
      C                   IF        (AREC1O <> AREC3) or (AREC2O <> AREC4)
      C                   EXCEPT    EXCPT5
      C                   ENDIF
      C                   ENDIF
- 
+
       ** SYSOPAJ
- 
+
      C     *IN85         IFEQ      *ON
      C                   EXCEPT    EXCPTA1
      C                   ENDIF
- 
+
       ** REOUTLPD
- 
+
      C     *IN81         IFEQ      *ON
      C     *IN39         ANDEQ     *ON
      C     *INU4         ANDEQ     *ON
      C                   EXCEPT    EXCPTA2
      C                   ENDIF
- 
+
       ** REIAC
- 
+
      C     *IN37         IFEQ      *ON
      C                   EXCEPT    EXCPTA3
      C                   EVAL      ForceCommit = True                                       MD021994
      C                   ENDIF
- 
+
       ** REACR
- 
+
      C     *IN37         IFEQ      *ON
      C     *IN33         ANDEQ     *OFF
      C                   EXCEPT    EXCPTA4
      C                   ENDIF
- 
+
       ** RECOMD
- 
+
      C     *IN37         IFEQ      *ON
      C                   EXCEPT    EXCPTA5
      C                   ENDIF
- 
+
      C
      C   99              SETON                                        U7LR
      C   99              GOTO      ENDPGM
- 
+
      C                   SETOFF                                       0203
                                                                                             MD021994
      C                   EVAL      REC_CTR = REC_CTR + 1                                    MD021994
@@ -2340,27 +2345,27 @@
      C                   UPDATE    GLACPOF                                                  MD021994
      C                   LEAVE                                                             AR1097401
      C                   ENDIF                                                             AR1097401
- 
+
      C                   ENDDO
                                                                                             MD021994
      C                   EVAL      *INLR = *ON                                              MD021994
- 
+
      C     ENDPGM        TAG
- 
+
      CLR   1             CHAIN     GLACCTAC                           89
      CLR                 SETON                                        80
- 
+
       ** Trailer record found
- 
+
      CLR   *IN89         IFEQ      *OFF
      CLR   NINP          ADD       TNAO          NINP
      CLR   NORD          ADD       TNAR          NORD
      CLR   NOCF          ADD       TNFTCA        NOCF
      CLR   NAMP          ADD       TNAA          NAMP
      CLR   NOCL          SUB       TROPEN        NOCL
- 
+
       ** To allow for GL0600 being run more than once a day
- 
+
      CLR   NAUP          ADD       TNOA          NAUP
      CLR                 Z-ADD     HWND          ZZTOTI
      CLR                 Z-ADD     HDCD          ZZTOTD
@@ -2394,13 +2399,13 @@
      CLR                 Z-ADD     *ZEROS        ACOD                                       MD022971
      CLR                 WRITE     GLACCTCF
      CLR                 ENDIF
- 
+
       ** Reset trailer totals
- 
+
      C/COPY WNCPYSRC,GL0600CP16
- 
+
       ** Update SYSOPZX
- 
+
      CLR   1             CHAIN     GLSYSOZX                           89
      CLR   TNAO          ADD       NORESY        FNAO              5 0
      CLR                 ADD       TNAR          FNAO
@@ -2412,13 +2417,13 @@
      CLR                 WRITE     GLSYSOXF
      CLR                 ENDIF
      CLR                 ENDIF
- 
+
       ** Update CLEARZZ
- 
+
      CLR U51             CHAIN     GLCLEAZZ                           89
      CLR U5TNPIC         ADD       NORECL        FNPIC             5 0
      CLR U5DEC(9)        ADD       HRDCCL        WRKN40            4 0
- 
+
      CLR U5WRKN40        IFLT      1000
      CLR U5              ADD       HRWNCL        INT(9)
      CLR U5              ADD       HRDCCL        DEC(9)
@@ -2428,20 +2433,20 @@
      CLR U5              ADD       1             INT(9)
      CLR U5              Z-ADD     WRKN40        DEC(9)
      CLR                 ENDIF
- 
+
      CLR U5*IN99         IFEQ      *OFF
      CLR U5              Z-ADD     FNPIC         NORECL
      CLR U5              Z-ADD     INT(9)        HRWNCL
      CLR U5              Z-ADD     DEC(9)        HRDCCL
- 
+
      CLR U5*IN89         IFEQ      *OFF
      CLR U5              UPDATE    GLCLEAZF
      CLR                 ELSE
      CLR U5              WRITE     GLCLEAZF
      CLR                 ENDIF
- 
+
      CLR                 ENDIF
- 
+
      CLR U4*IN99         IFEQ      *OFF
      CLR U4              EVAL      GLOUTLDS.GNREC = LNORE                                   MD031057
      CLR U4              EVAL      GLOUTLDS.GHWNP = HWNP                                    MD031057
@@ -2457,9 +2462,9 @@
      CLR U4              WRITE     GLOUTLT0      GLOUTLDS
      CLR                 ENDIF
      CLR                 ENDIF
- 
+
       ** If any retail accounts closed, update REACR trailer record count
- 
+
      CLR   CLOACR        COMP      0                                  39
      CLR 39              MOVE      *ALL'9'       ACRKEY           24
      CLR 39ACRKEY        CHAIN     REACR                              99
@@ -2494,7 +2499,7 @@
      C                   ENDIF                                                              MD021994
                                                                                             MD021994
      C                   IN        CBTASKSP                                                 MD021994
- 
+
      C/COPY WNCPYSRC,GL0600CCP8
      C                   Z-ADD     *ZEROS        ZERO01            1 0
      C                   MOVE      *BLANKS       BLANK2            2
@@ -2508,23 +2513,23 @@
      C                   MOVE      *BLANKS       BLNK21           21
      C                   MOVE      *BLANKS       BLAN15           15
      C                   MOVE      *BLANKS       BLANK3            3
- 
+
      C/COPY ZSRSRC,DFTTSTAMPE
- 
+
      C     *DTAARA       DEFINE    RUNDAT        RUNDT
      C                   IN        RUNDT
      C                   MOVE      ' '           BLK200          200
      C                   MOVE      ' '           BLANK1            1
      C                   MOVEL     'GL0600  '    DBPGM
      C                   Z-ADD     0             NITMS
- 
+
      C                   MOVE      'N'           ULX004            1
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'ULX004'      WSARD             6
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C     @RTCD         ANDNE     '*NRF    '
      C     *LOCK         IN        LDA
@@ -2534,19 +2539,19 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C     @RTCD         IFEQ      *BLANK
      C                   MOVE      'Y'           ULX004
      C                   SETON                                        74
      C                   ENDIF
- 
+
       ** Access bank details
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      '*MSG   '     @RTCD             7
      C                   PARM      '*FIRST '     @OPTN             7
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANK
      C                   MOVE      *BLANKS       DBERR
      C                   MOVEL     'SDBANKPD'    DBFILE
@@ -2556,18 +2561,18 @@
      C                   EXSR      *PSSR
      C                   GOTO      ENDFST
      C                   ENDIF
- 
+
       ** Check system date format, DDMMYY or MMDDYY.
- 
+
      C     DATF          COMP      'M'                                    98
- 
+
       ** Access midas module details
- 
+
      C                   CALL      'AOMMODR0'
      C                   PARM      '*MSG   '     @RTCD             7
      C                   PARM      '*FIRST '     @OPTN             7
      C     SDMMOD        PARM      SDMMOD        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANK
      C                   MOVE      *BLANKS       DBERR
      C                   MOVEL     'SDMMODPD'    DBFILE
@@ -2577,30 +2582,30 @@
      C                   EXSR      *PSSR
      C                   GOTO      ENDFST
      C                   ENDIF
- 
+
       ** If funds transfer installed seton 24
- 
+
      C     BGFDTR        IFEQ      'Y'
      C                   SETON                                            24
      C                   ELSE
      C                   SETOFF                                           24
      C                   ENDIF
- 
+
       ** If analytical accounting installed, seton indicator 28.
- 
+
      C     BGNOST        IFEQ      'Y'
      C                   MOVE      *ON           *IN28
      C                   ELSE
      C                   MOVE      *OFF          *IN28
      C                   ENDIF
- 
+
       ** Access general ledger details
- 
+
      C                   CALL      'AOGELRR1'
      C                   PARM      '*MSG   '     @RTCD             7
      C                   PARM      '*FIRST '     @OPTN             7
      C     SDGELR        PARM      SDGELR        DSSDY
- 
+
      C     @RTCD         IFNE      *BLANK
      C                   MOVE      *BLANKS       DBERR
      C                   MOVEL     'SDGELRPD'    DBFILE
@@ -2610,16 +2615,16 @@
      C                   EXSR      *PSSR
      C                   GOTO      ENDFST
      C                   ENDIF
- 
+
       ** Access retail details, when retail module exists
- 
+
      C     BGRTBN        IFEQ      'Y'
- 
+
      C                   CALL      'AORETLR0'
      C                   PARM      '*MSG   '     @RTCD             7
      C                   PARM      '*FIRST '     @OPTN             7
      C     SDRETL        PARM      SDRETL        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANK
      C                   MOVE      *BLANKS       DBERR
      C                   MOVEL     'SDRETLPD'    DBFILE
@@ -2629,18 +2634,18 @@
      C                   EXSR      *PSSR
      C                   GOTO      ENDFST
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Check if switchable feature CPB004 is switched on
- 
+
      C                   MOVE      'N'           WPB004            1
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*KEY   '     @OPTN
      C                   PARM      'CPB004'      @SARD             6
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANK
      C     @RTCD         ANDNE     '*NRF'
      C                   MOVE      *BLANKS       DBERR
@@ -2657,24 +2662,24 @@
      C                   MOVE      'N'           WPB004
      C                   ENDIF
      C                   ENDIF
- 
+
      C/COPY WNCPYSRC,GL0600C016
- 
+
       ** Call AOSARDR0 to see if CGL048 is switched on
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      '       '     @RTCD
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CGL048'      @SARD             6
- 
+
       ** If SAR CGL048 is installed, set up the indicating field
- 
+
      C     @RTCD         IFEQ      *BLANKS
      C                   MOVE      'Y'           CGL048            1
      C                   ELSE
      C                   MOVE      'N'           CGL048
      C                   ENDIF
- 
+
       *                                                                                       CGL184
       ** Check if CGL184 is switched ON                                                       CGL184
       *                                                                                       CGL184
@@ -2691,9 +2696,9 @@
      C                   ENDIF                                                                CGL184
       *                                                                                       CGL184
      C/COPY WNCPYSRC,GLH00528
- 
+
       ** Is rund last working day of month? 48 on if yes.
- 
+
      C                   Z-ADD     BJDNWD        ZDAYNO
      C                   EXSR      ZDATE2
      C                   Z-ADD     ZMTH          DMOTH             2 0
@@ -2701,16 +2706,16 @@
      C                   EXSR      ZDATE2
      C                   Z-ADD     ZMTH          RMOTH             2 0
      C     RMOTH         COMP      DMOTH                              4848
- 
+
       ** To avoid daily statements if account opened by system with daily
       ** accrual frequency
- 
+
      C     BMLDAI        COMP      'Y'                                    21
      C     BKAPFQ        COMP      'D'                                    23
      C                   Z-ADD     BJDNWD        NWKD              5 0
- 
+
      C/COPY WNCPYSRC,GL0600C017
- 
+
      C                   Z-ADD     0             RRNMMO            5 0
      C                   Z-ADD     0             TNAO              5 0
      C                   Z-ADD     0             TNFTCA            5 0
@@ -2726,40 +2731,40 @@
      C                   Z-ADD     0             TNOA              5 0
      C                   Z-ADD     0             CLOACR            4 0
      C                   Z-ADD     0             ZERO5             5 0
- 
+
       ** If Private Banking Module is installed.
- 
+
      C     BGN4ST        IFEQ      'Y'
- 
+
       ** Set up Replication Processing Indicator.
- 
+
      C                   MOVE      'Y'           WUREPL            1
- 
+
      C                   ENDIF
- 
+
       ** Call to the Switchable features file to check if CSD023
       ** is switched on.
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD             7
      C                   PARM      '*VERIFY'     @OPTN             7
      C                   PARM      'CSD023'      @SARD             6
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   MOVE      'N'           CSD023            1
      C     @RTCD         IFEQ      *BLANK
      C                   MOVE      'Y'           CSD023
      C                   ENDIF
- 
+
      C     ACBAKY        KLIST
      C                   KFLD                    BRCA
      C                   KFLD                    CNUM
      C                   KFLD                    CCY
      C                   KFLD                    ACOD
      C                   KFLD                    ACSQ
- 
+
      C/COPY WNCPYSRC,GL0600CCP3
- 
+
      C     *INU4         IFEQ      *ON
      C                   Z-ADD     0             LNORE             5 0
      C                   Z-ADD     0             HWNP             15 0
@@ -2768,7 +2773,7 @@
      C                   Z-ADD     0             HDCT              3 0
      C                   Z-ADD     0             GTAMT            15 0
      C                   ENDIF
- 
+
      C                   CALL      'AOSVALR0'
      C                   PARM      *BLANKS       @RTCDE            7
      C                   PARM      PSYSVL        P@OP01           20
@@ -2791,13 +2796,13 @@
      C                   PARM      *BLANKS       P@VL09          200
      C                   PARM      *BLANKS       P@OP10           20
      C                   PARM      *BLANKS       P@VL10          200
- 
+
      C                   MOVE      'N'           IMBLNC            1
      C     @RTCDE        IFEQ      *BLANKS
      C     P@VL01        ANDEQ     'Y'
      C                   MOVE      'Y'           IMBLNC
      C                   ENDIF
- 
+
      C     ENDFST        ENDSR
       *****************************************************************
       /EJECT
@@ -2828,7 +2833,7 @@
       *  REOPEN - Reopen closed account                               *
       *                                                               *
       *****************************************************************
- 
+
      C     REOPEN        BEGSR
      C                   MOVE      ' '           ACST
      C     DACC          COMP      RUND                                   73
@@ -2836,19 +2841,19 @@
      C                   Z-ADD     0             DACC
      C                   MOVE      'R'           CHTP
      C                   Z-ADD     RUND          LCD
- 
+
       ** For accounts to be re-opened, determine if next statement date
       ** is later than rundate.  If before, recompute next statement date
       ** to prevent GLC43 from looping
- 
+
      C     NSTD          IFLT      RUND
- 
+
      C                   Z-ADD     RUND          ZDAYNO
      C                   MOVE      STFQ          ZFREQ
      C                   MOVE      CCY           ZCCY
      C                   MOVE      BJSLCD        ZLOC
      C                   EXSR      ZFREQS
- 
+
      C     *IN99         IFEQ      '1'
      C                   MOVE      '1'           *INLR
      C                   MOVE      '1'           *INU7
@@ -2856,37 +2861,37 @@
      C                   GOTO      END
      C                   ENDIF
      C                   Z-ADD     ZDAYNO        NSTD
- 
+
      C     *INU1         IFEQ      '0'
      C     *IN23         ANDEQ     '0'
- 
+
      C     BJDNWD        COMP      BKAPDT                             47
- 
+
      C     *IN47         IFEQ      '1'
      C                   Z-ADD     BJDNWD        ZDAYNO
      C                   EXSR      ZFREQS
      C                   Z-ADD     ZDAYNO        NSTD
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C/COPY WNCPYSRC,GL0600CCP4
- 
+
      C     TNAR          ADD       1             TNAR
- 
+
       ** Include reopened accounts in NAUP processing count
- 
+
      C                   IF        *IN73 = '0'                                             AR1097218
      C     TNOA          ADD       1             TNOA
      C                   ENDIF                                                             AR1097218
      C                   Z-ADD     RUND          LACD
      C                   MOVE      'D'           RECIAM
      C                   SETON                                        38
- 
+
      C/COPY WNCPYSRC,GL0600CCP5
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2903,25 +2908,25 @@
      C                   KFLD                    WACOD
      C                   KFLD                    WACSQ
      C                   KFLD                    WBRCA
- 
+
       ** Key list to access alternative accounts on rehisbl
- 
+
      C     REHIS         KLIST
      C                   KFLD                    WBRCA
      C                   KFLD                    WCNUM
      C                   KFLD                    WCCY
      C                   KFLD                    WACOD
      C                   KFLD                    WACSQ
- 
+
       ** Amend REIAC
- 
+
      C     WDACP         IFNE      *BLANK
- 
+
      C                   MOVEL     WDACP         WALT
      C                   MOVE      WDRBR         WALT
- 
+
       ** Check if retail key
- 
+
      C     WALT5         IFEQ      *BLANKS
      C     WALT10        CHAIN     ACNUM                              99
      C                   ENDIF
@@ -2930,9 +2935,9 @@
      C                   SUB       1             NOALT
      C                   UPDATE    REIACD2F
      C                   EVAL      ForceCommit = True                                       MD021994
- 
+
       ** Update alti on b record
- 
+
      C     NOALT         IFEQ      0
      C     REHIS         CHAIN     REHISBL                            59
      C     *IN59         IFEQ      '0'
@@ -2940,16 +2945,16 @@
      C                   UPDATE    REHISPPF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
      C     WCACP         IFNE      *BLANK
- 
+
      C                   MOVEL     WCACP         WALT
      C                   MOVE      WCRBR         WALT
- 
+
       ** Check if retail key
- 
+
      C     WALT5         IFEQ      *BLANKS
      C     WALT10        CHAIN     ACNUM                              99
      C                   ENDIF
@@ -2958,7 +2963,7 @@
      C                   SUB       1             NOALT
      C                   UPDATE    REIACD2F
      C                   EVAL      ForceCommit = TRUE                                       MD021994
- 
+
      C     NOALT         IFEQ      0
      C     REHIS         CHAIN     REHISBL                            59
      C     *IN59         IFEQ      '0'
@@ -2969,12 +2974,12 @@
      C                   ENDIF
      C                   ENDIF
      C     WCHAC         IFNE      *BLANK
- 
+
      C                   MOVEL     WCHAC         WALT
      C                   MOVE      WCHBR         WALT
- 
+
       ** Check if retail key
- 
+
      C     WALT5         IFEQ      *BLANKS
      C     WALT10        CHAIN     ACNUM                              99
      C                   ENDIF
@@ -2983,7 +2988,7 @@
      C                   SUB       1             NOALT
      C                   UPDATE    REIACD2F
      C                   EVAL      ForceCommit = True                                       MD021994
- 
+
      C     NOALT         IFEQ      0
      C     REHIS         CHAIN     REHISBL                            59
      C     *IN59         IFEQ      '0'
@@ -3002,9 +3007,9 @@
       *                                                               *
       *****************************************************************
      C     CLORET        BEGSR
- 
+
       ** Amend REIAC
- 
+
      C                   MOVEL     ACNK          ACCKEY           24
      C                   MOVE      BRCA          ACCKEY
      C     ACCKEY        CHAIN     REIAC                              99
@@ -3015,13 +3020,13 @@
      C   99              EXSR      *PSSR
      C   99              GOTO      CLREND
      C                   EXSR      SRALT
- 
+
       ** Flag REACR closed of record present, amount of interest accrued
- 
+
      C     ACCKEY        CHAIN     REACR                              33
- 
+
       ** Amend REFEE (Conditioning on U3 presently absent)
- 
+
      C     COMKEY        CHAIN     RECOM                              99
      C   99              MOVE      *BLANKS       DBERR
      C   99              MOVEL     'RECOM'       DBFILE
@@ -3029,34 +3034,34 @@
      C   99              Z-ADD     62            DBASE
      C   99              EXSR      *PSSR
      C   99              GOTO      CLREND
- 
+
       ** Only update SREC,REIAC & REACR if successful closure
- 
+
      C  N56              SETON                                        37
- 
+
       **  If Replication Processing required.
- 
+
      C     WUREPL        IFEQ      'Y'
- 
+
       **  If file update required and Retail Account.
- 
+
      C     *IN37         IFEQ      *ON
      C     ATYP          ANDEQ     'R'
      C                   EXSR      REPLIC
- 
+
       ** If any error occurred while executing subroutine REPLIC.
- 
+
      C     *IN99         IFEQ      *ON
      C                   GOTO      CLREND
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C/COPY WNCPYSRC,GL0600C002
- 
+
      C     CLREND        ENDSR
       *****************************************************************
       /EJECT
@@ -3066,13 +3071,13 @@
       *                                                               *
       *****************************************************************
      C     SDRET         BEGSR
- 
+
      C                   Z-ADD     1             I0                4 0
- 
+
      C     TRAT          LOOKUP    RTT(I0)                                59
- 
+
       ** Transaction not found in array(RTT)
- 
+
      C     *IN59         IFEQ      '0'
      C                   MOVE      TRAT          RTTY              5
      C                   CALL      'AORETRR0'
@@ -3080,9 +3085,9 @@
      C                   PARM      '*KEY   '     @OPTN
      C                   PARM                    RTTY
      C     SDRETR        PARM      SDRETR        DSFDY
- 
+
       ** If record does not exist in SDRETRPD
- 
+
      C     @RTCD         IFNE      *BLANK
      C                   SETON                                        U7U8LR
      C                   MOVEL     'SDRETRPD'    DBFILE
@@ -3091,27 +3096,27 @@
      C                   EXSR      *PSSR
      C                   GOTO      END
      C                   ELSE
- 
+
       ** If record exist in SDRETRPD, store transaction in array(RTT)
- 
+
      C                   MOVEL     A1RTTY        RTT(I)
      C                   MOVE      A1COIN        COI(I)
- 
+
       ** Transaction is customer originated
- 
+
      C     A1COIN        IFEQ      'Y'
      C                   MOVE      'Y'           WCOIN
      C                   ENDIF
      C                   ADD       1             I
      C                   ENDIF
      C                   ELSE
- 
+
       ** Transaction is customer originated
- 
+
      C     COI(I0)       IFEQ      'Y'
      C                   MOVE      'Y'           WCOIN
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDSR
       *****************************************************************
@@ -3131,9 +3136,9 @@
      C     HASH          BEGSR
      C                   Z-ADD     INT(X)        ZZTOTI
      C                   Z-ADD     DEC(X)        ZZTOTD
- 
+
      C                   EXSR      GLZADD
- 
+
      C                   Z-ADD     ZZTOTI        INT(X)
      C                   Z-ADD     ZZTOTD        DEC(X)
      C                   ENDSR
@@ -3145,13 +3150,13 @@
       *                                                               *
       *****************************************************************
      C     HASHSUB       BEGSR
- 
+
      C                   Z-ADD     0             WRK18N0          18 0
      C                   EVAL      WRK18N0  = (INT(X) * 1000) + DEC(X)
      C                   EVAL      WRK18N0 = WRK18N0 - ZZAMTSUB
      C                   EVAL      INT(X) = WRK18N0 / 1000
      C                   EVAL      DEC(X) = WRK18N0 - (INT(X) * 1000)
- 
+
      C                   ENDSR
      C/COPY WNCPYSRC,GL0600C012
       *****************************************************************
@@ -3162,7 +3167,7 @@
       *                                                               *
       *****************************************************************
      C     LHASH         BEGSR
- 
+
      C     GPAMT         IFGT      0
      C     GPAMT         DIV       1000          ZZAMT
      C                   Z-ADD     HWNP          ZZTOTI
@@ -3171,7 +3176,7 @@
      C                   Z-ADD     ZZTOTI        HWNP
      C                   Z-ADD     ZZTOTD        HDCP
      C                   ENDIF
- 
+
      C     GTAMT         IFGT      0
      C     GTAMT         DIV       1000          ZZAMT
      C                   Z-ADD     HWNT          ZZTOTI
@@ -3180,7 +3185,7 @@
      C                   Z-ADD     ZZTOTI        HWNT
      C                   Z-ADD     ZZTOTD        HDCT
      C                   ENDIF
- 
+
      C     LHEND         ENDSR
       *****************************************************************                     MD038510
       /EJECT                                                                                MD038510
@@ -3204,25 +3209,25 @@
       *                                                               *
       *****************************************************************
      C     ACCROU        BEGSR
- 
+
      C                   MOVE      '0'           *IN36
- 
+
      C     RETTYK        KLIST
      C                   KFLD                    GTTYP
      C                   MOVEL     TRAT          GTTYP
- 
+
      C     RETTYK        CHAIN     RETTYPL0                           89
- 
+
      C     *IN89         IFEQ      *ON
      C     GRECI         ORNE      'D'
- 
+
       ** Data Base error in RETTYPL0 File
- 
+
      C                   MOVEL     *BLANKS       GOCLR
      C                   MOVEL     *BLANKS       GRCLT
      C                   MOVEL     *BLANKS       GRCLP
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -3234,14 +3239,14 @@
      C     GLZADD        BEGSR
      C                   Z-ADD     ZZAMT         ZZAMT            15 3    91
      C   91              GOTO      ZZAEND
- 
+
       ** SPLIT ZZAMT INTO INTEGER AND DECIMAL FIELDS
      C                   Z-ADD     ZZAMT         ZZAMTI           15 0
      C                   Z-ADD     ZZAMT         ZZWK1             3 3
      C                   MOVE      ZZWK1         ZZAMTD            3 0
- 
+
       ** BOTH ZZAMTI AND ZZAMTD CONTAIN A 'SIGN' ZONE NOW
- 
+
      C                   EXSR      GLZSUM
      C     ZZAEND        ENDSR
       *****************************************************************
@@ -3261,27 +3266,27 @@
       *                                                               *
       *****************************************************************
      C     GLZCMP        BEGSR
- 
+
       ** IF AN ERROR HAS OCCURRED ZZDIFI AND ZZDIFD WILL BE ZERO.
       ** '99' - OVERFLOW ERROR
       ** '97' - THE 'SIGN' ZONES OF ZZINT AND ZZDEC ARE DIFFERENT
- 
+
      C                   SETOFF                                       9799
      C                   Z-ADD     ZZDEC         ZZDEC             3 0919293
      C                   Z-ADD     ZZINT         ZZINT            15 0949596
- 
+
       ** If sign zones differ, set 97, & return zero.
- 
+
      C   91
      CAN 95
      COR 92
      CAN 94              SETON                                        97
- 
+
      C   97              GOTO      ZZQUIT
- 
+
       ** Special cases dealt with first
       ** either amounts eq '0' or both amounts 'EQ'
- 
+
      C                   SETOFF                                       9192
      C                   SETOFF                                       9495
      C   93
@@ -3289,30 +3294,30 @@
      C   91              Z-ADD     ZZTOTI        ZZDIFI           15 0
      C   91              Z-ADD     ZZTOTD        ZZDIFD            3 0
      C   91              GOTO      ZZSIGN
- 
+
      C     ZZTOTI        COMP      ZZINT                                  91
      C   91ZZTOTD        COMP      ZZDEC                                  91
      C   91              Z-ADD     0             ZZDIFI
      C   91              Z-ADD     0             ZZDIFD
      C   91              GOTO      ZZCEND
- 
+
      C     ZZTOTI        COMP      0                                      91
      C   91ZZTOTD        COMP      0                                      91
      C   91              Z-SUB     ZZINT         ZZDIFI
      C   91              Z-SUB     ZZDEC         ZZDIFD
- 
+
      C     ZZSIGN        TAG
- 
+
       ** if ZZDIFD is zero, and ZZDIFI is neg. set up ZZNEGD.
- 
+
      C                   SETOFF                                       96
      C   91ZZDIFD        COMP      0                                      94
      C   94ZZDIFI        COMP      0                                    96
      C   96              MOVE      '.000-'       ZZNEGD            5
      C   91              GOTO      ZZCEND
- 
+
       ** End of special cases
- 
+
       ** If ZZTOTALS EQ 'B' and ZZINT,ZZDEC EQ 'A' then - to compare
       ** 'A' with 'B'
       ** 1. store original value of 'B'.
@@ -3323,37 +3328,37 @@
       **     N.B. 'A' EQ ZZINT and ZZDEC
       **          'B' EQ ZZTOTI and ZZTOTD
       **          'C' EQ ZZDIFI and ZZDIFD
- 
+
       ** Step #1
- 
+
      C                   Z-ADD     ZZTOTI        ZZSTRI           15 0
      C                   Z-ADD     ZZTOTD        ZZSTRD            3 0
- 
+
       ** Step #2
- 
+
      C                   Z-SUB     ZZINT         ZZAMTI           15 0
      C                   Z-SUB     ZZDEC         ZZAMTD            3 0
- 
+
       ** Step #3
- 
+
      C                   EXSR      GLZSUM
      C   99              GOTO      ZZQUIT
- 
+
       ** Step #4
- 
+
      C                   Z-ADD     ZZTOTI        ZZDIFI
      C                   MOVE      ZZTOTD        ZZDIFD
- 
+
       ** Step #5
- 
+
      C                   Z-ADD     ZZSTRI        ZZTOTI           15 0
      C                   Z-ADD     ZZSTRD        ZZTOTD            3 0
      C                   GOTO      ZZCEND
- 
+
      C     ZZQUIT        TAG
      C                   Z-ADD     0             ZZDIFI
      C                   Z-ADD     0             ZZDIFD
- 
+
      C     ZZCEND        ENDSR
       *****************************************************************
       /EJECT
@@ -3372,51 +3377,51 @@
      C                   Z-ADD     ZZTOTD        ZZTOTD            3 0
      C                   SETOFF                                       919293
      C                   SETOFF                                       949599
- 
+
       ** Determine sign of ZZAMTI & D, 92 if neg
- 
+
      C     ZZAMTI        COMP      0                                    9293
      C   93ZZAMTD        COMP      0                                    9293
      C   93              GOTO      ZZSEND
- 
+
       ** Determine sign of ZZTOTI & D, 91 if neg.
- 
+
      C     ZZTOTI        COMP      0                                    9193
      C   93ZZTOTD        COMP      0                                    9193
- 
+
       ** If ZZTOTAL is zero, return ZZAMOUNT.
- 
+
      C   93              Z-ADD     ZZAMTI        ZZTOTI
      C   93              Z-ADD     ZZAMTD        ZZTOTD
      C   93              GOTO      ZZSEND
- 
+
       ** If signs differ bypass overflow checks.
- 
+
      C   91
      CANN92
      CORN91
      CAN 92              GOTO      ZZOFPS
- 
+
      C     ZZAMTD        ADD       ZZTOTD        ZZWK2             4 0
      C     ZZWK2         COMP      999                                93
      C  N93ZZWK2         COMP      -999                                 93
- 
+
      C   93
      CANN92ZZAMTI        ADD       1             ZZWK3            15 0
      C   93
      CAN 92ZZAMTI        SUB       1             ZZWK3
      C   93ZZTOTI        ADD       ZZWK3         ZZWK3
      C  N93ZZTOTI        ADD       ZZAMTI        ZZWK3
- 
+
       ** If the modulus of ZZWK3 is LT MOD. ZZTOTI then O/F has occurred
- 
+
      C  N92ZZWK3         COMP      ZZTOTI                               99
      C   92ZZWK3         COMP      ZZTOTI                             99
      C  N99              Z-ADD     ZZWK2         ZZTOTD
      C  N99              Z-ADD     ZZWK3         ZZTOTI
- 
+
       ** If O/F Zeroize ZZAMT , ind '99' set and ZZTOT fields left intact.
- 
+
      C   99              Z-ADD     0             ZZAMT            15 3
      C   99              MOVE      *BLANK        DBERR
      C   99              MOVEL     'ZSUM '       DBFILE
@@ -3424,34 +3429,34 @@
      C   99              MOVEL     '011'         DBASE
      C   99              EXSR      *PSSR
      C                   GOTO      ZZSEND
- 
+
       ** The 'SIGNS' are different
- 
+
      C     ZZOFPS        TAG
- 
+
       ** If ZZAMT was negative, make it pos. to comp with ZZTOT
- 
+
      C   92              Z-SUB     ZZAMTI        ZZAMTI           15 0
      C   92              Z-SUB     ZZAMTD        ZZAMTD            3 0
- 
+
       ** If ZZTOT was negative, make it pos. to comp with ZZAMT.
- 
+
      C   91              Z-SUB     ZZTOTI        ZZTOTI
      C   91              Z-SUB     ZZTOTD        ZZTOTD
- 
+
       ** Both ZZAMT and ZZTOT are now positive.
- 
+
      C     ZZTOTI        COMP      ZZAMTI                             93  95
      C   95ZZTOTD        COMP      ZZAMTD                             93  95
- 
+
       ** If ZZTOT EQ. ZZAMT return zero.
- 
+
      C   95              Z-ADD     0             ZZTOTI
      C   95              Z-ADD     0             ZZTOTD
      C   95              GOTO      ZZSEND
- 
+
       ** IF ZZTOT GT. ZZAMT.
- 
+
      C   93ZZAMTD        COMP      ZZTOTD                             94
      C   93
      CAN 94ZZTOTI        SUB       1             ZZTOTI
@@ -3462,9 +3467,9 @@
      CAN 94ZZWK2         SUB       ZZAMTD        ZZTOTD
      C   93
      CANN94ZZTOTD        SUB       ZZAMTD        ZZTOTD
- 
+
       ** If ZZAMT GT. ZZTOT.
- 
+
      C  N93ZZTOTD        COMP      ZZAMTD                             94
      C  N93
      CAN 94ZZAMTI        SUB       1             ZZWK3            15 0
@@ -3478,9 +3483,9 @@
      CAN 94ZZWK2         SUB       ZZTOTD        ZZTOTD
      C  N93
      CANN94ZZAMTD        SUB       ZZTOTD        ZZTOTD
- 
+
       ** Reverse sign of ZZTOT if larger I/P fields were negative
- 
+
      C                   SETOFF                                       94
      C   93
      CAN 91
@@ -3488,15 +3493,15 @@
      CAN 92              SETON                                        94
      C   94              Z-SUB     ZZTOTI        ZZTOTI
      C   94              Z-SUB     ZZTOTD        ZZTOTD
- 
+
       ** Restore sign of ZZAMTI & ZZAMTD if it was reversed.
- 
+
      C   92              Z-SUB     ZZAMTI        ZZAMTI
      C   92              Z-SUB     ZZAMTD        ZZAMTD
      C     ZZSEND        TAG
- 
+
       ** If ZZTOTD is zero, and ZZTOTI is neg. set up ZZNEGD.
- 
+
      C                   SETOFF                                       96
      C     ZZTOTD        COMP      0                                      91
      C   91ZZTOTI        COMP      0                                    96
@@ -3511,30 +3516,30 @@
       *                                                               *
       *****************************************************************
      C     ZFREQS        BEGSR
- 
+
       ** Calculations to define/clear fields.
- 
+
      C                   MOVE      ZFREQ         ZFREQ             1
      C                   Z-ADD     ZDAYNO        ZDAYNO            5 0
      C                   Z-ADD     ZMDAY         ZMDAY             2 0
      C                   MOVE      ZCCY          ZCCY              3
- 
+
       ** Convert day number to date.
- 
+
      C                   EXSR      ZDATE2
- 
+
      C/COPY WNCPYSRC,GL0600CP19
- 
+
       ** If the day number input (zmday) is zero set it to the same
       ** day of the month as the current run date
- 
+
      C     ZMDAY         IFEQ      0
      C                   MOVEL     ZADATE        ZZWRK2            2
      C                   MOVE      ZZWRK2        ZMDAY
      C                   ENDIF
- 
+
       ** Check for and increment for code D-Daily-working day.
- 
+
      C     ZFREQ         COMP      'D'                                    91
      C     CGL184        IFEQ      'Y'                                                        CGL184
      C  N91ZFREQ         COMP      'K'                                    91                  CGL184
@@ -3546,27 +3551,27 @@
      C                   Z-ADD     ZDYNBR        ZDAYNO
      C                   GOTO      ZFEND
      C                   ENDIF
- 
+
      C/COPY WNCPYSRC,GL0600CP21
- 
+
       ** Check for and increment for code W-weekly.
- 
+
      C     ZFREQ         COMP      'W'                                    91
      C   91ZDAYNO        ADD       7             ZDAYNO
      C   91              GOTO      ZFEND
- 
+
       ** Check for and increment for code F-fortnightly.
- 
+
      C     ZFREQ         COMP      'F'                                    91
      C   91ZDAYNO        ADD       14            ZDAYNO
      C   91              GOTO      ZFEND
- 
+
       ** Check for and increment for code S-semi-monthly.
- 
+
      C     ZFREQ         COMP      'S'                                    91
      C   91ZDAY          COMP      15                                 939292
      C   91              GOTO      ZFDATE
- 
+
      C     *IN91         IFEQ      '1'
      C     *IN92         IFEQ      '1'
      C                   Z-ADD     15            ZDAY
@@ -3575,9 +3580,9 @@
      C                   Z-ADD     31            ZDAY
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Check for and increment for code M-monthlu.
- 
+
      C     ZFREQ         COMP      'M'                                    91
      C     CGL184        IFEQ      'Y'                                                        CGL184
      C  N91ZFREQ         COMP      'G'                                    91                  CGL184
@@ -3585,22 +3590,22 @@
      C   91              Z-ADD     ZMDAY         ZDAY
      C   91ZMTH          ADD       1             ZMTH
      C   91              GOTO      ZFDATE
- 
+
       ** Check for and increment for code R-six days before end of month
- 
+
      C     ZFREQ         COMP      'R'                                    91
      C   91              Z-ADD     31            ZDAY
      C   91              GOTO      ZFDATE
- 
+
       ** Check for and increment for code T-bimonthly.
- 
+
      C     ZFREQ         COMP      'T'                                    91
      C   91              Z-ADD     ZMDAY         ZDAY
      C   91ZMTH          ADD       2             ZMTH
      C   91              GOTO      ZFDATE
- 
+
       ** Check for and increment for code Q-quarterly.
- 
+
      C     ZFREQ         COMP      'Q'                                    91
      C     CGL184        IFEQ      'Y'                                                        CGL184
      C  N91ZFREQ         COMP      'Q'                                    91                  CGL184
@@ -3608,16 +3613,16 @@
      C   91              Z-ADD     ZMDAY         ZDAY
      C   91ZMTH          ADD       3             ZMTH
      C   91              GOTO      ZFDATE
- 
+
       ** Check for and increment for code X-six monthlu.
- 
+
      C     ZFREQ         COMP      'X'                                    91
      C   91              Z-ADD     ZMDAY         ZDAY
      C   91ZMTH          ADD       6             ZMTH
      C   91              GOTO      ZFDATE
- 
+
       ** Check for and increment for code Y-yearly.
- 
+
      C     ZFREQ         COMP      'Y'                                    91
      C     CGL184        IFEQ      'Y'                                                        CGL184
      C  N91ZFREQ         COMP      'O'                                    91                  CGL184
@@ -3625,35 +3630,35 @@
      C   91              Z-ADD     ZMDAY         ZDAY
      C   91ZYEAR         ADD       1             ZYEAR
      C   91              GOTO      ZFDATE
- 
+
       ** Check for and increment for code L-last calendar day of month.
- 
+
      C     ZFREQ         COMP      'L'                                    91
      C   91              Z-ADD     31            ZDAY
      C   91              GOTO      ZFDATE
- 
+
       ** Check for and increment for code B-last working day of month.
- 
+
      C     ZFREQ         COMP      'B'                                    91
      C   91              Z-ADD     31            ZDAY
      C   91
      CAN 48
      CANNU1ZMTH          ADD       1             ZMTH
      C   91              GOTO      ZFDATE
- 
+
       ** Check for and increment for code A-monthlu accrual/profit date.
- 
+
      C     ZFREQ         COMP      'A'                                    91
- 
+
      C     *IN91         IFEQ      '1'
- 
+
       ** Access general ledger details
- 
+
      C                   CALL      'AOGELRR1'
      C                   PARM      '*MSG   '     @RTCD             7
      C                   PARM      '*FIRST '     @OPTN             7
      C     SDGELR        PARM      SDGELR        DSSDY
- 
+
      C     @RTCD         IFNE      *BLANK
      C                   SETON                                        99
      C                   SETON                                        U7
@@ -3666,45 +3671,45 @@
      C                   ELSE
      C                   Z-ADD     BKAPDT        ZDAYNO
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Bypass if ZFREQ is 'A' or any other value
- 
+
      C                   GOTO      ZFEND
- 
+
       ** Reformat date and ensure valid.
- 
+
      C     ZFDATE        TAG
- 
+
       ** Validate month.
- 
+
      C     ZMTH          COMP      12                                 91
      C   91ZMTH          SUB       12            ZMTH
      C   91ZYEAR         ADD       1             ZYEAR
- 
+
       ** Check for leap year.
- 
+
      C     ZYEAR         DIV       4             ZLYR              2 0
      C                   MVR                     ZLY               1 0    92
- 
+
       ** Validate day number.
- 
+
      C                   MOVE      ZFMD(ZMTH)    ZWRK2             2 0
      C     ZMTH          COMP      2                                      93
      C   92
      CAN 93              Z-ADD     29            ZWRK2
- 
+
      C     ZDAY          COMP      ZWRK2                              94
      C   94              Z-ADD     ZWRK2         ZDAY
- 
+
       ** Check if code r, to subtract 6 days.
- 
+
      C     ZFREQ         COMP      'R'                                    91
      C   91ZDAY          SUB       6             ZDAY
- 
+
       ** Reformat date, DDMMYY or MMDDYY, and convert to day number.
- 
+
      C                   MOVEL     ZDAY          ZWRK4             4 0
      C                   MOVE      ZMTH          ZWRK4
      C   98              MOVEL     ZMTH          ZWRK4
@@ -3712,9 +3717,9 @@
      C                   MOVEL     ZWRK4         ZDATE
      C                   MOVE      ZYEAR         ZDATE
      C                   EXSR      ZDATE1
- 
+
       ** Check if code b,to be checked for holiday.
- 
+
      C     ZFREQ         COMP      'B'                                    91
      C     *IN91         IFEQ      '1'
      C     *IN99         ANDNE     '1'
@@ -3723,7 +3728,7 @@
      C                   Z-ADD     ZDYNBR        ZDAYNO
      C                   GOTO      ZFEND
      C                   ENDIF
- 
+
      C     ZFEND         ENDSR
       *****************************************************************
       /EJECT
@@ -3733,70 +3738,70 @@
       *                                                               *
       *****************************************************************
      C     ZDATE1        BEGSR
- 
+
       ** Clear day number.
- 
+
      C                   Z-ADD     0             ZDAYNO            5 0
- 
+
       ** Calculation to define input date field.
- 
+
      C                   Z-ADD     ZDATE         ZDATE             6 0
- 
+
       ** Get individual day, month and year fields.
- 
+
      C                   MOVE      ZDATE         ZYEAR             2 0
      C  N98              MOVEL     ZDATE         ZDAY              2 0
      C   98              MOVEL     ZDATE         ZMTH              2 0
      C                   MOVE      ZDATE         ZWRK4             4 0
      C  N98              MOVEL     ZWRK4         ZMTH
      C   98              MOVEL     ZWRK4         ZDAY
- 
+
       ** Ensure month is valid.
- 
+
      C     ZMTH          COMP      0                                    9999
      C  N99ZMTH          COMP      12                                 99
      C   99              GOTO      ZDEND1
- 
+
       ** Check for 30 day months.
- 
+
      C     ZMTH          COMP      4                                      90
      C  N90ZMTH          COMP      6                                      90
      C  N90ZMTH          COMP      9                                      90
      C  N90ZMTH          COMP      11                                     90
- 
+
       ** Ensure day is valid.
- 
+
      C     ZDAY          COMP      0                                    9999
      C   90
      CANN99ZDAY          COMP      30                                 99
      C  N90
      CANN99ZDAY          COMP      31                                 99
      C   99              GOTO      ZDEND1
- 
+
       ** Check for leap year and february.
- 
+
      C     ZYEAR         ADD       28            ZYEAR
      C     ZYEAR         DIV       4             ZLYR              2 0
      C                   MVR                     ZLY               1 0    91
      C     ZMTH          COMP      2                                  93  92
- 
+
       ** If febuary further validate day.
- 
+
      C  N91
      CAN 92ZDAY          COMP      28                                 99
      C   91
      CAN 92ZDAY          COMP      29                                 99
      C   99              GOTO      ZDEND1
- 
+
       ** Determine number of days from 31/12/1971.
- 
+
      C     ZLYR          MULT      1461          ZDAYNO
      C  N91ZDAYNO        ADD       ZYDY(ZLY)     ZDAYNO
      C   91
      CAN 93ZDAYNO        ADD       1             ZDAYNO
      C     ZDAYNO        ADD       ZMDY(ZMTH)    ZDAYNO
      C     ZDAYNO        ADD       ZDAY          ZDAYNO
- 
+
      C     ZDEND1        ENDSR
       *****************************************************************
       /EJECT
@@ -3806,97 +3811,97 @@
       *                                                               *
       *****************************************************************
      C     ZDATE2        BEGSR
- 
+
       ** Clear date fields.
- 
+
      C                   Z-ADD     0             ZDATE             6 0
      C                   MOVEL     '       '     ZADATE            7
- 
+
       ** Calculation to define input day number.
- 
+
      C                   Z-ADD     ZDAYNO        ZDAYNO            5 0
- 
+
       ** Determine year number.
       ** Adjust day number in case last day of year.
- 
+
      C     ZDAYNO        SUB       1             ZDAYN1            5 0  99
      C   99              GOTO      ZDEND2
- 
+
       ** Calculate number of 4 year spans since 31/12/1971.
- 
+
      C     ZDAYN1        DIV       1461          ZLYR              2 0
      C                   MVR                     ZDAYN1
- 
+
       ** Calculate number of remaining years.
- 
+
      C                   Z-ADD     1             ZWRK2             2 0
      C     ZDTAG1        TAG
      C     ZDAYN1        COMP      ZYDY(ZWRK2)                          90
      C  N90ZWRK2         ADD       1             ZWRK2
      C  N90              GOTO      ZDTAG1
      C     ZWRK2         SUB       1             ZWRK2                    91
- 
+
       ** Decrement day no. by days in remaining years.
- 
+
      C  N91ZDAYN1        SUB       ZYDY(ZWRK2)   ZDAYN1
- 
+
       ** Calculate actual year number.
- 
+
      C     ZLYR          MULT      4             ZWRK3             3 0
      C     ZWRK3         ADD       72            ZWRK3
      C                   Z-ADD     ZWRK3         ZYEAR             2 0
      C     ZYEAR         ADD       ZWRK2         ZYEAR
- 
+
       ** Determine month number.
       ** adjust day no. in case last day of leap year febuary.
- 
+
      C                   SETOFF                                       9293
      C   91ZDAYN1        COMP      59                                   9293
      C   91
      CANN92ZDAYN1        SUB       1             ZDAYN1
- 
+
       ** Calculate month number.
- 
+
      C                   Z-ADD     2             ZWRK2
      C     ZDTAG2        TAG
      C     ZDAYN1        COMP      ZMDY(ZWRK2)                          94
      C  N94ZWRK2         ADD       1             ZWRK2
      C  N94              GOTO      ZDTAG2
      C     ZWRK2         SUB       1             ZWRK2
- 
+
      C                   Z-ADD     ZWRK2         ZMTH              2 0
- 
+
       ** Determine day of month.
       ** Add back last day of year adjustment.
- 
+
      C     ZDAYN1        ADD       1             ZDAYN1
- 
+
       ** calculate day of month.
- 
+
      C     ZDAYN1        SUB       ZMDY(ZWRK2)   ZDAY              2 0
- 
+
       ** Add back leap year 29th febuary adjustment, if required.
- 
+
      C   93ZDAY          ADD       1             ZDAY
- 
+
       ** format date, DDMMYY or MMDDYY.
- 
+
      C  N98              MOVEL     ZDAY          ZWRK4             4 0
      C   98              MOVE      ZDAY          ZWRK4
      C  N98              MOVE      ZMTH          ZWRK4
      C   98              MOVEL     ZMTH          ZWRK4
      C                   MOVEL     ZWRK4         ZDATE
      C                   MOVE      ZYEAR         ZDATE
- 
+
       ** Format alpha date, DDMMMYY.
- 
+
      C     ZDAY          COMP      10                                   95
      C                   MOVEL     ZDAY          ZWRK5             5
      C   95              MOVEL     ' '           ZWRK5
      C                   MOVE      ZMNM(ZMTH)    ZWRK5
      C                   MOVEL     ZWRK5         ZADATE
      C                   MOVE      ZYEAR         ZADATE
- 
+
      C     ZDEND2        ENDSR
       *****************************************************************
       /EJECT
@@ -3939,12 +3944,12 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
      C                   IF        WRun = *BLANK
      C                   EVAL      WRun = 'Y'
      C                   DUMP
      C                   ENDIF
- 
+
      C                   IF        PrintHeader                                              MD021994
                                                                                             MD021994
      C                   IF        NOT %OPEN(GL0600AU)                                      MD021994
@@ -3962,7 +3967,7 @@
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -3972,10 +3977,10 @@
       *                                                               *
       *****************************************************************
      C     REPLIC        BEGSR
- 
+
       ** Access Customer Details by using Access Object,
       ** to retrieve Private Banking Customer Indicator.
- 
+
      C                   MOVE      *BLANKS       @CUST
      C                   MOVEL     CNUM          @CUST
      C                   CALLB     'AOCUSTR2'
@@ -3984,9 +3989,9 @@
      C                   PARM                    @CUST            10
      C                   PARM                    @KYST             7
      C     SDCUST        PARM      SDCUST        DSLDY
- 
+
       **  If Customer Details do not exist, handle Database Error.
- 
+
      C     @RTCD         IFNE      *BLANKS
      C     @RTCD         ANDNE     '*NRF   '
      C     CSD023        ANDEQ     'Y'
@@ -4002,44 +4007,44 @@
      C                   SETON                                        U7U8LR
      C                   EXSR      *PSSR
      C                   GOTO      ENDREP
- 
+
      C                   ENDIF
- 
+
       **  If Customer is a Private Banking Customer, set up
       **  Replication Indicator.
- 
+
      C     BBPRBA        IFEQ      'Y'
- 
+
       **  Check if account code will be sent to interface
- 
+
      C                   MOVEL     ACOD          ACODX            10
      C                   CALLB     'AOACODR0'
      C                   PARM      '*MSG   '     @RTCD
      C                   PARM      '*KEY   '     @OPTN
      C                   PARM      ACODX         @ACCD            10
      C     SDACOD        PARM      SDACOD        DSSDY
- 
+
      C     @RTCD         IFEQ      *BLANKS
      C     WPB004        ANDEQ     'N'
- 
+
      C     @RTCD         OREQ      *BLANKS
      C     WPB004        ANDEQ     'Y'
      C     A5TRAN        ANDEQ     'Y'
- 
+
      C                   MOVE      'Y'           REPI
- 
+
      C                   ENDIF
      C                   ENDIF
- 
+
      C     ENDREP        TAG
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** Accounts opened by the system
- 
+
      OSYSOPAJ   EADD 85      EXCPTA1
      O                                            1 'D'
      O                       BRCA                 4
@@ -4056,19 +4061,19 @@
      O                       ANAM                60
      O                       CHTP                61
      O                       ACOD                71
- 
+
       ** Accounts due for balance statment
- 
+
      O/COPY WNCPYSRC,GL0600OOP3
- 
+
      O/COPY WNCPYSRC,GL0600OOP4
- 
+
      O/COPY WNCPYSRC,GL0600O008
- 
+
      O/COPY WNCPYSRC,GL0600OOP2
- 
+
       ** Postings in clearing
- 
+
      OCLEARPD   E    88 U5   EXCPT4
      O                                            1 'P'
      O                       LOTSA1             250
@@ -4111,39 +4116,39 @@
      O                       FDTRID             589
      O                       ACOD               599
      O                       OTRF               620
- 
+
      O/COPY WNCPYSRC,GL0600OOP5
- 
+
       ** Core hook for externalisation.
- 
+
      O/COPY WNCPYSRC,GL0600OOPG
- 
+
       ** Outward Clearing File.
- 
+
      OREOUTLPD  E    81 39 U4EXCPTA2
      O                                            1 'L'
      O                       GPAMT          B     9P
      O                       GTAMT          B    17P
      O                       ACNO                27
- 
+
       ** Accounts Master File - DETAIL
- 
+
      OACCNTL0   E    81      EXCPT5
      O                       AREC1O             200
      O                       AREC2O             687
- 
+
      O/COPY WNCPYSRC,GL0600O007
- 
+
      O/COPY WNCPYSRC,GL0600O006
- 
+
      O/COPY WNCPYSRC,GL0600O003
- 
+
      O/COPY WNCPYSRC,GL0600O004
- 
+
      O/COPY WNCPYSRC,GL0600O001
- 
+
      O/COPY WNCPYSRC,GL0600O002
- 
+
      OACCNTL0   EADD 81      EXCPT6
      O                       AREC1              200
      O                       AREC2              687
@@ -4286,21 +4291,21 @@
      O                       CCSG               676
      O                       CRMT               683
      O                       CRFD               687
- 
+
      O/COPY WNCPYSRC,GL0600O005
- 
+
      OREIAC     E    37      EXCPTA3
      O                       RECIAM               1
      O                       REPI           B   145
- 
+
      OREACR     E    37N33   EXCPTA4
      O                       RECIAM               1
- 
+
      ORECOMDF   E    37      EXCPTA5
      O                       RECI
- 
+
       ** Account post controls
- 
+
      O***GL0600AU  T    LR                     2 03                                         MD021994
      O**********                                 20 'REFERENCE GL0600AU'                    MD021994
      O**********             BJURPT              89                                         MD021994
@@ -4354,9 +4359,9 @@
      O**********                                 76 'KEY-'                                  MD021994
      O**********             DBKEY              105                                         MD021994
      O**********                                109 '***'                                   MD021994
- 
+
      O/COPY WNCPYSRC,GL0600OOP1
- 
+
 ** - ZFMD  -  NUMBER OF DAYS IN MONTH
 312831303130313130313031
 **   ZYDY - YEARS IN DAYS CUMULATIVE, FOUR YEAR SPAN

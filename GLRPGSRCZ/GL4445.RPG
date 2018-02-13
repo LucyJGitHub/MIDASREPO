@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD033630A          Date 25May16               *
+      *  Last Amend No. MD048056           Date 16Jan18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD033630A          Date 25May16               *
       *                 MD036967           Date 25May16               *
       *                 MD035554           Date 25May16               *
       *                 MD033630           Date 23Jun16               *
@@ -94,6 +95,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD048056 - Limit the valid date for Outward clearing to be   *
+      *             greater than rundate but less than or equal to    *
+      *             the next working date.                            *
       *  MD046248 - Finastra Rebranding                               *
       *  MD033630A - Corrected discrepancy in MD033630 codes.         *
       *  MD036967 - Conflict between CAP207 and CRE025. Update Credit *
@@ -348,6 +352,9 @@
      IDSFDY     E DSDSFDY                                                 S01194
      I* FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE                S01194
      I*                                                                   108484
+     ISDBANK    E DSSDBANKPD                                                                MD048056
+      ** Data Structure to receive Bank Details                                             MD048056
+      *                                                                                     MD048056
      ISDTRAD    E DSSDTRADPD                                              108484
      I* TRADING DETAILS ACCESSED VIA ACCESS PROGRAM                       108484
      I*                                                                   S01194
@@ -1465,6 +1472,13 @@
      C           *NAMVAR   DEFN           RUNDAT
      C                     IN   RUNDAT
      C                     Z-ADDEJNB      RDATE   50
+      *                                                                                     MD048056
+      ** Get Bank Details                                                                   MD048056
+      *                                                                                     MD048056
+     C                     CALL 'AOBANKR0'                                                  MD048056
+     C                     PARM '       ' PRTCD   7                                         MD048056
+     C                     PARM '*FIRST ' POPTN   7                                         MD048056
+     C           SDBANK    PARM SDBANK    DSFDY                                             MD048056
       *                                                                                       182086
       **  Initialise ZDAYNO to prevent Decimal Data Error                                     182086
       *                                                                                       182086
@@ -1807,7 +1821,9 @@
      C           *IN99     IFEQ *OFF                                                        MD036967
      C           GRECI     ANDEQ'D'                                                         MD036967
       *                                                                                     MD036967
-     C           BTVLDT    IFEQ RDATE                                                       MD036967
+     C********** BTVLDT    IFEQ RDATE                                              MD036967 MD048056
+     C           BTVLDT    IFLE RDATE                                                       MD048056
+     C           BTVLDT    ORGT BJDNWD                                                      MD048056
      C                     GOTO RMEMSR                                                      MD036967
      C                     ENDIF                                                            MD036967
       *                                                                                     MD036967

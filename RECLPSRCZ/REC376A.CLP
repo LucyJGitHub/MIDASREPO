@@ -3,15 +3,16 @@
 /*EXI    TEXT('Midas RE Interest Statement Print RCVF STI')          */
 /*********************************************************************/
 /*                                                                   */
-/*       Midas     Retail Module                                 */
+/*       Midas     Retail Module                                     */
 /*                                                                   */
 /*       REC376A -  RETAIL INTEREST AND CHARGE GENERATION            */
 /*                  RCVF TABTBRE                                     */
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. AR1069713          Date 14Dec12              */
+/*       Last Amend No. CRE113             Date 08Feb18              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      AR1069713          Date 14Dec12              */
 /*                      259754             Date 27Jul12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /*                      CCB016             Date 18Feb08              */
@@ -25,6 +26,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       CRE113 - COB Optimisation of REC376A                        */
 /*       MD046248 - Finastra Rebranding                              */
 /*       AR1069713 - Reverse fix 259754                              */
 /*       259754 - CoB Performance Enhancements for RZB. Override     */
@@ -79,6 +81,9 @@
 /**********  DCL        VAR(&PVL08) TYPE(*CHAR) LEN(200)           */           /*259754 AR1069713*/
 /**********  DCL        VAR(&PVL09) TYPE(*CHAR) LEN(200)           */           /*259754 AR1069713*/
 /**********  DCL        VAR(&PVL10) TYPE(*CHAR) LEN(200)           */           /*259754 AR1069713*/
+             DCL        VAR(&QRYSLT) TYPE(*CHAR) LEN(2000)                                /*CRE113*/
+             DCL        VAR(&COUNT) TYPE(*DEC) LEN(10 0)                                  /*CRE113*/
+                                                                                          /*CRE113*/
              DCLF       FILE(TABTBRE)
 /**/
              SNDPGMMSG  MSG('REC376 - Retail interests statements  ') +
@@ -128,6 +133,21 @@
 /**********  ENDDO                                                 */           /*259754 AR1069713*/
 /**********                                                        */           /*259754 AR1069713*/
 /*/COPY WNCPYSRC,REC376A001                                          */
+
+/* Check if Customer Ranges has been defined, skip if no records                          /*CRE113*/
+                                                                                          /*CRE113*/
+             RTVMBRD    FILE(SDCUSRTD) NBRCURRCD(&COUNT)                                  /*CRE113*/
+                                                                                          /*CRE113*/
+             IF         COND(&COUNT > 0) THEN(DO)                                         /*CRE113*/
+             CALL       PGM(RE001591) PARM(&QRYSLT)                                       /*CRE113*/
+                                                                                          /*CRE113*/
+             OVRDBF     FILE(RECAPML) TOFILE(RECAPML) SECURE(*YES) SHARE(*YES)            /*CRE113*/
+                                                                                          /*CRE113*/
+             OPNQRYF    FILE((RECAPML)) OPTION(*INP) FORMAT(*FILE) +
+                          QRYSLT(&QRYSLT) +
+                          KEYFLD(*FILE) OPNID(RECAPMLQRY) SEQONLY(*NO)                    /*CRE113*/
+             ENDDO                                                                        /*CRE113*/
+
              IF         COND((&ISTS *EQ '1') *OR (&ISTS *EQ ' ')) +
                           THEN(CALL REC3761)
              IF         COND(&ISTS *EQ '2') THEN(CALL REC3762)
@@ -138,6 +158,11 @@
 /**********  CLOF       OPNID(RECAPMLQRY)                          */           /*259754 AR1069713*/
 /**********  DLTOVR     FILE(RECAPML)                              */           /*259754 AR1069713*/
 /**********  ENDDO                                                 */           /*259754 AR1069713*/
+
+             IF         COND(&COUNT > 0) THEN(DO)                                         /*CRE113*/
+             CLOF       OPNID(RECAPMLQRY)                                                 /*CRE113*/
+             DLTOVR     FILE(RECAPML)                                                     /*CRE113*/
+             ENDDO                                                                        /*CRE113*/
 /**/
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')

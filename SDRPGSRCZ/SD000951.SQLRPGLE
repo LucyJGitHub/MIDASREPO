@@ -1096,7 +1096,7 @@
 
      C                   IF        *IN05 = *ON
 
-     C                   IF        #1ACTN = 'I'
+     C                   IF        *IN09 = *ON
      C                   EVAL      #1FCUS = *BLANKS
      C                   EVAL      #1LCUS = *BLANKS
      C                   ENDIF
@@ -1178,7 +1178,7 @@
      C                   IF        (#1FCUS <> #1FCIR and
      C                             #1LCUS <> #1LCIR and
      C                             #1ACTN = 'A') or
-     C                             (#1ACTN = 'I')
+     C                             (*IN09 = *ON)
 
      C/EXEC SQL
      C+ SELECT *

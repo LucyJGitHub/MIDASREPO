@@ -193,7 +193,6 @@
      C+ close CustRangeFile
      C/end-exec
 
-     C                   DUMP                                                   JaypeeDelete
      C                   RETURN
 
       *****************************************************************

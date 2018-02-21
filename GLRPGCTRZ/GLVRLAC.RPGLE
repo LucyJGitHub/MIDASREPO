@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD042377           Date 01Dec16               *
+      *  Last Amend No. CRE114             Date 19Feb18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD042377           Date 01Dec16               *
       *                 MD034451C          Date 02Mar16               *
       *                 MD041157           Date 09Aug16               *
       *                 MD030959           Date 17Jun15               *
@@ -59,6 +60,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CRE114   - Modulus 10 for Retail Account Number (FOB006)     *
       *  MD046248 - Finastra Rebranding                               *
       *  MD042377 - Error RE71053 should only be validated against a  *
       *             retail account since GL account does not have a   *
@@ -214,7 +216,7 @@
      FGLNW94L7  IF   E           K DISK    INFSR(*PSSR)                                     MD041157
      F                                     PREFIX(H_)                                       MD041157
       ** Midas GL GLNW94PD - By Brch/Custno/ccy/acod/accseq                                 MD041157
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -233,55 +235,55 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(20)
- 
+
       ** Constants for Translating Lower to Upper Case
      D LO              C                   CONST('abcdefghijklmnopqrst-
      D                                     uvwxyz')
      D UP              C                   CONST('ABCDEFGHIJKLMNOPQRST-
      D                                     UVWXYZ')
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array of Fields in error.
      D FldNamXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of error message IDs
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of error message data.
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
                                                                                              BUG4615
@@ -293,18 +295,18 @@
                                                                                              BUG4615
       ** Array of warning message data.                                                      BUG4615
      D WMsgDtXAr       S                   DIM(XArrayMax) LIKE(#MsgData)                     BUG4615
- 
+
      D RETA            S              1    DIM(10)
      D NUM             S              1    DIM(10) CTDATA PERRCD(10)
- 
+
      D @ANAM           S                   LIKE(ANAM)
      D @SNAM           S                   LIKE(DDANAM)
- 
+
      D                 DS
      D  RETNR                  1     10  0
      D  RETN1                  1      5  0
      D  RETN2                  6     10  0
- 
+
      D                 DS
      D***ACKEY**               11     18                                                      CGL029
      D  ACKEY                  1     24                                                       CGL029
@@ -316,22 +318,26 @@
      D***WWASEQ*               17     18  0                                                   CGL029
      D  WWACOD                13     22  0                                                    CGL029
      D  WWASEQ                23     24  0                                                    CGL029
- 
+
       ** Switchable Features Details File                                                   MD041157
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                MD041157
       ** External data structure for access programs (long)                                 MD041157
      D DSFDY         E DS                  EXTNAME(DSFDY)                                   MD041157
                                                                                             MD041157
+     D SDBANK        E DS                  EXTNAME(SDBANKPD)                                  CRE114
+      ** External DS for Bank ICD                                                             CRE114
+     D                                     PREFIX(Ds)                                         CRE114
+      *                                                                                       CRE114
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
                                                                                               CGL029
@@ -341,7 +347,7 @@
       *                                                                                     AR685469
       ** Work variable for ANAM to trim leading spaces                                      AR685469
      D XANAM           S             20                                                     AR685469
- 
+
      D Mod11Chk        S              1                                                       CGL062
      D P@Rtcd          S              7A                                                      CGL062
      D P@Op01          S             20A                                                      CGL062
@@ -375,7 +381,7 @@
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
       *****************************************************************
- 
+
      IRESWEPD0
      I              TRAT                        SWTRAT
      IRESWEP5F                                                                                253927
@@ -434,9 +440,9 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initialization
- 
+
      C                   Movel     *Blanks       RetCodeIn
      C                   Movel     *Blanks       FldNamXAr
      C                   Movel     *Blanks       MsgIDXAr
@@ -1098,6 +1104,40 @@
      C                   EndIf
       *
      C                   EndIf
+      *                                                                                       CRE114
+      ** If CRE114 is on and Action Code is 'I' and Retail Numbers are used                   CRE114
+      ** and Apply Modulus-10 Check is on in the Bank's ICD and the Retail                    CRE114
+      ** Account Number isn't blank, call to GLVGMD10 to compute and verify                   CRE114
+      ** the check digit (10th position) of this later field                                  CRE114
+      *                                                                                       CRE114
+     C                   If        CRE114 = 'Y'                                               CRE114
+     C                             And DDACTN = 'I'                                           CRE114
+     C                             And BMRANR = 'Y'                                           CRE114
+     C                             And WWRetl = 'Y'                                           CRE114
+     C                             And DsBJMODT = 'Y'                                         CRE114
+     C                             And DDAcNo <> *Blanks                                      CRE114
+      *                                                                                       CRE114
+     C                   CallB (E) 'GLVGMD10'                                                 CRE114
+     C                   Parm                    RetCodeIn                                    CRE114
+     C                   Parm      DDAcNo        P@Fld10          10                          CRE114
+      *                                                                                       CRE114
+     C                   Select                                                               CRE114
+     C                   When      %Error                                                     CRE114
+     C                   Move      'N'           DDAcNoOk                                     CRE114
+     C                   Add       1             Idx                                          CRE114
+     C                   Movel     'DDACNO'      FldNamXAr(Idx)                               CRE114
+     C                   Movel     'Y2U0032'     MsgIDXAr(Idx)                                CRE114
+     C                   Movel     'GLVGMD10'    MsgDtaXAr(Idx)                               CRE114
+      *                                                                                       CRE114
+     C                   When      RetCodeIn = 'REL0022'                                      CRE114
+     C                   Move      'N'           DDAcNoOk                                     CRE114
+     C                   Add       1             Idx                                          CRE114
+     C                   Movel     'DDACNO'      FldNamXAr(Idx)                               CRE114
+      ** Invalid entry – Retail account number does not pass Modulus 10 check                 CRE114
+     C                   Movel     'REL0022'     MsgIDXAr(Idx)                                CRE114
+     C                   EndSl                                                                CRE114
+      *                                                                                       CRE114
+     C                   EndIf                                                                CRE114
       *
      C                   ENDSR
       *****************************************************************
@@ -1106,7 +1146,7 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *Entry        Plist
       *
       * INPUTS
@@ -1222,9 +1262,9 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C** Obtain System Value Modulus11lChk                                                    CGL062
      C                   Eval      P@Op01 = 'Modulus11Chk'                                    CGL062
                                                                                               CGL062
@@ -1269,6 +1309,29 @@
      C     @RTCD         IFEQ      *BLANKS                                                  MD041157
      C                   MOVE      'Y'           CGL013                                     MD041157
      C                   ENDIF                                                              MD041157
+      *                                                                                       CRE114
+      ** Check if CRE114 is switched on.                                                      CRE114
+      *                                                                                       CRE114
+     C                   MOVE      'N'           CRE114            1                          CRE114
+     C                   CALLB     'AOSARDR0'                                                 CRE114
+     C                   PARM      *BLANKS       @RTCD                                        CRE114
+     C                   PARM      '*VERIFY'     @OPTN                                        CRE114
+     C                   PARM      'CRE114'      @SARD                                        CRE114
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CRE114
+      *                                                                                       CRE114
+     C     @RTCD         IFEQ      *BLANKS                                                    CRE114
+     C                   MOVE      'Y'           CRE114                                       CRE114
+     C                   ENDIF                                                                CRE114
+      *                                                                                       CRE114
+      ** Access Bank details via access program                                               CRE114
+      ** (database error handling done in access program)                                     CRE114
+      *                                                                                       CRE114
+     C                   If        CRE114 = 'Y'                                               CRE114
+     C                   CallB     'AOBANKR0'                                                 CRE114
+     C                   Parm      '*DBERR'      @RTCD                                        CRE114
+     C                   Parm      '*FIRST'      @OPTN                                        CRE114
+     C     SDBANK        Parm                    DSFDY                                        CRE114
+     C                   EndIf                                                                CRE114
      C                   ENDSR                                                  *** InzEnd ***
       *****************************************************************
       /EJECT

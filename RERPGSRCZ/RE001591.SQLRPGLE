@@ -72,7 +72,6 @@
      D Apos            C                   const(x'7D')
      D CNumGE          C                   const(' (CCNUM *GE ')
      D CNumLE          C                   const(' *AND CCNUM *LE ')
-     D* ClosePar        C                   const(x'29')
 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦

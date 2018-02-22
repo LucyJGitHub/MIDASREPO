@@ -200,6 +200,7 @@
      D W2RSF           S              1
      D W#EROR          S              1
      D W#EROR2         S              1
+     D CountRange      S              2  0
 
       ** Subfile workfields
      D WSkipRec        S              1
@@ -681,6 +682,11 @@
 
      C                   IF        *IN09 = *ON and PMODE = 'M'
 
+     C                   EXSR      SRCount
+
+      ** Maximum customer range to be entered is 40
+
+     C                   IF        CountRange < 40
       ** Process Add Request
 
      C                   EVAL      W#ACT = 'I'
@@ -700,6 +706,12 @@
      C                   EVAL      *IN12 = *ON
      C                   ENDIF
 
+     C                   ELSE
+     C                   EVAL      W#EROR = 'Y'
+     C                   EVAL      PZMsgID = 'USR8501'
+     C                   EXSR      SRZasnms
+     C                   EVAL      *IN40 = *ON
+     C                   ENDIF
      C                   ENDIF
      C                   ENDIF
 
@@ -1454,6 +1466,35 @@
       /EJECT
       *****************************************************************
       *                                                               *
+      * SRCount - Count number of records in SDCUSRTD                 *
+      *                                                               *
+      *****************************************************************
+     C     SRCount       BEGSR
+
+     C/exec sql
+     C+ declare CustRangeCount Cursor with return to client
+     C+  for select count(*)
+     C+  from SDCUSRTD
+     C/end-exec
+
+     C/exec sql
+     C+ open CustRangeCount
+     C/end-exec
+
+     C/exec SQL
+     C+ fetch CustRangeCount
+     C+ into :CountRange
+     C/end-exec
+
+     C/exec SQL
+     C+ close CustRangeCount
+     C/end-exec
+
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************
+      *                                                               *
       * *INZSR - Program Initialisation Routine                       *
       *                                                               *
       *****************************************************************
@@ -1516,6 +1557,7 @@
      C/exec sql
      C+ open CustRangeFile
      C/end-exec
+
 
      C                   Z-ADD     14            WSFPG
 

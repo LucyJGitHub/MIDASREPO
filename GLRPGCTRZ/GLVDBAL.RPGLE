@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD046635           Date 10Aug17               *
+      *  Last Amend No. MD037479           Date 20Sep17               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD046635           Date 10Aug17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -30,6 +31,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD037479 - Not possible to insert alternative acc on account *
+      *             with negative spread. Allow insertion of negative *
+      *             spread even if entered with alternative account.  *
+      *           - Applied for MD-46382.                             *
       *  MD046248 - Finastra Rebranding                               *
       *  MD046635 - User permissions are not verified on account      *
       *             input via AMAD API. Change the validation so that *
@@ -349,16 +354,16 @@
      C                   END
      C                   END
       *
-      **  Rate/Spread (SDSIG) must not be '-' if a Base Rate Type (DDDRIB)
-      **  is entered along with an Alternate account (DDDACP)
-     C     DDDRIB        IFEQ      *BLANKS
-     C     DDDSIG        ANDEQ     '-'
-     C     DDDACP        ANDNE     *Blanks
-     C                   Move      'N'           DDDSIGOk
-     C                   Add       1             Idx
-     C                   MoveL     'DDDSIG'      FldNamXAr(Idx)
-     C                   MoveL     'RE71238'     MsgIDXAr(Idx)
-     C                   ENDIF
+      ****Rate/Spread (SDSIG) must not be '-' if a Base Rate Type (DDDRIB)
+      ****is entered along with an Alternate account (DDDACP)
+     C*****DDDRIB        IFEQ      *BLANKS
+     C*****DDDSIG        ANDEQ     '-'
+     C*****DDDACP        ANDNE     *Blanks
+     C**********         Move      'N'           DDDSIGOk
+     C**********         Add       1             Idx
+     C**********         MoveL     'DDDSIG'      FldNamXAr(Idx)
+     C**********         MoveL     'RE71238'     MsgIDXAr(Idx)
+     C**********         ENDIF
       *
       ** If an error was found, set the return code appropriately
       *

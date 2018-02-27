@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD046635           Date 10Aug17               *
+      *  Last Amend No. MD037479           Date 20Sep17               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD046635           Date 10Aug17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -30,11 +31,15 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD037479 - Not possible to insert alternative acc on account *
+      *             with negative spread. Allow insertion of negative *
+      *             spread even if entered with alternative account.  *
+      *           - Applied for MD-46382.                             *
       *  MD046248 - Finastra Rebranding                               *
       *  MD046635 - User permissions are not verified on account      *
       *             input via AMAD API. Change the validation so that *
       *             the user inserting an account is always validated *
-      *             to have authority to the branch of the account.   *      
+      *             to have authority to the branch of the account.   *
       *  222462 - There is no check that the alternate account is     *
       *           live.                                               *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
@@ -48,17 +53,17 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
- 
+
       ** RE Account Numbers File
      FACNUM     IF   E           K DISK    INFSR(*PSSR)
- 
+
       ** RE Interest and Charges File
      FREIACXX   IF   E           K DISK    INFSR(*PSSR)
- 
+
       ** GL Account by Branch
      FACCNTLXX  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(ACCNTABF:ACCNTLXF)
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -77,54 +82,54 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(20)
- 
+
      D @NDIGT          C                   CONST('0123456789')
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array of Fields in error.
      D FldNamXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of error message IDs
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of error message data.
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
      D                 DS
      D**ACKEY1**               1     15                                                       CGL029
      D  ACKEY1                 1     21                                                       CGL029
@@ -134,7 +139,7 @@
      D**WWACSQ**              14     15                                                       CGL029
      D  WWACOD                10     19                                                       CGL029
      D  WWACSQ                20     21                                                       CGL029
- 
+
      D                 DS
      D**ACKEYK**               1     18                                                       CGL029
      D  ACKEYK                 1     24                                                       CGL029
@@ -150,23 +155,23 @@
      D  RETKK                  1     10  0
      D**ACCKYK**              11     15                                                       CGL029
      D  ACCKYK                11     21                                                       CGL029
- 
+
       ** External data structure for branch codes file
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
- 
+
       ** First DS for access programs, short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
                                                                                               CGL029
@@ -175,7 +180,7 @@
       *                                                                                       CGL029
      D DSSDY         E DS                  EXTNAME(DSSDY)                                     CGL029
       *                                                                                       CGL029
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -190,9 +195,9 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initialization
- 
+
      C                   MoveL     *Blanks       RetCodeIn
      C                   MoveL     *Blanks       FldNamXAr
      C                   MoveL     *Blanks       MsgIDXAr
@@ -349,16 +354,16 @@
      C                   END
      C                   END
       *
-      **  Rate/Spread (SDSIG) must not be '-' if a Base Rate Type (DDCRIB)
-      **  is entered along with an Alternate account (DDCACP)
-     C     DDCRIB        IFEQ      *BLANKS
-     C     DDCSIG        ANDEQ     '-'
-     C     DDCACP        ANDNE     *Blanks
-     C                   Move      'N'           DDCSIGOk
-     C                   Add       1             Idx
-     C                   MoveL     'DDCSIG'      FldNamXAr(Idx)
-     C                   MoveL     'RE71238'     MsgIDXAr(Idx)
-     C                   ENDIF
+      ****Rate/Spread (SDSIG) must not be '-' if a Base Rate Type (DDCRIB)
+      ****is entered along with an Alternate account (DDCACP)
+     C*****DDCRIB        IFEQ      *BLANKS
+     C*****DDCSIG        ANDEQ     '-'
+     C*****DDCACP        ANDNE     *Blanks
+     C**********         Move      'N'           DDCSIGOk
+     C**********         Add       1             Idx
+     C**********         MoveL     'DDCSIG'      FldNamXAr(Idx)
+     C**********         MoveL     'RE71238'     MsgIDXAr(Idx)
+     C**********         ENDIF
       *
       ** If an error was found, set the return code appropriately
       *
@@ -377,7 +382,7 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *Entry        Plist
       *
       ** INPUTS
@@ -439,9 +444,9 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR                                                  *** InzEnd ***
       *****************************************************************
       /EJECT

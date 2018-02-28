@@ -354,16 +354,16 @@
      C                   END
      C                   END
       *
-      ****Rate/Spread (SDSIG) must not be '-' if a Base Rate Type (DDDRIB)
-      ****is entered along with an Alternate account (DDDACP)
-     C*****DDDRIB        IFEQ      *BLANKS
-     C*****DDDSIG        ANDEQ     '-'
-     C*****DDDACP        ANDNE     *Blanks
-     C**********         Move      'N'           DDDSIGOk
-     C**********         Add       1             Idx
-     C**********         MoveL     'DDDSIG'      FldNamXAr(Idx)
-     C**********         MoveL     'RE71238'     MsgIDXAr(Idx)
-     C**********         ENDIF
+      ****Rate/Spread (SDSIG) must not be '-' if a Base Rate Type (DDDRIB)                  MD037479
+      ****is entered along with an Alternate account (DDDACP)                               MD037479
+     C*****DDDRIB        IFEQ      *BLANKS                                                  MD037479
+     C*****DDDSIG        ANDEQ     '-'                                                      MD037479
+     C*****DDDACP        ANDNE     *Blanks                                                  MD037479
+     C**********         Move      'N'           DDDSIGOk                                   MD037479
+     C**********         Add       1             Idx                                        MD037479
+     C**********         MoveL     'DDDSIG'      FldNamXAr(Idx)                             MD037479
+     C**********         MoveL     'RE71238'     MsgIDXAr(Idx)                              MD037479
+     C**********         ENDIF                                                              MD037479
       *
       ** If an error was found, set the return code appropriately
       *

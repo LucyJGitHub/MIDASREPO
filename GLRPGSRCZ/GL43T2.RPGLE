@@ -12,28 +12,34 @@
       *                                                               *
       *  (c) Finastra International Limited 2012                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL061A *CREATE    Date 06Aug12               *
+      *  Last Amend No. CGL188             Date 19Feb18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL061A *CREATE    Date 06Aug12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CGL188 - COB Optimisation of GL0420                          *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL061A - Statements Task Split Processing                   *
       *                                                               *
       *****************************************************************
       *
-     FSTMTS     IF   E           K DISK    INFSR(*PSSR)
-     F                                     IGNORE(STMTHHF)
-     F                                     IGNORE(STMTZXF)
+     F**********STMTS     IF   E           K DISK    INFSR(*PSSR)                             CGL188
+     F**********                                     IGNORE(STMTHHF)                          CGL188
+     F**********                                     IGNORE(STMTZXF)                          CGL188
       *
+     FGLSTPRL0  IF   E           K DISK    INFSR(*PSSR)                                       CGL188
      FGLSTAMPD  UF A E             DISK    INFSR(*PSSR)
      F                                     USROPN
      F                                     RENAME(STAMPD0:DRIVEF)
      F                                     COMMIT
       *
-     FGLSTMIPD  UF A E             DISK    INFSR(*PSSR)
-     F                                     RENAME(STAMPD0:INDEXF)
-     F                                     COMMIT
+     F**********GLSTMIPD  UF A E             DISK    INFSR(*PSSR)                             CGL188
+     F**********                                     RENAME(STAMPD0:INDEXF)                   CGL188
+     F**********                                     COMMIT                                   CGL188
+     FGLSTMIPD  UF A E             DISK    INFSR(*PSSR)                                       CGL188
+     F                                     RENAME(STMTAHF:INDEXF)                             CGL188
+     F                                     COMMIT                                             CGL188
       *
       *****************************************************************
       /EJECT
@@ -76,12 +82,29 @@
       *
       ** Rename fields for GLSTMIPD format
       *
-     I              S#BRCA                      WBRCA
-     I              S#CNUM                      WCNUM
-     I              S#CCY                       WCCY
-     I              S#ACOD                      WACOD
-     I              S#ACSQ                      WACSQ
-     I              S#ATYP                      WATYP
+     I**********              S#BRCA                      WBRCA                               CGL188
+     I**********              S#CNUM                      WCNUM                               CGL188
+     I**********              S#CCY                       WCCY                                CGL188
+     I**********              S#ACOD                      WACOD                               CGL188
+     I**********              S#ACSQ                      WACSQ                               CGL188
+     I**********              S#ATYP                      WATYP                               CGL188
+     I              RPTY                        WRPTY                                         CGL188
+     I              RECI                        WRECI                                         CGL188
+     I              ATYP                        WATYP                                         CGL188
+     I              BRCA                        WBRCA                                         CGL188
+     I              CNUM                        WCNUM                                         CGL188
+     I              CCY                         WCCY                                          CGL188
+     I              ACODQQ                      WACODQ                                        CGL188
+     I              ACSQ                        WACSQ                                         CGL188
+     I              MSFL                        WMSFL                                         CGL188
+     I              ZZ011                       WZ011                                         CGL188
+     I              LSTD                        WLSTD                                         CGL188
+     I              NSTD                        WNSTD                                         CGL188
+     I              LSTP                        WLSTP                                         CGL188
+     I              CFSB                        WCFSB                                         CGL188
+     I              YTDB                        WYTDB                                         CGL188
+     I              GLBT                        WGLBT                                         CGL188
+     I              ACOD                        WACOD                                         CGL188
       *
       *****************************************************************
       /EJECT
@@ -132,7 +155,8 @@
      C                   MOVE      WCCY          KCCY
      C                   Z-ADD     WACOD         KACOD
      C                   Z-ADD     WACSQ         KACSQ
-     C                   MOVE      WATYP         KATYP
+     C**********         MOVE      WATYP         KATYP                                        CGL188
+     C                   MOVE      WRPTY         KRPTY                                        CGL188
      C     KEY           SETGT     STMTAHF
      C                   ENDIF
       *
@@ -140,6 +164,7 @@
       ** specified in the input parameter (RECTOT) is reached.
       *
      C     TOT           DOUEQ     RECTOT
+     C     RPTY          OREQ      'A'                                                        CGL188
      C     *IN81         OREQ      '1'
       *
      C                   READ      STMTAHF                                81
@@ -148,7 +173,8 @@
       ** Set-up first record read.
       *
      C     TOT           IFEQ      0
-     C                   MOVE      ATYP          S#ATYP
+     C**********         MOVE      ATYP          S#ATYP                                       CGL188
+     C                   MOVE      RPTY          S#RPTY                                       CGL188
      C                   MOVE      BRCA          S#BRCA
      C                   MOVE      CNUM          S#CNUM
      C                   MOVE      CCY           S#CCY
@@ -164,7 +190,8 @@
       ** Output record for driver file.
       *
      C     TOT           IFGT      0
-     C                   MOVE      ATYP          E#ATYP
+     C**********         MOVE      ATYP          E#ATYP                                       CGL188
+     C                   MOVE      RPTY          E#RPTY                                       CGL188
      C                   MOVE      BRCA          E#BRCA
      C                   MOVE      CNUM          E#CNUM
      C                   MOVE      CCY           E#CCY
@@ -182,12 +209,23 @@
      C                   MOVE      CCY           WCCY
      C                   Z-ADD     ACSQ          WACSQ
      C                   Z-ADD     ACOD          WACOD
-     C                   MOVE      *BLANKS       E#ATYP
-     C                   MOVE      *BLANKS       E#BRCA
-     C                   MOVE      *BLANKS       E#CNUM
-     C                   MOVE      *BLANKS       E#CCY
-     C                   Z-ADD     0             E#ACSQ
-     C                   Z-ADD     0             E#ACOD
+     C**********         MOVE      *BLANKS       E#ATYP                                       CGL188
+     C**********         MOVE      *BLANKS       E#BRCA                                       CGL188
+     C**********         MOVE      *BLANKS       E#CNUM                                       CGL188
+     C**********         MOVE      *BLANKS       E#CCY                                        CGL188
+     C**********         Z-ADD     0             E#ACSQ                                       CGL188
+     C**********         Z-ADD     0             E#ACOD                                       CGL188
+     C                   MOVE      RPTY          WRPTY                                        CGL188
+     C                   MOVE      RECI          WRECI                                        CGL188
+     C                   Z-ADD     ACODQQ        WACODQ                                       CGL188
+     C                   MOVE      MSFL          WMSFL                                        CGL188
+     C                   MOVE      ZZ011         WZ011                                        CGL188
+     C                   Z-ADD     LSTD          WLSTD                                        CGL188
+     C                   Z-ADD     NSTD          WNSTD                                        CGL188
+     C                   Z-ADD     LSTP          WLSTP                                        CGL188
+     C                   Z-ADD     CFSB          WCFSB                                        CGL188
+     C                   Z-ADD     YTDB          WYTDB                                        CGL188
+     C                   MOVE      GLBT          WGLBT                                        CGL188
       *
       ** If Index file is empty write new record to it, else update
       ** with details of last record written.
@@ -240,13 +278,20 @@
       ** KLIST for setting file pointer to next record to be copied
       ** first key field is *none for RECI of header file format in logical
       *
-     C     KEY           KLIST
-     C                   KFLD                    KBRCA             3
-     C                   KFLD                    KCNUM             6
-     C                   KFLD                    KCCY              3
-     C                   KFLD                    KACOD            10 0
-     C                   KFLD                    KACSQ             2 0
-     C                   KFLD                    KATYP             1
+     C*****KEY           KLIST                                                                CGL188
+     C**********         KFLD                    KBRCA             3                          CGL188
+     C**********         KFLD                    KCNUM             6                          CGL188
+     C**********         KFLD                    KCCY              3                          CGL188
+     C**********         KFLD                    KACOD            10 0                        CGL188
+     C**********         KFLD                    KACSQ             2 0                        CGL188
+     C**********         KFLD                    KATYP             1                          CGL188
+     C     KEY           KLIST                                                                CGL188
+     C                   KFLD                    KRPTY             1                          CGL188
+     C                   KFLD                    KBRCA             3                          CGL188
+     C                   KFLD                    KCNUM             6                          CGL188
+     C                   KFLD                    KCCY              3                          CGL188
+     C                   KFLD                    KACOD            10 0                        CGL188
+     C                   KFLD                    KACSQ             2 0                        CGL188
       *
       ** Set up copyright parameter
      C                   MOVEA     CPY@          CPY2@            80

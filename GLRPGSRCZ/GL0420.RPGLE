@@ -14,8 +14,9 @@
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGL184             Date 07Dec16               *
+      *  Last Amend No. CGL188             Date 19Feb18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGL184             Date 07Dec16               *
       *                 MD037536           Date 26Apr16               *
       *                 MD033999           Date 29Jun15               *
       *                 AR1014455          Date 23Jan14               *
@@ -157,6 +158,13 @@
 0008 F*                                                               *
 0013 F*---------------------------------------------------------------*
       *                                                               *
+      *  CGL188 - COB Optimisation of GL0420                          *
+      *           Used /Copys:  GL0420FFP2, GL0420FFP3, GL0420I017,   *
+      *                         GL0420IIP4, GL0420IIP5, GL0420CP21,   *
+      *                         GL0420CP26, GL0420CP49, GL0420C005,   *
+      *                         GL0420C006, GL0420C081                *
+      *           Added /Copys: GLH00874, GLH00875, GLH00893,         *
+      *                         GLH00894                              *
       *  MD046248 - Finastra Rebranding                               *
       *  CGL184 - New Frequencies for Account Statements              *
       *  MD037536 - GLC43 components failed with �Record in file      *
@@ -510,11 +518,15 @@
       *                                                                   S01408
 0017 F***STMTS** IP AF      57 20AI     1 DISK                                         S01161 CGL029
      F***********STMTS   IP AF      67 20AI     1 DISK                                 CGL029 CGL061
-     FSTMTS     IP  AF   67    20AIDISK    KEYLOC(1)                                         CGL061A
+     F**********STMTS     IP  AF   67    20AIDISK    KEYLOC(1)                        CGL061A CGL188
      F***GLSTAMPDIP AF      67 20AI     1 DISK                                        CGL061 CGL061A
       **********                       Driver file                                    CGL061 CGL061A
      F***GLSTAMPAUF  E                    DISK                      A    UC           CGL061 CGL061A
       **********                       Driver Audit file                              CGL061 CGL061A
+     FGLSTPRL0  IP  AF   68    20AIDISK    KEYLOC(1)                                          CGL188
+      *                                                                                       CGL188
+     FGLSTBAL0  UF A E           K DISK    COMMIT                                             CGL188
+     F                                     PREFIX(BA)                                         CGL188
      F/COPY WNCPYSRC,GL0420FFP3                                           S01408
       *                                                                   S01408
 0018 F*STPO   IS AF     160  1AI   124 DISK                               S01091
@@ -746,6 +758,7 @@
      D ARAD            S              1    DIM(10)                              ADDRESS REFERENCES01
      D CY              S              3    DIM(200) FROMFILE(TABTG30) PERRCD(1) CCY/CCY DETAILS
      D CYD             S             37    DIM(200) ALT(CY)
+     D @PAGEN          S              5  0 INZ(0)                                             CGL188
      D*  DATA STRUCTURE FOR COMPILATION  - COPYRIGHT INSERTION            S03220
      D CPYR@#          DS                                                       S03220
      D  CPY@                   1     80                                         S03220
@@ -824,6 +837,7 @@
      D  ACOD                  13     22  0                                                    CGL029
      D  ACSQ                  23     24  0                                                    CGL029
      D/COPY WNCPYSRC,GL0420I017
+     D********** XXBSPAGEN     E DS             5    EXTNAME(XXBSPAGEN)             CGL188 To Delete
      D**                                                                  S01117
      D**   FILE INFORMATION DATA STRUCTURE                                S01117
      D**                                                                  S01117
@@ -984,6 +998,13 @@
      D PSCTN           S             50A                                                      CFC006
      D SECTN1          C                   CONST('GL0420001')                                 CFC006
      D SECTN2          C                   CONST('GL0420002')                                 CFC006
+      *                                                                                       CGL188
+      ** Parameters for AOSVALR0                                                              CGL188
+     D PRtCd           S              7A   INZ                                                CGL188
+     D POPT            S             20A   INZ DIM( 10 )                                      CGL188
+     D PVAL            S            200A   INZ DIM( 10 )                                      CGL188
+                                                                                              CGL188
+      *
      I/COPY WNCPYSRC,GL0420E001                                           S01408
      I*COPY*ZSRSRC,ZHOLE***********************************************               S01195 CGL061A
      I/COPY ZSRSRC,ZHOLELE                                                                   CGL061A
@@ -998,39 +1019,58 @@
      I/COPY WNCPYSRC,GL0420IIP5                                           S01408
      I*                                                                   S01408
 0145 I**************STMTS   NS  01   1 CD                                                     CGL061
-0145 ISTMTS     NS  01    1 CD                                                               CGL061A
+0145 I**********STMTS     NS  01    1 CD                                              CGL061A CGL188
      I***GLSTAMPDNS  01   1 CD                                                        CGL061 CGL061A
      I*                                                                   S01408
      I/COPY WNCPYSRC,GL0420IIP6                                           S01408
      I*                                                                   S01408
-0146 I                                  1    1  RECI
-0152 I                                  2    2  ATYP
+0146 I**********                        1    1  RECI                                          CGL188
+0152 I**********                        2    2  ATYP                                          CGL188
 0153 I****                                    3   50BRCD  L4              S01117
-0153 I                                  3    5  BRCA          L4                S01117
+0153 I**********                        3    5  BRCA          L4                S01117        CGL188
 0147 I**********                              6  110CNUM  L3                                  CSD027
-0147 I                                  6   11  CNUM          L3                              CSD027
-0148 I                                 12   14  CCY           L2
+0147 I**********                        6   11  CNUM          L3                       CSD027 CGL188
+0148 I**********                       12   14  CCY           L2                              CGL188
 0149 I**********                             15  180ACOD                                      CGL029
-     I                                 15   18 0ACODQQ                                        CGL029
-0150 I                                 19   20 0ACSQ
+     I**********                       15   18 0ACODQQ                                 CGL029 CGL188
+0150 I**********                       19   20 0ACSQ                                          CGL188
 0151 I*****************                       6  20 MATCH                 S01117
 0151 I**********                              3  20 MATCH                              S01117 CGL029
 0151 I**********                              6  20 MATCHS                             S01117 CGL029
-     I                                  3   14  MTCH                                          CGL029
-     I                                  6   14  MTCHS                                         CGL029
+     I**********                        3   14  MTCH                                   CGL029 CGL188
+     I**********                        6   14  MTCHS                                  CGL029 CGL188
      I/COPY WNCPYSRC,GL0420I020
 0154 I************************************P  30  320DUMMY L1              S01117
-0154 I                                 30   32  DUMMY         L1                S01117
-     I                             P   33   35 0LSTD                            S01161
-     I                             P   36   38 0NSTD                            S01161
-     I                             P   39   40 0LSTP                            S01161
+0154 I**********                       30   32  DUMMY         L1                       S01117 CGL188
+     I**********                   P   33   35 0LSTD                                   S01161 CGL188
+     I**********                   P   36   38 0NSTD                                   S01161 CGL188
+     I**********                   P   39   40 0LSTP                                   S01161 CGL188
      I**                                  P  41  480CFSB                  S01161
-     I                             P   41   48 0CFSB                    26      E18546
-     I                             P   49   56 0YTDB                            S01161
-     I                                 57   57  GLBT                            S01161
-     I                                 58   67 0ACOD                                          CGL029
+     I**********                   P   41   48 0CFSB                    26             E18546 CGL188
+     I**********                   P   49   56 0YTDB                                   S01161 CGL188
+     I**********                       57   57  GLBT                                   S01161 CGL188
+     I**********                       58   67 0ACOD                                   CGL029 CGL188
      I*                                                                   S01408
      I/COPY WNCPYSRC,GL0420IIP4                                           S01408
+     IGLSTPRL0  NS  01    2 CD                                                                CGL188
+     I                                  1    1  RPTY                                          CGL188
+     I                                  2    2  RECI                                          CGL188
+     I                                  3    3  ATYP                                          CGL188
+     I                                  4    6  BRCA          L4                              CGL188
+     I                                  7   12  CNUM          L3                              CGL188
+     I                                 13   15  CCY           L2                              CGL188
+     I                                 16   19 0ACODQQ                                        CGL188
+     I                                 20   21 0ACSQ                                          CGL188
+     I                                  4   15  MTCH                                          CGL188
+     I                                  7   15  MTCHS                                         CGL188
+     I                                 31   33  DUMMY         L1                              CGL188
+     I                             P   34   36 0LSTD                                          CGL188
+     I                             P   37   39 0NSTD                                          CGL188
+     I                             P   40   41 0LSTP                                          CGL188
+     I                             P   42   49 0CFSB                    26                    CGL188
+     I                             P   50   57 0YTDB                                          CGL188
+     I                                 58   58  GLBT                                          CGL188
+     I                                 59   68 0ACOD                                          CGL188
      I*                                                                   S01408
 0155 I********NS  13   1 CT                                                                   CGL061
 0156 I************                            2   60STMSIZ                                    CGL061
@@ -1350,6 +1390,7 @@
      C     *LIKE         DEFINE    PSTBAL        EUPBAL                                       CEU013
      C     *LIKE         DEFINE    PSTBF         EUPBF                                        CEU013
      C**                                                                  S01117
+     C**** *DTAARA       DEFINE                  XXBSPAGEN                          CGL188 To Delete
 0358 C*    FIRST CYCLE CALCULATIONS
      C/COPY WNCPYSRC,GL0420C005
 0359 C   30              GOTO      CYCLE1
@@ -1365,6 +1406,16 @@
      C                   MOVE      *BLANKS       DBKEY                                        CGL061
 0360 C                   SETON                                        30L1
      C/COPY WNCPYSRC,GL0420C006
+     C**********         IN        XXBSPAGEN                                        CGL188 To Delete
+     C**********         MOVE      XXBSPAGEN     @PAGEN            5 0              CGL188 To Delete
+      *                                                                                       CGL188
+     C     KSTBA         KLIST                                                                CGL188
+     C                   KFLD                    BRCA                                         CGL188
+     C                   KFLD                    CNUM                                         CGL188
+     C                   KFLD                    CCY                                          CGL188
+     C                   KFLD                    ACOD                                         CGL188
+     C                   KFLD                    ACSQ                                         CGL188
+      *                                                                                       CGL188
      C*                                                                   S01281
      C**  RETRIEVE GLSTAT DATA AREA TO EXTRACT ZERO BALANCE/NO            S01281
      C**  MOVEMENT IN
@@ -1478,6 +1529,45 @@
      C                   EXSR      *PSSR                                                      S01194
      C                   END                                                                  S01194
 0399 C   76              GOTO      ERROR
+      *
+     C                   EVAL      POPT( 1 ) = 'GLNumPagesLargeStmts'                         CGL188
+     C                   CALL      'AOSVALR0'                                                 CGL188
+     C                   PARM      *BLANKS       PRtCd                                        CGL188
+     C                   PARM                    POPT( 1 )                                    CGL188
+     C                   PARM                    PVAL( 1 )                                    CGL188
+     C                   PARM                    POPT( 2 )                                    CGL188
+     C                   PARM                    PVAL( 2 )                                    CGL188
+     C                   PARM                    POPT( 3 )                                    CGL188
+     C                   PARM                    PVAL( 3 )                                    CGL188
+     C                   PARM                    POPT( 4 )                                    CGL188
+     C                   PARM                    PVAL( 4 )                                    CGL188
+     C                   PARM                    POPT( 5 )                                    CGL188
+     C                   PARM                    PVAL( 5 )                                    CGL188
+     C                   PARM                    POPT( 6 )                                    CGL188
+     C                   PARM                    PVAL( 6 )                                    CGL188
+     C                   PARM                    POPT( 7 )                                    CGL188
+     C                   PARM                    PVAL( 7 )                                    CGL188
+     C                   PARM                    POPT( 8 )                                    CGL188
+     C                   PARM                    PVAL( 8 )                                    CGL188
+     C                   PARM                    POPT( 9 )                                    CGL188
+     C                   PARM                    PVAL( 9 )                                    CGL188
+     C                   PARM                    POPT( 10 )                                   CGL188
+     C                   PARM                    PVAL( 10 )                                   CGL188
+      *                                                                                       CGL188
+     C                   IF        PRtCd <> *BLANKS                                           CGL188
+      *                                                                                       CGL188
+     C     *LOCK         IN        LDA                                                        CGL188
+     C                   MOVEL     'SDSVALPD'    DBFILE                                       CGL188
+     C                   EVAL      DBKEY = 'POPT'                                             CGL188
+     C                   Z-ADD     12            DBASE                                        CGL188
+     C                   MOVEL     'GL0420'      DBPGM                                        CGL188
+     C                   OUT       LDA                                                        CGL188
+     C                   EXSR      *PSSR                                                      CGL188
+      *                                                                                       CGL188
+     C                   ELSE                                                                 CGL188
+     C                   EVAL      @PAGEN = %DEC( PVAL( 1 ) : 5 : 0 )                         CGL188
+     C                   ENDIF                                                                CGL188
+      *                                                                                       CGL188
      C/COPY WNCPYSRC,GL0420C111
      C*                                                                   S01377
      C**  Switchable SAR: Ignore check for zero account balance and       S01377
@@ -1830,8 +1920,12 @@
      C                   MOVE      ACSQ          WASQN            12                          CGL029
      C                   MOVEL     MTCH          MATCH            24                          CGL029
      C                   MOVE      WASQN         MATCH                                        CGL029
-     C                   MOVEL     MATCH         CMPKEY           25                         CGL061A
-     C                   MOVE      ATYP          CMPKEY                                      CGL061A
+     C/COPY WNCPYSRC,GLH00893                                                              To Delete
+     C**********         MOVEL     MATCH         CMPKEY           25                  CGL061A CGL188
+     C**********         MOVE      ATYP          CMPKEY                               CGL061A CGL188
+     C/COPY WNCPYSRC,GLH00894                                                              To Delete
+     C                   MOVEL     RPTY          CMPKEY           25                          CGL188
+     C                   MOVE      MATCH         CMPKEY                                       CGL188
       *                                                                                      CGL061A
       ** If record read from STMTS GT end key, seton LR.                                     CGL061A
       *                                                                                      CGL061A
@@ -2358,6 +2452,8 @@
      C***        IF RECORD IS NOT FOUND. EI. NO POSTINS FOR ACCOUNT.      E23370
      C*                                                                   E23370
      C     *IN15         IFEQ      '1'                                          UNSUCCESSFUL  E23370
+     C/COPY WNCPYSRC,GLH00874                                                              To Delete
+     C                   z-add     1             @PAGECTR          7 0                        CGL188
      C                   GOTO      NOSLCT                                       READ.         E23370
      C                   END                                                                  E23370
      C*                                                                   E23370
@@ -2369,6 +2465,8 @@
      C     MATCH         IFNE      SAVKEY                                                     236789
      C     *IN11         OREQ      '1'                                                        236789
      C                   SETON                                        15        IS NO EQUAL   E23370
+     C/COPY WNCPYSRC,GLH00875                                                              To Delete
+     C                   z-add     1             @PAGECTR                                     CGL188
      C                   GOTO      NOSLCT                                       TO KEY.       E23370
      C                   END                                                                  E23370
      C*                                                                   E23370
@@ -2712,6 +2810,7 @@
 0581 C                   Z-ADD     0             VCOF             13 0
      C*                                                                   S01408
      C/COPY WNCPYSRC,GL0420CP49                                           S01408
+     C                   Z-add     1             @PAGECTR                                     CGL188
      C*                                                                   S01408
 0582 C*
 0583 C*    SET PAGE COUNTER AND ADD CARRIED FORWARD BALANCE.
@@ -3064,6 +3163,7 @@
 0757 C   45STPA          ADD       1             STPA                                         S01091
      C*                                                                   S01408
      C/COPY WNCPYSRC,GL0420CP21                                           S01408
+     C   45@PAGECTR      ADD       1             @PAGECTR                                     CGL188
      C*                                                                   S01408
 0758 C   40              Z-ADD     LINCNT        FFLCNT            2 0                        S01091
 0759 C   45              Z-ADD     0             LINCNT                                       S01091
@@ -3662,6 +3762,7 @@
 0833 C   18STPA          ADD       1             STPA
      C*                                                                   S01408
      C/COPY WNCPYSRC,GL0420CP26                                           S01408
+     C   18@PAGECTR      ADD       1             @PAGECTR                                     CGL188
      C*                                                                   S01408
 0834 C   19CLBF          COMP      0                                  28
 0835 C     OFBP          TAG                                                    * OFBP TAG *
@@ -3970,6 +4071,22 @@
      C/COPY WNCPYSRC,GL0420C031
 0876 C   03              EXCEPT    ACUPD                                                      S01091
      C/COPY WNCPYSRC,GL0420C081
+      *                                                                                       CGL188
+     C     @PAGECTR      IFGT      @PAGEN                                                     CGL188
+      *                                                                                       CGL188
+     C                   move      *IN80         SAV80             1                          CGL188
+     C     KSTBA         CHAIN     GLSTBAL0                           80                      CGL188
+     C     *IN80         Ifeq      *ON                                                        CGL188
+     C                   move      BRCA          BABRCA                                       CGL188
+     C                   move      CNUM          BACNUM                                       CGL188
+     C                   move      CCY           BACCY                                        CGL188
+     C                   move      ACOD          BAACOD                                       CGL188
+     C                   move      ACSQ          BAACSQ                                       CGL188
+     C                   write     GLSTBAP0                                                   CGL188
+     C                   Endif                                                                CGL188
+     C                   move      SAV80         *IN80                                        CGL188
+      *                                                                                       CGL188
+     C                   Endif                                                                CGL188
       *                                                                                       CGL061
       ** Comit if restart status = 'Y' or number of records processed                         CGL061
       ** has reached optimum defined in CBTASKSP                                              CGL061

@@ -9,7 +9,7 @@
       *                                                               *
       *  GLVGMD10 - Modulus-10 Check for 10 Characters Fields         *
       *                                                               *
-      *  (C) Copyright Misys International Banking Systems Ltd. 2018  *
+      *  (C) Copyright Finastra International Limited 2018            *
       *                                                               *
       *  Note: The input field (P@Fld10) is supposed to be numeric.   *
       *        The calling program/module should have done this va-   *

@@ -837,7 +837,6 @@
      D  ACOD                  13     22  0                                                    CGL029
      D  ACSQ                  23     24  0                                                    CGL029
      D/COPY WNCPYSRC,GL0420I017
-     D********** XXBSPAGEN     E DS             5    EXTNAME(XXBSPAGEN)             CGL188 To Delete
      D**                                                                  S01117
      D**   FILE INFORMATION DATA STRUCTURE                                S01117
      D**                                                                  S01117
@@ -1003,8 +1002,7 @@
      D PRtCd           S              7A   INZ                                                CGL188
      D POPT            S             20A   INZ DIM( 10 )                                      CGL188
      D PVAL            S            200A   INZ DIM( 10 )                                      CGL188
-                                                                                              CGL188
-      *
+      *                                                                                       CGL188
      I/COPY WNCPYSRC,GL0420E001                                           S01408
      I*COPY*ZSRSRC,ZHOLE***********************************************               S01195 CGL061A
      I/COPY ZSRSRC,ZHOLELE                                                                   CGL061A
@@ -1390,7 +1388,6 @@
      C     *LIKE         DEFINE    PSTBAL        EUPBAL                                       CEU013
      C     *LIKE         DEFINE    PSTBF         EUPBF                                        CEU013
      C**                                                                  S01117
-     C**** *DTAARA       DEFINE                  XXBSPAGEN                          CGL188 To Delete
 0358 C*    FIRST CYCLE CALCULATIONS
      C/COPY WNCPYSRC,GL0420C005
 0359 C   30              GOTO      CYCLE1
@@ -1406,8 +1403,6 @@
      C                   MOVE      *BLANKS       DBKEY                                        CGL061
 0360 C                   SETON                                        30L1
      C/COPY WNCPYSRC,GL0420C006
-     C**********         IN        XXBSPAGEN                                        CGL188 To Delete
-     C**********         MOVE      XXBSPAGEN     @PAGEN            5 0              CGL188 To Delete
       *                                                                                       CGL188
      C     KSTBA         KLIST                                                                CGL188
      C                   KFLD                    BRCA                                         CGL188
@@ -1529,7 +1524,7 @@
      C                   EXSR      *PSSR                                                      S01194
      C                   END                                                                  S01194
 0399 C   76              GOTO      ERROR
-      *
+      *                                                                                       CGL188
      C                   EVAL      POPT( 1 ) = 'GLNumPagesLargeStmts'                         CGL188
      C                   CALL      'AOSVALR0'                                                 CGL188
      C                   PARM      *BLANKS       PRtCd                                        CGL188
@@ -1920,10 +1915,8 @@
      C                   MOVE      ACSQ          WASQN            12                          CGL029
      C                   MOVEL     MTCH          MATCH            24                          CGL029
      C                   MOVE      WASQN         MATCH                                        CGL029
-     C/COPY WNCPYSRC,GLH00893                                                              To Delete
      C**********         MOVEL     MATCH         CMPKEY           25                  CGL061A CGL188
      C**********         MOVE      ATYP          CMPKEY                               CGL061A CGL188
-     C/COPY WNCPYSRC,GLH00894                                                              To Delete
      C                   MOVEL     RPTY          CMPKEY           25                          CGL188
      C                   MOVE      MATCH         CMPKEY                                       CGL188
       *                                                                                      CGL061A
@@ -2452,7 +2445,6 @@
      C***        IF RECORD IS NOT FOUND. EI. NO POSTINS FOR ACCOUNT.      E23370
      C*                                                                   E23370
      C     *IN15         IFEQ      '1'                                          UNSUCCESSFUL  E23370
-     C/COPY WNCPYSRC,GLH00874                                                              To Delete
      C                   z-add     1             @PAGECTR          7 0                        CGL188
      C                   GOTO      NOSLCT                                       READ.         E23370
      C                   END                                                                  E23370
@@ -2465,7 +2457,6 @@
      C     MATCH         IFNE      SAVKEY                                                     236789
      C     *IN11         OREQ      '1'                                                        236789
      C                   SETON                                        15        IS NO EQUAL   E23370
-     C/COPY WNCPYSRC,GLH00875                                                              To Delete
      C                   z-add     1             @PAGECTR                                     CGL188
      C                   GOTO      NOSLCT                                       TO KEY.       E23370
      C                   END                                                                  E23370

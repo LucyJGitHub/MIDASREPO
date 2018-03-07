@@ -29,8 +29,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR214111           Date 26Jun15               *
+      *  Last Amend No. MD048231           Date 17Jan18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR214111           Date 26Jun15               *
       *                 250527             Date 19Aug14               *
       *                 251373             Date 30Jan08               *
       *                 MD023406           Date 12Nov13               *
@@ -78,6 +79,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD048231 - Removed/Changed fix 251373 in order to process    *
+      *             PAPER network messages using MQ queue             *
       *  MD046248 - Finastra Rebranding                               *
       *  AR214111 - Incoming messages were not retrieved properly by  *
       *             MidasPlus. Reveresed part of 257554 to remove the *
@@ -354,33 +357,33 @@
      Dw@f4             S          12000    inz(*blank)                                        CSW209
       ** Work field for the processing of Escape Translation                                  CSW209
      D digits          C                   '0123456789'                                       CSW212
- 
+
       **  Declare MQI structures needed
       * MQI Constants
      D/COPY QMQM/QRPGLESRC,CMQR
- 
+
       ** Object Descriptor
      D MQOD            DS
      D/COPY QMQM/QRPGLESRC,CMQODR
- 
+
       ** Message Descriptor
      D MQMD            DS
      D/COPY QMQM/QRPGLESRC,CMQMDR
- 
+
       ** Get message options
      D MQGMO           DS
      D/COPY QMQM/QRPGLESRC,CMQGMOR
- 
+
       ** Put message options
      D MQPMO           DS
      D/COPY QMQM/QRPGLESRC,CMQPMOR
- 
- 
+
+
       ** The include below brings in the return code structure that
       ** is used in calls to OS/400 APIs.
      D/COPY QSYSINC/QRPGLESRC,QUSEC
       * API Error code parameter
- 
+
       ** --- Start of fields used by access programs -------------------------- CSW025
      D @RtCd           S              7A                                        CSW025
       ** Return code                                                            CSW025
@@ -428,6 +431,8 @@
      D PSysVal10       S             20A                                                      245310
      D PCurSet10       S            200A                                                      245310
                                                                                               CTI004
+      ** Declared variable for system value setting                                         MD048231
+     D MMMPaper        S              1A                                                    MD048231
       /EJECT
       *****************************************************************
       *  Index to Subroutines                                         *
@@ -618,7 +623,7 @@
      C                   movel     mgde          smgde             6 0                        CSW034
      C                   movel     q@sndref      w@trn            16
      C     w@trn         chain     mgorefl0                           50
- 
+
       ** Set dataq priority key                                                              BUG3189
      C     mtpy          ifeq      '940'                                                     BUG3189
      C     mtpy          oreq      '950'                                                     BUG3189
@@ -632,6 +637,7 @@
       ** (API header format plus message sent from compression program)
      C/COPY WNCPYSRC,MS6110MC01
      C     NWRK          ifeq      'PAPER'                                                    251373
+     C     MMMPaper      ANDNE     'Y'                                                      MD048231
      C                   GOTO      DISCRD                                                     251373
      C                   endif                                                                251373
      C     NWRK          ifeq      'MINT'
@@ -641,7 +647,7 @@
      C                   endif
      C                   EVAL      p@msgbuf = APHEAD + q@msgbuf
      C/COPY WNCPYSRC,MS6110MC02
- 
+
       ** If we are sending messages to MMM via MQSeries then we have to                       CSW038
       ** set the Meridian 1.7 header fields                                                   CSW038
      C                   if        CSW038 = 'Y'                                               CSW038
@@ -651,24 +657,24 @@
      C                   else                                                                 CSW038
      C                   EVAL      p@msgbuf = APHEAD + q@msgbuf                               CSW038
      C                   endif                                                                CSW038
- 
+
       ** Get message length
- 
+
      C     w@null        scan      p@msgbuf      p@msglen                 99    *
      C     *in99         ifeq      *off
      C                   z-add     12000         p@msglen
      c                   endif
- 
+
       ** Remove null byte
- 
+
      C     w@null:' '    xlate     p@msgbuf      p@msgbuf
- 
+
       ** MDFMT (Format Name) is a subfield of the MQMD data structure,
       ** defined in the include member CMQMDR.
       ** FMSTR is a named constant defined in CMQR; it contains 'MQSTR   '.
      C                   EVAL      MDFMT = FMSTR
      C/COPY WNCPYSRC,MS6110MC03
- 
+
       ** Send message
      C                   Z-ADD     MQPUT         CID
      C                   CALL      'QMQM'
@@ -686,13 +692,13 @@
      C                   movel     '*PUT   '     PR@FN
      C                   movel     q@msgbuf      t@tdat
      C                   exsr      sr_trace
- 
+
       ** If send message failed, indicate abnormal end
- 
+
      C                   IF        REASON <> RCNONE
- 
+
       ** Log recovery details
- 
+
      C     p@mcid        chain     MSMCIDL0                           51
      C     *in51         ifeq      *off
      C                   movel(p)  TRNO          MCRSTR
@@ -707,9 +713,9 @@
      C                   movel     'Send message'w0key
      C                   movel     REASON        w0reas
      C                   z-add     101           w0ernb
- 
+
       ** If no failure
- 
+
      C                   else
       *
       ** If this was recovery run, recovery was a success so reset
@@ -917,6 +923,13 @@
      C                   move      '10'          q@skey                                      BUG3189
      C                   end                                                                 BUG3189
       *                                                                                      BUG3189
+      ** Validate if PAPER will be generated and system value should be Y                   MD048231
+      ** to generate                                                                        MD048231
+     C     NWRK          IFEQ      'PAPER'                                                  MD048231
+     C     MMMPaper      ANDNE     'Y'                                                      MD048231
+     C                   GOTO      DISCRDDQ                                                 MD048231
+     C                   ENDIF                                                              MD048231
+      **                                                                                    MD048231
       ** Message consists of                                                    CSW025
       ** - Meridian 1.7 header                                                  CSW025
       ** - message header = MGOREFPD data                                       CSW025
@@ -959,6 +972,7 @@
                                                                                 CSW025
       ** Update message status                                                  CSW025
                                                                                 CSW025
+     C     DISCRDDQ      TAG                                                                MD048231
      C     w@abnormal    ifeq      'Y'                                          CSW025
       ** If error: to set on the PDE flag, in case the message was delivered    CSW025
      C                   movel     'Y'           MPDE                           CSW025
@@ -1090,7 +1104,7 @@
      C     *in01         doueq     *on
      C     REASON        orne      RCNONE
      C     REASON        andne     RC2033
- 
+
       ** Get options: WAIT, CONVERT and ALLOW TRUNCATION.
       ** Note: the last of these options means that a message longer than
       ** the buffer length defined in this module (currently 1500 bytes)
@@ -1099,14 +1113,14 @@
      C                   Z-ADD     GMWT          GMOPT
      C                   ADD       GMCONV        GMOPT
      C                   ADD       GMATM         GMOPT
- 
+
       ** Set wait interval to 20 seconds
      C                   Z-ADD     20000         GMWI
- 
+
       ** Perform get operation inside commitment control. Commitment
       ** boundary is after the message management file updates.
      C                   ADD       GMSYP         GMOPT
- 
+
       ** MsgId and CorrelId are selectors cleared to ensure messages
       ** are processed in arrival/priority sequence
      C                   MOVEL     MINONE        MDMID
@@ -1114,10 +1128,10 @@
      C**********         MOVEL     CINONE        MDCID                               BUG14494 257554
      C**********         MOVEL     MCSYTM        MDCID                               257554 AR214111
      C*****              MOVEL     CINONE        MDCID                                        CSW039
- 
+
       ** Clear message buffer
      C                   clear                   q@msgbuf
- 
+
       ** Get message
      C                   Z-ADD     MQGET         CID
      C                   CALL      'QMQM'
@@ -1131,9 +1145,9 @@
      C                   PARM                    MESLEN            9 0
      C                   PARM                    CCODE             9 0
      C                   PARM                    REASON            9 0
- 
+
       ** Message starts after the API header block
- 
+
      C                   clear                   p@msgbuf
      C**********         subst     q@msgbuf:HLEN p@msgbuf                                   BUG13405
      C                   Movel     q@msgbuf      p@msgbuf                                   BUG13405
@@ -1155,9 +1169,9 @@
      C                   movel     REASON        w0reas
      C                   z-add     102           w0ernb
      C                   else
- 
+
       ** Else, if data received and no error
- 
+
      C     REASON        ifne      RC2033
       *                                                                                       CSW209
       ** Scan message for Escape Sequence Translation                                         CSW209
@@ -1193,7 +1207,7 @@
      C     w@io          caseq     'I'           sr_rpt
      C                   cas                     sr_trash
      C                   endcs
- 
+
      C                   endif
      C                   endif
       *
@@ -2102,7 +2116,7 @@
       ** Close MQ series queue (if it was opened)
       *
      C     w@open        ifeq      'Y'
- 
+
      C                   exsr      sr_close
      C     w@connect     ifeq      'Y'                                                        245310
      C                   exsr      sr_disconn                                                 245310
@@ -2237,7 +2251,7 @@
      C                   ELSE                                                   CSW038
      C                   MOVE      'N'           CSW038                         CSW038
      C                   ENDIF                                                  CSW038
- 
+
      C                   CALLB     'AOSARDR0'                                   CSW034
      C                   PARM      *BLANKS       @RTCD                          CSW034
      C                   PARM      '*VERIFY'     @OPTN                          CSW034
@@ -2312,11 +2326,11 @@
      C                   movel     'MIDAS  '     w0msgf
      C                   exsr      srerr
      C                   endif
- 
+
       ** Determine API Header record lengths
- 
+
      C                   CALLB     'UTGETRCDLN'
- 
+
       ** Return code
      C                   PARM                    ReturnCode       10
       ** Record length
@@ -2327,7 +2341,7 @@
      C/COPY WNCPYSRC,MS6110MC07
       ** File library
      C                   PARM      '*LIBL     '  FileLib          10
- 
+
      C/COPY WNCPYSRC,MS6110MC08
      C                   ADD       1             HLEN
      C/COPY WNCPYSRC,MS6110MC09
@@ -2349,7 +2363,7 @@
      C**********         ADD       1             HLEN                                  CSW038 250527
      C                   Z-ADD     1             HLEN                                         250527
      C                   endif                                                                CSW038
- 
+
       ** Initialise failure flag, termination indicator, 'open'
       ** and 'server termination requested' flags
       ** also MQ open error flag as 'open' flag was used for two reasons        CSW025
@@ -2360,14 +2374,17 @@
      C                   movel     'N'           w@srvr_trq        1
      C                   movel     'N'           w@MQConnErr       1                          245310
      C                   movel     'N'           w@MQOpenErr       1            CSW025
- 
+
       ** Use default connection handle, and implicit connection
      C                   Z-ADD     HCDEFH        HCONN
- 
+
       ** Open MQ series queue
       **  only if the Data Queue export feature is not present.                 CSW025
      C                   if        CSW025 = 'N'                                 CSW025
      C                               OR CSW038 = 'Y'                            CSW038
+      ** Access System Value                                                                MD048231
+     C                                                                                      MD048231
+     C                   EVAL      PSysVal02 = 'AllowPaperSendToMMM'                        MD048231
       ** If a Queue Manager is specified on SYSTEM VALUE MQQueueManager then                  245310
       ** connect to it and retain connection handle for other QMQM calls                      245310
       ** instead of using the default Queue Manager and connection                            245310
@@ -2399,8 +2416,41 @@
      C                   MOVEL     PCurSet01     QMGR             48                          245310
      C                   exsr      sr_connect                                                 245310
      C                   z-add     HANDLE        HCONN                                        245310
+     C                   ELSE                                                               MD048231
+     C                   MOVEL     PCurSet02     MMMPaper                                   MD048231
      C                   endif                                                                245310
      C                   exsr      sr_open
+      **                                                                                    MD048231
+      ** If CSW025 = 'Y' and CSW038 = 'N', Get system value for PAPER processing            MD048231
+      **                                                                                    MD048231
+     C                   ELSE                                                               MD048231
+     C                   EVAL      PSysVal01 = 'AllowPaperSendToMMM'                        MD048231
+     C                   CALLB     'AOSVALR0'                                               MD048231
+     C                   PARM      *BLANKS       PRtCd             7                        MD048231
+     C                   PARM                    PSysVal01                                  MD048231
+     C                   PARM                    PCurSet01                                  MD048231
+     C                   PARM                    PSysVal02                                  MD048231
+     C                   PARM                    PCurSet02                                  MD048231
+     C                   PARM                    PSysVal03                                  MD048231
+     C                   PARM                    PCurSet03                                  MD048231
+     C                   PARM                    PSysVal04                                  MD048231
+     C                   PARM                    PCurSet04                                  MD048231
+     C                   PARM                    PSysVal05                                  MD048231
+     C                   PARM                    PCurSet05                                  MD048231
+     C                   PARM                    PSysVal06                                  MD048231
+     C                   PARM                    PCurSet06                                  MD048231
+     C                   PARM                    PSysVal07                                  MD048231
+     C                   PARM                    PCurSet07                                  MD048231
+     C                   PARM                    PSysVal08                                  MD048231
+     C                   PARM                    PCurSet08                                  MD048231
+     C                   PARM                    PSysVal09                                  MD048231
+     C                   PARM                    PCurSet09                                  MD048231
+     C                   PARM                    PSysVal10                                  MD048231
+     C                   PARM                    PCurSet10                                  MD048231
+                                                                                            MD048231
+     C                   IF        PrtCd = *BLANKS                                          MD048231
+     C                   MOVEL     PCurSet01     MMMPaper                                   MD048231
+     C                   ENDIF                                                              MD048231
      C                   endif                                                  CSW025
                                                                                 CSW025
       ** If the Data Queue export feature is present:                           CSW025
@@ -2514,7 +2564,7 @@
      C                   add       1             Q
      C                   movel     'sr_open'     @STK(Q)
      C/COPY WNCPYSRC,MS6110MC16
- 
+
       ** Queue manager name                                                     CSW038
      C     MCMQMN        ifne      *Blank                                       CSW038
      C                   MOVEL     MCMQMN        ODMN             48            CSW038
@@ -2546,25 +2596,25 @@
                                                                                 CSW038
       ** Queue name
      C                   MOVEL     MCMQQN        ODON             48
- 
+
       ** Open queue for INPUT
- 
+
      C     p@io          ifeq      'I'
- 
+
       ** Open options: INPUT and FAIL_IF_QUIESCING
      C     OOINPQ        ADD       OOFIQ         OPTS
- 
+
       ** Open queue for OUTPUT
- 
+
      C                   else
- 
+
       ** Open options: OUTPUT and FAIL_IF_QUIESCING
      C     OOOUT         ADD       OOFIQ         OPTS
      C                   endif
                                                                                               242607
       ** Clear Q-Manager so it can use clustered queues / remote Q-manager as well            242607
      C                   MOVE      *BLANKS       ODMN                                         242607
- 
+
       ** Open queue
      C                   Z-ADD     MQOPEN        CID
      C                   CALL      'QMQM'
@@ -2579,9 +2629,9 @@
       ** Trace
      C                   movel     '*OPEN  '     PR@FN
      C                   exsr      sr_trace
- 
+
       ** If open queue failed, indicate abnormal end
- 
+
      C     REASON        IFNE      RCNONE
      C                   movel     'Y'           w@abnormal
      C                   movel     'QMQM     '   w0file
@@ -2591,9 +2641,9 @@
      C                   movel     REASON        w0reas
      C                   z-add     103           w0ernb
      C                   movel     'Y'           W@MQOpenErr                    CSW025
- 
+
       ** If no failure, identify successful open
- 
+
      C                   else
      C                   movel     'Y'           w@open
      C                   endif
@@ -2619,10 +2669,10 @@
       ** Push subroutine
      C                   add       1             Q
      C                   movel     'sr_close'    @STK(Q)
- 
+
       ** Close options: NONE
      C                   Z-ADD     CONONE        OPTS
- 
+
       ** Close queue
      C                   Z-ADD     MQCLOS        CID
      C                   CALL      'QMQM'
@@ -2636,9 +2686,9 @@
       ** Trace
      C                   movel     '*CLOSE '     PR@FN
      C                   exsr      sr_trace
- 
+
       ** If close queue failed, indicate abnormal end
- 
+
      C     REASON        IFNE      RCNONE
      C                   movel     'Y'           w@abnormal
      C                   movel     'QMQM     '   w0file

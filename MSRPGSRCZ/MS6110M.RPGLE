@@ -2416,7 +2416,6 @@
      C                   MOVEL     PCurSet01     QMGR             48                          245310
      C                   exsr      sr_connect                                                 245310
      C                   z-add     HANDLE        HCONN                                        245310
-     C                   ELSE                                                               MD048231
      C                   MOVEL     PCurSet02     MMMPaper                                   MD048231
      C                   endif                                                                245310
      C                   exsr      sr_open

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD046060           Date 21Jun17               *
+      *  Last Amend No. MD047741           Date 31Jan18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD046060           Date 21Jun17               *
       *                 CGL182             Date 11May17               *
       *                 MD043023           Date 25Jul17               *
       *                 MD042040           Date 10Oct16               *
@@ -86,6 +87,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD047741 - (1) apply MD020761                                *
+      *             (2) in case of update, take into account whether  *
+      *             the record was found during CHAIN                 *
+      *  MD020761 - GLBITPUPD Dumps (Update without prior read)       *
       *  MD046248 - Finastra Rebranding                               *
       *  MD046060 - GLBTNOPD is not defined with COMMIT               *
       *  CGL182 - Journal Entry via the Interface File - Java Version *
@@ -698,6 +703,7 @@
      C                   MOVE      B2BINB        BTBINB                                       CAP084
                                                                                               CAP084
      C     KJENP         CHAIN     GLJENPL0                           91                      CAP084
+     C                   IF        *IN91 = *OFF                                             MD020761
                                                                                               CRE023
       ** Save the current GLJENPPD record before the validated screen                         CRE023
       ** input is applied to GLJENPPD.                                                        CRE023
@@ -713,6 +719,8 @@
      C                   MOVE      BTDCIN        PTDCIN            1                          CAP084
      C                   MOVE      BTIBCA        PTIBCA                                      BUG2558
                                                                                               CAP084
+     C                   ENDIF                                                              MD020761
+      *                                                                                     MD020761
      C                   ENDIF                                                                CAP084
       *
       ** If JE Header record exists, update it.
@@ -733,6 +741,11 @@
       ** Write JE Item record.
       *
      C     B2BINB        IFNE      *ZERO                                                      CAP084
+      *                                                                                     MD020761
+      ** Ensure update/delete is attempted only if JE Item was                              MD020761
+      ** found previously                                                                   MD020761
+     C     *IN91         ANDEQ     *OFF                                                     MD020761
+      *                                                                                     MD020761
      C     JAVAUSER      ANDEQ     'Y'                                                        CAP084
      C     WPlayBack     ANDEQ     'N'                                                        CSC024
                                                                                               CAP084
@@ -813,7 +826,7 @@
      C                   ENDIF                                                                246418
       *                                                                                       246418
      C/COPY WNCPYSRC,GLBITPDC10
- 
+
      C                   IF        CER030 = 'Y'                                             BUG23742
       *                                                                                     BUG23742
      C                   EVAL      KPTDT = B2PTDT                                           BUG23742
@@ -1482,6 +1495,8 @@ E1   C                   ENDIF                                                  
       *                                                                                       CAP084
      C     JAVAUSER      IFEQ      'Y'                                                        CAP084
      C     B2BINB        ANDNE     *ZEROS                                                     CAP084
+      ** provided that record was found                                                     MD047741
+     C     *IN91         ANDEQ     *OFF                                                     MD047741
      C     WPlayBack     ANDEQ     'N'                                                        CSC024
      C                   Z-ADD     *ZERO         WINT15                                       CAP084
      C                   Z-ADD     *ZERO         WDEC09                                       CAP084
@@ -2406,7 +2421,7 @@ E1   C                   ENDIF                                                  
       **If*the*user*is*connected*via*a*browser,*the*job*user*name*is*QUSER*-          CAP084 BUG6979
       **their*user*name*is*stored*in*ZMUSER                                           CAP084 BUG6979
      C**********         IN        ZMUSER                                             CAP084 BUG6979
- 
+
      C*****USRID         IFNE      *BLANKS                                            CAP084 BUG6979
      C*****USRID         ANDNE     PSUser                                             CAP084 BUG6979
      C**********         MOVE      'Y'           JAVAUSER          1                  CAP084 BUG6979

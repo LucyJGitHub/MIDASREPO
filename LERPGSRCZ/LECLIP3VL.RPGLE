@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE141             Date 08Feb16               *
+      *  Last Amend No. CLE051             Date 02Mar18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE141             Date 08Feb16               *
       *                 AR882700           Date 07Jun13               *
       *                 AR804863           Date 10Dec12               *
       *                 CLE134             Date 01Aug12               *
@@ -64,6 +65,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE051 - Defaulting of Profit Centre                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE141 - Currency and Location Business Day Convention for   *
       *           Lending Transactions (Recompile)                    *
@@ -327,7 +329,7 @@
       *
      D ClilFilFmt    E DS                  EXTNAME(CLOANCL) PREFIX(@@)
       * (Current) Loans record CL in file Format
- 
+
       *
      D OKFlagsDS     E DS                  EXTNAME(LEECLI3PD)
       ***  Flags to indicate whether transaction fields are valid
@@ -579,7 +581,7 @@
       ** +----------------------------------------------------------------+
       *
       /COPY WNCPYSRC,LECLIP3V03
- 
+
       ** Check whether user is a web browser user, if so overwrite              CAP084
      C                   CALL      'SFC000026'                                  CAP084
      C                   PARM      *BLANKS       USER             10            CAP084
@@ -1914,6 +1916,7 @@
      C     SRFUDT        BEGSR
       *
      C                   MOVE      *BLANKS       WFUNP             1
+     C                   MOVE      '0'           *IN96                                        CLE051
      C     BGN0ST        IFEQ      'Y'
      C     CDE002        OREQ      'Y'
      C     CCLPTYP       IFEQ      61
@@ -1930,6 +1933,9 @@
      C     CDE002        ANDEQ     'Y'
      C     CCLPTYP       OREQ      67
      C     CDE002        ANDEQ     'Y'
+      *                                                                                       CLE051
+      ** Loan is of a valid processing type for Funding Information:                          CLE051
+     C                   MOVE      '1'           *IN96                                        CLE051
       *
      C     CCLORED       IFNE      BJRDNB
      C     DDACT3        ANDNE     'I'                                                        224261
@@ -1952,6 +1958,15 @@
       *
      C                   Z-ADD     0             WFSRP
      C     DDFRSP        IFEQ      *BLANKS
+      *                                                                                       CLE051
+     C     CLE051        IFEQ      'N'                                                        CLE051
+     C     CLE051        OREQ      'Y'                                                        CLE051
+     C     BGN0ST        ANDEQ     'Y'                                                        CLE051
+     C     *IN96         ANDEQ     '0'                                                        CLE051
+     C     CLE051        OREQ      'Y'                                                        CLE051
+     C     CDE002        ANDEQ     'Y'                                                        CLE051
+     C     *IN96         ANDEQ     '0'                                                        CLE051
+      *                                                                                       CLE051
      C     DDFSGN        IFNE      *BLANKS
      C                   MOVE      'N'           DDFSGNOK
      C                   ADD       1             Idx
@@ -1966,6 +1981,15 @@
      C                   MOVEL     'LEL0009'     MsgIDXAr(Idx)
      C                   ENDIF
       *
+      ** Else, if CLE051 is on and this is not a Risk Loan, then                              CLE051
+      ** a Funding Rate is mandatory:                                                         CLE051
+     C                   ELSE                                                                 CLE051
+     C                   MOVE      'N'           DDFPRCOK                                     CLE051
+     C                   ADD       1             Idx                                          CLE051
+     C                   MOVEL     'DDFRSP'      FldNamXAr(Idx)                               CLE051
+     C                   MOVEL     'LER2027'     MsgIDXAr(Idx)                                CLE051
+     C                   ENDIF                                                                CLE051
+      *                                                                                       CLE051
      C                   ELSE
       *
       ***  Validate Funding Spread/Rate.
@@ -2185,6 +2209,21 @@
      C                   ENDIF
      C                   ENDIF
       *
+     C     CLE051        IFEQ      'Y'                                                        CLE051
+     C     *IN96         ANDEQ     '1'                                                        CLE051
+     C     DDFPRC        IFEQ      *BLANKS                                                    CLE051
+     C     DDFPRCOK      ANDNE     'N'                                                        CLE051
+     C     BGN0ST        ANDEQ     'Y'                                                        CLE051
+     C     DDFPRC        OREQ      *BLANKS                                                    CLE051
+     C     DDFPRCOK      ANDNE     'N'                                                        CLE051
+     C     CDE002        ANDEQ     'Y'                                                        CLE051
+     C                   MOVE      'N'           DDFPRCOK                                     CLE051
+     C                   ADD       1             Idx                                          CLE051
+     C                   MOVEL     'DDFPRC'      FldNamXAr(Idx)                               CLE051
+     C                   MOVEL     'LER2026'     MsgIDXAr(Idx)                                CLE051
+     C                   ENDIF                                                                CLE051
+     C                   ENDIF                                                                CLE051
+      *                                                                                       CLE051
      C                   ELSE                                                   BUG491
       * Funding information cannot be amended if the loan is authorised                      BUG6258
       * or has not been entered today.                                                       BUG6258
@@ -2814,6 +2853,8 @@
       *
       ***  Define working fields
       *
+      ** Indicator for loans requiring funding information:                                   CLE051
+     C                   MOVE      '0'           *IN96                                        CLE051
       *
       ***  Access Bank details via access program
       *
@@ -3001,6 +3042,17 @@ E004 C                   ENDIF
      C                   EVAL      CLE036 = 'Y'                                            BUG10391R
      C                   ENDIF                                                             BUG10391R
      C/COPY WNCPYSRC,LEH01455
+      *                                                                                       CLE051
+      ** Determine if CLE051 is installed                                                     CLE051
+     C                   MOVEL     'N'           CLE051            1                          CLE051
+     C                   CALLB     'AOSARDR0'                                                 CLE051
+     C                   PARM      *BLANKS       @RTCD                                        CLE051
+     C                   PARM      '*VERIFY'     @OPTN                                        CLE051
+     C                   PARM      'CLE051'      @SARD                                        CLE051
+      *                                                                                       CLE051
+     C     @RTCD         IFEQ      *BLANKS                                                    CLE051
+     C                   MOVE      'Y'           CLE051                                       CLE051
+     C                   END                                                                  CLE051
       *
       ***  Key list for PMPORTPD
       *

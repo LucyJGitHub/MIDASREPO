@@ -11,8 +11,9 @@
      F*                                                                  *
       *  (c) Finastra International Limited 2001                      *
      F*                                                                  *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CER059             Date 19Jul10               *
+      *  Last Amend No. CLE051             Date 02Mar18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CER059             Date 19Jul10               *
       *                 CER045             Date 20Jul09               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -40,6 +41,7 @@
      F*                                                                  *
      F********************************************************************
       *                                                               *
+      *  CLE051 - Defaulting of Profit Centre                         *
       *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  CER045 - German Features - Reporting Bundesbank (Recompile)  *
@@ -264,6 +266,20 @@
      C                   MOVE      'N'           CSD009                         CSD009
      C                   ENDIF                                                  CSD009
      C/COPY WNCPYSRC,AOPRFMR0C1
+      *                                                                                       CLE051
+      ** Check if CLE051 - Defaulting of Profit Centre is installed                           CLE051
+      *                                                                                       CLE051
+     C                   CALL      'AOSARDR0'                                                 CLE051
+     C                   PARM      *BLANKS       @RTCD                                        CLE051
+     C                   PARM      '*VERIFY'     @OPTN                                        CLE051
+     C                   PARM      'CLE051'      @SARD                                        CLE051
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CLE051
+      *                                                                                       CLE051
+     C                   IF        @RTCD = *BLANKS                                            CLE051
+     C                   MOVE      'Y'           CLE051            1                          CLE051
+     C                   ELSE                                                                 CLE051
+     C                   MOVE      'N'           CLE051                                       CLE051
+     C                   ENDIF                                                                CLE051
       *                                                                         CSD009
       ** If CSD009 is installed and customer number of transaction is           CSD009
       ** not blanks, setup new parameters.                                      CSD009
@@ -732,6 +748,7 @@
       ** Centre' defined on ICD and set the return code to '0'.                 CSD009
      C     CAC004        IFEQ      'Y'                                          CSD009
      C/COPY WNCPYSRC,AOPRFMR0C2
+     C     CLE051        ANDEQ     'N'                                                        CLE051
      C                   MOVE      '0'           RTCD                           CSD009
      C                   MOVEL     FTUAPC        PRFC                           CSD009
      C                   ENDIF                                                  CSD009
@@ -917,6 +934,7 @@
       ** Centre' defined on ICD and set reutrn code to '0'.                     CSD009
      C     CAC004        IFEQ      'Y'                                          CSD009
      C/COPY WNCPYSRC,AOPRFMR0C3
+     C     CLE051        ANDEQ     'N'                                                        CLE051
      C                   MOVE      '0'           RTCD                           CSD009
      C                   MOVEL     FTUAPC        PRFC                           CSD009
      C                   ENDIF                                                  CSD009
@@ -1038,6 +1056,7 @@
      C**                       and change the return code to '0'          120827
      C     CAC004        IFEQ      'Y'                                                       120827
      C/COPY WNCPYSRC,AOPRFMR0C4
+     C     CLE051        ANDEQ     'N'                                                        CLE051
      C                   MOVE      '0'           RTCD                                        120827
      C                   MOVEL     FTUAPC        PRFC                                        120827
      C                   ENDIF                                                               120827

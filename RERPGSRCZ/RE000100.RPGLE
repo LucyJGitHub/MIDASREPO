@@ -18,8 +18,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD034451C          Date 02Mar16               *
+      *  Last Amend No. MD022132C          Date 09Mar18               *
+      *  Prev Amend No. MD022132           Date 09Mar18               *
+      *                 MD046248           Date 27Oct17               *
+      *                 MD034451C          Date 02Mar16               *
       *                 MD030959           Date 17Jun15               *
       *                 CRE095             Date 25Apr14               *
       *                 CRE090             Date 14Feb14               *
@@ -49,6 +51,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD022132C- Process all retail accounts.                      *
+      *           - Applied for MD-35969.                             *
+      *  MD022132 - Triggers don't pick up Rollback deletes of ABC    *
+      *             files.                                            *
+      *           - Applied for MD-35969.                             *
       *  MD046248 - Finastra Rebranding                               *
       *  MD034451C - API: Repeated Held Item reversals are allowed.   *
       *              Recompiled due to changed PF/HELDIHB.            *
@@ -121,24 +128,24 @@
      F                                     IGNORE(ACCNTAAF)
      F                                     IGNORE(ACCNTACF)
       ** Midas GL Accounts master
- 
+
      FRSACMTL8  IF   E           K DISK
       ** Midas GL Account Movements in Value Date Seq
- 
+
      FGLCOLLLG  IF   E           K DISK
       ** Midas GL Live Collateral Details by Account
- 
+
      FGLCOLLQ0  IF   E           K DISK
       ** Midas GL Collateral Details Extension File
- 
+
      FHELDIL1   IF   E           K DISK
      F                                     IGNORE(HELDIHAF)
      F                                     IGNORE(HELDIHCF)
       ** Midas RE Held Item File -  By Branch
- 
+
      FREODHSL0  IF   E           K DISK
       ** Midas RE Overdraft hist by account and hist date
- 
+
      F/COPY WNCPYSRC,REH00064
      FGLACNTL3  UF   E           K DISK    COMMIT
       ** Midas GL Account Extension File
@@ -157,7 +164,7 @@
       *                                                                                    AR1055588
       ** Midas RP Account Extension File                                                   AR1055588
       *                                                                                    AR1055588
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -165,22 +172,22 @@
      D LDA           E DS           256    EXTNAME(LDA)
       ** Local data area for database error details
       *
- 
+
      D JNSTAT        E DS                  EXTNAME(JNSTAT)
       ** Data Area giving Installation Control Details
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ***  External data structures for Bank Details
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
       ** Switchable Features file
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)                                BUG27346
       ***  External data structures for Currency Details                                    BUG27346
                                                                                             BUG27346
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ***  Short data structures for Access Objects
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** Long data structure for access objects
                                                                                            AR1055588
@@ -196,12 +203,12 @@
       *                                                                                    AR1055588
       ** External data structures for Customer Details                                     AR1055588
       *                                                                                    AR1055588
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D                 DS
       *** Data structure of workdates
      D  F1DAT0                 1      3P 0
@@ -216,7 +223,7 @@
      D  F1DAT9                28     30P 0
      D  F1DATS                 1     30P 0
      D                                     DIM(10) ASCEND
- 
+
      D                 DS
       *** Data structure of Base Available Balance
      D  F1BAB0                 1      8P 0                                                 BUG27719A
@@ -247,7 +254,7 @@
      D**F1BAVS**               1     80P 0                                                 BUG27719A
      D  F1ACBS                 1     80P 0                                                 BUG27719A
      D                                     DIM(10) ASCEND
- 
+
      D                 DS
       *** Data structure of Available Balance
      D  F1AVA0                 1      8P 0
@@ -262,7 +269,7 @@
      D  F1AVA9                73     80P 0
      D  F1AVAS                 1     80P 0
      D                                     DIM(10) ASCEND
- 
+
      D                 DS
       *** Data structure of Blocked Collateral
      D  F1CBC0                 1      8P 0
@@ -277,7 +284,7 @@
      D  F1CBC9                73     80P 0
      D  F1CBCS                 1     80P 0
      D                                     DIM(10) ASCEND
- 
+
      D                 DS
       *** Data structure of Held Items
      D  F1HIT0                 1      8P 0
@@ -311,7 +318,7 @@
      D/COPY WNCPYSRC,REH00065
       *** Data structure of Held Items
      D  HELDS          S              1    DIM(10)
- 
+
       *** Work variables
      D WDATEIN         S              5  0
      D WCNUM           S              6
@@ -329,7 +336,7 @@
      D NoDays          S              3  0
      D CLE134          S              1                                                       CLE134
      D WNWD            S              3  0                                                 AR1095876
- 
+
      D FieldsDS        DS
       ** Module is FT
      D WKSysFTDR                      1
@@ -362,12 +369,12 @@
      D***FieldsArr                      1    DIM(16)                             AR1039174 AR1039177
      D FieldsArr                      1    DIM(17)                                         AR1039177
      D                                     OVERLAY(FieldsDS)
- 
+
       ** AOSVALR0 parameters
- 
+
      D PSysVal         S             20    DIM(10)
      D PCurSet         S            200    DIM(10)
- 
+
       ** AOCURRR0 parameters                                                                BUG27346
      D PCcy            S              3                                                     BUG27346
                                                                                             BUG27346
@@ -380,24 +387,24 @@
      D WkTREF          S                   LIKE(R1TREF)                                     BUG27625
                                                                                             BUG27625
       ** Array Indices
- 
+
      D X               S              3P 0
- 
+
       *** Other variables
      D/COPY ZSRSRC,ZHOLILE
      D/COPY ZSRSRC,ZHOLELE
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
      IGLCOLQD0
      I              CDXREF                      CDXREF10
- 
+
      IRSACMTPO
      I              NRTC                        NRTCX
- 
+
      IREODHSD0
      I              ODED                        ODEDX
      I              ODLN                        ODLNX
@@ -408,7 +415,7 @@
       *================================================================
       *  P R O G R A M   S T A R T                                    *
       *================================================================
- 
+
       ** Start of processing
       *
      C     *LOVAL        SETLL     GLACNTL3
@@ -430,8 +437,11 @@
      C     KACCNT        CHAIN     ACCNT                                                    AR958145
       *
      C**********         IF        F1IABC = 'Y'                                             AR958145
-     C                   IF        F1IABC = 'Y' OR                                          AR958145
-     C                             ATYP = 'R'                                               AR958145
+     C*****              IF        F1IABC = 'Y' OR                                 AR958145 MD022132
+     C*****                        ATYP = 'R'                                      AR958145 MD022132
+     C**********         IF        F1IABC = 'Y'                                   MD022132 MD022132C
+     C                   IF        F1IABC = 'Y' OR                                         MD022132C
+     C                             ATYP = 'R'                                              MD022132C
       *****************************************************************                     AR958145
       ***Retrieve*account*details**************************************                     AR958145
       *****************************************************************                     AR958145
@@ -504,7 +514,7 @@
       *
      C                   READ      GLACNTL3
      C                   ENDDO
- 
+
      C                   EVAL      *INLR = *ON
      C                   RETURN
       *
@@ -519,7 +529,7 @@
       *                                                               *
       *****************************************************************
      C     SRWorkDay     BEGSR
- 
+
      C                   EVAL      NoDays = %INT(%TRIM(WKSysNoDays)) + 1
       *
       ** Initialize variables
@@ -533,7 +543,7 @@
      C                   IF        NoDays >= 1
      C                   Z-ADD     PRUN          F1DAT0
      C                   EndIf
- 
+
      C                   IF        NoDays >= 2
      C                   Z-ADD     BJRDNB        F1DAT1
      C                   ENDIF
@@ -1264,7 +1274,7 @@
       *                                                               *
       *****************************************************************
      C     SRStorSysVal  BEGSR
- 
+
      C                   CLEAR                   PSysVal
      C                   CLEAR                   PCurSet
       *
@@ -1280,20 +1290,20 @@
      C                   EVAL      PSysVal(10) = 'ABCAcctfrfrwdCR'
       *
      C                   EXSR      SrSysValues
- 
+
       ** Populate Fields array elements 1 to 10
- 
+
      C                   FOR       X = 1 TO 10
      C                   IF        PCurSet(X) <> *BLANKS
      C                   EVAL      FieldsArr(X) = %TRIM(PCurSet(X))
      C                   ENDIF
      C                   ENDFOR
- 
+
       ** Set up calling parameters for AOSVALR0
       *
      C                   CLEAR                   PSysVal
      C                   CLEAR                   PCurSet
- 
+
      C                   EVAL      PSysVal(1)  = 'ABCTransValueDR'
      C                   EVAL      PSysVal(2)  = 'ABCTransValueCR'
      C                   EVAL      PSysVal(3)  = 'ABCTransForwardDR'
@@ -1301,13 +1311,13 @@
      C                   EVAL      PSysVal(5)  = 'ABCNoDaysForward'
      C                   EVAL      PSysVal(6)  = 'ABCOvrdrftPtype'                         AR1039174
      C                   EVAL      PSysVal(7)  = 'ABCHeldItemPtype'                        AR1039177
- 
+
       ** Get System Values
- 
+
      C                   ExSr      SrSysValues
- 
+
       ** Populate Fields array elements 11 to 15
- 
+
      C                   FOR       X = 1 TO 5
      C                   IF        PCurSet(X) <> *BLANKS
      C                   EVAL      FieldsArr(X+10) = %TRIM(PCurSet(X))
@@ -1332,9 +1342,9 @@
       * SrSysValues -  Subroutine to Get System Values                *
       *                                                               *
       *****************************************************************
- 
+
      C     SrSysValues   BEGSR
- 
+
      C                   CALL      'AOSVALR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM                    PSysVal(1)
@@ -1357,16 +1367,16 @@
      C                   PARM                    PCurSet(9)
      C                   PARM                    PSysVal(10)
      C                   PARM                    PCurSet(10)
- 
+
       ** Check if database error occured
- 
+
      C                   FOR       X = 1 TO 10
- 
+
      C                   IF        PCurSet(X) = '*NRF'
      C                                      OR
      C                             @RTCD <> *BLANKS
      C                               AND @RTCD <> '*NRF'
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBKEY   = PSysVal(X)
      C                   EVAL      DBFILE  = 'SDSVALPD'
@@ -1374,9 +1384,9 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDFOR
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1387,7 +1397,7 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
       ** Initialise LDA field.
      C     *DTAARA       DEFINE                  LDA
      C     *LOCK         IN        LDA
@@ -1450,7 +1460,7 @@
                                                                                             BUG27625
      C     KeyHATM       KLIST                                                              BUG27625
      C                   KFLD                    WkTREF                                     BUG27625
- 
+
      C
       ** Call Access Program for Bank Details - Title, Run Date and
       ** Run Day Number.
@@ -1458,7 +1468,7 @@
      C                   PARM      '*MSG   '     @RTCD
      C                   PARM      '*FIRST '     @OPTN
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Handle Database Error.
      C                   IF        @RTCD <> *BLANKS
      C     *LOCK         IN        LDA
@@ -1525,11 +1535,11 @@
      C/COPY WNCPYSRC,REH00090
       ** Retrieve and Store System Values
      C                   EXSR      SRStorSysVal
- 
+
       ** Access RUNDAT for multibranching indicator
      C     *DTAARA       DEFINE                  JNSTAT
      C                   IN        JNSTAT
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

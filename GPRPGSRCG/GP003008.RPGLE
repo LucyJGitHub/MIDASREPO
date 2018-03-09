@@ -11,12 +11,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2010                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD032098           Date 09Mar18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-      *  Prev Amend No. CAP203  *CREATE    Date 02Mar10               *
+      *                 CAP203  *CREATE    Date 02Mar10               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD032098 - Added GZRSACMTPD to commitment control.           *
+      *           - Applied for MD-35969.                             *
       *  MD046248 - Finastra Rebranding                               *
       *  CAP203 - Teller Related APIs - Account Movements             *
       *                                                               *
@@ -27,8 +30,9 @@
       ** +--------------------------------------+
       *
       ** Midas GL Account Movements Files
-     FGZRSACMTPDO  A E           K DISK    INFSR(*PSSR)
- 
+     F***GZRSACMTPDO* A E           K DISK    INFSR(*PSSR)                                  MD032098
+     FGZRSACMTPDO  A E           K DISK    INFSR(*PSSR) USROPN COMMIT(D_COM)                MD032098
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -36,17 +40,17 @@
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D G_RSACMTPD    E DS                  EXTNAME(GZRSACMTPD)
- 
+
       ** +--------------------------------------+
       ** ¦  Declared variables                  ¦
       ** ¦  ==================                  ¦
       ** +--------------------------------------+
- 
+
      D @RUN            S              1
      D I#AIMG          S            172
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -56,13 +60,13 @@
       ** ¦ is executed at program activation.                         ¦
       ** ¦                                                            ¦
       ** +------------------------------------------------------------+
- 
+
       * Global File Updates
- 
+
      C                   WRITE     RSACMTPO
- 
+
      C                   EVAL      *INLR = *ON
- 
+
      C
       *****************************************************************
       /EJECT
@@ -72,10 +76,16 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    G_RSACMTPD
- 
+      *                                                                                    MD0320980
+      **Open for commit?                                                                   MD0320980
+      *                                                                                    MD0320980
+     C                   CALL      'GPCOPN4COM'                                            MD0320980
+     C                   PARM                    D_COM             1                       MD0320980
+     C                   OPEN      GZRSACMTPD                                              MD0320980
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -85,7 +95,7 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
      C     @RUN          IFEQ      *BLANK
      C                   MOVE      'Y'           @RUN
      C                   EVAL      *INU7 = *ON
@@ -93,8 +103,8 @@
      C                   EVAL      *INLR = *ON
      C                   DUMP
      C                   ENDIF
- 
+
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************

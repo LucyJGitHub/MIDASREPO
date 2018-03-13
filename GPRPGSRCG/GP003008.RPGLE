@@ -79,12 +79,12 @@
 
      C     *ENTRY        PLIST
      C                   PARM                    G_RSACMTPD
-      *                                                                                    MD0320980
-      **Open for commit?                                                                   MD0320980
-      *                                                                                    MD0320980
-     C                   CALL      'GPCOPN4COM'                                            MD0320980
-     C                   PARM                    D_COM             1                       MD0320980
-     C                   OPEN      GZRSACMTPD                                              MD0320980
+      *                                                                                     MD032098
+      **Open for commit?                                                                    MD032098
+      *                                                                                     MD032098
+     C                   CALL      'GPCOPN4COM'                                             MD032098
+     C                   PARM                    D_COM             1                        MD032098
+     C                   OPEN      GZRSACMTPD                                               MD032098
 
      C                   ENDSR
       *****************************************************************

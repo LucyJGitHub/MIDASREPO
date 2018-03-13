@@ -9,7 +9,7 @@
       *                                                                       *
       *  GL007012 - Change of Receiver and Increment of JrnSeq                *
       *                                                                       *
-      *  (c) Finastra International Limited 2001                              *
+      *  (c) Finastra International Limited 2018                              *
       *                                                                       *
       *  Last Amend No. MD022132 *CREATE   Date 09Mar18                       *
       *                                                                       *

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2018')
       *************************************************************************
 /*STD *  RPGBASEMOD                                                           *
 /*EXI *  TEXT('Midas GL Background Update of ABC Files')              *
@@ -9,7 +9,7 @@
       *                                                                       *
       *  GL007011 - Background update of ABC Files                            *
       *                                                                       *
-      *  (c) Finastra International Limited 2001                              *
+      *  (c) Finastra International Limited 2018                              *
       *                                                                       *
       *  Last Amend No. MD022132 *CREATE   Date 09Mar18                       *
       *                                                                       *

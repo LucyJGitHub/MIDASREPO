@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2014')
+     H COPYRIGHT('(c) Finastra International Limited 2018')
       *****************************************************************
 /*STD *  RPGBASEBND                                                   *
 /*EXI *  TEXT('Midas RE Trigger for RSACMTPD')                        *
@@ -12,7 +12,7 @@
       *  Function:  This program updates the log file GLPDCLTD for    *
       *             each insert to RSACMTPD.                          *
       *                                                               *
-      *  (c) Finastra International Limited 2001                      *
+      *  (c) Finastra International Limited 2018                      *
       *                                                               *
       *  Last Amend No. MD022132 *CREATE   Date 09Mar18               *
       *                                                               *

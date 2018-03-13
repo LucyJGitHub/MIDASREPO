@@ -10,7 +10,7 @@
       *                                                               *
       *  UTS00701 - QJORJRNE API Interface                            *
       *                                                               *
-      *  (c) Finastra International Limited                           *
+      *  (c) Finastra International Limited 2018                      *
       *                                                               *
       *  Last Amend No. MD022132 *CREATE   DATE 09Mar18               *
       *                                                               *

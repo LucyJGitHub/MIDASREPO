@@ -2416,8 +2416,8 @@
      C                   MOVEL     PCurSet01     QMGR             48                          245310
      C                   exsr      sr_connect                                                 245310
      C                   z-add     HANDLE        HCONN                                        245310
-     C                   MOVEL     PCurSet02     MMMPaper                                   MD048231
      C                   endif                                                                245310
+     C                   MOVEL     PCurSet02     MMMPaper                                   MD048231
      C                   exsr      sr_open
       **                                                                                    MD048231
       ** If CSW025 = 'Y' and CSW038 = 'N', Get system value for PAPER processing            MD048231

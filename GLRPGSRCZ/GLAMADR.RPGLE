@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD044546           Date 20Mar17               *
+      *  Last Amend No. MD044880           Date 15Jan18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD044546           Date 20Mar17               *
       *                 222427             Date 05Dec16               *
       *                 MD039546           Date 26Jan17               *
       *                 LLN022A            Date 03Jun15               *
@@ -66,6 +67,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD044880 - BOE Switched On Testing and Fixing                *
       *  MD046248 - Finastra Rebranding                               *
       *  MD044546 - Enable the ABC flag when CAP205 is on.            *
       *  222427 - AMAN - 'Extra Daily Statement Commission' default   *
@@ -505,15 +507,17 @@
      C                                           + GLFullAcct                               MD026979
      C/COPY OFCPYSRCZ,CRE101_020                                                              CRE101
      C                                           + InfData                                    CRE015
+     C                                           + ExtData                                  MD044880
      C                                           + AccnInPena2                                CRE015
+     C                                           + RegData                                  MD044880
      C**********                                 + RegData                           BUG10280 CRE073
      C**********                                 + ExtData                            BUG6218 CRE073
      C**********         EVAL      Buffer2 = %SUBST(AccnInPena2:4973) +                CRE073 CSF011
      C**********         EVAL      Buffer2 = %SUBST(AccnInPena2:4933) +              CSF011 AR946674
-     C/COPY OFCPYSRCZ,CRE101_063                                                              CRE101
-     C                   EVAL      Buffer2 = %SUBST(AccnInPena2:4924) +                     AR946674
-     C/COPY OFCPYSRCZ,CRE101_068                                                              CRE101
-     C                                              RegData + ExtData                         CRE073
+     C***/COPY*OFCPYSRCZ,CRE101_063                                                  CRE101 MD044880
+     C**********         EVAL      Buffer2 = %SUBST(AccnInPena2:4924) +            AR946674 MD044880
+     C***/COPY*OFCPYSRCZ,CRE101_068                                                  CRE101 MD044880
+     C**********                                    RegData + ExtData                         CRE073
  
      C     *IN28         IFEQ      *ON
      C                   CLOSE     PMPORTLL
@@ -579,8 +583,9 @@
      C                   PARM                    FwdBck            1
      C**********         PARM                    DDACRF_In        18                          CGL029
      C                   PARM                    DDACRF_In        24                          CGL029
-     C                   PARM                    Buffer         6000
-     C                   PARM                    Buffer2        3999                          CRE073
+     C**********         PARM                    Buffer         6000                        MD044880
+     C**********         PARM                    Buffer2        3999                 CRE073 MD044880
+     C                   PARM                    Buffer         9999                        MD044880
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr

@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD039248           Date 07Jun16               *
+      *  Last Amend No. MD044880           Date 15Jan18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD039248           Date 07Jun16               *
       *                 MD037909           Date 08Mar16               *
       *                 CLE141             Date 08Feb16               *
       *                 LLN022A            Date 03Jun15               *
@@ -59,6 +60,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD044880 - BOE Switched On Testing and Fixing                *
       *  MD046248 - Finastra Rebranding                               *
       *  MD039248 - Business Day Convention details missing in BDC    *
       *             tab for authorised loan (Recompile)               *
@@ -488,9 +490,11 @@
      C                                        + CrLnScnFmt6                                AR1021983
      C                                        + CrLnScnFmt7                                   CLE141
      C                                           + ##RECS  + ##PAYS
+     C                                           + @DEPI                                    MD044880
      C                                           + Infdata                              CAP086246159
-     C                                           + RegData                                    CER001
+     C**********                                 + RegData                           CER001 MD044880
      C                                           + ExtData                                    246159
+     C                                           + RegData                                  MD044880
  
      C                   SETON                                        LR
      C                   RETURN
@@ -625,6 +629,7 @@
       ** Action Code (Reject transaction)                                                   AR804863
       *                                                                                     AR804863
      C                   PARM                    @ACTRV            1                        AR804863
+     C                   PARM                    @DEPI             1                        MD044880
      C/COPY WNCPYSRC,LECLIPYC01
  
       ** Determine if BOE Yellow Book is installed                                           LLN022A

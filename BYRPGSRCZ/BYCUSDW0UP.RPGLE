@@ -14,14 +14,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD044880           Date 15Jan18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Midas Plus 1.4 Base ------------------------------------------*
-      *  Prev Amend No. BUG8497            Date 14Sep05               *
+      *                 BUG8497            Date 14Sep05               *
       *                 204195             Date 05Apr02               *
       *                 LLN018  *CREATE    Date 17Apr01               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD044880 - BOE FBM 2.1 switched on testing and fixing        *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG8497 - SDVCUSDX0 renamed to SDVCUSDPE.                    *
       *  204195 - Default fields before validation if data coming     *
@@ -248,12 +250,12 @@
       ** Write, delete or Update extended file
       *
      C     ACTN          IFEQ      'D'
-      *
-      ** Delete record
-      *
-     C     *IN89         IFEQ      *OFF
-     C                   DELETE    BYCUSTY2
-     C                   ENDIF
+      **********                                                                            MD044880
+      ***Delete*record                                                                      MD044880
+      **********                                                                            MD044880
+     C******IN89         IFEQ      *OFF                                                     MD044880
+     C**********         DELETE    BYCUSTY2                                                 MD044880
+     C**********         ENDIF                                                              MD044880
       *
      C                   ELSE
       *

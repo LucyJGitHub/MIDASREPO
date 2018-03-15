@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 1997                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR681415           Date 01Dec10               *
+      *  Last Amend No. MD049900           Date 02Mar18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 AR681415           Date 01Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       *                 LLN021             Date 03Oct97               *
@@ -27,6 +28,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD049900 - Include loan class in validating loan type/stype  *
+      *             combination                                       *
       *  MD046248 - Finastra Rebranding                               *
       *  AR681415 - Decimal data error in Loan Extract Criteria Main. *
       *           - and Product Code not highlighted when in error    *
@@ -195,6 +198,7 @@
      C           #LRSET    BEGSR
       *
       ** Reset error indicators
+     C                     MOVE *OFF      *IN49                                             MD049900
      C                     MOVEA'0000'    *IN,50
      C                     MOVEA'000000'  *IN,58                          LLN021
       *
@@ -202,6 +206,7 @@
      C                     MOVE *BLANKS   L#ACTN
      C                     MOVE *BLANKS   L#LTYP
      C                     MOVE *BLANKS   L#LNST
+     C                     MOVE *BLANKS   L#LNCL                                            MD049900
      C                     MOVE *BLANKS   L#LINS
      C                     MOVE *BLANKS   L#PCOD
      C                     MOVE *BLANKS   L#NPER                          LLN012
@@ -230,6 +235,7 @@
       *   Reset work fields and indicators
      C                     MOVE 'Y'       ULVALI
      C                     MOVEA'00000'   *IN,31
+     C                     MOVE *OFF      *IN49                                             MD049900
      C                     MOVEA'0000'    *IN,50
      C                     MOVEA'000000'  *IN,58                          LLN021
       *
@@ -260,7 +266,8 @@
      C                     PARM '*KEY   ' @OPTN   7        Option
      C                     PARM           L#LTYP           Loan Type
      C                     PARM           L#LNST           Loan Sub-Type
-     C                     PARM           @LNCL   4        Loan class                       AR681415
+     C**********           PARM           @LNCL   4        Loan class              AR681415 MD049900
+     C                     PARM           L#LNCL           Loan Class                       MD049900
      C                     PARM           DSFDY            Format
       *
       ** If *NRF is passed back through the return code, that combination of
@@ -269,6 +276,7 @@
      C                     MOVE 'BYM0074' ULMSID
      C                     MOVE *ON       *IN51
      C                     MOVE *ON       *IN52
+     C                     MOVE *ON       *IN49                                             MD049900
      C                     EXSR #LSNMG
      C                     MOVE 'N'       ULVALI
      C                     ENDIF
@@ -296,6 +304,14 @@
      C           L#LNST    IFEQ *BLANKS
      C                     MOVE 'BYM0058' ULMSID
      C                     MOVE *ON       *IN52
+     C                     EXSR #LSNMG
+     C                     MOVE 'N'       ULVALI
+     C                     ENDIF
+      *
+      **  Loan class must be entered
+     C           L#LNCL    IFEQ *BLANKS
+     C                     MOVE 'BYM0303' ULMSID
+     C                     MOVE *ON       *IN49
      C                     EXSR #LSNMG
      C                     MOVE 'N'       ULVALI
      C                     ENDIF

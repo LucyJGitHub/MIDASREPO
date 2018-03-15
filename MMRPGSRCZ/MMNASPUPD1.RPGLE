@@ -12,13 +12,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD044880           Date 15Jan18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Midas Plus 1.4 Base ------------------------------------------*
-      *  Prev Amend No. BUG7381            Date 31May05               *
+      *                 BUG7381            Date 31May05               *
       *                 LLN022  *CREATE    Date 24Jan05               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD044880 - BOE Switched On Testing and Fixing                *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG7381- Could not enter extension fields for deals entered  *
       *           before BOE was switched on                          *
@@ -119,7 +121,7 @@
  
      C     ACTN          CASEQ     'I'           INSERT
      C     ACTN          CASEQ     'A'           AMEND
-     C     ACTN          CASEQ     'D'           DELETE
+     C*****ACTN*         CASEQ     'D'           DELETE                                     MD044880
      C                   ENDCS
  
      C                   ENDSR

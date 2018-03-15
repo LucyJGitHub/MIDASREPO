@@ -14,8 +14,10 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. AR684053           Date 06Dec10               *
+      *  Last Amend No. MD050002           Date 12Mar18               *
+      *  Prev Amend No. MD044880           Date 15Jan18               *
+      *                 MD046248           Date 27Oct17               *
+      *                 AR684053           Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       *                 BUG8497            Date 14Sep05               *
@@ -28,6 +30,9 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD050002 - Correct defaulting of BOE Institution Code and    *
+      *             Industry Code                                     *
+      *  MD044880 - BOE Switched On Testing and Fixing                *
       *  MD046248 - Finastra Rebranding                               *
       *  AR684053 - Cannot enter a new customer. Applied AR665308.    *
       *  AR665308 - Error message BYM0071 being incorrectly issued.   *
@@ -213,26 +218,30 @@
       * incoming data is blank then default so that record does not         204195
       * fail validation.                                                    204195
       * Also if called from RPR module.
-     C     CallMod       IFEQ      'CTL'                                    204195
-     C     CallMod       OREQ      'RPR'                                    204195
+     C*****CallMod       IFEQ      'CTL'                                             204195 MD050002
+     C*****CallMod       OREQ      'RPR'                                             204195 MD050002
      C     ACTN          IFEQ      'I'                                      204195
      C     ACTN          OREQ      'A'                                      204195
-     C     #SSIOF        IFEQ      ' '                                      204195
-     C     #SUPAR        ANDEQ     ' '                                      204195
-     C     #SHASI        ANDEQ     ' '                                      204195
-     C     #SELGF        ANDEQ     ' '                                      204195
-     C     #SCNTP        ANDEQ     ' '                                      204195
-     C     #SLINC        ANDEQ     *BLANKS
-     C     #SLICD        ANDEQ     *BLANKS
+     C*****#SSIOF        IFEQ      ' '                                               204195 MD050002
+     C*****#SUPAR        ANDEQ     ' '                                               204195 MD050002
+     C*****#SHASI        ANDEQ     ' '                                               204195 MD050002
+     C*****#SELGF        ANDEQ     ' '                                               204195 MD050002
+     C*****#SCNTP        ANDEQ     ' '                                               204195 MD050002
+     C*****#SLINC        ANDEQ     *BLANKS                                           204195 MD050002
+     C*****#SLICD        ANDEQ     *BLANKS                                           204195 MD050002
       *                                                                     204195
       * Set Housing Association indicator to be N                           204195
+     C     #SHASI        IFEQ      *BLANKS                                                  MD050002
      C                   MOVE      'N'           #SHASI                     204195
+     C                   ENDIF                                                              MD050002
       *                                                                     204195
       * Set Eligibility Flag to be N                                        204195
-     C                   MOVE      'N'           #SELGF                     204195
+     C**********         MOVE      'N'           #SELGF                              204195 MD050002
       *                                                                     204195
       * Set Connected Counterparty flag to be N                             204195
+     C     #SCNTP        IFEQ      *BLANKS                                                  MD050002
      C                   MOVE      'N'           #SCNTP                     204195
+     C                   ENDIF                                                              MD050002
       *                                                                     204195
       * If Default Local Industry Code Flag is Y on BoE ICD,                        LLN018
       * move in value on SDCUSTPD.                                                  LLN018
@@ -248,9 +257,9 @@
      C                   MOVEL     BYLINC        #SLINC                             LLN020
      C                   ENDIF                                                      LLN018
       *                                                                     204195
+     C**********         ENDIF                                                       204195 MD050002
      C                   ENDIF                                              204195
-     C                   ENDIF                                              204195
-     C                   ENDIF                                              204195
+     C**********         ENDIF                                                       204195 MD050002
       *                                                                     204195
       ** Get ISO code for country of location
      C                   CALL      'AOCTRYR0'
@@ -268,8 +277,10 @@
      C     #SSIOF        AndNe     'I'
      C     #SSIOF        AndNe     'U'
      C                   ADD       1             Idx
-     C                   EVAL      FldNameArr(Idx) = '#SSIOF'
-     C                   EVAL      MsgIDArr(Idx) = 'BYM0030'
+     C**********         EVAL      FldNameArr(Idx) = '#SSIOF'                               MD044880
+     C**********         EVAL      MsgIDArr(Idx) = 'BYM0030'                                MD044880
+     C                   EVAL      FldNameArr(Idx) = 'LSIOF'                                MD044880
+     C                   EVAL      MsgIDArr(Idx) = '5049076'                                MD044880
      C                   EVAL      ReturnCode = 'Error'
  
       ** Use the return code's value to set the field's OK flag
@@ -288,8 +299,10 @@
      C     #SLICD        IfNe      '101'
      C     #SLINC        OrNe      '81'
      C                   ADD       1             Idx
-     C                   EVAL      FldNameArr(Idx) = '#SHASI'
-     C                   EVAL      MsgIDArr(Idx) = 'BYM0091'
+     C**********         EVAL      FldNameArr(Idx) = '#SHASI'                               MD044880
+     C**********         EVAL      MsgIDArr(Idx) = 'BYM0091'                                MD044880
+     C                   EVAL      FldNameArr(Idx) = 'LHASI'                                MD044880
+     C                   EVAL      MsgIDArr(Idx) = '5049084'                                MD044880
      C                   EVAL      ReturnCode = 'Error'
       *
       ** Use the return code's value to set the field's OK flag
@@ -306,8 +319,10 @@
      C     #SHASI        IfNe      'Y'
      C     #SHASI        AndNe     'N'
      C                   ADD       1             Idx
-     C                   EVAL      FldNameArr(Idx) = '#SHASI'
-     C                   EVAL      MsgIDArr(Idx) = 'BYM0092'
+     C**********         EVAL      FldNameArr(Idx) = '#SHASI'                               MD044880
+     C**********         EVAL      MsgIDArr(Idx) = 'BYM0092'                                MD044880
+     C                   EVAL      FldNameArr(Idx) = 'LHASI'                                MD044880
+     C                   EVAL      MsgIDArr(Idx) = '5049085'                                MD044880
      C                   EVAL      ReturnCode = 'Error'
       *
       ** Use the return code's value to set the field's OK flag
@@ -335,8 +350,10 @@
      C     RTNCDE        IfEq      '*NRF'
      C     *IN99         OrEq      *ON
      C                   ADD       1             Idx
-     C                   EVAL      FldNameArr(Idx) = '#SUPAR'
-     C                   EVAL      MsgIDArr(Idx) = 'BYM0090'
+     C**********         EVAL      FldNameArr(Idx) = '#SUPAR'                               MD044880
+     C**********         EVAL      MsgIDArr(Idx) = 'BYM0090'                                MD044880
+     C                   EVAL      FldNameArr(Idx) = 'LUPAR'                                MD044880
+     C                   EVAL      MsgIDArr(Idx) = '5049083'                                MD044880
      C                   EVAL      ReturnCode = 'Error'
       *
       ** Use the return code's value to set the field's OK flag
@@ -362,8 +379,10 @@
      C     #SELGF        AndNe     'N'
      C     #SELGF        AndNe     ' '
      C                   ADD       1             Idx
-     C                   EVAL      FldNameArr(Idx) = '#SELGF'
-     C                   EVAL      MsgIDArr(Idx) = 'BYM0093'
+     C**********         EVAL      FldNameArr(Idx) = '#SELGF'                               MD044880
+     C**********         EVAL      MsgIDArr(Idx) = 'BYM0093'                                MD044880
+     C                   EVAL      FldNameArr(Idx) = 'LELGF'                                MD044880
+     C                   EVAL      MsgIDArr(Idx) = '5049086'                                MD044880
      C                   EVAL      ReturnCode = 'Error'
       *
       ** Use the return code's value to set the field's OK flag
@@ -390,12 +409,29 @@
      C                   EndIf
  
      C*****#SLINC        Ifne      *Blanks                                             202030 203458
+     C     #SLINC        IFEQ      *BLANKS                                                  MD044880
+     C                   ADD       1             Idx                                        MD044880
+     C                   EVAL      FldNameArr(Idx) = 'LLINC'                                MD044880
+     C                   EVAL      MsgIDArr(Idx) = '5049078'                                MD044880
+     C                   EVAL      ReturnCode = 'Error'                                     MD044880
+      *                                                                                     MD044880
+      ** Use the return code's value to set the field's OK flag                             MD044880
+      *                                                                                     MD044880
+     C                   CALLB     'ZASETOKFLG'                                             MD044880
+     C                   PARM                    InstCodeOK                                 MD044880
+     C                   PARM                    ReturnCode                                 MD044880
+     C                   PARM                    WarnGlobal                                 MD044880
+                                                                                            MD044880
+     C                   ELSE                                                               MD044880
+                                                                                            MD044880
      C                   Move      #SLINC        ULLINS            2 0
      C     ULLINS        Chain     BYINSTV0                           89
      C     *IN89         IfEq      *On
      C                   ADD       1             Idx
-     C                   EVAL      FldNameArr(Idx) = '#SLINC'
-     C                   EVAL      MsgIDArr(Idx) = 'BYM0053'
+     C**********         EVAL      FldNameArr(Idx) = '#SLINC'                               MD044880
+     C**********         EVAL      MsgIDArr(Idx) = 'BYM0053'                                MD044880
+     C                   EVAL      FldNameArr(Idx) = 'LLINC'                                MD044880
+     C                   EVAL      MsgIDArr(Idx) = '5049077'                                MD044880
      C                   EVAL      ReturnCode = 'Error'
       *
       ** Use the return code's value to set the field's OK flag
@@ -413,8 +449,10 @@
      C     A4ISOC        IFEQ      'GB'                                                     AR665308
      C     LAUKRI        ANDNE     'Y'
      C                   ADD       1             Idx
-     C                   EVAL      FldNameArr(Idx) = '#SLINC'
-     C                   EVAL      MsgIDArr(Idx) = 'BYM0070'
+     C**********         EVAL      FldNameArr(Idx) = '#SLINC'                               MD044880
+     C**********         EVAL      MsgIDArr(Idx) = 'BYM0070'                                MD044880
+     C                   EVAL      FldNameArr(Idx) = 'LLINC'                                MD044880
+     C                   EVAL      MsgIDArr(Idx) = '5049079'                                MD044880
      C                   EVAL      ReturnCode = 'Error'
       *
       ** Use the return code's value to set the field's OK flag
@@ -431,8 +469,10 @@
      C     A4ISOC        IFNE      'GB'                                                     AR665308
      C     LAUKRI        ANDNE     'N'
      C                   ADD       1             Idx
-     C                   EVAL      FldNameArr(Idx) = '#SLINC'
-     C                   EVAL      MsgIDArr(Idx) = 'BYM0071'
+     C**********         EVAL      FldNameArr(Idx) = '#SLINC'                               MD044880
+     C**********         EVAL      MsgIDArr(Idx) = 'BYM0071'                                MD044880
+     C                   EVAL      FldNameArr(Idx) = 'LLINC'                                MD044880
+     C                   EVAL      MsgIDArr(Idx) = '5049080'                                MD044880
      C                   EVAL      ReturnCode = 'Error'
       *
       ** Use the return code's value to set the field's OK flag
@@ -443,6 +483,7 @@
      C                   PARM                    WarnGlobal
      C                   ENDIF
      C**********         ENDIF                                                         202030 203458
+     C                   ENDIF                                                              MD044880
  
      C                   EndIf
       *----------------------------------------------------------------
@@ -454,8 +495,10 @@
      C     LAUKRI        ANDEQ     'Y'
      C     #SLICD        ANDEQ     *BLANK
      C                   ADD       1             Idx
-     C                   EVAL      FldNameArr(Idx) = '#SLICD'
-     C                   EVAL      MsgIDArr(Idx) = 'BYM0072'
+     C**********         EVAL      FldNameArr(Idx) = '#SLICD'                               MD044880
+     C**********         EVAL      MsgIDArr(Idx) = 'BYM0072'                                MD044880
+     C                   EVAL      FldNameArr(Idx) = 'LLICD'                                MD044880
+     C                   EVAL      MsgIDArr(Idx) = '5049081'                                MD044880
      C                   EVAL      ReturnCode = 'Error'
       *
       ** Use the return code's value to set the field's OK flag
@@ -482,8 +525,10 @@
      C     #SLICD        Chain     BYINDRV0                           89
      C     *IN89         IfEq      *On
      C                   ADD       1             Idx
-     C                   EVAL      FldNameArr(Idx) = '#SLICD'
-     C                   EVAL      MsgIDArr(Idx) = 'BYM0073'
+     C**********         EVAL      FldNameArr(Idx) = '#SLICD'                               MD044880
+     C**********         EVAL      MsgIDArr(Idx) = 'BYM0073'                                MD044880
+     C                   EVAL      FldNameArr(Idx) = 'LLICD'                                MD044880
+     C                   EVAL      MsgIDArr(Idx) = '5049082'                                MD044880
      C                   EVAL      ReturnCode = 'Error'
       *
       ** Use the return code's value to set the field's OK flag
@@ -502,8 +547,10 @@
      C     #SCNTP        IfNe      'Y'
      C     #SCNTP        AndNe     'N'
      C                   ADD       1             Idx
-     C                   EVAL      FldNameArr(Idx) = '#SCNTP'
-     C                   EVAL      MsgIDArr(Idx) = 'BYM0205'
+     C**********         EVAL      FldNameArr(Idx) = '#SCNTP'                               MD044880
+     C**********         EVAL      MsgIDArr(Idx) = 'BYM0205'                                MD044880
+     C                   EVAL      FldNameArr(Idx) = 'LCNTP'                                MD044880
+     C                   EVAL      MsgIDArr(Idx) = '5049087'                                MD044880
      C                   EVAL      ReturnCode = 'Error'
       *
       ** Use the return code's value to set the field's OK flag

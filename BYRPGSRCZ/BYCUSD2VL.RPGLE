@@ -11,13 +11,18 @@
       *                                                               *
       *  (C) Copyright Finastra International Limited 2002            *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD049990           Date 07Mar18               *
+      *  Prev Amend No. MD044880           Date 15Jan18               *
+      *                 MD046248           Date 27Oct17               *
       * Midas Plus 1.4 Base ------------------------------------------*
-      *  Prev Amend No. LLN022             Date 24Jan05               *
+      *                 LLN022             Date 24Jan05               *
       *                 203458  *CREATE    Date 06May02               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD049990 - Incorrect mapping of Institution Code and Industry*
+      *             Code in main customer details                     *
+      *  MD044880 - BOE Switched On Testing and Fixing                *
       *  MD046248 - Finastra Rebranding                               *
       *  LLN022 - BOE Upgrade to MidasPlus.                           *
       *  203458 - Apply BOE validation rules to main customer details *
@@ -95,15 +100,21 @@
      C     *In90         Ifeq      *on
      C                   Move      'N'           DDLINCOK
      C                   Add       1             Idx
-     C                   Movel     'DDLINC'      FldNamXAr(Idx)
+     C**********         Movel     'DDLINC'      FldNamXAr(Idx)                             MD044880
+     C**********         MOVEL     'LLINC'       FldNamXAr(Idx)                    MD044880 MD049990
+     C                   MOVEL     'DDLINC'      FldNamXAr(Idx)                             MD049990
      C**********         Movel     'BYM0069'     MsgIdXAr(Idx)                                LLN022
-     C                   Movel     'BYM0302'     MsgIdXAr(Idx)                                LLN022
+     C**********         Movel     'BYM0302'     MsgIdXAr(Idx)                       LLN022 MD044880
+     C                   MOVEL     '5049088'     MsgIdXAr(Idx)                              MD044880
      C                   ENDIF
      C                   ELSE                                                                 LLN022
      C                   Move      'N'           DDLINCOK                                     LLN022
      C                   Add       1             Idx                                          LLN022
-     C                   Movel     'DDLINC'      FldNamXAr(Idx)                               LLN022
-     C                   Movel     'BYM0069'     MsgIdXAr(Idx)                                LLN022
+     C**********         Movel     'DDLINC'      FldNamXAr(Idx)                      LLN022 MD044880
+     C**********         Movel     'BYM0069'     MsgIdXAr(Idx)                       LLN022 MD044880
+     C**********         Movel     'LLINC'       FldNamXAr(Idx)                    MD044880 MD049990
+     C                   MOVEL     'DDLINC'      FldNamXAr(Idx)                             MD049990
+     C                   MOVEL     '5049078'     MsgIdXAr(Idx)                              MD044880
      C                   ENDIF                                                                LLN022
       *
       ** If customer is UK Res. then Institution code must be UK Res.
@@ -112,8 +123,11 @@
      C     LAUKRI        andne     'Y'
      C                   Move      'N'           DDLINCOK
      C                   Add       1             Idx
-     C                   Movel     'DDLINC'      FldNamXAr(Idx)
-     C                   Movel     'BYM0070'     MsgIdXAr(Idx)
+     C**********         Movel     'DDLINC'      FldNamXAr(Idx)                             MD044880
+     C**********         Movel     'BYM0070'     MsgIdXAr(Idx)                              MD044880
+     C**********         MOVEL     'LLINC'       FldNamXAr(Idx)                    MD044880 MD049990
+     C                   MOVEL     'DDLINC'      FldNamXAr(Idx)                             MD049990
+     C                   MOVEL     '5049079'     MsgIdXAr(Idx)                              MD044880
      C                   Endif
       *
       ** If customer is not UK Res. then Inst. code must not be UK Res.
@@ -122,8 +136,11 @@
      C     LAUKRI        andeq     'Y'
      C                   Move      'N'           DDLINCOK
      C                   Add       1             Idx
-     C                   Movel     'DDLINC'      FldNamXAr(Idx)
-     C                   Movel     'BYM0071'     MsgIdXAr(Idx)
+     C**********         Movel     'DDLINC'      FldNamXAr(Idx)                             MD044880
+     C**********         Movel     'BYM0071'     MsgIdXAr(Idx)                              MD044880
+     C**********         MOVEL     'LLINC'       FldNamXAr(Idx)                    MD044880 MD049990
+     C                   MOVEL     'DDLINC'      FldNamXAr(Idx)                             MD049990
+     C                   MOVEL     '5049080'     MsgIdXAr(Idx)                              MD044880
      C                   Endif
       *
      C                   Endif
@@ -140,8 +157,11 @@
      C     DDLICD        andeq     *Blanks
      C                   Move      'N'           DDLICDOK
      C                   Add       1             Idx
-     C                   Movel     'DDLICD'      FldNamXAr(Idx)
-     C                   Movel     'BYM0072'     MsgIdXAr(Idx)
+     C**********         Movel     'DDLICD'      FldNamXAr(Idx)                             MD044880
+     C**********         Movel     'BYM0072'     MsgIdXAr(Idx)                              MD044880
+     C**********         MOVEL     'LLICD'       FldNamXAr(Idx)                    MD044880 MD049990
+     C                   MOVEL     'DDLICD'      FldNamXAr(Idx)                             MD044880
+     C                   MOVEL     '5049081'     MsgIdXAr(Idx)                              MD044880
      C                   Endif
       *
       **  Must be valid code if entered
@@ -150,8 +170,11 @@
      C     *In90         Ifeq      *on
      C                   Move      'N'           DDLICDOK
      C                   Add       1             Idx
-     C                   Movel     'DDLICD'      FldNamXAr(Idx)
-     C                   Movel     'BYM0073'     MsgIdXAr(Idx)
+     C**********         Movel     'DDLICD'      FldNamXAr(Idx)                             MD044880
+     C**********         Movel     'BYM0073'     MsgIdXAr(Idx)                              MD044880
+     C**********         MOVEL     'LLICD'       FldNamXAr(Idx)                    MD044880 MD049990
+     C                   MOVEL     'DDLICD'      FldNamXAr(Idx)                             MD049990
+     C                   MOVEL     '5049082'     MsgIdXAr(Idx)                              MD044880
      C                   Endif
      C                   Endif
       *

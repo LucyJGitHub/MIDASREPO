@@ -14,12 +14,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD044880           Date 15Jan18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Midas Plus 1.4 Base ------------------------------------------*
-      *  Prev Amend No. LLN022  *CREATE    Date 24Jan05               *
+      *                 LLN022  *CREATE    Date 24Jan05               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD044880 - BOE Switched On Testing and Fixing                *
       *  MD046248 - Finastra Rebranding                               *
       *  LLN022 - BOE Upgrade to MidasPlus.                           *
       *                                                               *
@@ -152,7 +154,8 @@
      C                             LLNTPX <> '9'
      C
      C                   EVAL      Idx             = Idx + 1
-     C                   EVAL      MsgIdArr   (Idx) = 'BYM0043'
+     C**********         EVAL      MsgIdArr   (Idx) = 'BYM0043'                             MD044880
+     C                   EVAL      MsgIdArr   (Idx) = '5049098'                             MD044880
      C                   EVAL      FldNameArr (Idx) = 'LLNTPX'
      C                   EVAL      ReturnCode      = 'Error'
      C
@@ -184,7 +187,8 @@
      C                   IF        PZErr = 'Y'
      C
      C                   EVAL      Idx             = Idx + 1
-     C                   EVAL      MsgIdArr   (Idx) = 'BYM0120'
+     C**********         EVAL      MsgIdArr   (Idx) = 'BYM0120'                             MD044880
+     C                   EVAL      MsgIdArr   (Idx) = '5049099'                             MD044880
      C                   EVAL      FldNameArr (Idx) = 'LFMATX'
      C                   EVAL      ReturnCode      = 'Error'
      C
@@ -193,7 +197,8 @@
      C                   IF        PZDayNo < BYMDTE
      C
      C                   EVAL      Idx             = Idx + 1
-     C                   EVAL      MsgIdArr   (Idx) = 'BYM0121'
+     C**********         EVAL      MsgIdArr   (Idx) = 'BYM0121'                             MD044880
+     C                   EVAL      MsgIdArr   (Idx) = '5049100'                             MD044880
      C                   EVAL      FldNameArr (Idx) = 'LFMATX'
      C                   EVAL      ReturnCode      = 'Error'
      C

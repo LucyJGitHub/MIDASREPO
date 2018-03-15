@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. LLN022A            Date 03Jun15               *
+      *  Last Amend No. MD044880           Date 15Jan18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 LLN022A            Date 03Jun15               *
       *                 LLN022             Date 03Jun15               *
       *                 BUG6218            Date 03Jun15               *
       *                 CRE073             Date 10Dec06               *
@@ -38,6 +39,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD044880 - BOE Switched On Testing and Fixing                *
       *  MD046248 - Finastra Rebranding                               *
       *  LLN022A - BOE Upgrade to MidasPlus - incorporate code from   *
       *            /COPY members and add switchability.               *
@@ -373,8 +375,10 @@
      C                             + Sect5ScnFmt + Sect6ScnFmt + @TimeStamp                   CSE071
      C                             + PPROT + PTRBS + PPRBS +ASDC1 + ASDC2                     CSE071
      C**********                   + ASDC3                                            CSE071  CER001
-     C                             + ASDC3 + RegData                                          CER001
+     C**********                   + ASDC3 + RegData                                 CER001 MD044880
+     C                             + ASDC3                                                  MD044880
      C                             + ExtData                                                 BUG6218
+     C                             + RegData                                                MD044880
  
      C                   SETON                                        LR
      C                   RETURN

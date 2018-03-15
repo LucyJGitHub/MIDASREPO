@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD039986           Date 10Aug16               *
+      *  Last Amend No. MD044880           Date 15Jan18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD039986           Date 10Aug16               *
       *                 AR1090283          Date 10Aug16               *
       *                 AR701789           Date 26Sep16               *
       *                 AR702532           Date 13Jan15               *
@@ -77,6 +78,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD044880 - BOE Switched On Testing and Fixing                *
       *  MD046248 - Finastra Rebranding                               *
       *  MD039986 - Additional codes to upgrade AR1090283.            *
       *  AR1090283 - Customer details not visible for enquire.        *
@@ -424,14 +426,18 @@
      C                   PARM                    FwdBck
      C**********         PARM                    DDACRF_In        18                          CGL029
      C                   PARM                    DDACRF_In        24                          CGL029
-     C                   PARM                    Buffer
-     C                   PARM                    Buffer2                                      CSF011
+     C**********         PARM                    Buffer                                     MD044880
+     C**********         PARM                    Buffer2                             CSF011 MD044880
+     C                   PARM                    Buffer9999                                 MD044880
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    APIRetC
  
+     C                   MOVEL     Buffer9999    Buffer                                     MD044880
+     C                   MOVE      Buffer9999    Buffer2                                    MD044880
+
       * SD Customers
  
      C     TransTYPE     WHENEQ    'CUSD'
@@ -608,6 +614,7 @@
       ** Action Code (Reject transaction)                                                   AR804863
       *                                                                                     AR804863
      C                   PARM      *BLANK        @ACTRV            1                        AR804863
+     C                   PARM      *BLANK        @DEPI             1                        MD044880
  
       * LE Rollover Details
  

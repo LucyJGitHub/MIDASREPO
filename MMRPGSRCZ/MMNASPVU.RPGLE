@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. LLN022A            Date 03Jun15               *
+      *  Last Amend No. MD044880           Date 15Jan18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 LLN022A            Date 03Jun15               *
       *                 LLN022             Date 03Jun15               *
       *                 CDL094             Date 11Jun14               *
       *                 CSD095             Date 08Apr14               *
@@ -72,6 +73,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD044880 - BOE Switched On Testing and Fixing                *
       *  MD046248 - Finastra Rebranding                               *
       *  LLN022A - BOE Upgrade to MidasPlus - incorporate code from   *
       *            /COPY members and add switchability.               *
@@ -232,6 +234,7 @@
      D DENBPayIns            546   1090                                                       NAD002
      D*DENBRecIns************463    531                                                       NAD002
      D*DENBPayIns************532   1090                                                       NAD002
+     D NaspExFilFmt  E DS                  EXTNAME(BYNASPX0)                                MD044880
                                                                                               CER001
      D ValidLux      E DS                  EXTNAME(MMVNPLX1PD)                                CER001
                                                                                               CER001
@@ -259,6 +262,8 @@
       * FRA/IRS settlement instructions - current
      D CrFRASttmt    E DS                  EXTNAME(SDESSFPD) PREFIX(@)
  
+     D CrNASPExtDta  E DS                  EXTNAME(MMNPEXPD) PREFIX(@)                      MD044880
+
       * Pay settlement instructions in file format
      D DBPaySttmt    E DS                  EXTNAME(SDESFPPD)
      D FLPAY2                 21    565                                                       NAD002
@@ -681,6 +686,12 @@
      C                   EXSR      ValidateTr                                                BUG4482
      C                   EXSR      ValidateSt                                                BUG4482
      C                   EXSR      ValidateLP                                                BUG3992
+     C                   EXSR      SetupAmend                                               MD044880
+     C                   EVAL      ExtData = CrNASPExtDta                                   MD044880
+     C                                                                                      MD044880
+     C                   WHEN      DDACTN = 'D'                                             MD044880
+     C                   EXSR      SetupAmend                                               MD044880
+     C                   EVAL      ExtData = CrNASPExtDta                                   MD044880
  
      C                   ENDSL
       *
@@ -733,7 +744,9 @@
      C**********                                        + InPaySttmt + ExtData         BG3948 CAP086
      C                                                  + InPaySttmt + InfData                CAP086
      C**********                                        + ExtData                      CAP086 CER001
-     C                                                  + RegData + ExtData                   CER001
+     C**********                                        + RegData + ExtData          CER001 MD044880
+     C                                                  + ExtData                           MD044880
+     C                                                  + RegData                           MD044880
      C                   ENDIF                                                               BUG4808
  
      C                   RETURN
@@ -1045,6 +1058,15 @@
      C                   PARM                    WMsgDtaArr
      C                   PARM                    WIdx
  
+     C                   IF        LLN012 = 'Y'                                             MD044880
+                                                                                            MD044880
+     C                   CALLB     'MMNASPRTV1'                                             MD044880
+     C                   PARM      *BLANK        ReturnCode                                 MD044880
+     C                   PARM                    DDACTN                                     MD044880
+     C                   PARM                    APFOTranID                                 MD044880
+     C                   PARM                    DDDLNO                                     MD044880
+     C                   PARM                    NaspExFilFmt                               MD044880
+     C                   ENDIF                                                              MD044880
       *
       ** Default current system date to Deal Date when inserting
       ** a new transaction.
@@ -1211,6 +1233,16 @@
      C                   ENDIF
      C                   ENDIF
  
+     C                   IF        LLN012 = 'Y'                                             MD044880
+                                                                                            MD044880
+     C                   CALLB     'MMNASPCVT1'                                             MD044880
+     C                   PARM      *BLANK        ReturnCode                                 MD044880
+     C                   PARM                    DDDLNO                                     MD044880
+     C                   PARM                    NaspExFilFmt                               MD044880
+     C                   PARM                    CrNASPExtDta                               MD044880
+                                                                                            MD044880
+     C                   ENDIF                                                              MD044880
+
      C                   ENDSR
       *****************************************************************
       /EJECT

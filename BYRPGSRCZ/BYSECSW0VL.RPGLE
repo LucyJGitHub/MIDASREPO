@@ -14,14 +14,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD044880           Date 15Jan18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Midas Plus 1.4 Base ------------------------------------------*
-      *  Prev Amend No. LLN022             Date 24Jan05               *
+      *                 LLN022             Date 24Jan05               *
       *                 LLN020             Date 15Jul02               *
       *                 LLN018  *CREATE    Date 17Apr01               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD044880 - BOE Switched On Testing and Fixing                *
       *  MD046248 - Finastra Rebranding                               *
       *  LLN022 - BOE Upgrade to MidasPlus                            *
       *  LLN020 - Upgrade BOE to Midas Release 4.                     *
@@ -192,7 +194,8 @@
      C                   ADD       1             Idx
      C**********         EVAL      FldNameArr(Idx) = '#SQUAL'                                 LLN022
      C                   EVAL      FldNameArr(Idx) = 'QUAL'                                   LLN022
-     C                   EVAL      MsgIDArr(Idx) = 'BYM0204'
+     C**********         EVAL      MsgIDArr(Idx) = 'BYM0204'                                MD044880
+     C                   EVAL      MsgIDArr(Idx) = '5049090'                                MD044880
      C                   EVAL      ReturnCode = 'Error'
  
       ** Use the return code's value to set the field's OK flag
@@ -212,7 +215,8 @@
      C                   ADD       1             Idx
      C**********         EVAL      FldNameArr(Idx) = '#SGTEE'                                 LLN022
      C                   EVAL      FldNameArr(Idx) = 'GTEE'                                   LLN022
-     C                   EVAL      MsgIDArr(Idx) = 'BYM0203'
+     C**********         EVAL      MsgIDArr(Idx) = 'BYM0203'                                MD044880
+     C                   EVAL      MsgIDArr(Idx) = '5049089'                                MD044880
      C                   EVAL      ReturnCode = 'Error'
       ** Use the return code's value to set the field's OK flag
      C                   CALLB     'ZASETOKFLG'

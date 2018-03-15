@@ -27,8 +27,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD031146           Date 08Apr16               *
+      *  Last Amend No. MD044880           Date 15Jan18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD031146           Date 08Apr16               *
       *                 LLN022A            Date 03Jun15               *
       *                 LLN022             Date 03Jun15               *
       *                 CDL094             Date 01Sep14               *
@@ -80,6 +81,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD044880 - BOE Switched On Testing and Fixing                *
       *  MD046248 - Finastra Rebranding                               *
       *  MD031146 - Amended program to populate FRNT and AFRT fields  *
       *             in FCLTYFN.                                       *
@@ -287,6 +289,8 @@
      D FacnFilFmt    E DS                  EXTNAME(FCLTYFN)
      D                                     PREFIX(FN_)
  
+     D FacnExFilFmt  E DS                  EXTNAME(BYFCLTX0)                                MD044880
+     D                                     PREFIX(EX_)                                      MD044880
       * (Current) Facility in Screen Format - Primary Details
      D CurFcPrim     E DS                  EXTNAME(LEFCPPPD)
      D                                     PREFIX(@)
@@ -318,6 +322,7 @@
       *                                                                                       CLE106
      D CrFRASttmt    E DS                  EXTNAME(SDESSFPD) PREFIX(@)                        CLE106
  
+     D CrFCIPExtDta  E DS                  EXTNAME(LEFCEXPD) PREFIX(@)                      MD044880
      D InfData       E DS                  EXTNAME(LELEIFPD)                                  CAP086
      D                                     PREFIX(IF_)                                        CAP086
       ** Interface Data Format Definition File format                                         CAP086
@@ -786,6 +791,12 @@
      C                   WHEN      DDACTN = 'X'                                              BUG4482
       *  Processing for Authorises                                                           BUG4482
      C                   EXSR      ValidateTr                                                BUG4482
+     C                   EXSR      SetupAmd                                                 MD044880
+     C                   EVAL      ExtData = CrFCIPExtDta                                   MD044880
+                                                                                            MD044880
+     C                   WHEN      DDACTN = 'R' OR DDACTN = 'C'                             MD044880
+     C                   EXSR      SetupAmd                                                 MD044880
+     C                   EVAL      ExtData = CrFCIPExtDta                                   MD044880
  
      C                   ENDSL
       *                                                                                       CLE106
@@ -850,7 +861,9 @@
      C                                           + InfData                                  BUG13174
      C                                           + InRecSttmt                               BUG13174
      C                                           + InPaySttmt                                 CLE106
-     C                                           + RegData + ExtData                        BUG10093
+     C**********                                 + RegData + ExtData               BUG10093 MD044880
+     C                                           + ExtData                                  MD044880
+     C                                           + RegData                                  MD044880
      C
  
  
@@ -941,6 +954,18 @@
  
      C                   Z-ADD     FM_TNLU       H#TNLU            5 0
  
+     C                   IF        LLN007 = 'Y'                                             MD044880
+     C                   CALLB     'LEFCIPRTV1'                                             MD044880
+     C                   PARM                    ReturnCode                                 MD044880
+     C                   PARM                    DDACTN                                     MD044880
+     C                   PARM                    APFOTranID                                 MD044880
+     C                   PARM                    DDCSSN                                     MD044880
+     C                   PARM                    DDFACT                                     MD044880
+     C                   PARM                    DDFCNO                                     MD044880
+     C                   PARM                    DDBRCA                                     MD044880
+     C                   PARM                    FacnExFilFmt                               MD044880
+     C                   ENDIF                                                              MD044880
+
      C                   ENDSR
  
  
@@ -1335,6 +1360,16 @@
      C                   ENDIF                                                                CLE106
      C                   ENDIF                                                               BUG9460
  
+     C                   IF        LLN007 = 'Y'                                             MD044880
+     C                   CALLB     'LEFCIPCVT1'                                             MD044880
+     C                   PARM                    ReturnCode                                 MD044880
+     C                   PARM                    DDCSSN                                     MD044880
+     C                   PARM                    DDFACT                                     MD044880
+     C                   PARM                    DDFCNO                                     MD044880
+     C                   PARM                    FacnExFilFmt                               MD044880
+     C                   PARM                    CrFCIPExtDta                               MD044880
+     C                   ENDIF                                                              MD044880
+
      C                   ENDSR
       *****************************************************************
       /EJECT

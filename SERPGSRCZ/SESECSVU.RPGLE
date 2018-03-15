@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. LLN022A            Date 03Jun15               *
+      *  Last Amend No. MD044880           Date 15Jan18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 LLN022A            Date 03Jun15               *
       *                 LLN022             Date 03Jun15               *
       *                 BUG6218            Date 03Jun15               *
       *                 AR996842           Date 11Feb13               *
@@ -73,6 +74,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD044880 - BOE Switched On Testing and Fixing                *
       *  MD046248 - Finastra Rebranding                               *
       *  LLN022A - BOE Upgrade to MidasPlus - incorporate code from   *
       *            /COPY members and add switchability.               *
@@ -292,6 +294,9 @@
       ** - Screen Format                                                                      CSE071
      D CrSE6ScnFmt   E DS                  EXTNAME(SESEC6PD)                                  CSE071
      D                                     PREFIX(O)                                          CSE071
+                                                                                            MD044880
+     D CrExtFilFmt   E DS                  EXTNAME(SESEEXPD)                                MD044880
+     D                                     PREFIX(O)                                        MD044880
       *
       ** Securities retrieved from file - file format
      D CrSEFilFmt    E DS                  EXTNAME(SECTYD)
@@ -727,6 +732,10 @@
                                                                                              LLN022A
      C                   EXSR      SRValAmend
  
+     C                   WHEN      DDACTN = 'D'                                             MD044880
+     C                   EXSR      SetupAmd                                                 MD044880
+     C                   EVAL      PExtData = CrExtFilFmt                                   MD044880
+
      C                   ENDSL
       *
      C     INVALID       TAG
@@ -781,8 +790,10 @@
      C                                 + NWSe5ScnFmt + NWSe6ScnFmt + @TimeStamp               CSE071
      C                                 + PPROT + PTRBS + PPRBS +ASDC1 + ASDC2                 CSE071
      C**********                       + ASDC3                                         CSE071 CER001
-     C                                 + ASDC3 + RegData                                      CER001
+     C**********                       + ASDC3 + RegData                             CER001 MD044880
+     C                                 + ASDC3                                              MD044880
      C                                 + PExtData                                            BUG6218
+     C                                 + RegData                                            MD044880
      C                   ENDIF                                                               BUG5230
  
      C                   RETURN
@@ -1745,6 +1756,18 @@
       ** Linked Maintenance Flag
  
      C                   PARM                    PParmLink
+      *                                                                                     MD044880
+      ** If LLN012 installed convert BOE fields.                                            MD044880
+      *                                                                                     MD044880
+     C                   IF        LLN012 = 'Y'                                             MD044880
+                                                                                            MD044880
+     C                   CALLB     'SESECSCVT1'                                             MD044880
+     C                   PARM                    RetCodeOut                                 MD044880
+     C                   PARM                    DDSESN                                     MD044880
+     C                   PARM                    SVRCD                                      MD044880
+     C                   PARM                    CrExtFilFmt                                MD044880
+                                                                                            MD044880
+     C                   ENDIF                                                              MD044880
  
      C                   ENDSR
       *
@@ -1903,12 +1926,12 @@
       *  Hook to enable non-core message files to be included
      C/COPY WNCPYSRC,SESECSM01
       *
-      **  Add GBBYUSRMSG to MsgFArray if BOE installed                                       LLN022A
-      *                                                                                      LLN022A
-     C                   IF        LLN012 = 'Y'                                              LLN022A
-     C                   EVAL      MsgFArray (%LookUp(*Blanks:MsgFArray)) =                  LLN022A
-     C                             'GBBYUSRMSG'                                              LLN022A
-     C                   ENDIF                                                               LLN022A
+      ****Add*GBBYUSRMSG*to*MsgFArray*if*BOE*installed                              LLN022A MD044880
+      **********                                                                    LLN022A MD044880
+     C**********         IF        LLN012 = 'Y'                                     LLN022A MD044880
+     C**********         EVAL      MsgFArray (%LookUp(*Blanks:MsgFArray)) =         LLN022A MD044880
+     C**********                   'GBBYUSRMSG'                                     LLN022A MD044880
+     C**********         ENDIF                                                      LLN022A MD044880
                                                                                              LLN022A
       * Access bank details via access program
       * (database error handling done in access program)

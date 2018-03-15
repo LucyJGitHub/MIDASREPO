@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CSD027             Date 21Jan09               *
+      *  Last Amend No. MD044880           Date 15Jan18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CSD027             Date 21Jan09               *
       * Midas Plus 1.4 Base ------------------------------------------*
       *                 LLN022             Date 24Jan05               *
       *                 LLN018  *CREATE    Date 17Apr01               *
@@ -23,6 +24,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD044880 - BOE Switched On Testing and Fixing                *
       *  MD046248 - Finastra Rebranding                               *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  LLN022 - BOE Upgrade to MidasPlus.                           *
@@ -262,13 +264,13 @@
       ** Write, delete or Update extended file
       *
      C     ACTN          IFEQ      'D'
-      *
-      ** Delete record
-      *
-     C     *IN89         IFEQ      *OFF
-     C                   DELETE    BYACCTY1
-     C                   ENDIF
-      *
+      **********                                                                            MD044880
+      ***Delete*record                                                                      MD044880
+      **********                                                                            MD044880
+     C******IN89         IFEQ      *OFF                                                     MD044880
+     C**********         DELETE    BYACCTY1                                                 MD044880
+     C**********         ENDIF                                                              MD044880
+      **********                                                                            MD044880
      C                   ELSE
       *
      C                   MOVEL     ValidBoE      NWRCD

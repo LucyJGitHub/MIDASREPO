@@ -11,13 +11,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2000                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD044880           Date 15Jan18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Midas Plus 1.4 Base ------------------------------------------*
-      *  Prev Amend No. LLN022             Date 24Jan05               *
+      *                 LLN022             Date 24Jan05               *
       *                 LLN016             Date 08May00               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD044880 - BOE Switched On Testing and Fixing                *
       *  MD046248 - Finastra Rebranding                               *
     1 *  LLN022 - BoE Uprade to MidasPlus.                            *
       *  LLN016 - Upgrade BoE to DBAR3                                *
@@ -127,7 +129,8 @@
      C                   ADD       1             Idx
      C**********         EVAL      FldNameArr(Idx) = 'LGTEE'                                  LLN022
      C                   EVAL      FldNameArr(Idx) = 'LGTEEEX'                                LLN022
-     C                   EVAL      MsgIDArr(Idx) = 'XXX0010'
+     C**********         EVAL      MsgIDArr(Idx) = 'XXX0010'                                MD044880
+     C                   EVAL      MsgIDArr(Idx) = '5049094'                                MD044880
    49C                   EVAL      GTEEOK        = 'N'                                        LLN022
  
      C                   ENDIF
@@ -141,7 +144,8 @@
      C     LQUALEX       ANDNE     '3'
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'LQUALEX'
-     C                   EVAL      MsgIDArr(Idx) = 'XXX0011'
+     C**********         EVAL      MsgIDArr(Idx) = 'XXX0011'                                MD044880
+     C                   EVAL      MsgIDArr(Idx) = '5049095'                                MD044880
    50C                   EVAL      QUALOK        = 'N'                                        LLN022
      C                   ENDIF
       *
@@ -165,7 +169,8 @@
      C     *IN78         ANDEQ     '0'                                                        LLN022
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'LFMATEX'
-     C                   EVAL      MsgIDArr(Idx) = 'XXX0012'
+     C**********         EVAL      MsgIDArr(Idx) = 'XXX0012'                                MD044880
+     C                   EVAL      MsgIDArr(Idx) = '5049096'                                MD044880
    52C                   EVAL      FMATOK        = 'N'                                        LLN022
      C                   ELSE
       ** Final Maturity Date must be on or after the maturity date
@@ -188,7 +193,8 @@
      C                   ADD       1             Idx
      C**********         EVAL      FldNameArr(Idx) = 'ULFMAT'                                 LLN022
      C                   EVAL      FldNameArr(Idx) = 'LFMATEX'                                LLN022
-     C                   EVAL      MsgIDArr(Idx) = 'XXX0013'
+     C**********         EVAL      MsgIDArr(Idx) = 'XXX0013'                                MD044880
+     C                   EVAL      MsgIDArr(Idx) = '5049097'                                MD044880
    54C                   EVAL      FMATOK        = 'N'                                        LLN022
      C                   ENDIF
       *

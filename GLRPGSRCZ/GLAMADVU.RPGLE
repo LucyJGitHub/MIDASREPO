@@ -34,8 +34,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD044546           Date 20Mar17               *
+      *  Last Amend No. MD044880           Date 15Jan18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD044546           Date 20Mar17               *
       *                 MD043890           Date 06Feb17               *
       *                 MD042713           Date 05Dec16               *
       *                 222427             Date 05Dec16               *
@@ -133,6 +134,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD044880 - BOE Switched On Testing and Fixing                *
       *  MD046248 - Finastra Rebranding                               *
       *  MD044546 - Enable the ABC flag when CAP205 is on.            *
       *  MD043890 - Cannot insert term and notice                     *
@@ -522,6 +524,8 @@
       * Current account in screen format - Period and Penalty                                 CRE015
      D CurAcPena     E DS                  EXTNAME(GLAMPPPD)                                  CRE015
      D                                     PREFIX(@)                                          CRE015
+     D CurExtDta     E DS                  EXTNAME(GLAMEXPD)                                MD044880
+     D                                     PREFIX(@)                                        MD044880
      D/COPY OFCPYSRCZ,CRE101_034                                                              CRE101
       * Current Account in File Format                                                        BUG553
      D********CrAcFilFmt    E DS                  EXTNAME(ACCNTAB)                     BUG553 240312
@@ -982,6 +986,7 @@
       *  Processing for Inserts
      C                   EXSR      ValidateAc
      C/COPY WNCPYSRC,GLAMADJC01                                                               243436
+     C                   EXSR      ValidateBOE                                              MD044880
                                                                                              BUG9141
      C                   WHEN         DDACTN = 'D'                                           BUG9141
       ***Processing*for*Inserts                                                     BUG9141 MD024398
@@ -995,6 +1000,7 @@
      C                   MOVEL     CurAcComm     AccnInComm                                 MD024398
      C                   MOVEL     CurAcOthe     AccnInOthe                                 MD024398
      C                   MOVEL     CurAcPena     AccnInPena1                                MD024398
+     C                   MOVEL     CurExtDta     ExtData                                    MD044880
      C/COPY OFCPYSRCZ,CRE101_041                                                              CRE101
      C                   EXSR      ValdAcMast                                                BUG9141
      C                   MOVEL     ExBXFilFmt    ValidExBX                                  AR820577
@@ -1002,22 +1008,23 @@
                                                                                              BUG9141
      C*COPY*WNCPYSRC,GLAMADJC01*****                                                          243436
  
-     C                   IF        LLN007 = 'Y'                                              LLN022A
-     C                   CALLB     'BYAMADW0VL'                                              LLN022A
-     C                   PARM                    DDACTN                                      LLN022A
-     C                   PARM                    DATA                                        LLN022A
-     C                   PARM                    ExtData                                     LLN022A
-     C                   PARM                    OKFlags                                     LLN022A
-     C                   PARM                    FldNameArr                                  LLN022A
-     C                   PARM                    MsgIDArr                                    LLN022A
-     C                   PARM                    MsgDtaArr                                   LLN022A
-     C                   PARM                    Idx                                         LLN022A
-     C                   PARM                    WFldNamArr                                  LLN022A
-     C                   PARM                    WMsgIDArr                                   LLN022A
-     C                   PARM                    WMsgDtaArr                                  LLN022A
-     C                   PARM                    WIdx                                        LLN022A
-     C                   PARM                    ValidBoe                                    LLN022A
-     C                   ENDIF                                                               LLN022A
+     C                   EXSR      ValidateBOE                                              MD044880
+     C**********         IF        LLN007 = 'Y'                                     LLN022A MD044880
+     C**********         CALLB     'BYAMADW0VL'                                     LLN022A MD044880
+     C**********         PARM                    DDACTN                             LLN022A MD044880
+     C**********         PARM                    DATA                               LLN022A MD044880
+     C**********         PARM                    ExtData                            LLN022A MD044880
+     C**********         PARM                    OKFlags                            LLN022A MD044880
+     C**********         PARM                    FldNameArr                         LLN022A MD044880
+     C**********         PARM                    MsgIDArr                           LLN022A MD044880
+     C**********         PARM                    MsgDtaArr                          LLN022A MD044880
+     C**********         PARM                    Idx                                LLN022A MD044880
+     C**********         PARM                    WFldNamArr                         LLN022A MD044880
+     C**********         PARM                    WMsgIDArr                          LLN022A MD044880
+     C**********         PARM                    WMsgDtaArr                         LLN022A MD044880
+     C**********         PARM                    WIdx                               LLN022A MD044880
+     C**********         PARM                    ValidBoe                           LLN022A MD044880
+     C**********         ENDIF                                                      LLN022A MD044880
       *                                                                                      LLN022A
      C                   WHEN         DDACTN = 'A'
  
@@ -1027,22 +1034,23 @@
      C                   EXSR      ValidateAc
      C/COPY WNCPYSRC,GLAMADJC02
  
-     C                   IF        LLN007 = 'Y'                                              LLN022A
-     C                   CALLB     'BYAMADW0VL'                                              LLN022A
-     C                   PARM                    DDACTN                                      LLN022A
-     C                   PARM                    DATA                                        LLN022A
-     C                   PARM                    ExtData                                     LLN022A
-     C                   PARM                    OKFlags                                     LLN022A
-     C                   PARM                    FldNameArr                                  LLN022A
-     C                   PARM                    MsgIDArr                                    LLN022A
-     C                   PARM                    MsgDtaArr                                   LLN022A
-     C                   PARM                    Idx                                         LLN022A
-     C                   PARM                    WFldNamArr                                  LLN022A
-     C                   PARM                    WMsgIDArr                                   LLN022A
-     C                   PARM                    WMsgDtaArr                                  LLN022A
-     C                   PARM                    WIdx                                        LLN022A
-     C                   PARM                    ValidBoe                                    LLN022A
-     C                   ENDIF                                                               LLN022A
+     C                   EXSR      ValidateBOE                                              MD044880
+     C**********         IF        LLN007 = 'Y'                                     LLN022A MD044880
+     C**********         CALLB     'BYAMADW0VL'                                     LLN022A MD044880
+     C**********         PARM                    DDACTN                             LLN022A MD044880
+     C**********         PARM                    DATA                               LLN022A MD044880
+     C**********         PARM                    ExtData                            LLN022A MD044880
+     C**********         PARM                    OKFlags                            LLN022A MD044880
+     C**********         PARM                    FldNameArr                         LLN022A MD044880
+     C**********         PARM                    MsgIDArr                           LLN022A MD044880
+     C**********         PARM                    MsgDtaArr                          LLN022A MD044880
+     C**********         PARM                    Idx                                LLN022A MD044880
+     C**********         PARM                    WFldNamArr                         LLN022A MD044880
+     C**********         PARM                    WMsgIDArr                          LLN022A MD044880
+     C**********         PARM                    WMsgDtaArr                         LLN022A MD044880
+     C**********         PARM                    WIdx                               LLN022A MD044880
+     C**********         PARM                    ValidBoe                           LLN022A MD044880
+     C**********         ENDIF                                                      LLN022A MD044880
       *                                                                                      LLN022A
      C                   ENDSL
       *
@@ -1100,16 +1108,18 @@
      C                                           + GLFullAcct                               MD026979
      C/COPY OFCPYSRCZ,CRE101_020                                                              CRE101
      C                                           + InfData                                    CRE015
-     C                                           + FillerBOE                                MD043890
+     C                                           + ExtData                                  MD044880
+     C**********                                 + FillerBOE                       MD043890 MD044880
      C                                           + AccnInPena2                                CRE015
+     C                                           + RegData                                  MD044880
      C**********                                 + RegData                             CER001 CRE073
      C**********                                 + ExtData                           BUG62183 CRE073
      C**********         EVAL      Buffer2 = %SUBST(AccnInPena2:4973) +                CRE073 CSF011
      C**********         EVAL      Buffer2 = %SUBST(AccnInPena2:4933) +              CSF011 AR946674
-     C/COPY OFCPYSRCZ,CRE101_063                                                              CRE101
-     C                   EVAL      Buffer2 = %SUBST(AccnInPena2:4924) +                     AR946674
-     C/COPY OFCPYSRCZ,CRE101_068                                                              CRE101
-     C                                         RegData + ExtData                              CRE073
+     C***/COPY*OFCPYSRCZ,CRE101_063                                                  CRE101 MD044880
+     C**********         EVAL      Buffer2 = %SUBST(AccnInPena2:4924) +            AR946674 MD044880
+     C***/COPY*OFCPYSRCZ,CRE101_068                                                  CRE101 MD044880
+     C**********                               RegData + ExtData                     CRE073 MD044880
  
      C     *IN28         IFEQ      *ON
      C                   CLOSE     PMPORTLL
@@ -1818,6 +1828,18 @@
      C                   PARM      *BLANK        DDDRMG1          12
      C                   PARM      *BLANK        DDCRMG1          12
  
+     C                   IF        LLN007 = 'Y'                                             MD044880
+     C                   CALLB     'GLAMADCVT1'                                             MD044880
+     C                   PARM                    RetCodeIn                                  MD044880
+     C                   PARM                    DDCUSN                                     MD044880
+     C                   PARM                    DDCCY                                      MD044880
+     C                   PARM                    DDACOD                                     MD044880
+     C                   PARM                    DDACSQ                                     MD044880
+     C                   PARM                    DDBRCA                                     MD044880
+     C                   PARM                    SSVRCD                                     MD044880
+     C                   PARM                    CurExtDta                                  MD044880
+     C                   ENDIF                                                              MD044880
+
      C                   ENDSR
      C/COPY WNCPYSRC,GLH00647
       *****************************************************************
@@ -2320,6 +2342,31 @@
  
      C                   ENDSR
       *****************************************************************
+      /EJECT                                                                                MD044880
+      *****************************************************************                     MD044880
+      *                                                               *                     MD044880
+      * ValidatBOE - Routine to validate Bank of England fields       *                     MD044880
+      *                                                               *                     MD044880
+      *****************************************************************                     MD044880
+     C     ValidateBOE   BEGSR                                                              MD044880
+     C                   IF        LLN007 = 'Y'                                             MD044880
+     C                   CALLB     'BYAMADW0VL'                                             MD044880
+     C                   PARM                    DDACTN                                     MD044880
+     C                   PARM                    DATA                                       MD044880
+     C                   PARM                    ExtData                                    MD044880
+     C                   PARM                    OKFlags                                    MD044880
+     C                   PARM                    FldNameArr                                 MD044880
+     C                   PARM                    MsgIDArr                                   MD044880
+     C                   PARM                    MsgDtaArr                                  MD044880
+     C                   PARM                    Ix                                         MD044880
+     C                   PARM                    WFldNamArr                                 MD044880
+     C                   PARM                    WMsgIDArr                                  MD044880
+     C                   PARM                    WMsgDtaArr                                 MD044880
+     C                   PARM                    WIdx                                       MD044880
+     C                   PARM                    ValidBoe                                   MD044880
+     C                   ENDIF                                                              MD044880
+     C                   ENDSR                                                              MD044880
+      *****************************************************************                     MD044880
       /EJECT
       *****************************************************************
      C     WriteToDB     BEGSR
@@ -3287,8 +3334,9 @@
      C                   PARM                    WMsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    UpdateYN          1
-     C                   PARM                    Buffer         6000
-     C                   PARM                    Buffer2        3999                          CRE073
+     C**********         PARM                    Buffer         6000                        MD044880
+     C**********         PARM                    Buffer2        3999                 CRE073 MD044880
+     C                   PARM                    Buffer         9999                        MD044880
      C                   PARM                    APIRetc           1
      C                   PARM                    @TimeStamp       26                         BUG4196
      C                   PARM                    GLFullAcct       24                        MD026979

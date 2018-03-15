@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD041996           Date 12Oct16               *
+      *  Last Amend No. MD044880           Date 15Jan18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD041996           Date 12Oct16               *
       *                 MD045238           Date 24Apr17               *
       *                 MD042966           Date 20Dec16               *
       *                 MD042692           Date 20Dec16               *
@@ -138,6 +139,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD044880 - BOE FBM 2.1 switched on testing and fixing        *
       *  MD046248 - Finastra Rebranding                               *
       *  MD041996 - Incorrect mapping for FX Netting                  *
       *  MD045238 - Authority Holder is not recognized as Controlling *
@@ -720,6 +722,11 @@
       ** (Current) Customer in Screen Format - Currency/Time of Netting                    AR1086546
      D CurCuCtnm     E DS                  EXTNAME (SDCCTNPD)                              AR1086546
      D                                     PREFIX (T@)                                     AR1086546
+                                                                                            MD044880
+     D CurCuCuex     E DS                  EXTNAME(SDCUEXPD)                                MD044880
+     D                                     PREFIX (EX)                                      MD044880
+      ** (Current) Extra Data in Screen Format                                              MD044880
+                                                                                            MD044880
       ** Global Customer X-Reference - File Format                                            222373
      D GCustFilFmt   E DS                  EXTNAME(GPCUSTXPD)                                 222373
       ** Current Customer in Screen Format - MT3xx BEI Details                                222373
@@ -835,6 +842,7 @@
      D  TransCS13                          LIKE(SDSW13)                                       CSW213
      D  TransCUXC                          LIKE(SDCUXC)                                       CGL132
      D  TransFTCR                          LIKE(SDFTCR)                                       CGL132
+     D  TransCUEX                          LIKE(ExtData)                                    MD044880
                                                                                               CSW213
      D TransInEx3      DS          9999                                                       CSW213
      D  TransCARS              1   9999                                                       CSW213
@@ -1029,10 +1037,12 @@
      D***FillerBuf       S           5276A                                           CSW213 MD041996
      D FillerBuf       S           5096A                                                    MD041996
      D***FillerBufEx2    S           8951A                                             CSW213 CGL132
-     D FillerBufEx2    S           5980A                                                      CGL132
+     D***FillerBufEx2    S           5980A                                           CGL132 MD044880
+     D FillerBufEx2    S           5915A                                                    MD044880
      D FillerBufEx3    S           9999A                                                      CSW213
      D***FillerBufEx4    S           6898A                                           CSW213 MD041996
-     D FillerBufEx4    S           5974A                                                    MD041996
+     D***FillerBufEx4    S           5974A                                         MD041996 MD044880
+     D FillerBufEx4    S           6039A                                                    MD044880
      D TranInCtnm1     S              8A                                                    MD041996
      D TranInCtnm2     S            110A                                                    MD041996
      D PPCOLC          S              2A                                                    MD026693
@@ -1046,6 +1056,7 @@
      D PTMode          S              1A                                                    MD026519
      D WMsgLen         S             15P 5 INZ(50)                                          MD026519
      D CTI006          S              1A                                                    MD030956
+     D PCusNum         S              6P 0                                                  MD044880
                                                                                             MD026519
      D PAPARM          DS           100                                                     MD042692
      D  PAMODE                 1      1                                                     MD042692
@@ -1140,6 +1151,7 @@
      C                   EVAL      TranInCCTX = TransCCTX                                     CSW213
      C                   EVAL      TranInCUXC = TransCUXC                                     CGL132
      C                   EVAL      TranInFTCR = TransFTCR                                     CGL132
+     C                   EVAL      ExtData    = TransCUEX                                   MD044880
  
       * Reset variables gradually updated
  
@@ -1177,7 +1189,8 @@
      C                   PARM                    DDACTN                                     AR316373
      C                   PARM                    DATA                                       AR316373
      C                   PARM      *BLANKS       CallMod           3                        AR316373
-     C                   PARM                    ExtData500                                 AR316373
+     C**********         PARM                    ExtData500                        AR316373 MD044880
+     C                   PARM                    ExtData                                    MD044880
      C                   PARM                    OkCuBoE                                    AR316373
      C                   PARM                    FldNameArr                                 AR316373
      C                   PARM                    MsgIdArr                                   AR316373
@@ -1329,7 +1342,8 @@
      C                   PARM                    DDACTN                                     AR316373
      C                   PARM                    DATA                                       AR316373
      C                   PARM      *BLANKS       CallMod           3                        AR316373
-     C                   PARM                    ExtData500                                 AR316373
+     C**********         PARM                    ExtData500                        AR316373 MD044880
+     C                   PARM                    ExtData                                    MD044880
      C                   PARM                    OkCuBoE                                    AR316373
      C                   PARM                    FldNameArr                                 AR316373
      C                   PARM                    MsgIdArr                                   AR316373
@@ -1348,6 +1362,7 @@
  
      C                   EXSR      SetupAmd
      C                   EXSR      ValidateTr
+     C                   MOVEL     CurCuCuex     ExtData                                    MD044880
  
      C                   ENDSL
       *
@@ -1422,6 +1437,7 @@
      C                   EVAL      BufferEx2 = SDSW13                                         CSW213
      C                                       + TranInCUXC                                     CGL132
      C                                       + TranInFTCR                                     CGL132
+     C                                       + ExtData                                      MD044880
      C                                       + FillerBufEx2                                   CSW213
                                                                                               CSW213
      C                   EVAL      BufferEx3 = FillerBufEx3                                   CSW213
@@ -1429,7 +1445,7 @@
      C                   EVAL      BufferEx4 = TranInCUAH                                     CSW213
      C                                       + TranInCCTX                                     CSW213
      C                                       + TranInCtnm2                                  MD041996
-     C                                       + ExtData                                      AR316373
+     C**********                             + ExtData                             AR316373 MD044880
      C                                       + FillerBufEx4                                   CSW213
      C                   ENDIF                                                               BUG4742
  
@@ -1567,6 +1583,15 @@
       *                                                                                     BUG23518
      C                   PARM                    WIdx                                       BUG23518
  
+     C                   IF        LLN007 = 'Y'                                             MD044880
+     C                   CALLB     'SDCUSDRTV1'                                             MD044880
+     C                   PARM      *BLANK        RetCodeIn                                  MD044880
+     C                   PARM                    DDACTN                                     MD044880
+     C                   PARM                    APFOTranID                                 MD044880
+     C                   PARM                    DDCUSN                                     MD044880
+     C                   PARM                    FileBoE                                    MD044880
+     C                   ENDIF                                                              MD044880
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1670,6 +1695,14 @@
  
       ** Customer Details
  
+     C                   MOVEL     DDCUSN        PCusNum                                    MD044880
+      *                                                                                     MD044880
+     C                   CALLB     'SDCUSDCVT1'                                             MD044880
+     C                   PARM      *BLANK        ReturnCode                                 MD044880
+     C                   PARM                    PCusNum                                    MD044880
+     C                   PARM                    FileBoE                                    MD044880
+     C                   PARM                    CurCuCuex                                  MD044880
+
      C                   ENDSR
       *****************************************************************
       /EJECT

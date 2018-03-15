@@ -14,14 +14,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD044880           Date 15Jan18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Midas Plus 1.4 Base ------------------------------------------*
-      *  Prev Amend No. LLN020             Date 15Jul02               *
+      *                 LLN020             Date 15Jul02               *
       *                 202717             Date 07Feb02               *
       *                 LLN018  *CREATE    Date 17Apr01               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD044880 - BOE Switched On Testing and Fixing                *
       *  MD046248 - Finastra Rebranding                               *
       *  LLN020 - Upgrade BOE to Midas Release 4.                     *
       *           Rename fields to avoid conflict with CARS.          *
@@ -252,9 +254,9 @@
       *
       ** Delete record
       *
-     C     *IN89         IFEQ      *OFF
-     C                   DELETE    BYSECTY1
-     C                   ENDIF
+     C******IN89         IFEQ      *OFF                                                     MD044880
+     C**********         DELETE    BYSECTY1                                                 MD044880
+     C**********         ENDIF                                                              MD044880
       *
      C                   ELSE
       *

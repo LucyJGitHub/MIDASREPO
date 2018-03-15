@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD041996           Date 12Oct15               *
+      *  Last Amend No. MD044880           Date 15Jan18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD041996           Date 12Oct15               *
       *                 CSW216             Date 14Mar16               *
       *                 CER071             Date 01Aug16               *
       *                 AR316373           Date 03Jun15               *
@@ -59,6 +60,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD044880 - BOE FBM 2.1 switched on testing and fixing        *
       *  MD046248 - Finastra Rebranding                               *
       *  MD041996 - Incorrect mapping for FX Netting                  *
       *  CSW216 - SWIFT Changes 2016 (Recompile)                      *
@@ -295,10 +297,12 @@
      D***FillerBuf       S           5276A                                           CSW213 MD041996
      D FillerBuf       S           5096A                                                    MD041996
      D***FillerBufEx2    S           8951A                                             CSW213 CGL132
-     D FillerBufEx2    S           5980A                                                      CGL132
+     D***FillerBufEx2    S           5980A                                           CGL132 MD044880
+     D FillerBufEx2    S           5915A                                                    MD044880
      D FillerBufEx3    S           9999A                                                      CSW213
      D***FillerBufEx4    S           6898A                                           CSW213 MD041996
-     D FillerBufEx4    S           5974A                                                    MD041996
+     D***FillerBufEx4    S           5974A                                         MD041996 MD044880
+     D FillerBufEx4    S           6039A                                                    MD044880
      D NewCuCtnm1      S              8A                                                    MD041996
      D NewCuCtnm2      S            110A                                                    MD041996
  
@@ -418,6 +422,7 @@
      C                   EVAL      BufferEx2 = CuSW13                                         CSW213
      C                                       + CuCUXC                                         CGL132
      C                                       + CuFTCR                                         CGL132
+     C                                       + ExtData                                      MD044880
      C                                       + FillerBufEx2                                   CSW213
                                                                                               CSW213
      C                   EVAL      BufferEx3 = FillerBufEx3                                   CSW213
@@ -425,7 +430,7 @@
      C                   EVAL      BufferEx4 = NewCuCUAH                                      CSW213
      C                                       + NewCuCCTX                                      CSW213
      C                                       + NewCuCtnm2                                   MD041996
-     C                                       + ExtData                                      MD041996
+     C**********                             + ExtData                             MD041996 MD044880
      C                                       + FillerBufEx4                                   CSW213
  
      C                   SETON                                        LR

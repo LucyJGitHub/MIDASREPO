@@ -14,13 +14,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD044880           Date 15Jan18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Midas Plus 1.4 Base ------------------------------------------*
-      *  Prev Amend No. LLN022  *CREATE    Date 24Jan05               *
+      *                 LLN022  *CREATE    Date 24Jan05               *
       *                                    Date                       *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD044880 - BOE Switched On Testing and Fixing                *
       *  MD046248 - Finastra Rebranding                               *
       *  LLN022 - BOE Upgrade to MidasPlus                            *
       *                                                               *
@@ -135,6 +137,7 @@
       *
       ** If Amend/Insert mode,
       *
+     C                   IF        ACTN = 'I' OR ACTN = 'A'                                 MD044880
      C                   EVAL      LLNRF = LVLNRF
      C                   EVAL      LLNTP = LVLNTP
      C                   EVAL      LFMAT = LVFMAT
@@ -151,6 +154,7 @@
      C                   ELSE
      C                   WRITE     BYLOAND0
      C                   ENDIF
+     C                   ENDIF                                                              MD044880
       *
      C                   ENDSR
       *****************************************************************

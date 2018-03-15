@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD048478           Date 21Nov17               *
+      *  Last Amend No. MD044880           Date 15Jan18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD048478           Date 21Nov17               *
       *                 MD046969           Date 02Sep17               *
       *                 CLE141             Date 08Feb16               *
       *                 LLN022A            Date 03Jun15               *
@@ -126,6 +127,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD044880 - BOE Switched On Testing and Fixing                *
       *  MD046248 - Finastra Rebranding                               *
       *  MD048478 - Cannot input auto settle = pre check order        *
       *  MD046969 - Inserted PDCL X and Y combined via SOAP or Manual *
@@ -453,6 +455,9 @@
      D CurClSeven    E DS                  EXTNAME(LECLI7PD)                                  CLE141
      D                                     PREFIX(@)                                          CLE141
  
+     D ClExtFilFmt   E DS                  EXTNAME(BYLOANX0)                                MD044880
+     D                                     PREFIX(@)                                        MD044880
+
       * Error indicators
      D OKClPrim      E DS                  EXTNAME(LEECLI1PD)
      D OKClSeco      E DS                  EXTNAME(LEECLI2PD)
@@ -495,6 +500,8 @@
       * FRA/IRS Settlement Instructions - Current
      D C_FRA         E DS                  EXTNAME(SDESSFPD) PREFIX(C_)
  
+     D C_EXTDATA     E DS                  EXTNAME(LECLEXPD) PREFIX(C_)                     MD044880
+                                                                                            MD044880
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)                                  247545
      D PCust           S             10                                                       247545
      D PStKey          S              7                                                       247545
@@ -1128,6 +1135,8 @@
      C                   If        Idx <> 0
      C                   GOTO      INVALID
      C                   ENDIF
+     C                   EXSR      SetupAmd                                                 MD044880
+     C                   EVAL      ExtData = C_EXTDATA                                      MD044880
       *                                                                                       LLN022
       ** If BOE installed, validate fields.                                                  LLN022A
       *                                                                                      LLN022A
@@ -1167,6 +1176,7 @@
      C                   WHEN      DDACTN = 'R' AND CL_VDAT < BJRDNB                         BUG6010
      C                             AND CL_ORED < BJRDNB                                      BUG6010
      C                   EXSR      SetupAmd                                                  BUG6010
+     C                   EVAL      ExtData = C_EXTDATA                                      MD044880
      C                   EXSR      ValidateTr                                                BUG6010
      C                   EVAL      ##PREC = 'Y'                                              BUG6010
      C                   EVAL      ##PPAY = 'Y'                                              BUG6010
@@ -1410,8 +1420,10 @@
      C                                               + TranInSeven                            CLE141
      C                                               + ##RECS + ##PAYS                      MD020605
      C                                               + @DEPI                                MD046969
-     C                                               + InfData + RegData                    MD020605
+     C**********                                     + InfData + RegData           MD020605 MD044880
+     C                                               + InfData                              MD044880
      C                                               + ExtData                              MD020605
+     C                                               + RegData                              MD044880
      C                   ENDIF                                                              MD020605
                                                                                             MD020605
      C                   ELSE                                                                BUG4685
@@ -1433,8 +1445,10 @@
      C**********                                     + ExtData                        BUG2480 CAP086
      C**********                                     + InfData + ExtData              CAP086  CER001
      C                                               + @DEPI                                MD046969
-     C                                               + InfData + RegData                      CER001
+     C**********                                     + InfData + RegData             CER001 MD044880
+     C                                               + InfData                              MD044880
      C                                               + ExtData                                CER001
+     C                                               + RegData                              MD044880
      C                   ENDIF                                                               BUG4685
  
      C                   RETURN
@@ -1539,6 +1553,15 @@
      C                   PARM                    PLoanNum                                     CER001
      C                   PARM                    CLIPExFilFmt                                 CER001
      C                   ENDIF                                                                CER001
+
+     C                   IF        LLN007 = 'Y'                                             MD044880
+     C                   CALLB     'LECLIPRTV1'                                             MD044880
+     C                   PARM                    ReturnCode                                 MD044880
+     C                   PARM                    DDACTN                                     MD044880
+     C                   PARM                    APFOTranID                                 MD044880
+     C                   PARM                    DDLNRF                                     MD044880
+     C                   PARM                    ClExtFilFmt                                MD044880
+     C                   ENDIF                                                              MD044880
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2794,6 +2817,15 @@
      C                   PARM                    TranInSeco                                   CLE106
      C                   PARM                    TranInThir                                   CLE106
  
+     C                   IF        LLN007 = 'Y'                                             MD044880
+     C                   CALLB     'LECLIPCVT1'                                             MD044880
+     C                   PARM                    ReturnCode                                 MD044880
+     C                   PARM                    DDLNRF                                     MD044880
+     C                   PARM                    ClExtFilFmt                                MD044880
+     C                   PARM                    C_EXTDATA                                  MD044880
+     C                   PARM                    BJDFIN                                     MD044880
+     C                   ENDIF                                                              MD044880
+
      C                   ENDSR
       *****************************************************************
       /EJECT

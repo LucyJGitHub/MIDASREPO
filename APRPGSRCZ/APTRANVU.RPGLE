@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL099             Date 03Nov17               *
+      *  Last Amend No. MD044880           Date 15Jan18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL099             Date 03Nov17               *
       *                 MD041996           Date 12Oct16               *
       *                 MD042042           Date 14Feb17               *
       *                 MD042033           Date 30Sep16               *
@@ -209,6 +210,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD044880 - BOE Switched On Testing and Fixing                *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date                                    *
       *           Applied for MD-48461                                *      
@@ -622,6 +624,7 @@
      D  TransCS13                          LIKE(SDSW13)                                       CSW213
      D  TransCUXC                          LIKE(SDCUXC)                                       CGL132
      D  TransFTCR                          LIKE(SDFTCR)                                       CGL132
+     D  TransCUEX                          LIKE(SDCUEX)                                     MD044880
                                                                                               CSW213
      D TransInEx3      DS          9999                                                       CSW213
      D  TransCARS              1   9999                                                       CSW213
@@ -688,6 +691,7 @@
       ** CDL099 Split Value Date with additional extra fields                                 CDL099
      D InCDL099      E DS                  EXTNAME(FXDLEXPD)                                  CDL099
      D DDEXDT_FX     E                     EXTFLD(DDEXDT)                                     CDL099
+     D SDCUEX        E DS                  EXTNAME(SDCUEXPD)                                MD044880
       *                                                                                     BUG23742
      D POthNarr1       S            500A                                                    BUG23742
       *                                                                                     BUG23742
@@ -1666,30 +1670,49 @@ RGC  D RPIF4LN         S              4  0                                      
  
      C                   EXSR      AMADFmts
  
-     C     AMMDLn        SUBST     BUFFER:Bfp    TRANS1
+     C*****AMMDLn        SUBST     BUFFER:Bfp    TRANS1                                     MD044880
+     C                   EVAL      TRANS1 = %SUBST(BufferTotal:Bfp:AMMDLn)                  MD044880
      C                   ADD       AMMDLn        Bfp
-     C     AMDILn        SUBST     BUFFER:Bfp    TRANS2
+     C*****AMDILn        SUBST     BUFFER:Bfp    TRANS2                                     MD044880
+     C                   EVAL      TRANS2 = %SUBST(BufferTotal:Bfp:AMDILn)                  MD044880
      C                   ADD       AMDILn        Bfp
-     C     AMCILn        SUBST     BUFFER:Bfp    TRANS3
+     C*****AMCILn        SUBST     BUFFER:Bfp    TRANS3                                     MD044880
+     C                   EVAL      TRANS3 = %SUBST(BufferTotal:Bfp:AMCILn)                  MD044880
      C                   ADD       AMCILn        Bfp
-     C     AMCOLn        SUBST     BUFFER:Bfp    TRANS4
+     C*****AMCOLn        SUBST     BUFFER:Bfp    TRANS4                                     MD044880
+     C                   EVAL      TRANS4 = %SUBST(BufferTotal:Bfp:AMCOLn)                  MD044880
      C                   ADD       AMCOLn        Bfp
-     C     AMODLn        SUBST     BUFFER:Bfp    TRANS5
+     C*****AMODLn        SUBST     BUFFER:Bfp    TRANS5                                     MD044880
+     C                   EVAL      TRANS5 = %SUBST(BufferTotal:Bfp:AMODLn)                  MD044880
      C                   ADD       AMODLn        Bfp                                         BUG4196
       **  Restore Timestamp field from the record                                            BUG4196
-     C     26            SUBST     BUFFER:Bfp    @TimeStamp                                  BUG4196
+     C*****26***         SUBST     BUFFER:Bfp    @TimeStamp                         BUG4196 MD044880
+     C                   EVAL      @TimeStamp = %SUBST(BufferTotal:Bfp:26)                  MD044880
      C                   ADD       26            Bfp                                         BUG4196
-     C     AMADFLn       SUBST     BUFFER:Bfp    AMADFiller                                  BUG5988
+     C*****AMADFLn       SUBST     BUFFER:Bfp    AMADFiller                         BUG5988 MD044880
+     C                   EVAL      AMADFiller = %SUBST(BufferTotal:Bfp:AMADFLn)             MD044880
      C                   ADD       AMADFLn       Bfp                                         BUG5988
-     C     AMPPLn1       SUBST     BUFFER:Bfp    TRANS6                                       CRE015
+     C*****AMPPLn1       SUBST     BUFFER:Bfp    TRANS6                              CRE015 MD044880
+     C                   EVAL      TRANS6 = %SUBST(BufferTotal:Bfp:AMPPLn1)                 MD044880
      C                   ADD       AMPPLn1       Bfp                                          CRE015
-     C     124           SUBST     BUFFER:Bfp    StampTax                                     CER049
+     C*****124**         SUBST     BUFFER:Bfp    StampTax                            CER049 MD044880
+     C                   EVAL      StampTax = %SUBST(BufferTotal:Bfp:124)                   MD044880
      C                   ADD       124           Bfp                                          CER049
-     C     24            SUBST     BUFFER:Bfp    GLFullAcct                                 MD026979
+     C*****24***         SUBST     BUFFER:Bfp    GLFullAcct                        MD026979 MD044880
+     C                   EVAL      GLFullAcct = %SUBST(BufferTotal:Bfp:24)                  MD044880
      C                   ADD       24            Bfp                                        MD026979
-     C/COPY OFCPYSRCZ,CRE101_003                                                              CRE101
-     C     AMIFLn        SUBST     BUFFER:Bfp    InfData                                      CAP086
+     C***/COPY*OFCPYSRCZ,CRE101_003                                                  CRE101 MD044880
+     C                   EVAL      ACMIData = %SUBST(BufferTotal:Bfp:ACMILn)                MD044880
+     C                   ADD       ACMILn        Bfp                                        MD044880
+     C*****AMIFLn        SUBST     BUFFER:Bfp    InfData                             CAP086 MD044880
+     C                   EVAL      InfData = %SUBST(BufferTotal:Bfp:AMIFLn)                 MD044880
      C                   ADD       AMIFLn        Bfp                                        BUG10280
+     C                   EVAL      ExtData = %SUBST(BufferTotal:Bfp:AMEXLn)                 MD044880
+     C                   ADD       AMEXLn        Bfp                                        MD044800
+     C                   EVAL      RepeatData = %SUBST(BufferTotal:Bfp:AMPPLn2)             MD044880
+     C                   ADD       AMPPLn2       Bfp                                        MD044880
+     C                   EVAL      RegData = %SUBST(BufferTotal:Bfp:AMRXLn)                 MD044880
+     C                   ADD       AMRXLn        Bfp                                        MD044880
      C*****AMPPLn2       SUBST     BUFFER:Bfp    RepeatData                            CRE015 CRE073
      C**********         ADD       AMPPLn2       Bfp                                   CRE015 CRE073
      C*****AMRXLn        SUBST     BUFFER:Bfp    RegData                               CER001 CRE073
@@ -1703,29 +1726,29 @@ RGC  D RPIF4LN         S              4  0                                      
      C**********         ADD       4932          Bfp                                CSF011A AR946674
      C*****4923*         SUBST     BUFFER:Bfp    TempData#1                        AR946674 MD026979
      C**********         ADD       4923          Bfp                               AR946674 MD026979
-     C/COPY OFCPYSRCZ,CRE101_063                                                              CRE101
-     C     4899          SUBST     BUFFER:Bfp    TempData#1                                 MD026979
-     C                   ADD       4899          Bfp                                        MD026979
-     C/COPY OFCPYSRCZ,CRE101_064                                                              CRE101
+     C***/COPY*OFCPYSRCZ,CRE101_063                                                  CRE101 MD044880
+     C*****4899*         SUBST     BUFFER:Bfp    TempData#1                        MD026979 MD044880
+     C**********         ADD       4899          Bfp                               MD026979 MD044880
+     C***/COPY*OFCPYSRCZ,CRE101_064                                                  CRE101 MD044880
      C*****450**         SUBST     BUFFER2:Bfp2  TempData#2                         CSF011A AR946674
      C*****459**         SUBST     BUFFER2:Bfp2  TempData#2                        AR946674 MD026979
-     C/COPY OFCPYSRCZ,CRE101_063                                                              CRE101
-     C     483           SUBST     BUFFER2:Bfp2  TempData#2                                 MD026979
-     C/COPY OFCPYSRCZ,CRE101_065                                                              CRE101
-     C                   MOVEL     TempData#1    RepeatData                                   CRE073
-     C                   MOVE      TempData#2    RepeatData                                   CRE073
+     C***/COPY*OFCPYSRCZ,CRE101_063                                                  CRE101 MD044880
+     C*****483**         SUBST     BUFFER2:Bfp2  TempData#2                        MD026979 MD044880
+     C***/COPY*OFCPYSRCZ,CRE101_065                                                  CRE101 MD044880
+     C**********         MOVEL     TempData#1    RepeatData                          CRE073 MD044880
+     C**********         MOVE      TempData#2    RepeatData                          CRE073 MD044880
      C**********         ADD       410           Bfp2                                 CRE073 CSF011A
      C*****AMRXLn        SUBST     BUFFER:Bfp2   InfData                              CRE073 CSF011A
      C**********         ADD       AMRXLn        Bfp                                  CRE073 CSF011A
      C**********         ADD       450           Bfp2                               CSF011A AR946674
      C**********         ADD       459           Bfp2                              AR946674 MD026979
-     C/COPY OFCPYSRCZ,CRE101_063                                                              CRE101
-     C                   ADD       483           Bfp2                                       MD026979
-     C/COPY OFCPYSRCZ,CRE101_066                                                              CRE101
-     C     AMRXLn        SUBST     BUFFER2:Bfp2  RegData                                     CSF011A
-     C                   ADD       AMRXLn        Bfp2                                        CSF011A
-     C     AMEXLn        SUBST     BUFFER2:Bfp2  Extdata                                      CRE073
-     C                   ADD       AMEXLn        Bfp2                                         CRE073
+     C***/COPY*OFCPYSRCZ,CRE101_063                                                  CRE101 MD044880
+     C**********         ADD       483           Bfp2                              MD026979 MD044880
+     C***/COPY*OFCPYSRCZ,CRE101_066                                                  CRE101 MD044880
+     C*****AMRXLn        SUBST     BUFFER2:Bfp2  RegData                            CSF011A MD044880
+     C**********         ADD       AMRXLn        Bfp2                               CSF011A MD044880
+     C*****AMEXLn        SUBST     BUFFER2:Bfp2  Extdata                             CRE073 MD044880
+     C**********         ADD       AMEXLn        Bfp2                                CRE073 MD044880
  
      C                   CALL      'GLAMADVU'
       * Common header information (DS) from source system
@@ -1751,12 +1774,16 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    WMsgDtaArr
      C                   PARM                    MsgFArray
      C                   PARM                    UpdateYN
-     C                   PARM                    Buffer
-     C                   PARM                    Buffer2                                      CRE073
+     C**********         PARM                    Buffer                                     MD044880
+     C**********         PARM                    Buffer2                             CRE073 MD044880
+     C                   PARM                    Buffer9999                                 MD044880
      C                   PARM                    APIRetc
      C                   PARM                    @TimeStamp                                  BUG4196
      C                   PARM                    GLFullAcct                                 MD026979
  
+     C                   MOVEL     Buffer9999    Buffer                                     MD044880
+     C                   MOVE      Buffer9999    Buffer2                                    MD044880
+
       * GL Journal Entry Header Maintenance
       * GL Journal Entry Header Maintenance - Non-retail                                     BUG9009
  
@@ -2317,10 +2344,13 @@ RGC  D RPIF4LN         S              4  0                                      
      C     ESSPLn        SUBST     BUFFER:Bfp    PaySttmt                                     CLE106
      C                   ADD       ESSPLn        Bfp                                        BUG10093
                                                                                             BUG10093
+     C     FCEXLn        SUBST     BUFFER:Bfp    ExtData                                    MD044880
+     C                   ADD       FCEXLn        Bfp                                        MD044880
+                                                                                            MD044880
      C     FCRXLn        SUBST     BUFFER:Bfp    RegData                                    BUG10093
      C                   ADD       FCRXLn        Bfp                                        BUG10093
                                                                                             BUG10093
-     C     FCEXLn        SUBST     BUFFER:Bfp    ExtData                                    BUG10093
+     C*****FCEXLn        SUBST     BUFFER:Bfp    ExtData                           BUG10093 MD044880
  
      C                   CALL      'LEFCIPVU'
      C                   PARM                    HeadIn
@@ -2401,11 +2431,14 @@ RGC  D RPIF4LN         S              4  0                                      
      C*****10************SUBST     BUFFER:Bfp    ReservID                       BUG2480
      C*******************ADD       10            Bfp                            BUG2480
  
+     C     CLEXLn        SUBST     BUFFER:Bfp    ExtData                                    MD044880
+     C                   ADD       CLEXLn        Bfp                                        MD044880
+                                                                                            MD044880
      C     CLRXLn        SUBST     BUFFER:Bfp    RegData                                      CER001
      C                   ADD       CLRXLn        Bfp                                          CER001
                                                                                               CER001
-     C     CLEXLn        SUBST     BUFFER:Bfp    ExtData
-     C                   ADD       CLEXLn        Bfp
+     C*****CLEXLn        SUBST     BUFFER:Bfp    ExtData                                    MD044880
+     C**********         ADD       CLEXLn        Bfp                                        MD044880
  
      C                   MOVE      ReservID15    ReservID                       BUG2480
                                                                                 BUG2480
@@ -3118,9 +3151,11 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   ADD       26            Bfp                                         BUG1569
      C     SECSFLn       SUBST     BUFFER:Bfp    SECSFiller                                  BUG5988
      C                   ADD       SECSFLn       Bfp                                         BUG5988
+     C     SEEXLn        SUBST     BUFFER:Bfp    ExtData                                    MD044880
+     C                   ADD       SEEXLn        Bfp                                        MD044880
      C     SERXLn        SUBST     BUFFER:Bfp    RegData                                      CER001
      C                   ADD       SERXLn        Bfp                                          CER001
-     C     SEEXLn        SUBST     BUFFER:Bfp    ExtData
+     C*****SEEXLn        SUBST     BUFFER:Bfp    ExtData                                    MD044880
  
      C                   CALL      'SESECSVU'
  
@@ -3613,9 +3648,11 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   ADD       ESSPLn        Bfp
      C     NAIFLn        SUBST     BUFFER:Bfp    InfData                                      CAP086
      C                   ADD       NAIFLn        Bfp                                          CAP086
+     C     NPEXLn        SUBST     BUFFER:Bfp    ExtData                                    MD044880
+     C                   ADD       NPEXLn        Bfp                                        MD044880
      C     NPRXLn        SUBST     BUFFER:Bfp    RegData                                      CER001
      C                   ADD       NPRXLn        Bfp                                          CER001
-     C     NPEXLn        SUBST     BUFFER:Bfp    ExtData
+     C*****NPEXLn        SUBST     BUFFER:Bfp    ExtData                                    MD044880
  
      C                   CALL      'MMNASPVU'
       * Common header information (DS) from source system
@@ -7122,6 +7159,8 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   EVAL      Bfp  += CUXCLn                                             CGL132
      C                   EVAL      TransFTCR = %SUBST(BufferEx2:Bfp:FTCRLn)                   CGL132
      C                   EVAL      Bfp  += FTCRLn                                             CGL132
+     C                   EVAL      TransCUEX = %SUBST(BufferEx2:Bfp:SDEXLn)                 MD044880
+     C                   EVAL      Bfp  += SDEXLn                                           MD044880
      C                   EVAL      BFEX2Ln -= Bfp                                           MD022093
                                                                                             MD022093
      C                   ENDSR                                                              MD022093
@@ -7177,8 +7216,8 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   EVAL      TRANS19   = %SUBST(TransCCTN:1:CCTNLn1) +                MD041996
      C                                         %SUBST(BufferEx4:Bfp:CCTNLn)                 MD041996
      C                   ADD       CCTNLn        Bfp                                        MD041996
-     C                   EVAL      ExtData   = %SUBST(BufferEx4:Bfp:SDEXLn)                 MD022093
-     C                   ADD       SDEXLn        Bfp                                        MD022093
+     C**********         EVAL      ExtData   = %SUBST(BufferEx4:Bfp:SDEXLn)        MD022093 MD044880
+     C**********         ADD       SDEXLn        Bfp                               MD022093 MD004480
                                                                                             MD022093
      C                   EVAL      BFEx4Ln  -= Bfp                                          MD022093
       *                                                                                     MD022093

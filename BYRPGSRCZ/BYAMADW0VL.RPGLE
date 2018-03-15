@@ -14,14 +14,16 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD044880           Date 15Jan18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
       * Midas Plus 1.4 Base ------------------------------------------*
-      *  Prev Amend No. LLN022             Date 24Jan05               *
+      *                 LLN022             Date 24Jan05               *
       *                 LLN020             Date 15Jul02               *
       *                 LLN018  *CREATE    Date 17Apr01               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD044880 - BOE Switched On Testing and Fixing                *
       *  MD046248 - Finastra Rebranding                               *
       *  LLN022 - BOE Upgrade to MidasPlus.                           *
       *  LLN020 - Upgrade BOE to Midas Release 4.                     *
@@ -200,7 +202,8 @@
      C                   ADD       1             Idx
      C**********         EVAL      FldNameArr(Idx) = '#SNETI'                                 LLN022
      C                   EVAL      FldNameArr(Idx) = 'NETI'                                   LLN022
-     C                   EVAL      MsgIDArr(Idx) = 'BYM0033'
+     C**********         EVAL      MsgIDArr(Idx) = 'BYM0033'                                MD044880
+     C                   EVAL      MsgIDArr(Idx) = '5049066'                                MD044880
      C                   EVAL      ReturnCode = 'Error'
       ** Use the return code's value to set the field's OK flag
      C                   CALLB     'ZASETOKFLG'
@@ -216,7 +219,8 @@
      C                   ADD       1             Idx
      C**********         EVAL      FldNameArr(Idx) = '#SNETI'                                 LLN022
      C                   EVAL      FldNameArr(Idx) = 'NETI'                                   LLN022
-     C                   EVAL      MsgIDArr(Idx) = 'BYM0032'
+     C**********         EVAL      MsgIDArr(Idx) = 'BYM0032'                                MD044880
+     C                   EVAL      MsgIDArr(Idx) = '5049065'                                MD044880
      C                   EVAL      ReturnCode = 'Error'
       ** Use the return code's value to set the field's OK flag
      C                   CALLB     'ZASETOKFLG'
@@ -239,7 +243,8 @@
      C                   ADD       1             Idx
      C**********         EVAL      FldNameArr(Idx) = '#SDPTP'                                 LLN022
      C                   EVAL      FldNameArr(Idx) = 'DPTP'                                   LLN022
-     C                   EVAL      MsgIDArr(Idx) = 'BYM0035'
+     C**********         EVAL      MsgIDArr(Idx) = 'BYM0035'                                MD044880
+     C                   EVAL      MsgIDArr(Idx) = '5049068'                                MD044880
      C                   EVAL      ReturnCode = 'Error'
       ** Use the return code's value to set the field's OK flag
      C                   CALLB     'ZASETOKFLG'
@@ -255,7 +260,8 @@
      C                   ADD       1             Idx
      C**********         EVAL      FldNameArr(Idx) = '#SDPTP'                                 LLN022
      C                   EVAL      FldNameArr(Idx) = 'DPTP'                                   LLN022
-     C                   EVAL      MsgIDArr(Idx) = 'BYM0034'
+     C**********         EVAL      MsgIDArr(Idx) = 'BYM0034'                                MD044880
+     C                   EVAL      MsgIDArr(Idx) = '5049067'                                MD044880
      C                   EVAL      ReturnCode = 'Error'
       ** Use the return code's value to set the field's OK flag
      C                   CALLB     'ZASETOKFLG'
@@ -277,7 +283,8 @@
      C                   ADD       1             Idx
      C**********         EVAL      FldNameArr(Idx) = '#SDPTP'                                 LLN022
      C                   EVAL      FldNameArr(Idx) = 'SNOD'                                   LLN022
-     C                   EVAL      MsgIDArr(Idx) = 'BYM0036'
+     C**********         EVAL      MsgIDArr(Idx) = 'BYM0036'                                MD044880
+     C                   EVAL      MsgIDArr(Idx) = '5049069'                                MD044880
      C                   EVAL      ReturnCode = 'Error'
  
       ** Use the return code's value to set the field's OK flag
@@ -296,7 +303,8 @@
      C                   ADD       1             Idx
      C**********         EVAL      FldNameArr(Idx) = '#SSNOD'                                 LLN022
      C                   EVAL      FldNameArr(Idx) = 'SNOD'                                   LLN022
-     C                   EVAL      MsgIDArr(Idx) = 'BYM0037'
+     C**********         EVAL      MsgIDArr(Idx) = 'BYM0037'                                MD044880
+     C                   EVAL      MsgIDArr(Idx) = '5049070'                                MD044880
      C                   EVAL      ReturnCode = 'Error'
       *
       ** Use the return code's value to set the field's OK flag
@@ -315,7 +323,8 @@
      C                   ADD       1             Idx
      C**********         EVAL      FldNameArr(Idx) = '#SLNTP'                                 LLN022
      C                   EVAL      FldNameArr(Idx) = 'LNTP'                                   LLN022
-     C                   EVAL      MsgIDArr(Idx) = 'BYM0038'
+     C**********         EVAL      MsgIDArr(Idx) = 'BYM0038'                                MD044880
+     C                   EVAL      MsgIDArr(Idx) = '5049071'                                MD044880
      C                   EVAL      ReturnCode = 'Error'
       ** Use the return code's value to set the field's OK flag
      C                   CALLB     'ZASETOKFLG'
@@ -331,7 +340,8 @@
      C                   ADD       1             Idx
      C**********         EVAL      FldNameArr(Idx) = '#SLNTP'                                 LLN022
      C                   EVAL      FldNameArr(Idx) = 'LNTP'                                   LLN022
-     C                   EVAL      MsgIDArr(Idx) = 'BYM0040'
+     C**********         EVAL      MsgIDArr(Idx) = 'BYM0040'                                MD044880
+     C                   EVAL      MsgIDArr(Idx) = '5049073'                                MD044880
      C                   EVAL      ReturnCode = 'Error'
       ** Use the return code's value to set the field's OK flag
      C                   CALLB     'ZASETOKFLG'
@@ -351,7 +361,8 @@
      C                   ADD       1             Idx
      C**********         EVAL      FldNameArr(Idx) = '#SLNTP'                                 LLN022
      C                   EVAL      FldNameArr(Idx) = 'LNTP'                                   LLN022
-     C                   EVAL      MsgIDArr(Idx) = 'BYM0039'
+     C**********         EVAL      MsgIDArr(Idx) = 'BYM0039'                                MD044880
+     C                   EVAL      MsgIDArr(Idx) = '5049072'                                MD044880
      C                   EVAL      ReturnCode = 'Error'
       ** Use the return code's value to set the field's OK flag
      C                   CALLB     'ZASETOKFLG'
@@ -379,7 +390,8 @@
      C                   ADD       1             Idx
      C**********         EVAL      FldNameArr(Idx) = '#SMDAT'                                 LLN022
      C                   EVAL      FldNameArr(Idx) = 'MDAT'                                   LLN022
-     C                   EVAL      MsgIDArr(Idx) = 'BYM0041'
+     C**********         EVAL      MsgIDArr(Idx) = 'BYM0041'                                MD044880
+     C                   EVAL      MsgIDArr(Idx) = '5049074'                                MD044880
      C                   EVAL      ReturnCode = 'Error'
       *
       ** Use the return code's value to set the field's OK flag
@@ -409,7 +421,8 @@
      C                   ADD       1             Idx
      C**********         EVAL      FldNameArr(Idx) = '#SLLIM'                                 LLN022
      C                   EVAL      FldNameArr(Idx) = 'LLIM'                                   LLN022
-     C                   EVAL      MsgIDArr(Idx) = 'BYM0042'
+     C**********         EVAL      MsgIDArr(Idx) = 'BYM0042'                                MD044880
+     C                   EVAL      MsgIDArr(Idx) = '5049075'                                MD044880
      C                   EVAL      ReturnCode = 'Error'
       *
       ** Use the return code's value to set the field's OK flag

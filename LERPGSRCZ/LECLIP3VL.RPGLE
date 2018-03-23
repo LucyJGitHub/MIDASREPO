@@ -65,7 +65,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CLE051 - Defaulting of Profit Centre                         *
+      *  CLE051 - Mandatory Profit Centre User Input                  *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE141 - Currency and Location Business Day Convention for   *
       *           Lending Transactions (Recompile)                    *

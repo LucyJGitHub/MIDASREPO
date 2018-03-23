@@ -41,7 +41,7 @@
      F*                                                                  *
      F********************************************************************
       *                                                               *
-      *  CLE051 - Defaulting of Profit Centre                         *
+      *  CLE051 - Mandatory Profit Centre User Input                  *
       *  MD046248 - Finastra Rebranding                               *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  CER045 - German Features - Reporting Bundesbank (Recompile)  *
@@ -267,7 +267,7 @@
      C                   ENDIF                                                  CSD009
      C/COPY WNCPYSRC,AOPRFMR0C1
       *                                                                                       CLE051
-      ** Check if CLE051 - Defaulting of Profit Centre is installed                           CLE051
+      ** Check if CLE051 - Mandatory Profit Centre User Input is installed                    CLE051
       *                                                                                       CLE051
      C                   CALL      'AOSARDR0'                                                 CLE051
      C                   PARM      *BLANKS       @RTCD                                        CLE051

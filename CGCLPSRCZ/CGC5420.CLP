@@ -9,7 +9,8 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD048610           Date 26Dec17              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /*       Prev Amend No. BUG14209           Date 25Jul07              */
@@ -29,6 +30,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD048610 - Correct selection on extracted date.             */
 /*       MD046248 - Finastra Rebranding                              */
 /*       BUG14209 - CGC5410 Failed during COB.                       */
 /*       245055 - Review 241824.                                     */
@@ -44,27 +46,27 @@
 /*       S01522 - User Defined Correspondence                        */
 /*                                                                   */
 /*********************************************************************/
- 
+
              PGM        PARM(&RPARM &RBCH &SELECT &OPTIONS)
- 
+
 /* Copyright Statement                                               */
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Finastra International Limited +
                           2001')
- 
- 
+
+
 /* Parameter received for RCF */
 /*           DCL        VAR(&RPARM)       TYPE(*CHAR) LEN(100)*/                          /*241824*/
 /*           DCL        VAR(&RPARM)       TYPE(*CHAR) LEN(115)*/                   /*241824 245055*/
              DCL        VAR(&RPARM)       TYPE(*CHAR) LEN(100)                            /*245055*/
              DCL        VAR(&RBCH)        TYPE(*CHAR) LEN(3)
- 
+
 /* General */
              DCL        VAR(&OPTIONS)     TYPE(*CHAR) LEN(256)
- 
+
 /* Used for query selection criteria */
              DCL        VAR(&SELECT)      TYPE(*CHAR) LEN(512)
- 
+
              DCL        VAR(&BRCH_SL)     TYPE(*CHAR) LEN(25)
              DCL        VAR(&CORR_SL)     TYPE(*CHAR) LEN(25)
              DCL        VAR(&PRIM_SL)     TYPE(*CHAR) LEN(25)
@@ -77,7 +79,7 @@
              DCL        VAR(&ATRM_SL)     TYPE(*CHAR) LEN(25)
              DCL        VAR(&EXDT_SL)     TYPE(*CHAR) LEN(25)                             /*241824*/
              DCL        VAR(&MODI_SL)     TYPE(*CHAR) LEN(25)                             /*241824*/
- 
+
 /* Used to break down &RPARM into individual selection criteria */
              DCL        VAR(&CORRESP)     TYPE(*CHAR) LEN(10)
              DCL        VAR(&PRIMARY)     TYPE(*CHAR) LEN(1)
@@ -100,17 +102,17 @@
 /************DCL        VAR(&EXDT) TYPE(*CHAR) LEN(7) */                           /*241824*245055*/
              DCL        VAR(&EXDT) TYPE(*CHAR) LEN(5)                                     /*245055*/
              DCL        VAR(&MODI) TYPE(*CHAR) LEN(2)                                     /*241824*/
- 
+
 /* Declare file SDBANKPD  */
              DCLF       FILE(SDBANKPD)
- 
+
 /* Global monitor message */
              MONMSG  MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO ABNORMAL)
- 
+
 /* Copyright Statement                                               */
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
- 
+
 /* Set-off Data Base Error Switches. */
              CHGJOB     SWS(XXXXXX00)
 /* */
@@ -118,7 +120,7 @@
 /* */
              OVRDBF     FILE(SDBANKPD) SHARE(*NO)
              RCVF
- 
+
 /* Retrieve constituent data from &RPARM                             */
              CHGVAR     VAR(&CORRESP ) VALUE(%SST(&RPARM 11 10))
              CHGVAR     VAR(&PRIMARY ) VALUE(%SST(&RPARM 21 1))
@@ -142,19 +144,19 @@
              CHGVAR     VAR(&EXDT) VALUE(%SST(&RPARM 54 5))                               /*245055*/
 /************CHGVAR     VAR(&MODI) VALUE(%SST(&RPARM 105 2))                       /*241824*245055*/
              CHGVAR     VAR(&MODI) VALUE(%SST(&RPARM 59 2))                               /*245055*/
- 
- 
+
+
 /* Set up Selection strings for OPNQRYF */
- 
- 
+
+
 /* Branch                                                            */
              IF        COND((&RBCH *NE '   ') *AND (&RBCH *NE 'ALL')) +
                                                         THEN(DO)
                   CHGVAR VAR(&BRCH_SL) VALUE('(DRBRCA *EQ "' *TCAT +
                                  &RBCH *TCAT '")')
                   CHGVAR VAR(&SELECT) VALUE(&BRCH_SL)
-                  ENDDO
- 
+             ENDDO
+
 /* Correspondent                                                     */
 /* If &COT is 'C' then &CORRESP is the correspondent                 */
 /* If &COT is 'T' then &CORRESP is the correspondent type            */
@@ -164,70 +166,70 @@
              IF         COND(&CORRESP *NE '          ') THEN(DO)
                   CHGVAR VAR(&CORR_SL) VALUE('(DRDCOR *EQ "' *TCAT +
                                  &CORRESP *TCAT '")')
- 
+
                   IF         COND(&SELECT *EQ ' ') THEN(DO)
                       CHGVAR VAR(&SELECT) VALUE(&CORR_SL)
-                     ENDDO
- 
+                  ENDDO
+
                   ELSE CMD(DO)
                      CHGVAR VAR(&SELECT) +
                            VALUE(&SELECT *TCAT ' & ' *CAT &CORR_SL)
-                     ENDDO
                   ENDDO
-             ENDDO      /* 086662 */
- 
+             ENDDO
+             ENDDO       /* 086662 */
+
 /* Primary Only?                                                     */
              IF         COND(&PRIMARY *EQ 'Y') THEN(DO)
 /**************** CHGVAR VAR(&PRIM_SL) + ***************************** 083971*/
 /*********************** VALUE('(DRPCOR *EQ "          ")') ********** 083971*/
              CHGVAR     VAR(&PRIM_SL) VALUE('(DRPCOR *EQ DRDCOR)')   /*083971*/
- 
+
                   IF         COND(&SELECT *EQ ' ') THEN(DO)
                      CHGVAR VAR(&SELECT) VALUE(&PRIM_SL)
-                     ENDDO
- 
+                  ENDDO
+
                   ELSE CMD(DO)
                      CHGVAR VAR(&SELECT) +
                            VALUE(&SELECT *TCAT ' & ' *CAT &PRIM_SL)
-                     ENDDO
                   ENDDO
- 
- 
+             ENDDO
+
+
 /* Print Type                                                        */
              IF         COND(&PRTTYPE *NE '          ') THEN(DO)
                   CHGVAR VAR(&PTYP_SL) VALUE('(DRPTYP *EQ "' *TCAT +
                                  &PRTTYPE *TCAT '")')
- 
+
                   IF         COND(&SELECT *EQ ' ') THEN(DO)
                      CHGVAR VAR(&SELECT) VALUE(&PTYP_SL)
-                     ENDDO
- 
+                  ENDDO
+
                   ELSE CMD(DO)
                      CHGVAR VAR(&SELECT) +
                            VALUE(&SELECT *TCAT ' & ' *CAT &PTYP_SL)
-                     ENDDO
                   ENDDO
- 
- 
+             ENDDO
+
+
 /* Sub-type                                                          */
              IF         COND((&SUBTYPE *NE '          ') *AND +
                           (&PRTTYPE *NE '          ')) THEN(DO)
                   CHGVAR VAR(&PSTP_SL) VALUE('(DRPSTP *EQ "' *TCAT +
                                  &SUBTYPE *TCAT '")')
- 
+
                   IF         COND(&SELECT *EQ ' ') THEN(DO)
                      CHGVAR VAR(&SELECT) VALUE(&PSTP_SL)
-                     ENDDO
- 
+                  ENDDO
+
                   ELSE CMD(DO)
                      CHGVAR VAR(&SELECT) +
                            VALUE(&SELECT *TCAT ' & ' *CAT &PSTP_SL)
-                     ENDDO
                   ENDDO
- 
- 
+             ENDDO
+
+
 /* From date                                                         */
- 
+
              IF         COND(&FROMDATEA *NE '00000') THEN(DO)
 /* If '0000J' then default to run date from SDBANKPD */
              IF         COND(&FROMDATEA *NE '0000J') THEN(DO)
@@ -239,18 +241,18 @@
                   CHGVAR VAR(&FDAT_SL) VALUE('(DRPRTD *GE ' *CAT +
                                 &FROMDATEA *TCAT ')')
              ENDDO
- 
+
                   IF         COND(&SELECT *EQ ' ') THEN(DO)
                      CHGVAR VAR(&SELECT) VALUE(&FDAT_SL)
-                     ENDDO
- 
+                  ENDDO
+
                   ELSE CMD(DO)
                      CHGVAR VAR(&SELECT) +
                            VALUE(&SELECT *TCAT ' *AND ' *CAT &FDAT_SL)
-                     ENDDO
                   ENDDO
- 
- 
+             ENDDO
+
+
 /* To date                                                         */
              IF         COND(&TODATEA *NE '00000') THEN(DO)
 /* If '0000J' then default to run date from SDBANKPD */
@@ -260,96 +262,96 @@
              IF         COND(&TODATEA *NE '0000K') THEN(DO)           /*089165*/
                   CHGVAR VAR(&TDAT_SL) VALUE('(DRPRTD *LE ' *CAT +
                                 &TODATEA *TCAT ')')                   /*089166*/
-             ENDDO                                                    /*089165*/
+             ENDDO       /*089165*/
              ELSE       CMD(DO)                                       /*089165*/
                   CHGVAR VAR(&TODATEA) VALUE(&BJRDNB)                 /*089165*/
                   CHGVAR VAR(&TDAT_SL) VALUE('(DRPRTD *LT ' *CAT +
                                 &TODATEA *TCAT ')')                   /*089165*/
-             ENDDO                                                    /*089165*/
+             ENDDO       /*089165*/
              ENDDO
              ELSE       CMD(DO)
                   CHGVAR VAR(&TODATEA) VALUE(&BJRDNB)
                   CHGVAR VAR(&TDAT_SL) VALUE('(DRPRTD *LE ' *CAT +
                                 &TODATEA *TCAT ')')
              ENDDO
- 
+
                   IF         COND(&SELECT *EQ ' ') THEN(DO)
                      CHGVAR VAR(&SELECT) VALUE(&TDAT_SL)
-                     ENDDO
- 
+                  ENDDO
+
                   ELSE CMD(DO)
                      CHGVAR VAR(&SELECT) +
                            VALUE(&SELECT *TCAT ' & ' *CAT &TDAT_SL)
-                     ENDDO
                   ENDDO
- 
- 
+             ENDDO
+
+
 /* Language ID                                                       */
              IF         COND(&LANGUAGE *NE '  ') THEN(DO)
                   CHGVAR VAR(&LGID_SL) VALUE('(DRLGID *EQ "' *TCAT +
                                 &LANGUAGE *TCAT '")')
- 
+
                   IF         COND(&SELECT *EQ ' ') THEN(DO)
                      CHGVAR VAR(&SELECT) VALUE(&LGID_SL)
-                     ENDDO
- 
+                  ENDDO
+
                   ELSE CMD(DO)
                      CHGVAR VAR(&SELECT) +
                            VALUE(&SELECT *TCAT ' & ' *CAT &LGID_SL)
-                     ENDDO
                   ENDDO
- 
- 
+             ENDDO
+
+
 /* Status                                                            */
              IF         COND(&STATUS1 *NE '    ') THEN(DO)
                   CHGVAR VAR(&STTS_SL) VALUE('(DRISTS *EQ %VALUES("' +
                                  *TCAT &STATUS1)
- 
+
                   IF         COND(&STATUS2 *NE '    ') THEN( +
                         CHGVAR VAR(&STTS_SL) VALUE(&STTS_SL *TCAT +
                                  '" "' *TCAT &STATUS2))
- 
+
                   IF         COND(&STATUS3 *NE '    ') THEN( +
                         CHGVAR VAR(&STTS_SL) VALUE(&STTS_SL *TCAT +
                                  '" "' *TCAT &STATUS3))
- 
+
                   IF         COND(&STATUS4 *NE '    ') THEN( +
                         CHGVAR VAR(&STTS_SL) VALUE(&STTS_SL *TCAT +
                                  '" "' *TCAT &STATUS4))
- 
+
                   IF         COND(&STATUS5 *NE '    ') THEN( +
                         CHGVAR VAR(&STTS_SL) VALUE(&STTS_SL *TCAT +
                                  '" "' *TCAT &STATUS5))
- 
+
                   CHGVAR VAR(&STTS_SL) VALUE(&STTS_SL *TCAT '"))')
- 
- 
+
+
                   IF         COND(&SELECT *EQ ' ') THEN(DO)
                      CHGVAR VAR(&SELECT) VALUE(&STTS_SL)
-                     ENDDO
- 
+                  ENDDO
+
                   ELSE CMD(DO)
                      CHGVAR VAR(&SELECT) +
                            VALUE(&SELECT *TCAT ' & ' *CAT &STTS_SL)
-                     ENDDO
                   ENDDO
- 
- 
+             ENDDO
+
+
 /* Auto-Transmission Indicator                                       */
              IF         COND(&ATRM     *NE '  ') THEN(DO)
                   CHGVAR VAR(&ATRM_SL) VALUE('(DRATRM *EQ "' *TCAT +
                                 &ATRM *TCAT '")')
- 
+
                   IF         COND(&SELECT *EQ ' ') THEN(DO)
                      CHGVAR VAR(&SELECT) VALUE(&ATRM_SL)
-                     ENDDO
- 
+                  ENDDO
+
                   ELSE CMD(DO)
                      CHGVAR VAR(&SELECT) +
                            VALUE(&SELECT *TCAT ' & ' *CAT &ATRM_SL)
-                     ENDDO
                   ENDDO
- 
+             ENDDO
+
 /* Extract date                                                      */                   /*241824*/
 /************IF         COND(&EXDT *NE '       ') THEN(DO) */                      /*241824*245055*/
 /************IF         COND(%SST(&EXDT 1 1) *EQ '0') THEN(CHGVAR + */             /*241824*245055*/
@@ -362,24 +364,28 @@
                           '       ') THEN(DO)                                           /*BUG14209*/
 /* If '0000J' then default to run date from SDBANKPD */                                   /*245055*/
              IF         COND(&EXDT *NE '0000J') THEN(DO)                                  /*245055*/
-                  CHGVAR VAR(&EXDT_SL) VALUE('(DRRDNB *GE ' *CAT +
-                                &EXDT *TCAT ')')                                          /*245055*/
-             ENDDO                                                                        /*245055*/
+/*********        CHGVAR VAR(&EXDT_SL) VALUE('(DRRDNB *GE ' *CAT +
+                                &EXDT *TCAT ')') */                              /*245055*MD048610*/
+                  CHGVAR VAR(&EXDT_SL) VALUE('(DRRDNB *EQ ' *CAT +
+                                &EXDT *TCAT ')')                                        /*MD048610*/
+             ENDDO       /*245055*/
              ELSE       CMD(DO)                                                           /*245055*/
                   CHGVAR VAR(&EXDT) VALUE(&BJRDNB)                                        /*245055*/
-                  CHGVAR VAR(&EXDT_SL) VALUE('(DRRDNB *GE ' *CAT +
-                                &EXDT *TCAT ')')                                          /*245055*/
-             ENDDO                                                                        /*245055*/
+/*********        CHGVAR VAR(&EXDT_SL) VALUE('(DRRDNB *GE ' *CAT +
+                                &EXDT *TCAT ')') */                              /*245055*MD048610*/
+                  CHGVAR VAR(&EXDT_SL) VALUE('(DRRDNB *EQ ' *CAT +
+                                &EXDT *TCAT ')')                                        /*MD048610*/
+             ENDDO       /*245055*/
                                                                                           /*245055*/
                   IF         COND(&SELECT *EQ ' ') THEN(DO)                               /*241824*/
                      CHGVAR VAR(&SELECT) VALUE(&EXDT_SL)                                  /*241824*/
-                     ENDDO                                                                /*241824*/
+                  ENDDO       /*241824*/
                                                                                           /*241824*/
                   ELSE CMD(DO)                                                            /*241824*/
                      CHGVAR VAR(&SELECT) +
                            VALUE(&SELECT *TCAT ' & ' *CAT &EXDT_SL)                       /*241824*/
-                     ENDDO                                                                /*241824*/
-                  ENDDO                                                                   /*241824*/
+                  ENDDO       /*241824*/
+             ENDDO       /*241824*/
                                                                                           /*241824*/
 /* Module Id                                                         */                   /*241824*/
              IF         COND(&MODI *NE '       ') THEN(DO)                                /*241824*/
@@ -388,46 +394,47 @@
                                                                                           /*241824*/
                   IF         COND(&SELECT *EQ ' ') THEN(DO)                               /*241824*/
                      CHGVAR VAR(&SELECT) VALUE(&MODI_SL)                                  /*241824*/
-                     ENDDO                                                                /*241824*/
+                  ENDDO       /*241824*/
                                                                                           /*241824*/
                   ELSE CMD(DO)                                                            /*241824*/
                      CHGVAR VAR(&SELECT) +
                            VALUE(&SELECT *TCAT ' & ' *CAT &MODI_SL)                       /*241824*/
-                     ENDDO                                                                /*241824*/
-                  ENDDO                                                                   /*241824*/
+                  ENDDO       /*241824*/
+             ENDDO       /*241824*/
                                                                                           /*241824*/
- 
+
 /* Override database file CGUDCRPD and open query file */
              IF         COND(&SELECT *EQ ' ') THEN(DO)
                 CHGVAR VAR(&SELECT) VALUE('*ALL')
-                ENDDO
- 
- 
+             ENDDO
+
+
 /* Terminate Program normally                                        */
              GOTO       CMDLBL(ENDCLPGM)
- 
- 
+
+
 /**/
 /* Abnormal termination processing                       */
 /**/
 ABNORMAL:
              CHGJOB     SWS(XXXXXX11)
                  MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
- 
+
              DMPCLPGM
                  MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
- 
+
              SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
                           CGC5420 ended abnormally') MSGTYPE(*ESCAPE)
                  MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
- 
- 
+
+
  ENDCLPGM:
              RCLRSC     LVL(*CALLER)
                  MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
- 
+
              CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
                  MONMSG     MSGID(CPF0000 RPG0000 MCH0000)
- 
+
              ENDPGM
+

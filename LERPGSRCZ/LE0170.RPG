@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. CLE168             Date 26Feb18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 AR804792           Date 05Sep11               *
       *                 AR820566           Date 25Aug11               *
@@ -113,6 +114,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE168 - Allow Debit of Blocked Account                      *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  CLE148 - Alpha Loan Reference                                *
@@ -287,6 +289,9 @@
       *                                                                                       CLE106
       *                                                                   S01408
      F/COPY WNCPYSRC,LE0170FFP1                                           S01408
+      *                                                                                       CLE168
+     FLEFCLYPPIF  E           K        DISK                                                   CLE168
+      *                                                                                       CLE168
       *                                                                   S01408
       /EJECT
      F*****************************************************************
@@ -437,6 +442,7 @@
 0093 I                                       13  15 FACA
 0094 I                                       16  17 FACB
 0095 I                                       13  17 FAC
+     I                                      641 641 BNKRT                                     CLE168
 0090 I        NS  03   1 CT   2 CF                                        CLE004
 0097 I*
 0098 I*****CUSTOMER*SHORTNAMES*FILE*-*DETAIL*RECORD.                      S01194
@@ -1384,6 +1390,34 @@
      C*                                                                   S01117
      C           *NAMVAR   DEFN RUNDAT    RUNDT                           S01117
      C                     IN   RUNDT                                     S01117
+      *                                                                                       CLE168
+      ** Check if CLE168 is switched on                                                       CLE168
+      *                                                                                       CLE168
+     C                     MOVE *BLANK    CLE168  1                                           CLE168
+     C                     MOVE *OFF      *IN89                                               CLE168
+     C                     CALL 'AOSARDR0'                                                    CLE168
+     C                     PARM *BLANKS   PRTCD                                               CLE168
+     C                     PARM '*VERIFY' POPTN                                               CLE168
+     C                     PARM 'CLE168'  PSARD                                               CLE168
+     C           SCSARD    PARM SCSARD    DSFDY                                               CLE168
+      *                                                                                       CLE168
+     C           PRTCD     IFEQ *BLANKS                                                       CLE168
+     C                     MOVE 'Y'       CLE168                                              CLE168
+     C                     MOVE *ON       *IN89                                               CLE168
+     C                     ELSE                                                               CLE168
+     C           PRTCD     IFNE '*NRF   '                                                     CLE168
+     C                     MOVE '912'     DBASE                                               CLE168
+     C                     MOVEL'CLE168  'DBKEY                                               CLE168
+     C                     MOVEL'SCSARDPD'DBFILE                                              CLE168
+     C                     EXSR *PSSR                                                         CLE168
+     C                     ENDIF                                                              CLE168
+     C                     ENDIF                                                              CLE168
+      *                                                                                       CLE168
+     C           KBNKRT    KLIST                                                              CLE168
+     C                     KFLD           CNUM                                                CLE168
+     C                     KFLD           FACT                                                CLE168
+     C                     KFLD           FCNO                                                CLE168
+      *                                                                                       CLE168
       *                                                                   CLE004
       ** Check if SAR CLE004 is present                                   CLE004
       *                                                                   CLE004
@@ -2396,6 +2430,14 @@
      C/COPY WNCPYSRC,LEH01255
 0683 C           KEY1      CHAINFCLTY                40
      C/COPY WNCPYSRC,LEH01256
+      *                                                                                       CLE168
+     C           CLE168    IFEQ 'Y'                                                           CLE168
+     C           KBNKRT    CHAINLEFCLYPP             96                                       CLE168
+     C           *IN96     IFEQ '0'                                                           CLE168
+     C                     MOVE XBKRPT    BNKRT                                               CLE168
+     C                     ENDIF                                                              CLE168
+     C                     ENDIF                                                              CLE168
+      *                                                                                       CLE168
 0684 C                     ENDSR
 0687 C*
 0688 C********** CHCLI     BEGSR                           ** SR-CHCLI *  S01194
@@ -3700,6 +3742,7 @@
      O                 87      DAT,12   633                                                 AR796118
      O                 87      DAT,13   640                                                 AR796118
      O/COPY WNCPYSRC,LE0170O002
+     O                         BNKRT    641                                                   CLE168
      OLE0170FMD        03N82N40                                           CLE004
      O       AND      NLR                                                 CLE004
      O       OR        06 40NLR                                           CLE004
@@ -3927,7 +3970,7 @@ JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
 SHORTNAME NOT ON FILE
 CUSTOMER NOT ON FILE
 FACILITY NOT ON FILE
- 
+
 USER IS NOT AUTHORISED TO ANY BOOKING BRANCHES
 USER IS NOT AUTHORISED TO THE BOOKING BRANCH
 FUNCTION KEY INVALID FOR NON-SYNDICATED FACILITY                                  191106

@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD049007           Date 15Dec17               *
+      *  Last Amend No. CLE168             Date 26Feb18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD049007           Date 15Dec17               *
       *                 MD032213           Date 06Aug15               *
       *                 CLE154             Date 02Aug12               *
       *                 CDL094             Date 01Sep14               *
@@ -63,9 +64,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE168 - Allow Debit of Blocked Account                      *
       *  MD046248 - Finastra Rebranding                               *
       *  MD049007 - Repayment schedules cannot be completed when      *
-      *             CLE034 is ON and Settlement C is defined          *      
+      *             CLE034 is ON and Settlement C is defined          *
       *  MD032213 - SOAP RPSC UPDATE unexpected error                 *
       *  CLE154 - Loan Repayment Schedule Enhancement (Recompile)     *
       *  CDL094 - Enhance Receive Settlement Instructions             *
@@ -131,14 +133,14 @@
       ** Î =======                              Î
       ** +--------------------------------------+
       *****************************************************************
- 
+
      FZAFLDNPD  IT   F   15        DISK    INFSR(*PSSR)
      FCLOAN     IF   E           K DISK                                                       CLE036
      F                                     PREFIX(CL)                                         CLE036
      F                                     IGNORE(CLOANHHF)                                   CLE036
      F                                     IGNORE(CLOANCKF)                                   CLE036
      F                                     IGNORE(CLOANZ1F)                                   CLE036
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** Î Automatically included D-specs       Î
@@ -157,58 +159,58 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       ** The following /COPY line includes definitions for the above fields
       ** as #ProcPgm, #ProcMod and #ProcName.  They are based on the
       ** corresponding fields in the PSDS /COPY member, so that member
       ** must be included where this one is used.
- 
+
      D/COPY ZACPYSRC,PROCPARMS
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for arrays
       ** specific to API *CTL modules.
      D/COPY ZACPYSRC,APICTLARR
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** Î End of automatically included D-specsÎ
       ** Î =====================================Î
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** Î Manually included D-specs            Î
       ** Î =========================            Î
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** Î Named constants                      Î
       ** Î ===============                      Î
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** Î Arrays and Data Structures           Î
       ** Î ==========================           Î
       ** +--------------------------------------+
- 
+
      D WArrCmtJob      S             10A   DIM(10)                                            CSC022
       ** Array for Commitment Job Names                                                       CSC022
                                                                                               CSC022
@@ -219,21 +221,21 @@
                                                                                               CSC022
       ** Incoming Header
      D HeadIn        E DS                  EXTNAME(APHEADPD)
- 
+
       ** Incoming Transaction
      D TranInRPSC    E DS                  EXTNAME(LERPSCPD)
                                                                                               CAP086
      D InfData       E DS                  EXTNAME(LELEIFPD)                                  CAP086
      D                                     PREFIX(IF_)                                        CAP086
       ** Interface Data Format Definition File format                                         CAP086
- 
+
       ** Incoming Transaction 2                                                               CLE106
      D TranInRPS2    E DS                  EXTNAME(LERPS2PD)                                  CLE106
                                                                                               CLE106
       ** Repayment schedule Extra Data - File (D/B) format
      D***ExtData*******E DS                  EXTNAME(LECLEXPD)                                246768
      D ExtData       E DS                  EXTNAME(LERPEXPD)                                  246768
- 
+
       ** Valid repayment schedules layout
      D ValidRPSC     E DS                  EXTNAME(LEVRPSCPD)
      D                                     PREFIX(V_)
@@ -243,40 +245,43 @@
      D  ValidPAY             404    948                                                       CGL029
      D  ValidRECEx          1195   1212                                                       CGL029
      D  ValidPAYEx          1213   1230                                                       CGL029
- 
+
       ** (Current) repayment schedule in file Format
      D RPSCFilFmt    E DS                  EXTNAME(LOAMSDK)
      D                                     PREFIX(RP_)
- 
+
       ** (Current) Transaction in Screen Format - Main Details
      D CurTrRPSC     E DS                  EXTNAME(LERPSCPD)
      D                                     PREFIX(@)
- 
+
       ** Error indicators
      D OKTrRPSC      E DS                  EXTNAME(LEERPSCPD)
- 
+
       ** Pay Settlement Instructions - Input
      D InPaySttmt    E DS                  EXTNAME(SDESSPPD)
- 
+
       ** Receive Settlement Instructions - Input
      D InRecSttmt    E DS                  EXTNAME(SDESSRPD)
- 
+
       ** FRA/IRS Settlement Instructions - Input
      D InFRASttmt    E DS                  EXTNAME(SDESSFPD)
- 
+
       ** Pay Settlement Instructions - File (D/B) format
      D DBPaySttmt    E DS                  EXTNAME(SDESFPPD)
      D***FLPAY**                1    559                                                      CGL029
      D  FLPAY                 21    565                                                       CGL029
- 
+
       ** Receive Settlement Instructions - File (D/B) format
      D DBRecSttmt    E DS                  EXTNAME(SDESFRPD)
      D***FLREC**                1     69                                                      CGL029
      D  FLREC                 21     75                                                       CGL029
- 
+
       ** FRA/IRS Settlement Instructions - File (D/B) format
      D DBFRASttmt    E DS                  EXTNAME(SDESFFPD)
- 
+      *                                                                                       CLE168
+     D LEFCLY        E DS                  EXTNAME(LEFCLYPP) DTAARA                           CLE168
+     D                                     PREFIX(A_)                                         CLE168
+      *                                                                                       CLE168
       ** Old settlement details
      D  OldStsDS       DS
      D  OSETP                  1      2  0
@@ -296,7 +301,7 @@
      D  OSPI2                 71    100                                                       CGL029
      D  OSPI3                101    130                                                       CGL029
      D  OLDSTS                 1    130                                                       CGL029
- 
+
       ** New settlement details
      D  NewStsDS       DS
      D  WSETP                  1      2
@@ -316,21 +321,21 @@
      D  WSPI2                 71    100                                                       CGL029
      D  WSPI3                101    130                                                       CGL029
      D  NEWSTS                 1    130                                                       CGL029
- 
+
       ** New settlement details
      D  PasDtaDS       DS           256
      D  WSCCY                  1      3
      D  WOBBR                  4      6
      D  WOSBR                  7      9
      D  SAVLC                 10     20
- 
+
       ** Last change data - LOAMS
      D                 DS
      D  WLCD                   1      5  0
      D  WCHTP                  6      6
      D  WTNLU                  7     11  0
      D  WLSTC                  1     11
- 
+
       ** Flags to indicate whether Pay Settlement instruction fields
       ** are valid
      D OKPayInsDS      DS
@@ -364,7 +369,7 @@
      D  DDPmacOK                      1A   INZ('Y')                                           CLE031
      D  DDPexrOK                      1A   INZ('Y')                                           CLE031
      D  DDPexiOK                      1A   INZ('Y')                                           CLE031
- 
+
       ** Flags to indicate whether Receive Settlement instruction fields
       ** are valid
      D OKRecInsDS      DS
@@ -378,7 +383,7 @@
      D  DDRmacOK                      1A   INZ('Y')                                           CLE031
      D  DDRexrOK                      1A   INZ('Y')                                           CLE031
      D  DDRexiOK                      1A   INZ('Y')                                           CLE031
- 
+
       ** Flags to indicate whether FRA/IRS instruction fields are valid
      D OKFRAInsDS      DS
      D  DDDsr1OK                      1A   INZ('Y')
@@ -403,20 +408,20 @@
      D  DDAgtyOK                      1A   INZ('Y')
      D  DDAgdtOK                      1A   INZ('Y')
      D  DDAgvvOK                      1A   INZ('Y')
- 
+
       **
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** EXTERNAL DS FOR SAR DETAILS
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
      D SCA_LCD       E                     EXTFLD(LCD)
- 
+
       ** First DS for Access programs - short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Second DS for Access programs - long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)                                  CSF011
      D WCustomer       S             10                                                       CSF011
      D C#KYST          S              7                                                       CSF011
@@ -427,16 +432,16 @@
       ** Î Declared variables                   Î
       ** Î ==================                   Î
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc in Amend validation
      D AmIdx           S              3P 0
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of warning message ids etc
      D WIdx            S              3P 0
- 
+
       ** Fields (500A) to receive the incoming transaction
      D Trans5001       S            500A
                                                                                               CAP086
@@ -444,13 +449,13 @@
      D InfData500      S            500A                                                      CAP086
                                                                                               CAP086
      D Trans5002       S            500A                                                      CLE106
- 
+
       ** Field (500A) to receive the incoming Extra Data
      D ExtData500      S            500A
- 
+
       ** Parameters for LERPSCRTV
      D ModeofOp        S              6
- 
+
       ** Parameters for ZASETINDFT
      D ##CALP          S              4
      D ##PCCY          S              3
@@ -465,31 +470,31 @@
      D Blank2          S              2
      D BlankSTYP       S              2A                                                      CSD095
      D BlankBRCA       S              3A                                                      CSD095
- 
+
       ** Parameters for LERPSC1VL
      D PTypFilCLOAN    S              2
      D BrcaFilCLOAN    S              3                                                      BUG4960
- 
+
       ** Parameters for ZDATE1
      D DATEA           S              6
      D ZDAYNO          S              5  0
      D ErrorFlag       S              1
- 
+
       ** Parameters for ZASETINVAL
      D ##BRCA          S              3
      D ##DATR          S              5  0
      D ##DATP          S              5  0
      D ##ACTN          S              1
      D ##VALITER       S              3
- 
+
       ** Parameters for LERPSCAMD
      D ResetErrs       S              1
- 
+
       ** Parameters for *ENTRY
      D UpdateYN        S              1
      D Buffer          S           6000
      D APIRetc         S              1
- 
+
       ** Switchable features
      D CLE106          S              1                                                       CLE106
      D CLE034          S              1A                                                      CLE034
@@ -530,13 +535,13 @@
       ** Î End of D-specs                       Î
       ** Î ==============                       Î
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** Î Hook for non-core D-specs (all types)  Î
       ** Î also any I-specs (if necessary)        Î
       ** Î =====================================  Î
       ** +----------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -546,8 +551,8 @@
       ** Î executed at program activation.                                Î
       ** Î                                                                Î
       ** +----------------------------------------------------------------+
- 
- 
+
+
       * Incoming transaction is broken into 500A fields, so that a common CL
       * can be used between this module and the one that read the MQ queue.
       * This module needs to break these 500A fields by loading them into
@@ -559,28 +564,28 @@
                                                                                             BUG13350
       ***Set*up*Amendment*Type*field*to*be*'RE'************************            BUG13350 BUG13710
      C**********         EVAL      DDATYP = 'RE'                                   BUG13350 BUG13710
- 
+
       ** Reset variables gradually updated
      C                   EXSR      RESETCYCLE
- 
+
       ** Validate Action Code
      C                   EXSR      ValidateAc
- 
+
       ** If error in validation of action code, fail this input
      C                   IF        Idx <> 0
      C                   GOTO      INVALID
      C                   ENDIF
- 
+
       ** Processing depends upon Action Code
      C                   SELECT
- 
+
       ** Processing for Inserts
      C                   WHEN         DDACTN = 'I'
      C                   IF        CLE036 = 'Y'                                               CLE106
      C                   EXSR      SRCnvAmt                                                   CLE106
      C                   ENDIF                                                                CLE106
      C                   EXSR      ValidateTr
- 
+
       ** If error in validation, fail this input
      C                   IF        Idx <> 0
      C                   GOTO      INVALID
@@ -622,7 +627,7 @@
      C**********                   PPayParm <> *BLANK                              AR723989 MD021356
      C**********         MOVEL     PPayParm      InPaySttmt                        AR723989 MD021356
      C**********         ENDIF                                                     AR723989 MD021356
- 
+
      C                   EXSR      DftSettmts
       *****************************************************************            AR723989 MD021356
       ***Blank*out*invalid*settlement*side.****************************            AR723989 MD021356
@@ -634,18 +639,18 @@
      C**********         ENDIF                                                     AR723989 MD021356
       *****************************************************************            AR723989 MD021356
      C                   EXSR      ValidateSt
- 
+
       ** Processing for Amends or Changes
      C                   WHEN      DDACTN = 'A' OR DDACTN = 'R'
      C                   EXSR      SetupAmd
      C                   EXSR      SRCnvAmt                                                   CLE106
      C                   EXSR      ValidateTr
- 
+
       ** If error in validation, fail this input
      C                   IF        Idx <> 0
      C                   GOTO      INVALID
      C                   ENDIF
- 
+
      C                   EXSR      ValidateSt
       *                                                                                    MD025105B
       ** No need for validation of amendment for action 'R' since                          MD025105B
@@ -659,11 +664,11 @@
       *  Processing for Authorises                                                           BUG4482
      C                   EXSR      ValidateTr                                                BUG4482
      C                   EXSR      ValidateSt                                                BUG4482
- 
+
      C                   ENDSL
- 
+
      C     INVALID       TAG
- 
+
       ** Populate Customer Name on Input fields                                               CSF011
                                                                                               CSF011
      C                   EXSR      SrCustActN                                                 CSF011
@@ -672,18 +677,18 @@
      C                   IF        UpdateYN = 'Y' AND Idx = 0
      C                   EXSR      WriteToDB
      C                   ENDIF
- 
+
      C                   SETON                                        LR
- 
+
       ** Remerge buffer with all relevant data structures
      C**********         EVAL      Buffer = TranInRPSC + InRecSttmt                           CLE106
      C**********                           + InPaySttmt + ExtData                             CAP086
      C                   EVAL      Buffer = TranInRPSC + TranInRPS2                           CLE106
      C                                     + InRecSttmt                                       CLE106
      C                                     + InPaySttmt + InfData + ExtData                   CAP086
- 
+
      C                   RETURN
- 
+
       ********************************************************************
       /EJECT
       *****************************************************************
@@ -693,67 +698,67 @@
       *                                                               *
       *****************************************************************
      C     ValidateAc    BEGSR
- 
+
       ** Validate action code versus transaction IDs supplied
       ** The repayment sch. in file format from the LE database is retrieved
       ** as well.
      C                   CALLB     'LERPSCRTV'
- 
+
       ** Inputs
- 
+
       ** Return code
      C                   PARM      *BLANK        ReturnCode
- 
+
       ** Mode = '*FRONT' (FRONT OFFICE TRANSACTION INTERFACE)
       ** Mode = '      ' (NOT FRONT OFFICE TRANSACTION INTERFACE)
      C                   PARM      *BLANKS       ModeofOp
- 
+
       ** Response mode
      C                   PARM      'S'           APRESPMODE
- 
+
       ** Action Code
      C                   PARM                    DDACTN
- 
+
       ** Front Office Transaction ID
      C                   PARM                    APFOTranID
- 
+
       ** (Midas) Transaction Number
      C                   PARM                    DDLNRF
- 
+
       **(Midas) Sequence no.
      C                   PARM                    DDSEQN
- 
+
       ** (Midas) Value date
      C                   PARM                    DDVDAT
- 
+
       ** Outputs
- 
+
       ** (Current) Repayment sch. in file format
      C                   PARM                    RPSCFilFmt
- 
+
       ** OK - Action code
      C                   PARM                    DDActnOK
- 
+
       ** OK - Transaction Number
      C                   PARM                    DDLnrfOK
- 
+
       ** OK - Sequence no.
      C                   PARM      *BLANK        DDSeqnOK
- 
+
       ** OK - Value Date
      C                   PARM      *BLANK        DDVdatOK
- 
+
       ** Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIdArr
      C                   PARM                    MsgDtaArr
- 
+
       ** Array index (3P0) from/to caller
      C                   PARM                    Idx
      C                   PARM                    PRcvParm                                     TDA070
      C                   PARM                    PPayParm                                    BUG8529
      C                   PARM                    WrkLnDetails                               MD021356
- 
+
       ** Save the settlement details for update if not insert
      C                   IF        DDACTN <> 'I'
      C                   EVAL      OSETP = RP_SETP
@@ -763,7 +768,7 @@
      C                   EVAL      OSPI1 = RP_SPI1
      C                   EVAL      OSPI2 = RP_SPI2
      C                   EVAL      OSPI3 = RP_SPI3
- 
+
       ** Save the last update for test
      C                   EVAL      WLCD = RP_LCD
      C                   EVAL      WCHTP = RP_CHTP
@@ -771,7 +776,7 @@
      C                   EVAL      SAVLC = WLSTC
      C                   EVAL      ValidRpSc = RpScFilFmt
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -781,7 +786,7 @@
       *                                                               *
       *****************************************************************
      C     DftSettmts    BEGSR
- 
+
       * If ANY of the Settlements fields have been entered, bypass this
       * routine.
       * Otherwise, use modules which will use Standard Settlement
@@ -801,7 +806,7 @@
      C                   ELSE                                                               MD021356
      C                   MOVEL     DDCUST        ##CSNM                                     MD021356
      C                   ENDIF                                                              MD021356
- 
+
      C                   CALLB     'ZASETINDFT'
       ** Output
       ** Calling function type
@@ -834,7 +839,7 @@
                                                                                               CSD095
       ** Branch                                                                               CSD095
      C                   PARM      *BLANK        BlankBRCA                                    CSD095
- 
+
       ** Return
       ** Defaulted Payment Settlement Instruction in file format
      C                   PARM                    DBPaySttmt
@@ -883,26 +888,26 @@
      C                   EVAL      FLIC72     = WrkLnICCY                                   MD021356
                                                                                             MD021356
      C                   ENDIF                                                              MD021356
- 
+
       ** The defaulted instructions are in file format, but the
       ** Settlements validation requires that they are in the input format.
       ** Therefore run them through a conversion module.
      C                   CALLB     'ZASETINCVT'
- 
+
       ** Defaulted Settlement Instructions in file format
      C                   PARM                    DBPaySttmt
      C                   PARM                    DBRecSttmt
      C                   PARM                    DBFRASttmt
- 
+
       ** Defaulted Settlement Instruction in input format
      C                   PARM                    InPaySttmt
      C                   PARM                    InRecSttmt
      C                   PARM                    InFRASttmt
      C                   PARM      DDCURR        #TRCCY                                      CSF011A
      C                   PARM      DDCURR        #TPCCY                                      CSF011A
- 
+
      C                   ENDIF
- 
+
       ** Clear settlement instructions depending on loan processing                           CLE106
       ** type - rules are as follows :-                                                       CLE106
       ** Processing types 61/62/63/64/65/68/70/71 - s/be Receipt only                         CLE106
@@ -957,23 +962,23 @@
       *                                                               *
       *****************************************************************
      C     SetupAmd      BEGSR
- 
+
       ** For Amends, convert the repayment sch. to screen format
      C                   CALLB     'LERPSCCVT'
- 
+
       ** Inputs
- 
+
       ** Return Code
      C                   PARM      *BLANKS       RetCodeIn
- 
+
       ** Repayment schedule in File Format
      C                   PARM                    RPSCFilFmt
- 
+
       ** Output Parameters
- 
+
       ** Repayment schedule Details Screen Format
      C                   PARM                    CurTrRPSC
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -983,7 +988,7 @@
       *                                                                *
       ******************************************************************
      C     ValidateTr    BEGSR
- 
+
       ** Use converted amount (loan ccy) as transaction amount                                CLE106
       ** so that details in valids file are in loan ccy.                                      CLE106
                                                                                               CLE106
@@ -996,52 +1001,52 @@
                                                                                               CLE106
       ** Validate Repayment Schedule details
      C                   CALLB     'LERPSC1VL'
- 
+
       ** Inputs
- 
+
       ** Response mode
      C                   PARM      'S'           APRespMode
- 
+
       ** Repayment Schedule Transaction Details
      C                   PARM                    TranInRPSC
                                                                                               CAP086
       ** Interface Data file                                                                  CAP086
      C                   PARM                    InfData                                      CAP086
                                                                                               CAP086
- 
+
       ** Extra Data
      C                   PARM                    ExtData
- 
+
       ** Outputs
- 
+
       ** Repayment schedule Details OK inds
      C                   PARM                    OKTrRPSC
- 
+
       ** Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
- 
+
       ** Array index (3P0) from/to caller
      C                   PARM                    Idx
- 
+
       * Warning fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
- 
+
       ** Array index (3P0) from/to caller
      C                   PARM                    WIdx
- 
+
       ** Valid Repayment schedule Transaction (DS) from/to caller
      C                   PARM                    ValidRPSC
- 
+
       ** Processing type in CLOANCL file
      C                   PARM                    PTypFilCLOAN
                                                                                              BUG4960
       ** Branch from CLOANCL file                                                            BUG4960
      C                   PARM                    BrcaFilCLOAN                                BUG4960
- 
+
       ** Return actual transaction details to screen fields                                   CLE106
                                                                                               CLE106
      C                   IF        CLE036 = 'Y' And DDLCCY <> *Blanks                         CLE106
@@ -1057,23 +1062,23 @@
       * ValidateSt - Routine to validate the settlemnt instructions   *
       *                                                               *
       *****************************************************************
- 
+
      C     ValidateSt    BEGSR
- 
+
       ** Set up date of receipt, and date of payment
      C                   EVAL      ##DATR = *ZEROS
      C                   EVAL      DATEA = DDVDAT
- 
+
      C                   CALLB     'ZDATE1'
      C                   PARM                    DATEA
      C                   PARM                    ZDAYNO
      C                   PARM                    BJDFIN
      C                   PARM                    ErrorFlag
- 
+
       ** Set the Pay Date and Receive Date = Value Date
      C                   EVAL      ##DATP = ZDAYNO
      C                   EVAL      ##DATR = ZDAYNO
- 
+
      C                   RESET                   ReturnCode
                                                                                              BUG4960
       ** Set loan type and branch correctly during insert                                    BUG4960
@@ -1088,7 +1093,7 @@
      C                   ELSE                                                                BUG4960
      C                   EVAL      ##BRCA = RP_BRCA                                          BUG4960
      C                   ENDIF                                                               BUG4960
- 
+
       ** Settlement currency must always be in loan currency                                  CLE036
                                                                                               CLE036
      C                   IF        CLE036 = 'Y'                                               CLE036
@@ -1162,68 +1167,83 @@
      C                   ENDIF                                                              AR693137
      C                   ENDIF                                                              AR693137
                                                                                             AR693137
+      *                                                                                       CLE168
+      ** Get Facility Customer, Facility Type, Facility Sequence                              CLE168
+      *                                                                                       CLE168
+     C                   IF        DDLNRF <> *BLANKS AND CLE168 = 'Y'                         CLE168
+     C     *LOCK         IN        LEFCLY                                                     CLE168
+     C     DDLNRF        CHAIN     CLOANCLF                           89                      CLE168
+     C                   IF        *IN89 = '0'                                                CLE168
+     C                   EVAL      A_XCNUM = CLFCUS                                           CLE168
+     C                   MOVE      CLFTYP        A_XFACT                                      CLE168
+     C                   MOVE      CLFSEQ        A_XFCNO                                      CLE168
+     C                   EVAL      A_XBKRPT = *BLANKS                                         CLE168
+     C                   ENDIF                                                                CLE168
+     C                   OUT       LEFCLY                                                     CLE168
+     C                   ENDIF                                                                CLE168
+      *                                                                                       CLE168
      C                   CALLB     'ZASETINVAL'
- 
+
       ** Return Code
      C                   PARM                    ReturnCode
- 
+
       ** Calling function type
      C                   PARM      'LEND'        ##CALP
- 
+
       ** Payment currency
      C**********         PARM      DDCURR        ##PCCY                                       CLE036
      C                   PARM      WPCurr        ##PCCY                                       CLE036
- 
+
       ** Receive currency
      C**********         PARM      DDCURR        ##RCCY                                       CLE036
      C                   PARM      WRCurr        ##RCCY                                       CLE036
- 
+
       ** Customer (shortname or number)
      C                   PARM      DDCUST        ##CSNM
- 
+
       ** Loan type
      C**********         PARM      RP_LTYP       ##TTYP                                      BUG4960
      C                   PARM                    ##TTYP                                      BUG4960
- 
+
       ** Federal Funds Ind.
      C                   PARM      *BLANKS       ##FFND
- 
+
       ** Booking Branch
      C**********         PARM      RP_BRCA       ##BRCA                                      BUG4960
      C                   PARM                    ##BRCA                                      BUG4960
- 
+
       ** Receipt Date
      C                   PARM                    ##DATR
- 
+
       ** Payment Date
      C                   PARM                    ##DATP
- 
+
       ** Input (or Defaulted) Receipt/Payment/FRA/IRS Settlement Instruction
      C                   PARM                    InPaySttmt
      C                   PARM                    InRecSttmt
      C                   PARM                    InFRASttmt
- 
+
       ** Action Code
      C                   PARM      DDACTN        ##ACTN
       * Protect Payment Field
      C                   PARM                    ##PPAY            1
       * Protect Receipt Field
      C                   PARM                    ##PREC            1
- 
+
       ** Following parameters are returned by called module
       ** Payment Instruction OK flag
      C                   PARM                    OKPayInsDS
- 
+
       ** Receive Instruction OK flag
      C                   PARM                    OKRecInsDS
- 
+
       ** FRA/IRS Instruction OK flag
      C                   PARM                    OKFRAInsDS
- 
+
       ** Error fields/message IDs (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
- 
+
       ** Array index (3P0) from/to caller
      C                   PARM                    Idx
       ** Warning Messages
@@ -1231,19 +1251,19 @@
      C                   PARM                    WMsgIdArr
      C                   PARM                    WMsgDtaArr
      C                   PARM                    WIdx
- 
+
       ** File (D/B) Receipt/Payment/FRA/IRS Settlement Instruction
      C                   PARM                    DBPaySttmt
      C                   PARM                    DBRecSttmt
      C                   PARM                    DBFraSttmt
- 
+
       ** Extra Input
       ** Action Code used
      C                   PARM      DDACTN        ##ACTN
- 
+
       ** Validation Iteration
      C                   PARM      '1ST'         ##VALITER
- 
+
      C                   IF        DDSTAL = 'Y'                                               CLE034
      C                   EVAL      InPaySttmt = *Blanks                                       CLE034
      C                   EVAL      InRecSttmt = *Blanks                                       CLE034
@@ -1258,26 +1278,26 @@
      C                   EVAL      WOBBR = FLPOBR
      C                   EVAL      WOSBR = FLPOBR
      C                   EVAL      WTSEN = FLPIBN
- 
+
      C                   IF        CEU004 = 'Y'
      C                   EVAL      WSCCY = FLPSCY
      C                   ENDIF
- 
+
      C                   ELSE
      C                   MOVE      FLRSTM        WSETP
      C                   EVAL      WOSAC = FLRONS
      C                   EVAL      WOBBR = FLROBR
      C                   EVAL      WOSBR = FLROBR
      C                   EVAL      WTSEN = FLRIBN
- 
+
      C                   IF        CEU004 = 'Y'
      C                   EVAL      WSCCY = FLRSCY
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   MOVEL     FLBENN        WFACO
- 
+
       ** Update Repayment schedule in file format
      C**********         EVAL      ValidPAY = DBPaySttmt                                      CGL029
      C**********         EVAL      ValidREC = DBRecSttmt                                      CGL029
@@ -1299,33 +1319,33 @@
      C                   MOVE      FLRSCY        V_RPSCCY                                     CLE031
      C                   MOVE      FLPSCY        V_RPPSCY                                     CLE031
      C                   ENDIF                                                                CLE031
- 
+
       ** Perform the additional validations
      C                   CALLB     'LERPSC2VL'
- 
+
       ** Response mode (1A), from source system common header
      C                   PARM      'S'           APRespMode
- 
+
       ** Valid Repayment schedule
      C                   PARM                    ValidRpSc
- 
+
       ** Payment instructions
      C                   PARM                    DBPaySttmt
- 
+
       ** Receive instructions
      C                   PARM                    DBRecSttmt
- 
+
       ** Field OK flags (DS)
      C                   PARM                    OKTrRPSC
- 
+
       ** Warning fields/message IDs/message data (arrays)
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIdArr
      C                   PARM                    WMsgDtaArr
- 
+
       ** Array index
      C                   PARM                    WIdx
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -1334,20 +1354,20 @@
       *    are amendable.                                             *
       *                                                               *
       *****************************************************************
- 
+
      C     ValdateAmd    BEGSR
- 
+
       ** This subroutine calls a procedure which checks whether it
       ** was valid to amend any of the fields which have been
       ** changed.  Some are never amendable and some depend upon ICD
       ** settings as to whether they are amendable.
- 
+
       ** To determine what fields have changed, the current fields
       ** on file must be converted to a 'screen' format.
- 
+
       ** These fields are then compared with the fields on the input
       ** transaction.
- 
+
       ** Any errors detected by the called procedure take precedence
       ** over any errors found during the validation of the complete
       ** transaction.  The errors from the called procedure are kept
@@ -1362,7 +1382,7 @@
      C                   EVAL      DDCURR = DDLCCY                                            CLE106
      C                   EVAL      DDSAMT = DDLCPR                                            CLE106
      C                   ENDIF                                                                CLE106
- 
+
      C                   IF        DDLNRF = *Blanks                                         MD032213
      C                   EVAL      DDLNRF = @DDLNRF                                         MD032213
      C                   ENDIF                                                              MD032213
@@ -1388,34 +1408,34 @@
      C                   ENDIF                                                              MD032213
                                                                                             MD032213
      C                   RESET                   ReturnCode
- 
+
      C                   CALLB     'LERPSCAMD'
- 
+
       ** INPUTS
       ** Return Code
      C                   PARM                    ReturnCode
- 
+
       ** New Deal in Screen Format (Incoming Transaction)
      C                   PARM                    TranInRPSC
- 
+
       ** (Current) Deal in Screen Format
      C                   PARM                    CurTrRPSC
- 
+
       ** OUTPUTS
       ** Field OK flags (DS) from/to caller
      C                   PARM                    OKTrRPSC
- 
+
       ** Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    AmFldNamAr
      C                   PARM                    AmMsgIdArr
      C                   PARM                    AmMsgDtaAr
- 
+
       ** Array index (3P0) from/to caller
      C                   PARM                    AmIdx
- 
+
       ** Reset of Fields in Error Required (Y/N)
      C                   PARM      'Y'           ResetErrs
- 
+
       ** If any errors overwrite previous error information
      C                   IF        AmIdx <> 0
      C                   MOVEA     AmMsgIdArr    MsgidArr
@@ -1430,7 +1450,7 @@
      C                   EVAL      DDCURR = TmpCURR                                           CLE106
      C                   EVAL      DDSAMT = TmpSAMT                                           CLE106
      C                   ENDIF                                                                CLE106
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1440,12 +1460,12 @@
       *                                                               *
       *****************************************************************
      C     WriteToDB     BEGSR
- 
+
      C                   IF        Idx = 0
      C                   EXSR      SetupValid
      C                   EXSR      UpdateDB
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1473,28 +1493,28 @@
       *                                                               *
       *****************************************************************
      C     RESETCYCLE    BEGSR
- 
+
      C                   RESET                   FldNameArr
      C                   RESET                   MsgIDArr
      C                   RESET                   MsgDtaArr
      C                   RESET                   Idx
- 
+
      C                   RESET                   WFldNamArr
      C                   RESET                   WMsgIDArr
      C                   RESET                   WMsgDtaArr
      C                   RESET                   WIdx
- 
+
      C                   RESET                   AmFldNamAr
      C                   RESET                   AmMsgIDArr
      C                   RESET                   AmMsgDtaAr
      C                   RESET                   AmIdx
- 
+
      C                   CLEAR                   CurTrRPSC
- 
+
      C                   MOVE      *ALL'Y'       OKTrRPSC
- 
+
      C                   CLEAR                   ValidRPSC
- 
+
      C                   EVAL      DDCRSN = *BLANKS                                          CSF011A
      C                   EVAL      DDCRNM = *BLANKS                                          CSF011A
      C                   EVAL      DDCRTN = *BLANKS                                          CSF011A
@@ -1508,16 +1528,16 @@
       *                                                               *
       *****************************************************************
      C     SetupValid    BEGSR
- 
+
       ** For Reversed put the complete (pre-existing) Repayment schedule
       ** into the Valid file record
      C                   IF        DDACTN = 'R' OR DDACTN = 'X'
      C                   EVAL      ValidRpSc = RpScFilFmt
      C                   ENDIF
- 
+
       ** Set Valid file field(s) that are needed for all Action Codes
      C                   EVAL      V_RPCHTP = DDACTN
- 
+
       ** Include Header fields that need to be o/p to the Valid file
      C                   EVAL      V_RPFRNT = APFOTranID
                                                                                               CLE106
@@ -1557,35 +1577,35 @@
       * UpdateDB - Update Database                                    *
       *                                                               *
       *****************************************************************
- 
+
      C     UpdateDB      BEGSR
- 
+
      C                   CALLB     'LERPSCUPD'
      C                   PARM      *BLANKS       @RTCD
- 
+
       ** New Repayment schedule in file format
      C                   PARM                    ValidRPSC
- 
+
       ** Old settlement details
      C                   PARM                    OldStsDS
- 
+
       ** New settlement details
      C                   PARM                    NewStsDS
- 
+
       ** Pass data
      C                   PARM                    PasDtaDS
- 
+
       ** Field OK flags (DS) from/to caller
      C                   PARM                    OKTrRPSC
- 
+
       ** Error fields/message IDs/message data (arrays) from/to calle  r
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIdArr
      C                   PARM                    MsgDtaArr
- 
+
       ** Array index (3P0) from/to caller
      C                   PARM                    Idx
- 
+
       ** If there were any errors in the update functions, rollback any
       ** updates and end this program. Otherwise, COMMIT the updates
      C                   IF        @RTCD<>*BLANK AND @RTCD<>'*RECUPD'
@@ -1610,9 +1630,9 @@
      C                   EVAL      MsgIdArr(1) = 'LEL0817'                                  AR868380
      C                   LEAVESR                                                            AR868380
      C                   ENDIF                                                              AR868380
- 
+
       ** Setup sequence number to pass back to APTRANVU on insert mode
- 
+
      C     DDACTN        IFEQ      'I'
      C     V_RPLASN      ANDNE     *ZERO
      C*****WIdx**        ANDEQ     *ZERO                                                      CLE106
@@ -1636,14 +1656,14 @@
      C                   EXSR      SRTEXT
      C                   MOVEL     ZAMSTP        DDSTAT
      C                   MOVE      *BLANKS       ZAMSID
- 
+
       ** If update not done due to record being updated by another
       ** workstation send message to screen.
      C                   IF        @RTCD = '*RECUPD'
      C                   EVAL      FldNameArr(1) = '*ANY'
      C                   EVAL      MsgIdArr(1) = 'LEL0666'
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       * SRTEXT  -  Set up text from message file.                     *
@@ -1706,16 +1726,16 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
- 
+
       ** Common header information (DS) from source system
      C                   PARM                    HeadIn
- 
+
       ** Transaction information
      C                   PARM                    Trans5001
      C                   PARM                    Trans5002                                    CLE106
- 
+
       ** Payment/Receipt/FRA/IRS Settlement Instruction from source system
      C                   PARM                    InPaySttmt
      C                   PARM                    InRecSttmt
@@ -1732,7 +1752,7 @@
      C                   PARM                    UpdateYN
      C                   PARM                    Buffer
      C                   PARM                    APIRetc
- 
+
       ** Initialize SAR work flag and Commit flag                                             CSC022
      C                   Eval      CSC022      = 'N'                                          CSC022
      C                   Eval      WSkipCommit = ' '                                          CSC022
@@ -1780,37 +1800,37 @@
      C                   EVAL      MsgFArray(1) = 'LERMSGF'
      C                   EVAL      MsgFArray(2) = 'DRSMM'
      C                   EVAL      MsgFArray(3) = 'Y2USRMSGF'
- 
+
       * Hook to enable non-core Message files to be included
      D/COPY WNCPYSRC,LERPSCM01
- 
+
       ** Access Bank details via access program
       ** (database error handling done in access program)
      C                   CALLB     'AOBANKR0'
      C                   PARM      '*DBERR '     @RTCD
      C                   PARM      '*FIRST '     @OPTN
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Access SAR details file
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CLE005'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        @RTCD = *BLANK
      C                   EVAL      CLE005 = 'Y'
      C                   ELSE
      C                   EVAL      CLE005 = 'N'
      C                   ENDIF
- 
+
       ** Access SAR details file
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CEU004'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   IF        @RTCD = *BLANK
      C                   EVAL      CEU004 = 'Y'
      C                   ELSE
@@ -1854,7 +1874,7 @@
      C                   ELSE                                                                 CLE034
      C                   MOVE      'N'           CLE034                                       CLE034
      C                   ENDIF                                                                CLE034
- 
+
       ** Determine if CLE036 (Lending Enhancements)                                           CLE036
                                                                                               CLE036
      C                   EVAL      CLE036 = 'N'                                               CLE036
@@ -1868,7 +1888,7 @@
      C                   ENDIF                                                                CLE036
                                                                                               CLE036
      C                   EVAL      @RTCD = *BLANKS
- 
+
       ** Access SAR details file to determine if                                              CAP086
       ** Automatic Authorisation is installed                                                 CAP086
      C                   EVAL      CAP086 = 'N'                                               CAP086
@@ -1892,6 +1912,21 @@
      C                   IF        @RTCD = *BLANKS                                            CAP086
      C                   EVAL      CAP086 = 'Y'                                               CAP086
      C                   ENDIF                                                                CAP086
- 
+      *                                                                                       CLE168
+      ** Access SAR details file                                                              CLE168
+      *                                                                                       CLE168
+     C                   CALLB     'AOSARDR0'                                                 CLE168
+     C                   PARM      *BLANKS       @RTCD                                        CLE168
+     C                   PARM      '*VERIFY'     @OPTN                                        CLE168
+     C                   PARM      'CLE168'      @SARD                                        CLE168
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CLE168
+                                                                                              CLE168
+     C                   IF        @RTCD = *BLANK                                             CLE168
+     C                   MOVEL     'Y'           CLE168            1                          CLE168
+     C                   ELSE                                                                 CLE168
+     C                   MOVEL     'N'           CLE168                                       CLE168
+     C                   ENDIF                                                                CLE168
+      *                                                                                       CLE168
+
      C                   ENDSR
       *****************************************************************

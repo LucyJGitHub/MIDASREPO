@@ -2757,7 +2757,6 @@
      C                   EVAL      MsgIDArr(Idx) = 'ESM0991'
      C                   MOVE      'N'           DDRonxOK
      C                   END
-     C/COPY WNCPYSRC,CLE168_030                                                               CLE168
      C                   ENDIF                                                                CLE168
      C                   EXSR      SRExtChkBlkAc                                            MD036475
      C                   ENDIF                                                                260863

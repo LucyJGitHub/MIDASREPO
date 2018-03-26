@@ -1290,7 +1290,7 @@
                        else;                                                                //CLE168
                           wOverdraftAmt = B_SEAVOD;                                         //CLE168
                        endif;                                                               //CLE168
-        	          else;                                                                    //CLE168
+                   else;                                                                    //CLE168
                    wOverdraftAmt = B_SEAVOD + B_SERAMT;
                    endif;                                                                   //CLE168
 

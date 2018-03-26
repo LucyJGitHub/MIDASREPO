@@ -3,7 +3,7 @@
      H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
-/*EXI *  TEXT('Midas LE PDP New Available Balance Computation')
+/*EXI *  TEXT('Midas LE PDP New Available Balance Computation')       *
       *****************************************************************
       *                                                               *
       *  Midas - Customer Lending Module                              *

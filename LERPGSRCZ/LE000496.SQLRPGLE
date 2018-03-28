@@ -12,9 +12,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. CLE168             Date 26Feb18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
-      *                 MD038713           Date 07May16               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. MD038713           Date 07May16               *
       *                 MD037496           Date 11Feb16               *
       *                 MD038473           Date 02Jun16               *
       *                 MD036207           Date 02Jun16               *
@@ -22,7 +21,6 @@
       *                                                               *
       *****************************************************************
       *                                                               *
-      *  CLE168 - Allow Debit of Blocked Account                      *
       *  MD046248 - Finastra Rebranding                               *
       *  MD038713 - Incorrect Values for Payment Date and Original    *
       *             Transaction Start Date                            *
@@ -111,12 +109,6 @@
      D  pDateFormat                   1A
      D  pValueDate                    6  0
      D  pRunDate                      7A
-                                                                                              CLE168
-     D  check_SARD     pr                  extpgm('AOSARDR0')                                 CLE168
-     D    pReturnCode                 7A                                                      CLE168
-     D    pOption                     7A                                                      CLE168
-     D    pSARD                       6A                                                      CLE168
-     D    pDSSDY                    200A                                                      CLE168
 
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
@@ -156,8 +148,6 @@
      D OFLLN4                188    189B 0
      D PRTLN4                367    368B 0
 
-     D SCSARD        e ds                  extname(SCSARDPD)                                  CLE168
-                                                                                              CLE168
       ** +--------------------------------------+
       ** ¦ Constants declaration                ¦
       ** ¦ =====================                ¦
@@ -207,9 +197,6 @@
      D*PAGEP2***       s              5  0 INZ(0001)                            MD036207
      D PAGEP2          s              6  0 INZ(0001)                            MD036207
      D PAGEP1          s              6  0 INZ(0001)                            MD036207
-                                                                                              CLE168
-     D CLE168          s              1a                                                      CLE168
-     D pSARD           s              6A                                                      CLE168
 
       ** AOSVALR0 Parameters
      D pRetCode        S              7A
@@ -785,11 +772,8 @@
                    P1CATE = SECATC;
                    P1REPR = SEREPR;
                    P1CATE = SECATC;
-                   P1BNFL = SEBNKFL;                                                        //CLE168
 
-       //          if SERETB <> 'Y';                                                        //CLE168
-                   if (SERETB <> 'Y') or                                                    //CLE168
-                   (SERETB = 'Y' and SEBNKFL = 'Y');                                        //CLE168
+                   if SERETB <> 'Y';
                       ZFLD15 = 0;
                       if SEAAMT <> 0;
                          ZFLD15 = SEAAMT;
@@ -949,23 +933,7 @@
                                 : pDSSDY
                                );
                    SDBANK = pDSSDY;
-                                                                                            //CLE168
-       //Check if CLE168 is switched on                                                     //CLE168
-                   pOption = '*VERIFY';                                                     //CLE168
-                   pSARD = 'CLE168';                                                        //CLE168
-                   callp check_SARD(                                                        //CLE168
-                                  pReturnCode                                               //CLE168
-                                : pOption                                                   //CLE168
-                                : pSARD                                                     //CLE168
-                                : pDSSDY                                                    //CLE168
-                               );                                                           //CLE168
-                   SCSARD = pDSSDY;                                                         //CLE168
-                                                                                            //CLE168
-                   if pReturnCode = *blanks;                                                //CLE168
-                      CLE168 = 'Y';                                                         //CLE168
-                      *IN97 = *On;                                                          //CLE168
-                   endif;                                                                   //CLE168
-                                                                                            //CLE168
+
                    PrtLn1 = 0;                                                            //MD038473
                    PrtLn2 = 0;                                                            //MD038473
                    PrtLn3 = 0;                                                            //MD038473

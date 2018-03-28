@@ -33,9 +33,8 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. CLE168             Date 26Feb18               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
-      *                 CDL094             Date 11Jun14               *
+      *  Last Amend No. MD046248           Date 27Oct17               *
+      *  Prev Amend No. CDL094             Date 11Jun14               *
       *                 CSD095             Date 08Apr14               *
       *                 MD022254           Date 19Sep13               *
       *                 CLE148             Date 23Jul12               *
@@ -64,7 +63,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CLE168 - Allow Debit of Blocked Account                      *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL094 - Enhance Receive Settlement Instructions             *
       *           (Recompile)                                         *
@@ -102,13 +100,8 @@
       *  CAP084 - API Wrapper project                                 *
       *                                                               *
       *****************************************************************
-
+ 
       *****************************************************************
-      *                                                                                       CLE168
-      **  Customer Loans File - by Loan Number                                                CLE168
-     FCLOAN     IF   E           K DISK    INFSR(*PSSR)                                       CLE168
-     F                                     IGNORE(CLOANHHF:CLOANCKF:CLOANZ1F)                 CLE168
-     F                                     PREFIX(ZA)                                         CLE168
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
@@ -126,9 +119,9 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
-
+ 
      D/COPY ZACPYSRC,STD_D_SPEC
-
+ 
       *                                                                                       CSC022
       ** Program Status Data Structure                                                        CSC022
       ** =============================                                                        CSC022
@@ -141,39 +134,39 @@
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **-----------------------------------------------------------------------
-
+ 
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
-
+ 
       *  Array for job name                                                                   CSC022
      D ARRJBNAM        S             10A   DIM(10)                                            CSC022
       * Incoming header
      D HeadIn        E DS                  EXTNAME(APHEADPD)
-
+ 
       * Incoming transaction in screen format
      D FESTScnFmt    E DS                  EXTNAME(LEFESTPD)
-
+ 
       * Incoming transaction 2 in screen format                                               CLE106
      D FES2ScnFmt    E DS                  EXTNAME(LEFES2PD)                                  CLE106
                                                                                               CLE106
@@ -187,41 +180,38 @@
       * Large fields to include
       * - Receive instructions (STRSTM to STROCN)
       * - Pay     instructions (STPSTM to STBTB6)
-      *                                                                                       CLE168
-     D LEFCLY        E DS                  EXTNAME(LEFCLYPP) DTAARA                           CLE168
-     D                                     PREFIX(A_)                                         CLE168
-      *                                                                                       CLE168
+ 
       * Current fee settlement in file format
      D FESTFilFmt    E DS                  EXTNAME(LEFEEAD)
      D                                     PREFIX(FA_)
-
+ 
       * Pay settlement instructions in screen format
      D InPaySttmt    E DS                  EXTNAME(SDESSPPD)
-
+ 
       * Receive settlement instructions in screen format
      D InRecSttmt    E DS                  EXTNAME(SDESSRPD)
-
+ 
       * FRA/IRS settlement instructions in screen format
      D InFRASttmt    E DS                  EXTNAME(SDESSFPD)
-
+ 
       * Pay settlement instructions in file format
      D F_PAY         E DS                  EXTNAME(SDESFPPD)
      D  F_PAY1                21    565                                                       TCA094
-
+ 
       * Receive settlement instructions in file format
      D F_REC         E DS                  EXTNAME(SDESFRPD)
      D  F_REC1                21     75                                                       TCA094
-
+ 
       * FRA/IRS settlement instructions in file format
      D F_FRI         E DS                  EXTNAME(SDESFFPD)
       * (needed as a parameter only)
-
+ 
       * Error indicators
      D FESTOkInd     E DS                  EXTNAME(LEEFESTPD)
-
+ 
       * 24X7 Data area structure
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)
-
+ 
       *                                                                                       CSC022
      D SCCMTJOB      E DS           256    DTAARA(SCCMTJOB)                                   CSC022
       ** Midas SC Jobs handling commitment control data area                                  CSC022
@@ -230,7 +220,7 @@
       *                                                                                       CSC022
       ** SD data area
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)
-
+ 
       * Flags to indicate whether Pay Settlement instruction fields
       * are valid
      D OKPayInsDS      DS
@@ -264,7 +254,7 @@
      D  DDPmacOK                      1A   INZ('Y')                                           CLE031
      D  DDPexrOK                      1A   INZ('Y')                                           CLE031
      D  DDPexiOK                      1A   INZ('Y')                                           CLE031
-
+ 
       * Flags to indicate whether Receive Settlement instruction fields
       * are valid
      D OKRecInsDS      DS
@@ -278,17 +268,17 @@
      D  DDRmacOK                      1A   INZ('Y')                                           CLE031
      D  DDRexrOK                      1A   INZ('Y')                                           CLE031
      D  DDRexiOK                      1A   INZ('Y')                                           CLE031
-
+ 
       * Flags to indicate whether FRA/IRS instruction fields are valid
       * (needed as a parameter only)
      D OKFRAInsDS      DS            22
-
+ 
       * External DS for bank details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
-
+ 
       * External DS for SAR details
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
-
+ 
       * First DS for access programs - short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
                                                                                               CSF011
@@ -299,7 +289,7 @@
                                                                                               CAP086
      D InfData       E DS                  EXTNAME(LELEIFPD)                                  CAP086
      D                                     PREFIX(IF_)                                        CAP086
-
+ 
       ** +--------------------------------------+                                             CSC022
       ** ¦ Use of Indicator                     ¦                                             CSC022
       ** ¦ ================                     ¦                                             CSC022
@@ -312,29 +302,29 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
-
+ 
       * Index for arrays of error message ids etc
      D Idx             S              3P 0 INZ(0)
-
+ 
       * Index for arrays of warning message ids etc
      D WIdx            S              3P 0 INZ(0)
-
+ 
       * Field to receive the incoming fee settlement
      D Trans5001       S            500A
                                                                                               CAP086
       ** Field (500A) to receive the incoming Interface Data                                  CAP086
                                                                                               CAP086
      D InfData500      S            500A                                                      CAP086
-
+ 
       ** Fields (500A) to receive the fee settlement data 2                                   CLE106
      D Trans5002       S            500A                                                      CLE106
                                                                                               CLE106
       * Actual rundate (24x7)
      D WProcDate       S                   LIKE(BJRDNB)
-
+ 
       ** Java user information
      D ZMUSER        E DS                  EXTNAME(ZMUSER) DTAARA(ZMUSER)
-
+ 
      D CLE106          S              1A   INZ('N')                                           CLE106
      D CSC022          S              1A   INZ('N')                                           CSC022
       ** Counter variable                                                                     CSC022
@@ -355,13 +345,13 @@
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
-
+ 
       ** +----------------------------------------+
       ** ¦ Hook for non-core D-specs (all types)  ¦
       ** ¦ also any I-specs (if necessary)        ¦
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
-
+ 
       *****************************************************************
       ** +--- Start of main processing ---------------------------------+
       ** ¦                                                              ¦
@@ -369,7 +359,7 @@
       ** ¦ executed at program activation.                              ¦
       ** ¦                                                              ¦
       ** +--------------------------------------------------------------+
-
+ 
       * Incoming transaction is broken into 500A fields, so that a common CL
       * can be used between this module and the one that read the MQ queue.
       * This module needs to break these 500A fields by loading them into
@@ -378,11 +368,11 @@
      C                   MOVEL     Trans5002     FES2ScnFmt                                   CLE106
                                                                                               CAP086
      C                   MOVEL     InfData500    InfData                                      CAP086
-
+ 
       * If the user is connected via a browser, the job user name is the data
       * source conection name - the actual user name is stored in ZMUSER
      C                   IN        ZMUSER
-
+ 
       * Get the user name from ZMUSER
      C                   SELECT
      C                   WHEN         S#ACTN = 'I'
@@ -392,10 +382,10 @@
      C                   WHEN         S#ACTN = 'A'
      C                   EVAL         F1AUSR = USRID
      C                   ENDSL
-
+ 
       * Reset variables gradually updated
      C                   EXSR      RESETCYCLE
-
+ 
       * Validate action code and retrieve transaction
      C                   EXSR      ValidateAc
       *
@@ -403,10 +393,10 @@
      C                   IF        Idx <> 0
      C                   GOTO      INVALID
      C                   EndIf
-
+ 
       * Default settlement details if required
      C                   EXSR      DftSettmts
-
+ 
       * Validate transaction
      C                   EXSR      ValidateTr
      C                   EVAL      S#EUTN = V_STPCRF                                          CLE106
@@ -451,7 +441,7 @@
      C                   Eval      FESTFilFmt = ValidFEST
      C                   EXSR      UpdateDB
      C                   ENDIF
-
+ 
      C*** need to preserve data from rtv module and send it back to             BUG1849
      C*** screen                                                                BUG1849
      C*****INVALID       TAG                                                          BUG1849 CSF011
@@ -476,12 +466,12 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
-
+ 
      C     *ENTRY        PLIST
-
+ 
       * Common header information (DS) from source system
      C                   PARM                    HeadIn
-
+ 
       * Fee settlement information
      C                   PARM                    Trans5001
      C                   PARM                    Trans5002                                    CLE106
@@ -498,12 +488,12 @@
      C                   PARM                    UpdateYN          1
      C                   PARM                    Buffer         6000
      C                   PARM                    APIRetc           1
-
+ 
       * Set up the name of the primary and secondary message files from
       * which the message handler will get the messages
      C                   EVAL      MsgFArray(1) = 'LERMSGF'
      C                   EVAL      MsgFArray(2) = 'DRSMM'
-
+ 
       * Hook to enable non-core Message files to be included
      D/COPY WNCPYSRC,LEFESTVM01
       *
@@ -513,7 +503,7 @@
      C                   PARM      '*DBERR '     @RTCD             7
      C                   PARM      '*FIRST '     @OPTN             7
      C     SDBANK        PARM      SDBANK        DSFDY
-
+ 
       *
       * Access SAR details file to determine if CSC011
       * is switched on
@@ -564,7 +554,7 @@
      C     @RTCD         IFEQ      *BLANKS                                                    CLE031
      C                   MOVE      'Y'           CLE031                                       CLE031
      C                   ENDIF                                                                CLE031
-
+ 
       * Key lists
      C     KFEST         KLIST
      C                   KFLD                    @@CUSN            6 0
@@ -573,24 +563,10 @@
      C                   KFLD                    @@LOAN            6                          CLE148
      C                   KFLD                    @@FSEQ            2 0
      C                   KFLD                    @@VDAT            5 0
-
+ 
       *  Hook to enable non-core initial processing to be included
      D/COPY WNCPYSRC,LEFESTV001
-      *                                                                                       CLE168
-      ** Access SAR details file                                                              CLE168
-      *                                                                                       CLE168
-     C                   CALLB     'AOSARDR0'                                                 CLE168
-     C                   PARM      *BLANKS       @RTCD                                        CLE168
-     C                   PARM      '*VERIFY'     @OPTN                                        CLE168
-     C                   PARM      'CLE168'      @SARD                                        CLE168
-     C     SCSARD        PARM      SCSARD        DSFDY                                        CLE168
-                                                                                              CLE168
-     C                   IF        @RTCD = *BLANK                                             CLE168
-     C                   MOVEL     'Y'           CLE168            1                          CLE168
-     C                   ELSE                                                                 CLE168
-     C                   MOVEL     'N'           CLE168                                       CLE168
-     C                   ENDIF                                                                CLE168
-      *                                                                                       CLE168
+ 
       * Determine if CSC022 is switched on                                                    CSC022
                                                                                               CSC022
      C                   CALLB     'AOSARDR0'                                                 CSC022
@@ -663,20 +639,20 @@
       * The fee settlement in file format from the database is retrieved
       * as well.
      C                   RESET                   ReturnCode
-
+ 
      C                   CALLB     'LEFESTRTV'
       *
       * INPUTS
       *
       ** Return Code
      C                   PARM                    ReturnCode
-
+ 
       * Mode
      C                   PARM      ' '           P#MODE            1
-
+ 
       * Response Code
      C                   PARM      'S'           RESPMODE          1
-
+ 
       * Action, customer, facility type, facility number,
       * fee sequence number and value date
      C                   PARM                    S#ACTN            1
@@ -688,14 +664,14 @@
      C                   PARM                    S#LOAN            6                          CLE073
       *
       * OUTPUTS
-
+ 
       * Fee Settlement Details in file format
      C                   PARM                    FESTFilFmt
      C                   PARM                    InRecSttmt                                   258669
      C                   PARM                    InPaySttmt                                   258669
      C                   PARM                    F_REC                                        258669
      C                   PARM                    F_PAY                                        258669
-
+ 
       * Action, customer, facility type, facility number,
       * fee sequence number and value date OK indicators
      C                   PARM                    S#ACTNok          1
@@ -705,32 +681,32 @@
      C                   PARM                    S#FSEQok          1
      C                   PARM                    S#VDATok          1
      C                   PARM                    S#LOANok          1                          CLE073
-
+ 
       * Customer number
      C                   PARM                    S#CNUM            6
-
+ 
       * Fee currency and decimal places
      C                   PARM                    S#FCCY            3
      C                   PARM                    FecyNBDP          1 0
-
+ 
       * Fee type, fee code, fee narrative, fee amount due/past due
      C                   PARM                    S#FTYP           10
      C                   PARM                    S#FCOD            2
      C                   PARM                    S#FENV           20
      C                   PARM                    S#DUPD           18
-
+ 
       * Value date
      C                   PARM                    W#VDAT            5 0
-
+ 
       * Settlement adjustment due date
      C                   PARM                    W#SADD            5 0
-
+ 
       * Participant Fee Indicator
      C                   PARM                    W#PTFI            1
-
+ 
       * Fee amount past due
      C                   PARM                    W#CPAM           13 0
-
+ 
       * Facility amount
       * Facility branch
       * Facility branch details
@@ -757,15 +733,15 @@
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
-
+ 
       * Array index (3P0) from/to caller
      C                   PARM                    WIdx
-
+ 
       * Save the TNLU
      C                   Eval      TNLU = FA_FATNLU
-
+ 
      C                   ENDSR
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -774,7 +750,7 @@
       *                                                               *
       *****************************************************************
      C     DftSettmts    BEGSR
-
+ 
       **If*ANY*of*the*Settlements*fields*have*been*entered,*bypass*this                       258669
       **routine.*******************************************************                       258669
       *                                                                                       258669
@@ -789,39 +765,39 @@
      C                             AND (FLRSTM = 0)                                           258669
      C                             AND (S#TYPE <> 'W')                                      MD022254
      C                             AND (S#TYPE <> ' ')                                      MD022254
-
+ 
      C                   CALLB     'ZASETINDFT'
-
+ 
       * Output
       * Calling function type
      C                   PARM      'LEND'        ##CALP            4
       * Payment currency
      C***********        PARM      FccyFCCY      ##PCCY            3                         BUG8459
      C                   PARM      S#FCCY        ##PCCY            3                         BUG8459
-
+ 
       * Receive currency
      C***********        PARM      FccyFCCY      ##RCCY            3                         BUG8459
      C                   PARM      S#FCCY        ##RCCY            3                         BUG8459
-
+ 
       * Customer (shortname or number)
      C                   PARM      S#CNUM        ##CSNM           10
-
+ 
       * Deal type
      C                   PARM      *BLANKS       ##TTYP            2
-
+ 
       * Federal Funds Ind.
      C                   PARM      *BLANK        ##FFND            1
-
+ 
       * ISDA Rules for FRA/IRS deals only
       * Version of ISDA Rules govern
      C                   PARM                    Blank4            4
-
+ 
       * Type of ISDA agreement
      C                   PARM                    Blank6            6
-
+ 
       * Date of ISDA Agreement
      C                   PARM                    Blank6X           6
-
+ 
       * Version of ISDA Agreement
      C                   PARM                    Blank2            2
       *
@@ -837,31 +813,31 @@
       * Return
       * Defaulted Payment Settlement Instruction in file format
      C                   PARM                    F_Pay
-
+ 
       * Defaulted Receipt Settlement Instruction in file format
      C                   PARM                    F_Rec
-
+ 
       * Defaulted FRA/IRS Settlement Instruction in file format
      C                   PARM                    F_FRI
-
+ 
       * The defaulted instructions are in file format, but the
       * Settlements validation requires that they are in the input format.
       * Therefore run them through a conversion module.
-
+ 
      C                   CALLB     'ZASETINCVT'
-
+ 
       ** Defaulted Settlement Instructions in file format
      C                   PARM                    F_Pay
      C                   PARM                    F_Rec
      C                   PARM      *BLANK        F_FRI
-
+ 
       ** Defaulted Settlement Instruction in input format
      C                   PARM                    InPaySttmt
      C                   PARM                    InRecSttmt
      C                   PARM                    InFRASttmt
      C                   PARM      S#FCCY        InTrCcy                                     CSF011A
      C                   PARM      S#FCCY        InTpCcy                                     CSF011A
-
+ 
      C                   ELSE                                                                 258669
       *                                                                                       258669
       ** If no settlement details entered, but retrieval from Fees                            258669
@@ -897,7 +873,7 @@
      C                   ENDIF                                                                258669
       *                                                                                       258669
      C                   ENDIF
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -908,41 +884,41 @@
       *                                                                *
       ******************************************************************
      C     ValidateTr    BEGSR
-
+ 
      C                   IF        CLE106 = 'Y'                                               CLE106
      C                   EVAL      F5TNRF = S#EUTN                                            CLE106
      C                   ENDIF                                                                CLE106
-
+ 
       * Validate fee settlement details
-
+ 
      C                   CALLB     'LEFESTVAL'
       *
       * INPUTS
       *
       ** Return Code
      C                   PARM                    RetCodeIn
-
+ 
       * Mode
      C                   PARM                    P#MODE            1
-
+ 
       * Fee Settlement Details in screen format
      C                   PARM                    FESTScnFmt
-
+ 
       * Fee currency and decimal places
      C                   PARM                    FecyNBDP          1 0
-
+ 
       * Value date
      C                   PARM                    W#VDAT            5 0
-
+ 
       * Settlement settlement due date
      C                   PARM                    W#SADD            5 0
-
+ 
       * Participant Fee Indicator
      C                   PARM                    W#PTFI            1
-
+ 
       * Fee amount past due
      C                   PARM                    W#CPAM           13 0
-
+ 
       * Facility amount
       * Facility branch
       * Facility branch details
@@ -956,7 +932,7 @@
      C                   PARM                    FcbrSYCU          6                          CSD027
      C                   PARM                    FccyFCCY          3
      C                   PARM                    FccyNBDP          1 0
-
+ 
       * Front Office Inputs (if mode = 'B')
      C                   PARM                    F5PCOB            3
      C                   PARM                    F5TNRF           15
@@ -966,7 +942,7 @@
      C                   PARM                    FESTFilFmt
       *
       * OUTPUTS
-
+ 
       * Status
      C                   PARM                    S#STAT           10
       * Fee Type
@@ -979,10 +955,10 @@
      C                   PARM                    S#DUPD           18
       * Field OK flags
      C                   PARM                    FESTOkInd
-
+ 
       * Settlement amount
      C                   PARM                    W#SADJ           13 0
-
+ 
       * Settlement amount edited
      C                   PARM                    S#SADE           19
       *
@@ -990,21 +966,21 @@
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
-
+ 
       * Array index (3P0) from/to caller
      C                   PARM                    Idx
-
+ 
       * Warning fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    WFldNamArr
      C                   PARM                    WMsgIDArr
      C                   PARM                    WMsgDtaArr
-
+ 
       * Array index (3P0) from/to caller
      C                   PARM                    WIdx
-
+ 
       * Valid Fee Settlement
      C                   PARM                    ValidFEST
-
+ 
                                                                                              CSF011A
       ** If Syndications Manager is off, override UTN with PC Ref value                      CSF011A
                                                                                              CSF011A
@@ -1050,7 +1026,7 @@
      C                   If        ##DATP = 0
      C                   Eval      ##DATP = WProcDate
      C                   EndIf
-
+ 
       ** Remove settlements if Settlement Allocation is available                             CLE034
                                                                                               CLE034
      C                   IF        S#STAL = 'Y'                                               CLE034
@@ -1061,30 +1037,8 @@
      C                   ENDIF                                                                CLE034
                                                                                               CLE034
      C                   RESET                   ReturnCode
-      *                                                                                       CLE168
-      ** Get Facility Customer, Facility Type, Facility Sequence                              CLE168
-      *                                                                                       CLE168
-     C                   IF        CLE168 = 'Y'                                               CLE168
-     C     *LOCK         IN        LEFCLY                                                     CLE168
-     C                   IF        S#LOAN <> *BLANKS                                          CLE168
-     C     S#LOAN        CHAIN     CLOANCLF                           89                      CLE168
-     C                   IF        *IN89 = '0'                                                CLE168
-     C                   EVAL      A_XCNUM = ZAFCUS                                           CLE168
-     C                   MOVE      ZAFTYP        A_XFACT                                      CLE168
-     C                   MOVE      ZAFSEQ        A_XFCNO                                      CLE168
-     C                   EVAL      A_XBKRPT = *BLANKS                                         CLE168
-     C                   ENDIF                                                                CLE168
-     C                   ELSE                                                                 CLE168
-     C                   MOVEL     S#CSSN        A_XCNUM                                      CLE168
-     C                   MOVE      S#FACT        A_XFACT                                      CLE168
-     C                   MOVE      S#FCNO        A_XFCNO                                      CLE168
-     C                   EVAL      A_XBKRPT = *BLANKS                                         CLE168
-     C                   ENDIF                                                                CLE168
-     C                   OUT       LEFCLY                                                     CLE168
-     C                   ENDIF                                                                CLE168
-      *                                                                                       CLE168
      C                   CALLB     'ZASETINVAL'
-
+ 
       ** Return Code
      C                   PARM                    ReturnCode
       ** Following parameters are output to called module
@@ -1115,12 +1069,12 @@
      C                   PARM                    InFRASttmt
       * Action Code
      C                   PARM      S#ACTN        ##ACTN            1
-
+ 
       * Protect Payment Field
      C                   PARM                    ##PPAY            1
       * Protect Receipt Field
      C                   PARM                    ##PREC            1
-
+ 
       ** Following parameters are returned by called module
       ** Payment Instruction OK flag
      C                   PARM                    OKPayInsDS
@@ -1212,21 +1166,21 @@
       *                                                               *
       *****************************************************************
      C     RESETCYCLE    BEGSR
-
+ 
      C                   RESET                   FldNameArr
      C                   RESET                   MsgIDArr
      C                   RESET                   MsgDtaArr
      C                   RESET                   Idx
-
+ 
      C                   RESET                   WFldNamArr
      C                   RESET                   WMsgIDArr
      C                   RESET                   WMsgDtaArr
      C                   RESET                   WIdx
-
+ 
      C                   MOVE      *ALL'Y'       FESTOkInd
-
+ 
      C                   CLEAR                   ValidFEST
-
+ 
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1235,7 +1189,7 @@
       * UPDATEDB - Update database                                    *
       *                                                               *
       *****************************************************************
-
+ 
      C     UPDATEDB      BEGSR
       *
       * Update
@@ -1246,40 +1200,40 @@
       *
       ** Return Code
      C                   PARM                    ReturnCode
-
+ 
       * Mode
      C                   PARM                    P#MODE            1
-
+ 
       * Action Code
      C                   PARM                    S#ACTN            1
-
+ 
       * Fee Settlement Details in file format
      C                   PARM                    FESTFilFmt
-
+ 
       * File Receive instructions
      C                   PARM                    F_Rec
-
+ 
       * File Payment instructions
      C                   PARM                    F_Pay
-
+ 
       * Fee currency
      C                   PARM                    S#FCCY            3
-
+ 
       * Value date
      C                   PARM                    W#VDAT            5 0
-
+ 
       * Settlement amount
      C                   PARM                    W#SADJ           13 0
-
+ 
       * Settlement adjustment due date
      C                   PARM                    W#SADD            5 0
-
+ 
       * Participant Fee Indicator
      C                   PARM                    W#PTFI            1
-
+ 
       * TNLU of fee settlement record on LEFEEAD
      C                   PARM                    TNLU              5 0
-
+ 
       * Facility amount
       * Facility branch
       * Facility branch details
@@ -1293,7 +1247,7 @@
      C                   PARM                    FcbrSYCU          6                          CSD027
      C                   PARM                    FccyFCCY          3
      C                   PARM                    FccyNBDP          1 0
-
+ 
       * Front office inputs (if mode = 'B')
      C                   PARM                    F5PCOB
      C                   PARM                    F5TNRF

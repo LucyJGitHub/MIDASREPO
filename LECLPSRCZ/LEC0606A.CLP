@@ -10,9 +10,8 @@
 /*                                                                  */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                  */
-/*       Last Amend No. CLE168             Date 26Feb18              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
-/*                      MD033997           Date 11May15              */
+/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Prev Amend No. MD033997           Date 11May15              */
 /*                      AR1061928          Date 30Nov12              */
 /*                      AR1055539          Date 12Nov12              */
 /*                      CLE134             Date 01Aug12              */
@@ -33,7 +32,6 @@
 /*                      S01194                  DATE  08FEB90       */
 /*------------------------------------------------------------------*/
 /*                                                                  */
-/*       CLE168 - Allow Debit of Blocked Account                    */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD033997 - Move process of facility expiry on 2nd COB.     */
 /*       AR1061928 - LEC06 on MSGW during clean COB                 */
@@ -70,11 +68,6 @@
                         VALUE('FACILITIES UPDATE ')
              DCL        VAR(&RERUN) TYPE(*CHAR) LEN(10)                                   /*CLE134*/
              DCL        VAR(&LEPDCL) TYPE(*CHAR) LEN(256)                                 /*CLE134*/
-             DCL        VAR(&RTCD) TYPE(*CHAR) LEN(7)                                     /*CLE168*/
-             DCL        VAR(&OPTN) TYPE(*CHAR) LEN(7)                                     /*CLE168*/
-             DCL        VAR(&SARD) TYPE(*CHAR) LEN(6)                                     /*CLE168*/
-             DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)                                 /*CLE168*/
-             DCL        VAR(&CLE168) TYPE(*CHAR) LEN(1) VALUE('N')                        /*CLE168*/
                                                                                           /*CLE039*/
              IF         COND(&RERUN *EQ 'NEWCOB') THEN(DO)                                /*CLE134*/
              RTVDTAARA  DTAARA(LEPDCL) RTNVAR(&LEPDCL)                                    /*CLE134*/
@@ -86,19 +79,6 @@
                           CMTSCOPE(*JOB)                                                  /*CLE039*/
              MONMSG     MSGID(CPF8351)                                                    /*CLE039*/
                                                                                           /*CLE039*/
-                                                                                          /*CLE168*/
-/* Check if CLE168 is switched *ON */                                                     /*CLE168*/
-                                                                                          /*CLE168*/
-             CHGVAR     VAR(&RTCD) VALUE('       ')                                       /*CLE168*/
-             CHGVAR     VAR(&OPTN) VALUE('*VERIFY')                                       /*CLE168*/
-             CHGVAR     VAR(&SARD) VALUE('CLE168')                                        /*CLE168*/
-                                                                                          /*CLE168*/
-             CALL       PGM(AOSARDR0) PARM(&RTCD &OPTN &SARD &SCSARD)                     /*CLE168*/
-                                                                                          /*CLE168*/
-             IF         COND(&RTCD *EQ '       ') THEN(DO)                                /*CLE168*/
-                CHGVAR     VAR(&CLE168) VALUE('Y')                                        /*CLE168*/
-             ENDDO                                                                        /*CLE168*/
-                                                                                          /*CLE168*/
 /*/COPY WNCPYSRC,LEC0606A02                                          */
 /**/
              SNDPGMMSG  MSG(&MSG) TOMSGQ(MRUNQ)
@@ -115,10 +95,10 @@
 /************CLRPFM     FILE(LKEY2HH)                            */ /*098436*/
 /************CLRPFM     FILE(LKEY2DP)                            */ /*098436*/
 /************CLRPFM     FILE(LKEY2ZZ)                            */ /*098436*/
-
+ 
 /*       CHANGE TO TAKE COPY OF REVERSED & CLOSED                  */
 /*       FACILITY DETAILS BEFORE DROPPED                           */
-
+ 
      CLRPFM FILE(PEFCLFM)
      CPYF FROMFILE(FCLTYFM) TOFILE(PEFCLFM) +
           MBROPT(*ADD) INCREL((*IF RECI *EQ 'R') (*OR RECI *EQ 'C'))
@@ -128,7 +108,7 @@
           MBROPT(*ADD) CRTFILE(*NO)                                                       /*239910*/
 /**/                                                                                      /*239910*/
 /*/COPY WNCPYSRC,LEC0606A01                                          */
-
+ 
 /**/
 /**/
 /*********** OVRDBF     FILE(TABLE) TOFILE(TABLEEI)                  * *S01194*/
@@ -159,9 +139,6 @@
 /**********     MONMSG     MSGID(CPF2995 CPF2981)                              /*CLE039*/ /*228542*/
                 CALL       PGM(SCC000060) PARM('LEFCLTQD' '*FIRST')                       /*228542*/
                                                                                           /*228542*/
-                IF         COND(&CLE168 *EQ 'Y') THEN(DO)                                 /*CLE168*/
-                   CALL       PGM(SCC000060) PARM('LEFCLYPP' '*FIRST')                    /*CLE168*/
-                ENDDO                                                                     /*CLE168*/
              ENDDO                                                                        /*CLE039*/
                                                                                           /*CLE039*/
 /**/

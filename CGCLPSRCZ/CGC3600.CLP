@@ -10,8 +10,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD024871           Date 11Feb14              */
+/*       Last Amend No. MD049404           Date 05Feb18              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD024871           Date 11Feb14              */
 /*                      AR659584           Date 06Dec10              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
@@ -22,7 +23,8 @@
 /*                      Xnnnnn             Date ddmmmyy              */
 /*                                                                   */
 /*********************************************************************/
-/*                                                                   */
+/*       MD049404 - V7R1 introduced new field in QADBXRDBD.          */
+/*                  Recompile program to avoid level check error.    */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD024871 - CM Custom-Defined Data Extract terminated        */
 /*                  abnormally due to graphic field &DBXRDBT2        */
@@ -32,7 +34,7 @@
 /*                                                                   */
 /*********************************************************************/
              PGM (&RMTL &DBNAME &RTNCOD)
- 
+
 /*/COPY WNCPYSRC,mmCnnnnINT                                          */
 /* Remote location */
              DCL        VAR(&RMTL) TYPE(*CHAR) LEN(256)
@@ -45,17 +47,17 @@
                           2001')
              DCL        VAR(&IASP_YN) TYPE(*CHAR) LEN(1)                                /*AR659584*/
 /*/COPY GPCPYSRCG,GPSVALDCL                                          */                 /*AR659584*/
- 
+
 /* File that stores the RDB entries */
 /**********  DCLF       FILE(QADBXRDBD) ALWVARLEN(*YES) */                              /*MD024871*/
              DCLF       FILE(QADBXRDBD) ALWVARLEN(*YES) +
                           ALWGRAPHIC(*YES)                                              /*MD024871*/
- 
+
 /* Global monitor message */
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
              CHGJOB     SWS(XXXXXX00)
 /**/                                                                                    /*AR659584*/
 /* Get the global IASP system values */                                                 /*AR659584*/
@@ -82,9 +84,9 @@
 /**/                                                                                    /*AR659584*/
              ENDDO                                                                      /*AR659584*/
 /**/                                                                                    /*AR659584*/
- 
+
 /*/COPY WNCPYSRC,mmCnnnnMPS                                          */
- 
+
 RTVRDBDIR:
              RCVF       DEV(*FILE)
              MONMSG     MSGID(CPF0864) EXEC(DO)
@@ -96,32 +98,32 @@ RTVRDBDIR:
                GOTO       CMDLBL(END)
              ENDDO
              GOTO       CMDLBL(RTVRDBDIR)
- 
- 
+
+
 /*/COPY WNCPYSRC,mmCnnnnMPE                                          */
- 
+
              GOTO       CMDLBL(END)
- 
+
  ABNOR:
 /*/COPY WNCPYSRC,mmCnnnnERR                                          */
- 
+
              CHGJOB     SWS(XXXXXX11)
              CHGVAR     VAR(&RTNCOD) VALUE('*ERROR')
              DMPCLPGM
- 
+
 /* Abnormal termination - batch job */
- 
+
              SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
                           CGC3600 ended abnormally - see job log') +
                           TOMSGQ(MOPERQ)
              MONMSG     MSGID(CPF0000 MCH0000)
- 
- 
+
+
  END:        CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Finastra International Limited')
- 
+
 /*/COPY WNCPYSRC,mmCnnnnEND                                          */
- 
+
 /* (Add any specific end processing here) */
- 
+
              ENDPGM

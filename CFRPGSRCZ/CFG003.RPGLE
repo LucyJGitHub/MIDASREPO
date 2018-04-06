@@ -56,7 +56,7 @@
 
      FCFMCIDL0  IF   E           K disk    infsr(*PSSR)
      FCFTRAMPD  O    E             disk    infsr(*PSSR)
-     F                                     commit                                
+     F                                     commit
 
       *****************************************************************
       /EJECT
@@ -183,8 +183,8 @@
      C                   clear                   buffer
      C                   movea     w@msgbuf      buffer
      C                   write     cftramd0
-      ** Commit so that messages don't roll back onto queue                      
-     C                   commit                                                  
+      ** Commit so that messages don't roll back onto queue
+     C                   commit
 
       ** else if message not found on queue...
      C                   else
@@ -193,7 +193,11 @@
 
      C                   enddo
 
+      ** Close MQ series queue
+     C                   if        CSW038 = 'Y'
      C                   exsr      sr_close
+     C                   endIf
+
      C                   Move      *ON           *INLR
       *
       **********************************************************************

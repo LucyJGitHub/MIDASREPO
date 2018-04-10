@@ -7,17 +7,19 @@
       *                                                               *
       *  Midas - Retail Module                                        *
       *                                                               *
-      *  RE001591 - Customer Ranges Definition Query                  *
+      *  RE001591 - Customer Ranges Definition Query.                 *
       *                                                               *
       *  Function: This program forms the query for Customer Ranges   *
       *              to be used by REC376A.                           *
       *                                                               *
       *  (c) Finastra International Limited 2018                      *
       *                                                               *
-      *  Last Amend No. CRE113  *CREATE    Date 05Feb18               *
+      *  Last Amend No. CRE113CC1          Date 27Mar18               *
+      *  Prev Amend No. CRE113  *CREATE    Date 05Feb18               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CRE113CC1 - Include Audit Reports                            *
       *  CRE113 - COB Optimisation of REC376A                         *
       *                                                               *
       *****************************************************************
@@ -124,6 +126,7 @@
      C+ declare CustRangeFile Scroll Cursor
      C+  for select *
      C+  from SDCUSRTD
+     C+  where CRRECI = 'D'                                                                CRE113CC1
      C+  order by
      C+  CRFCIR, CRLCIR
      C/end-exec

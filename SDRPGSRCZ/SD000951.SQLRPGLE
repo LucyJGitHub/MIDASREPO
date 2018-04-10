@@ -13,10 +13,12 @@
       *                                                               *
       *  (c) Finastra International Limited 2018                      *
       *                                                               *
-      *  Last Amend No. CRE113  *CREATE    Date 05Feb18               *
+      *  Last Amend No. CRE113CC1          Date 27Mar18               *
+      *  Prev Amend No. CRE113  *CREATE    Date 05Feb18               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CRE113CC1 - Include Audit Reports                            *
       *  CRE113 - COB Optimisation of REC376A                         *
       *                                                               *
       *****************************************************************
@@ -69,6 +71,7 @@
       *  SRDelete      -  Delete Customer Range Details               *
       *  SRAmend       -  Update Customer Range Details               *
       *  SRZasnms      -  Message handling subroutine                 *
+      *  SRTrailer     -  Update Control Files                        *                    CRE113CC1
       *  SREnd         -  End program                                 *
       *  *PSSR         -  Error handling subroutine                   *
       *                                                               *
@@ -83,6 +86,9 @@
      F                                     SFILE(SD000951S1:SRLRN)
      F                                     INFDS(INFDS#)
      F                                     INFSR(*PSSR)
+      ** Control File Update Index
+     FSDFCTLL0  UF   E           K DISK    INFSR(*PSSR)                                    CRE113CC1
+     F                                     COMMIT                                          CRE113CC1
 
       *****************************************************************
       /EJECT
@@ -201,6 +207,7 @@
      D W#EROR          S              1
      D W#EROR2         S              1
      D CountRange      S              2  0
+     D WFNAM           S             10                                                    CRE113CC1
 
       ** Subfile workfields
      D WSkipRec        S              1
@@ -225,7 +232,9 @@
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
-
+     C/exec SQL                                                                            CRE113CC1
+     C+ set option COMMIT = *CHG                                                           CRE113CC1
+     C/end-exec                                                                            CRE113CC1
       ** Main Program
 
      C                   DO        *HIVAL
@@ -702,6 +711,7 @@
      C                   IF        W#EROR = *BLANKS and *IN12 = *OFF
      C                                              and *IN03 = *OFF
      C                   EVAL      W1PMD = 'ADD'
+     C                   EXSR      SRTrailer                                               CRE113CC1
      C                   EXSR      SRReload
      C                   EVAL      *IN12 = *ON
      C                   ENDIF
@@ -964,6 +974,7 @@
 
       ** Blank out record and protect from entry
 
+     C                   EXSR      SRTrailer                                               CRE113CC1
      C                   EXSR      SRClrScrn
      C                   EVAL      *IN84 = *OFF
 
@@ -999,6 +1010,7 @@
      C                   EXSR      SRMove
      C                   ELSE
      C                   EVAL      *IN84 = *OFF
+     C                   EXSR      SRTrailer                                               CRE113CC1
      C                   ENDIF
      C                   ENDSR
       *****************************************************************
@@ -1364,10 +1376,16 @@
      C                   EXSR      SRZasnms
      C                   ELSE
      C                   TIME                    WTIME
-     C/EXEC SQL
-     C+ DELETE from SDCUSRTD
-     C+ where CRFCIR = :#1FCIR and
-     C+       CRLCIR = :#1LCIR
+     C**********/EXEC SQL                                                                  CRE113CC1
+     C**********+ DELETE from SDCUSRTD                                                     CRE113CC1
+     C**********+ where CRFCIR = :#1FCIR and                                               CRE113CC1
+     C**********+       CRLCIR = :#1LCIR                                                   CRE113CC1
+     C/EXEC SQL                                                                            CRE113CC1
+     C+ UPDATE SDCUSRTD SET CRRECI = '*', CRCHGD = :BJRDNB, CRCHGT = 'D',                  CRE113CC1
+     C+ CRUSER = :PSuser, CRTMST = :WTIME                                                  CRE113CC1
+     C+ where CRFCIR = :#1FCIR and                                                         CRE113CC1
+     C+       CRLCIR = :#1LCIR                                                             CRE113CC1
+     C+       and CRRECI = 'D'                                                             CRE113CC1
      C/END-EXEC
 
      C                   ENDIF
@@ -1418,6 +1436,7 @@
      C+ CRLCIR = :#2LCIR, CRUSER = :PSuser, CRTMST = :WTIME
      C+ where CRFCIR = :#1FCIR and
      C+       CRLCIR = :#1LCIR
+     C+       and CRRECI = 'D'                                                             CRE113CC1
      C/END-EXEC
 
      C                   EVAL      WCUST = 'Y'
@@ -1451,7 +1470,9 @@
       *                                                               *
       *****************************************************************
      C     SREnd         BEGSR
-
+      *                                                                                    CRE113CC1
+     C                   COMMIT                                                            CRE113CC1
+      *                                                                                    CRE113CC1
       ** If selection mode and F3 has been pressed
       ** Terminate program
 
@@ -1475,6 +1496,7 @@
      C+ declare CustRangeCount Cursor with return to client
      C+  for select count(*)
      C+  from SDCUSRTD
+     C+  where CRRECI = 'D'                                                                CRE113CC1
      C/end-exec
 
      C/exec sql
@@ -1489,6 +1511,45 @@
      C/exec SQL
      C+ close CustRangeCount
      C/end-exec
+
+     C                   ENDSR
+      *****************************************************************
+      /EJECT
+      *****************************************************************                    CRE113CC1
+      *                                                               *                    CRE113CC1
+      * SRTrailer - Update Control Files                              *                    CRE113CC1
+      *                                                               *                    CRE113CC1
+      *****************************************************************                    CRE113CC1
+     C     SRTrailer     BEGSR                                                             CRE113CC1
+                                                                                           CRE113CC1
+     C                   MOVEL     'SDCUSRTD'    WFNAM                                     CRE113CC1
+     C     WFNAM         CHAIN     SDFCTLL0                           60                   CRE113CC1
+                                                                                           CRE113CC1
+     C                   IF        *IN60 = *ON                                             CRE113CC1
+     C     *LOCK         IN        LDA                                                     CRE113CC1
+     C                   EVAL      DBFILE = 'SDFCTLPA'                                     CRE113CC1
+     C                   EVAL      DBKEY = WFNAM                                           CRE113CC1
+     C                   EVAL      DBPGM = 'SD000951'                                      CRE113CC1
+     C                   EVAL      DBASE = 3                                               CRE113CC1
+     C                   OUT       LDA                                                     CRE113CC1
+     C                   EXSR      *PSSR                                                   CRE113CC1
+                                                                                           CRE113CC1
+     C                   ELSE                                                              CRE113CC1
+                                                                                           CRE113CC1
+     C                   SELECT                                                            CRE113CC1
+     C                   WHEN      W1PMD = 'ADD'                                           CRE113CC1
+     C                   ADD       1             AHNORC                                    CRE113CC1
+     C                   ADD       1             AHNOIN                                    CRE113CC1
+     C                   WHEN      #1ACTN = 'D'                                            CRE113CC1
+     C                   ADD       1             AHNODL                                    CRE113CC1
+     C                   SUB       1             AHNORC                                    CRE113CC1
+     C                   WHEN      WCUST = 'Y'                                             CRE113CC1
+     C                   ADD       1             AHNOAM                                    CRE113CC1
+     C                   ENDSL                                                             CRE113CC1
+                                                                                           CRE113CC1
+     C                   ENDIF                                                             CRE113CC1
+                                                                                           CRE113CC1
+     C                   UPDATE    @AHREAU                                                 CRE113CC1
 
      C                   ENDSR
       *****************************************************************
@@ -1550,6 +1611,7 @@
      C+ declare CustRangeFile Scroll Cursor
      C+  for select *
      C+  from SDCUSRTD
+     C+  where CRRECI = 'D'                                                                CRE113CC1
      C+  order by
      C+  CRFCIR, CRLCIR
      C/end-exec
@@ -1588,7 +1650,9 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
-
+                                                                                           CRE113CC1
+     C                   ROLBK                                                             CRE113CC1
+                                                                                           CRE113CC1
      C                   DUMP
 
      C                   IF        @RUN = *BLANK

@@ -8,10 +8,11 @@
       *                                                               *
       *  FT0640 - CUSTOMER TRANSFERS                                  *
       *                                                               *
-      *  (c) Finastra International Limited 2001                      *
+      *  (c)Finastra International Limited 2001                       *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD045920           Date 04Jul17               *
+      *  Last Amend No. MD048075           Date 09Nov17               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD045920           Date 04Jul17               *
       *                 MD046436           Date 04Jul17               *
       *                 252874             Date 25Jan17               *
       *                 CSW215             Date 06Apr15               *
@@ -161,6 +162,9 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD048075 - Field 50A instead of 50F in MT103 with CSW024 on  *
+      *           - Add system value FTAllowFld50F to allow the use   *
+      *             of tag 50F.                                       *
       *  MD046248 - Finastra Rebranding                               *
       *  MD045920 - Ordering Customer account number is missing from  *
       *             FT SWIFT payment.                                 *
@@ -501,7 +505,8 @@
       **                                                                                      CSC022
      E/COPY WNCPYSRC,FT0640E001
       *
-     E                    SVAL    1   1 20                                                    242289
+     E**********          SVAL    1   1 20                                           242289 MD048075
+     E                    SVAL    1   2 20                                                  MD048075
      E/EJECT
      I*
      I*CLINTCBF****70                                                     S01310
@@ -2301,7 +2306,7 @@
      C                     EXSR SR05                                      E21465
      C* ****** MOVE FORMATTED ACCOUNT WITH BANK FIELDS       ******       E21465
      C* ****** INTO PRINT LINE                               ******       E21465
-      *                                                                                       CFT032
+      *                                                                      cj1              CFT032
      C           WMT103    IFEQ 'Y'                                                         BUG14771
      C********** CFT032    ANDEQ'Y'                                               BUG14771 BUG14771A
       *                                                                                     BUG14771
@@ -2614,11 +2619,12 @@
       *                                                                   S01310
       **  Field 50 - Ordering Customer.                                   S01310
       *                                                                   S01310
-     C           WMT103    IFEQ 'Y'                                                         BUG14771
+     C           WMT103    IFEQ 'Y'                                                 cj1     BUG14771
      C********** CFT032    ANDEQ'Y'                                               BUG14771 BUG14771A
       ** If switchable feature CSW024 is switched *ON.                                      BUG14771
       *                                                                                     BUG14771
      C           CSW024    IFEQ 'Y'                                                         BUG14771
+     C           FLG50A    ANDEQ'Y'                                                         MD048075
       *                                                                                     BUG14771
       ** Search customer then check if it is CROSSMAR and its BEI is                        BUG14771
       ** not blank.                                                                         BUG14771
@@ -2645,7 +2651,7 @@
      C                     ENDIF                                                            BUG14771
      C                     ENDIF                                                            BUG14771
       *                                                                                       CSW207
-      *** Call formatting program                                                             CSW207
+      *** Call formatting program                   cj1                                       CSW207
       *                                                                                       CSW207
      C           CSW207    IFEQ 'Y'                                                           CSW207
      C           WMT103    ANDEQ'Y'                                                           250600
@@ -2669,6 +2675,7 @@
       ** If switchable feature CSW024 is switched *ON.                                        250600
       *                                                                                       250600
      C           CSW024    IFEQ 'Y'                                                           250600
+     C           FLG50A    ANDEQ'Y'                                                         MD048075
       *                                                                                       250600
       ** Search customer then check if it is CROSSMAR and its BEI is                          250600
       ** not blank.                                                                           250600
@@ -5084,39 +5091,39 @@
      C           W#GLAR    OREQ 'Y'                                                           CFT124
      C           W#ACNM    OREQ 'Y'                                                           CFT124
       *                                                                                       CFT124
-s1   C           W#ACNM    IFEQ 'Y'                                                           CFT124
+S1   C           W#ACNM    IFEQ 'Y'                                                           CFT124
      C           '/'       CAT  ANAM:0    MFLD      P                                         CFT124
      C                     ADD  1         Q                                                   CFT124
-x1   C                     ELSE                                                               CFT124
-s2   C           W#IBAN    IFEQ 'Y'                                                           CFT124
-s3   C           IBAN      IFEQ *BLANKS                                                       CFT124
-s4   C           W#RTNO    IFEQ 'Y'                                                           CFT124
+X1   C                     ELSE                                                               CFT124
+S2   C           W#IBAN    IFEQ 'Y'                                                           CFT124
+S3   C           IBAN      IFEQ *BLANKS                                                       CFT124
+S4   C           W#RTNO    IFEQ 'Y'                                                           CFT124
      C           ACNO      ANDNE0                                                             CFT124
      C           '/'       CAT  @@ACNO:0  MFLD      P                                         CFT124
      C                     ADD  1         Q                                                   CFT124
-x4   C                     ELSE                                                               CFT124
-s5   C           W#GLAR    IFEQ 'Y'                                                           CFT124
+X4   C                     ELSE                                                               CFT124
+S5   C           W#GLAR    IFEQ 'Y'                                                           CFT124
      C           '/'       CAT  DSACC:0   MFLD      P                                         CFT124
      C                     ADD  1         Q                                                   CFT124
-e5   C                     ENDIF                                                              CFT124
-e4   C                     ENDIF                                                              CFT124
-x3   C                     ELSE                                                               CFT124
+E5   C                     ENDIF                                                              CFT124
+E4   C                     ENDIF                                                              CFT124
+X3   C                     ELSE                                                               CFT124
      C           '/'       CAT  IBAN:0    MFLD      P                                         CFT124
      C                     ADD  1         Q                                                   CFT124
-e3   C                     ENDIF                                                              CFT124
-x2   C                     ELSE                                                               CFT124
-s3   C           W#RTNO    IFEQ 'Y'                                                           CFT124
-s4   C           ACNO      ANDNE0                                                             CFT124
+E3   C                     ENDIF                                                              CFT124
+X2   C                     ELSE                                                               CFT124
+S3   C           W#RTNO    IFEQ 'Y'                                                           CFT124
+S4   C           ACNO      ANDNE0                                                             CFT124
      C           '/'       CAT  @@ACNO:0  MFLD      P                                         CFT124
      C                     ADD  1         Q                                                   CFT124
-x4   C                     ELSE                                                               CFT124
-s5   C           W#GLAR    IFEQ 'Y'                                                           CFT124
+X4   C                     ELSE                                                               CFT124
+S5   C           W#GLAR    IFEQ 'Y'                                                           CFT124
      C           '/'       CAT  DSACC:0   MFLD      P                                         CFT124
      C                     ADD  1         Q                                                   CFT124
-e5   C                     ENDIF                                                              CFT124
-e3   C                     ENDIF                                                              CFT124
-e2   C                     ENDIF                                                              CFT124
-e1   C                     ENDIF                                                              CFT124
+E5   C                     ENDIF                                                              CFT124
+E3   C                     ENDIF                                                              CFT124
+E2   C                     ENDIF                                                              CFT124
+E1   C                     ENDIF                                                              CFT124
       *                                                                                       CFT124
      C           Q         OCUR MULT                                                          CFT124
       *                                                                                       CFT124
@@ -5899,6 +5906,39 @@ e1   C                     ENDIF                                                
      C                     ELSE                                                               204225
      C                     MOVEL'N'       CSW024                                              204225
      C                     ENDIF                                                              204225
+      *                                                                                     MD048075
+     C                     CALL 'AOSVALR0'                                                  MD048075
+     C                     PARM *BLANKS   @RTCD                                             MD048075
+     C                     PARM SVAL,2    P@OP01                                            MD048075
+     C                     PARM *BLANKS   P@VL01                                            MD048075
+     C                     PARM *BLANKS   P@OP02                                            MD048075
+     C                     PARM *BLANKS   P@VL02                                            MD048075
+     C                     PARM *BLANKS   P@OP03                                            MD048075
+     C                     PARM *BLANKS   P@VL03                                            MD048075
+     C                     PARM *BLANKS   P@OP04                                            MD048075
+     C                     PARM *BLANKS   P@VL04                                            MD048075
+     C                     PARM *BLANKS   P@OP05                                            MD048075
+     C                     PARM *BLANKS   P@VL05                                            MD048075
+     C                     PARM *BLANKS   P@OP06                                            MD048075
+     C                     PARM *BLANKS   P@VL06                                            MD048075
+     C                     PARM *BLANKS   P@OP07                                            MD048075
+     C                     PARM *BLANKS   P@VL07                                            MD048075
+     C                     PARM *BLANKS   P@OP08                                            MD048075
+     C                     PARM *BLANKS   P@VL08                                            MD048075
+     C                     PARM *BLANKS   P@OP09                                            MD048075
+     C                     PARM *BLANKS   P@VL09                                            MD048075
+     C                     PARM *BLANKS   P@OP10                                            MD048075
+     C                     PARM *BLANKS   P@VL10                                            MD048075
+      *                                                                                     MD048075
+     C           @RTCD     IFNE *BLANKS                                                     MD048075
+     C                     MOVE '057'     DBERR#                                            MD048075
+     C                     MOVELSVAL,2    DBERKY                                            MD048075
+     C                     MOVEL'SDSVALPD'DBFNAM                                            MD048075
+     C                     EXSR DBERR                                                       MD048075
+     C                     ELSE                                                             MD048075
+      ** If FTAllowFld50F = 'Y', allow Tag 50F                                              MD048075
+     C                     MOVELP@VL01    ALW50F  1                                         MD048075
+     C                     ENDIF                                                            MD048075
       **                                                                                      CSC022
       ** Initialize CSC022 and Skip Commit/Rollback flags                                     CSC022
       **                                                                                      CSC022
@@ -5969,6 +6009,7 @@ e1   C                     ENDIF                                                
       ** Access MT10350K* system values if CFT124 is installed                                CFT124
       *                                                                                       CFT124
      C           CFT124    IFEQ 'Y'                                                           CFT124
+     C                     MOVE *BLANKS   P@OP01                                            MD048075
      C                     MOVELSVIBAN    P@OP01                                              CFT124
      C                     MOVELSVRENO    P@OP02                                              CFT124
      C                     MOVELSVGLRF    P@OP03                                              CFT124
@@ -6445,6 +6486,23 @@ e1   C                     ENDIF                                                
      C                     MOVELBBCRNM    CRNM   20                       S01310
      C                     MOVELBBCRTN    CTWN   10                       S01310
      C                     MOVELBBCSID    CSID                            S01310
+      *                                                                                     MD048075
+      ** If FTAllowFld50F = Y and Swift Financial Ins = Y, use tag 50A                      MD048075
+      ** If FTAllowFld50F = Y and Swift Financial Ins = N, use tag 50F                      MD048075
+      *                                                                                     MD048075
+     C                     SELEC                                                            MD048075
+     C           ALW50F    WHEQ 'Y'                                                         MD048075
+     C           BBSWFI    ANDEQ'Y'                                                         MD048075
+     C                     MOVE 'Y'       FLG50A  1                                         MD048075
+      *                                                                                     MD048075
+     C           ALW50F    WHEQ 'Y'                                                         MD048075
+     C           BBSWFI    ANDEQ'N'                                                         MD048075
+     C                     MOVE 'N'       FLG50A                                            MD048075
+      *                                                                                     MD048075
+     C                     OTHER                                                            MD048075
+     C                     MOVE 'Y'       FLG50A                                            MD048075
+     C                     ENDSL                                                            MD048075
+      *                                                                                     MD048075
      C/COPY WNCPYSRC,FT0640C009
      C**********           MOVELBBCNA1    CNA1                                       S01310 BUG14771
      C**********           MOVELBBCNA2    CNA2                                       S01310 BUG14771
@@ -6720,6 +6778,7 @@ e1   C                     ENDIF                                                
      C*   NON BLANK                                                    ***
      C           IVTAG1    IFEQ 'A'
      C           CSID      ANDNE*BLANK
+     C           FLG50A    ANDEQ'Y'                                                         MD048075
       *                                                                   S01435
       * If using account line construct then use second line              S01435
       *                                                                   S01435
@@ -7761,33 +7820,33 @@ e1   C                     ENDIF                                                
      C           W#GLAR    OREQ 'Y'                                                           CFT124
      C           W#ACNM    OREQ 'Y'                                                           CFT124
       *                                                                                       CFT124
-s1   C           W#ACNM    IFEQ 'Y'                                                           CFT124
+S1   C           W#ACNM    IFEQ 'Y'                                                           CFT124
      C           '/'       CAT  ANAM:0    OPCOC1                                              CFT124
-x1   C                     ELSE                                                               CFT124
-s2   C           W#IBAN    IFEQ 'Y'                                                           CFT124
-s3   C           IBAN      IFEQ *BLANKS                                                       CFT124
-s4   C           W#RTNO    IFEQ 'Y'                                                           CFT124
+X1   C                     ELSE                                                               CFT124
+S2   C           W#IBAN    IFEQ 'Y'                                                           CFT124
+S3   C           IBAN      IFEQ *BLANKS                                                       CFT124
+S4   C           W#RTNO    IFEQ 'Y'                                                           CFT124
      C           ACNO      ANDNE0                                                             CFT124
      C           '/'       CAT  @@ACNO:0  OPCOC1                                              CFT124
-x4   C                     ELSE                                                               CFT124
-s5   C           W#GLAR    IFEQ 'Y'                                                           CFT124
+X4   C                     ELSE                                                               CFT124
+S5   C           W#GLAR    IFEQ 'Y'                                                           CFT124
      C           '/'       CAT  DSACC:0   OPCOC1                                              CFT124
-e5   C                     ENDIF                                                              CFT124
-e4   C                     ENDIF                                                              CFT124
-x3   C                     ELSE                                                               CFT124
+E5   C                     ENDIF                                                              CFT124
+E4   C                     ENDIF                                                              CFT124
+X3   C                     ELSE                                                               CFT124
      C           '/'       CAT  IBAN:0    OPCOC1                                              CFT124
-e3   C                     ENDIF                                                              CFT124
-x2   C                     ELSE                                                               CFT124
-s3   C           W#RTNO    IFEQ 'Y'                                                           CFT124
+E3   C                     ENDIF                                                              CFT124
+X2   C                     ELSE                                                               CFT124
+S3   C           W#RTNO    IFEQ 'Y'                                                           CFT124
      C           ACNO      ANDNE0                                                             CFT124
      C           '/'       CAT  @@ACNO:0  OPCOC1                                              CFT124
-x3   C                     ELSE                                                               CFT124
-s4   C           W#GLAR    IFEQ 'Y'                                                           CFT124
+X3   C                     ELSE                                                               CFT124
+S4   C           W#GLAR    IFEQ 'Y'                                                           CFT124
      C           '/'       CAT  DSACC:0   OPCOC1                                              CFT124
-e4   C                     ENDIF                                                              CFT124
-e3   C                     ENDIF                                                              CFT124
-e2   C                     ENDIF                                                              CFT124
-e1   C                     ENDIF                                                              CFT124
+E4   C                     ENDIF                                                              CFT124
+E3   C                     ENDIF                                                              CFT124
+E2   C                     ENDIF                                                              CFT124
+E1   C                     ENDIF                                                              CFT124
       *                                                                                       CFT124
      C                     ENDIF                                                              CFT124
       *                                                                                       CFT124
@@ -11644,7 +11703,7 @@ e1   C                     ENDIF                                                
 *EQUATE 4040
      X/COPY WNCPYSRC,FT0640X001
 ** CPY@   **      OBJECT COPYRIGHT
-(c) Finastra International Limited 2001
+(c)Finastra International Limited 2001
 **   ZMNM - MONTHS SHORT NAMES
 JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
 ** TABA/TABB - Instruction Code/Bank to Bank Code                         CFT014
@@ -11665,3 +11724,4 @@ ABCDEFGHIJKLMNOPQRSTUVWXYZ                                                      
 1234567890                                                                                    CSW202
 **   SVAL  -  SYSTEM VALUES ARRAY                                                             242289
 UseFullFTRefInMsg                                                                             242289
+FTAllowFld50F                                                                               MD048075

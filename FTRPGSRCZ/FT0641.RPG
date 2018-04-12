@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD045920           Date 04Jul17               *
+      *  Last Amend No. MD048075           Date 09Nov17               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD045920           Date 04Jul17               *
       *                 MD046436           Date 04Jul17               *
       *                 252874             Date 25Jan17               *
       *                 CSW215             Date 06Apr15               *
@@ -158,6 +159,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD048075 - Field 50A instead of 50F in MT103 with CSW024 on  *
+      *           - Add system value FTAllowFld50F to allow the use   *
+      *             of tag 50F.                                       *
       *  MD046248 - Finastra Rebranding                               *
       *  MD045920 - Ordering Customer account number is missing from  *
       *             FT SWIFT payment.                                 *
@@ -478,7 +482,8 @@
      E                    NUMC   10  10  1                                                    CSW202
      E/COPY WNCPYSRC,FT0641E001
       *
-     E                    SVAL    1   1 20                                                    242289
+     E**********          SVAL    1   1 20                                           242289 MD048075
+     E                    SVAL    1   2 20                                                  MD048075
      E/EJECT
      I*
      I*CLINTCBF****70                                                     S01310
@@ -2576,6 +2581,7 @@
       ** If switchable feature CSW024 is switched *ON.                                      BUG14771
       *                                                                                     BUG14771
      C           CSW024    IFEQ 'Y'                                                         BUG14771
+     C           FLG50A    ANDEQ'Y'                                                         MD048075
       *                                                                                     BUG14771
       ** Search customer then check if it is CROSSMAR and its BEI is                        BUG14771
       ** not blank.                                                                         BUG14771
@@ -2623,6 +2629,7 @@
       ** If switchable feature CSW024 is switched *ON.                                        250600
       *                                                                                       250600
      C           CSW024    IFEQ 'Y'                                                           250600
+     C           FLG50A    ANDEQ'Y'                                                         MD048075
       *                                                                                       250600
       ** Search customer then check if it is CROSSMAR and its BEI is                          250600
       ** not blank.                                                                           250600
@@ -5794,6 +5801,39 @@ e1   C                     ENDIF                                                
      C                     ELSE                                                               204225
      C                     MOVEL'N'       CSW024                                              204225
      C                     ENDIF                                                              204225
+      *                                                                                     MD048075
+     C                     CALL 'AOSVALR0'                                                  MD048075
+     C                     PARM *BLANKS   @RTCD                                             MD048075
+     C                     PARM SVAL,2    P@OP01                                            MD048075
+     C                     PARM *BLANKS   P@VL01                                            MD048075
+     C                     PARM *BLANKS   P@OP02                                            MD048075
+     C                     PARM *BLANKS   P@VL02                                            MD048075
+     C                     PARM *BLANKS   P@OP03                                            MD048075
+     C                     PARM *BLANKS   P@VL03                                            MD048075
+     C                     PARM *BLANKS   P@OP04                                            MD048075
+     C                     PARM *BLANKS   P@VL04                                            MD048075
+     C                     PARM *BLANKS   P@OP05                                            MD048075
+     C                     PARM *BLANKS   P@VL05                                            MD048075
+     C                     PARM *BLANKS   P@OP06                                            MD048075
+     C                     PARM *BLANKS   P@VL06                                            MD048075
+     C                     PARM *BLANKS   P@OP07                                            MD048075
+     C                     PARM *BLANKS   P@VL07                                            MD048075
+     C                     PARM *BLANKS   P@OP08                                            MD048075
+     C                     PARM *BLANKS   P@VL08                                            MD048075
+     C                     PARM *BLANKS   P@OP09                                            MD048075
+     C                     PARM *BLANKS   P@VL09                                            MD048075
+     C                     PARM *BLANKS   P@OP10                                            MD048075
+     C                     PARM *BLANKS   P@VL10                                            MD048075
+      *                                                                                     MD048075
+     C           @RTCD     IFNE *BLANKS                                                     MD048075
+     C                     MOVE '057'     DBERR#                                            MD048075
+     C                     MOVELSVAL,2    DBERKY                                            MD048075
+     C                     MOVEL'SDSVALPD'DBFNAM                                            MD048075
+     C                     EXSR DBERR                                                       MD048075
+     C                     ELSE                                                             MD048075
+      ** If FTAllowFld50F = 'Y', allow Tag 50F                                              MD048075
+     C                     MOVELP@VL01    ALW50F  1                                         MD048075
+     C                     ENDIF                                                            MD048075
       *                                                                                       CSW213
       ** Check if SWIFT Changes 2013 (CSW213) is installed                                    CSW213
       *                                                                                       CSW213
@@ -5877,6 +5917,7 @@ e1   C                     ENDIF                                                
       ** Access MT10350K* system values if CFT124 is installed                                CFT124
       *                                                                                       CFT124
      C           CFT124    IFEQ 'Y'                                                           CFT124
+     C                     MOVE *BLANKS   P@OP01                                            MD048075
      C                     MOVELSVIBAN    P@OP01                                              CFT124
      C                     MOVELSVRENO    P@OP02                                              CFT124
      C                     MOVELSVGLRF    P@OP03                                              CFT124
@@ -6306,6 +6347,23 @@ e1   C                     ENDIF                                                
      C                     MOVELBBCRNM    CRNM   20                       S01310
      C                     MOVELBBCRTN    CTWN   10                       S01310
      C                     MOVELBBCSID    CSID                            S01310
+      *                                                                                     MD048075
+      ** If FTAllowFld50F = Y and Swift Financial Ins = Y, Use tag 50A                      MD048075
+      ** If FTAllowFld50F = Y and Swift Financial Ins = N, use tag 50F                      MD048075
+      *                                                                                     MD048075
+     C                     SELEC                                                            MD048075
+     C           ALW50F    WHEQ 'Y'                                                         MD048075
+     C           BBSWFI    ANDEQ'Y'                                                         MD048075
+     C                     MOVE 'Y'       FLG50A  1                                         MD048075
+      *                                                                                     MD048075
+     C           ALW50F    WHEQ 'Y'                                                         MD048075
+     C           BBSWFI    ANDEQ'N'                                                         MD048075
+     C                     MOVE 'N'       FLG50A                                            MD048075
+      *                                                                                     MD048075
+     C                     OTHER                                                            MD048075
+     C                     MOVE 'Y'       FLG50A                                            MD048075
+     C                     ENDSL                                                            MD048075
+      *                                                                                     MD048075
      C/COPY WNCPYSRC,FT0641C009
      C**********           MOVELBBCNA1    CNA1                                       S01310 BUG14771
      C**********           MOVELBBCNA2    CNA2                                       S01310 BUG14771
@@ -6578,6 +6636,7 @@ e1   C                     ENDIF                                                
      C*   NON BLANK                                                    ***
      C           IVTAG1    IFEQ 'A'
      C           CSID      ANDNE*BLANK
+     C           FLG50A    ANDEQ'Y'                                                         MD048075
       *                                                                   S01435
       * If using account line construct then use second line              S01435
       *                                                                   S01435
@@ -7620,7 +7679,7 @@ s4   C           W#RTNO    IFEQ 'Y'                                             
      C           ACNO      ANDNE0                                                             CFT124
      C           '/'       CAT  @@ACNO:0  OPCOC1                                              CFT124
 x4   C                     ELSE                                                               CFT124
-s5   C           W#GLAR    IFEQ 'Y'                                                           CFT124
+x5   C           W#GLAR    IFEQ 'Y'                                                           CFT124
      C           '/'       CAT  DSACC:0   OPCOC1                                              CFT124
 e5   C                     ENDIF                                                              CFT124
 e4   C                     ENDIF                                                              CFT124
@@ -11453,3 +11512,4 @@ ABCDEFGHIJKLMNOPQRSTUVWXYZ                                                      
 1234567890                                                                                    CSW202
 **   SVAL  -  SYSTEM VALUES ARRAY                                                             242289
 UseFullFTRefInMsg                                                                             242289
+FTAllowFld50F                                                                               MD048075

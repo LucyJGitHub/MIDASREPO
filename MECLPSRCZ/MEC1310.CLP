@@ -9,12 +9,13 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD043618           Date 07Dec17              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. CAP084             Date 08Jul03              */
+/*                      CAP084             Date 08Jul03              */
 /*                      CSF002             Date 11Aug03              */
 /* Midas Release 4.01.02 --------------------------------------------*/
 /*                      197434             Date 09Oct01              */
@@ -24,6 +25,9 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD043618 - Job ME_FT_IMM when started manually it is        */
+/*                  submitted  with user’s profile and not system    */
+/*                  owner profile -Formalization of onsite fix.      */
 /*       MD046248 - Finastra Rebranding                              */
 /*       CAP084 - Parameter added to ZMUSER for Java wrappers        */
 /*       CSF002 - Global layer.                                      */
@@ -92,8 +96,8 @@
 /* Create ZMUSER data area  */
 /* */
 /************CALL       PGM(ZMUSER) PARM(&ERRCDE)                                         /*CAP084*/
-             CALL       PGM(ZMUSER) PARM(&ERRCDE &ZMUSER)                                 /*CAP084*/
-             IF         COND(&ERRCDE *EQ 1) THEN(GOTO CMDLBL(ABNORMAL))
+/**********  CALL       PGM(ZMUSER) PARM(&ERRCDE &ZMUSER)                        /*CAP084 MD043618*/
+/**********  IF         COND(&ERRCDE *EQ 1) THEN(GOTO CMDLBL(ABNORMAL))                 /*MD043618*/
 /* */
 /* Set up other data ares   */
 /* */

@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. MD046248           Date 27Oct17              */
-/*       Prev Amend No. MD027770           Date 27Jun14              */
+/*       Last Amend No. MD043618           Date 07Dec17              */
+/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*                      MD027770           Date 27Jun14              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -26,6 +27,9 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD043618 - Job ME_FT_IMM when started manually it is        */
+/*                  submitted  with user’s profile and not system    */
+/*                  owner profile -Formalization of onsite fix.      */
 /*       MD046248 - Finastra Rebranding                              */
 /*       MD027770 - Job ME_FT_IMM dumps due to xxOWNER not found     */
 /*                  in MUSER. Use the current user in SBMJOB command */
@@ -153,10 +157,14 @@
 /************             JOBD(MEJOBD) JOBQ(MEJOBQ) USER(*JOBD) +    */                 /*MD027770*/
 /************             RTGDTA(MSMEIMM) INLLIBL(*JOBD) MSGQ(MOPERQ) +                 /*MD027770*/
 /************             OUTQ(*JOBD)                                */          /*CSC023 MD027770*/
+/**********  SBMJOB     CMD(CALL PGM(MEC1021)) JOB(MS_ME_IMM) +
+/**********               JOBD(MEJOBD) JOBQ(MEJOBQ) USER(*CURRENT) +
+/**********               RTGDTA(MSMEIMM) INLLIBL(*JOBD) +
+/**********               MSGQ(MOPERQ) OUTQ(*JOBD)                             /*MD027770 MD043618*/
              SBMJOB     CMD(CALL PGM(MEC1021)) JOB(MS_ME_IMM) +
-                          JOBD(MEJOBD) JOBQ(MEJOBQ) USER(*CURRENT) +
+                          JOBD(MEJOBD) JOBQ(MEJOBQ) USER(*JOBD) +
                           RTGDTA(MSMEIMM) INLLIBL(*JOBD) +
-                          MSGQ(MOPERQ) OUTQ(*JOBD)                                      /*MD027770*/
+                          MSGQ(MOPERQ) OUTQ(*JOBD)                                      /*MD043618*/
              RCVMSG     PGMQ(*SAME) RMV(*NO) MSGDTA(&MSGDTA) +
                           MSGID(&MSGID)
 /**/

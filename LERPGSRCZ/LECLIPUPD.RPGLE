@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. 260408             Date 06Oct17               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD046370           Date 07Nov17               *
+      *  Prev Amend No. 260408             Date 06Oct17               *
+      *                 MD046248           Date 27Oct17               *
       *                 MD041714           Date 29Sep16               *
       *                 MD039449           Date 04Jul16               *
       *                 MD034363           Date 30Jun15               *
@@ -149,6 +150,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046370 - Component LERC135 is looping in COB. If loan      *
+      *             maturity date is amended, updated of fee end date/*
+      *             next payment date is done if system value         *
+      *             'AutoEndCalcLoanFee' is 'Y' and if system value is*
+      *             'N', no update should be done.  Applicable for all*
+      *             calculated loan fees.                             *
       *  260408 - For non-sydicated loan, NOPS is not updated if      *
       *           attached part sold has processing type (PTYP) = 72. *
       *           This allows the main loan to be deleted even if the *
@@ -2250,8 +2257,11 @@
      C     *IN89         DOWEQ     '0'                                                        262735
       *                                                                                       262735
      C     FECALT        IFEQ      '97'                                                       262735
+     C     AutoEndFee    ANDEQ     'Y'                                                      MD046370
      C     FECALT        OREQ      '98'                                                       262735
+     C     AutoEndFee    ANDEQ     'Y'                                                      MD046370
      C     FECALT        OREQ      '99'                                                       262735
+     C     AutoEndFee    ANDEQ     'Y'                                                      MD046370
      C     FECALT        OREQ      '90'                                                       262735
       *                                                                                       262735
       ** Populate Fee fields                                                                  262735
@@ -7761,7 +7771,7 @@
      C     L_CLPTYP      ANDEQ     72
      C     PTYP_M        OREQ      71
      C     L_CLPTYP      ANDEQ     72
-     C*****PTYP_M        OREQ      72
+     C*****PTYP_M        OREQ      72                                                         260408
      C     PTYP_M        ORNE      72                                                         260408
      C     L_CLPTYP      ANDEQ     72
      C***********        Z-ADD     L_CLLNRF      WSCLLNRF          6 0                        CLE148
@@ -9403,6 +9413,41 @@
      C                   ENDIF                                                                CLE141
      C                   ENDIF                                                                CLE141
                                                                                               CRE073
+     C                   EVAL      SVALK1 = 'AutoEndCalcLoanFee'                            MD046370
+     C                   CALLB     'AOSVALR0'                                               MD046370
+     C                   PARM      *BLANKS       PRtCd                                      MD046370
+     C                   PARM                    SVALK1           20                        MD046370
+     C                   PARM                    SVAL1           200                        MD046370
+     C                   PARM                    SVALK2           20                        MD046370
+     C                   PARM                    SVAL2           200                        MD046370
+     C                   PARM                    SVALK3           20                        MD046370
+     C                   PARM                    SVAL3           200                        MD046370
+     C                   PARM                    SVALK4           20                        MD046370
+     C                   PARM                    SVAL4           200                        MD046370
+     C                   PARM                    SVALK5           20                        MD046370
+     C                   PARM                    SVAL5           200                        MD046370
+     C                   PARM                    SVALK6           20                        MD046370
+     C                   PARM                    SVAL6           200                        MD046370
+     C                   PARM                    SVALK7           20                        MD046370
+     C                   PARM                    SVAL7           200                        MD046370
+     C                   PARM                    SVALK8           20                        MD046370
+     C                   PARM                    SVAL8           200                        MD046370
+     C                   PARM                    SVALK9           20                        MD046370
+     C                   PARM                    SVAL9           200                        MD046370
+     C                   PARM                    SVALK10          20                        MD046370
+     C                   PARM                    SVAL10          200                        MD046370
+      *                                                                                     MD046370
+     C                   IF        PRtCd = *BLANKS                                          MD046370
+     C                   MOVEL     SVAL1         AutoEndFee        1                        MD046370
+     C                   ELSE                                                               MD046370
+     C     *LOCK         IN        LDA                                                      MD046370
+     C                   EVAL      DBFile = 'SDSVALPD'                                      MD046370
+     C                   EVAL      DBase = 103                                              MD046370
+     C                   EVAL      DBKey = SVALK1                                           MD046370
+     C                   OUT       LDA                                                      MD046370
+     C                   EXSR      SRErr                                                    MD046370
+     C                   ENDIF                                                              MD046370
+      *                                                                                     MD046370
       ** If Past Due Call Loans Processing;                                                   CLE134
       ** Set Basel II Classification Period Description & Days Arrays.                        CLE134
                                                                                               CLE134

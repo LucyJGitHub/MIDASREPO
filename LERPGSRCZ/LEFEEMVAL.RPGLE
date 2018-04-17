@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD028931           Date 13May14               *
+      *  Last Amend No. MD046370           Date 07Nov17               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD028931           Date 13May14               *
       *                 MD039016           Date 26May16               *
       *                 CLE141A            Date 28Apr16               *
       *                 CLE141             Date 08Feb16               *
@@ -105,6 +106,16 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD046370 - Component LERC135 is looping in COB. If system    *
+      *             value AutoEndCalcLoanFee is 'Y' & loan already has*
+      *             a zero amount, prevent fee from being inserted    *
+      *             with start date that falls after date when loan's *
+      *             principal is zero. Also, if system value is 'Y',  *
+      *             prevent fee end date that falls after loan        *
+      *             maturity date and if system value is 'N', this is *
+      *             allowed. Also, prevent fee start date that falls  *
+      *             after loan maturity date. Applicable for all      *
+      *             calculated loan fee.                              *
       *  MD046248 - Finastra Rebranding                               *
       *  MD028931 - Incorrect defaulting of exhange rate for loan fees*
       *             Added check on FA_FCCY not equal to blank to      *
@@ -272,7 +283,7 @@
       ** Ê =======                              Ê
       ** +--------------------------------------+
       *****************************************************************
- 
+
       * Fees Settlement/Adjustment Detail
      FLEFEADL2  IF   E           K DISK    INFSR(*PSSR)
      FLEPDUEL2  IF   E           K DISK    INFSR(*PSSR)                                       CLE134
@@ -287,17 +298,19 @@
      F**********                           COMMIT                                    AR314017 CLE164
      FSDBSRTL0  IF   E           K DISK    INFSR(*PSSR)                                    AR826996B
      F                                                                                     AR826996B
- 
+     FLEHISTLA  IF   E           K DISK    INFSR(*PSSR)                                     MD046370
+     F                                     PREFIX(HP_)                                      MD046370
+
       **  Compile time arrays
- 
+
      D WCTP            S              2    DIM(14) CTDATA PERRCD(14)
      D***ECTP***       S              2    DIM(17) CTDATA PERRCD(17)                   CLE073 CLE134
      D***ECTP***       S              2    DIM(18) CTDATA PERRCD(18)                 CLE134 AR322844
      D ECTP            S              2    DIM(04) CTDATA PERRCD(04)                        AR322844
- 
+
      D CLE141          S              1A                                                      CLE141
      D RetCode         S              7A                                                     CLE141A
- 
+
       *
       *****************************************************************
       ** +--------------------------------------+
@@ -317,42 +330,42 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       ** The following /COPY line includes definitions for the above fields
       ** as #ProcPgm, #ProcMod and #ProcName.  They are based on the
       ** corresponding fields in the PSDS /COPY member, so that member
       ** must be included where this one is used.
- 
+
      D/COPY ZACPYSRC,PROCPARMS
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** Ê End of automatically included D-specsÊ
       ** Ê =====================================Ê
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** Ê Manually included D-specs            Ê
       ** Ê =========================            Ê
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** Ê Named constants                      Ê
       ** Ê ===============                      Ê
@@ -373,36 +386,36 @@
      D     WMSGID4     S                   LIKE(#MsgID)                                       CAS019
                                                                                               CAS019
      D MSGDATA         S                   LIKE(#MsgData)                                     CAS019
- 
+
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(75)
- 
+
       ** +--------------------------------------+
       ** Ê Arrays and Data Structures           Ê
       ** Ê ==========================           Ê
       ** +--------------------------------------+
- 
+
       ** Array of Fields in error.
      D FldNamXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of error message IDs
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of error message data.
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
       ** Array of Fields with warnings.
      D WFldNmXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of warning message IDs
      D WMsgIDXAr       S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of warning message data.
      D WMsgDtXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
       * First DS for Access programs - short data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
      D                 DS                                                                     242377
      D  WPARM                  1     20                                                       242377
      D  WPARM1                 1      5                                                       242377
@@ -412,41 +425,41 @@
       *                                                                                       242377
       ** Flags to indicate whether transaction fields are valid
      D OKFee         E DS                  EXTNAME(LEEFEEMPD)
- 
+
      D SDFEE         E DS                  EXTNAME(SDFEEPD)
       ** External DS for Fee Details
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
       ** EXTERNAL DS FOR GENERAL LEDGER DETAILS
- 
+
      D SDCLND        E DS                  EXTNAME(SDCLNDPD)
       **  CUSTOMER LENDING DETAILS
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** EXTERNAL DS FOR MIDAS MODULES DETAILS
- 
+
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
       ** BRANCH CODES
- 
+
      D SDCTRY        E DS                  EXTNAME(SDCTRYPD)
       **   COUNTRY
- 
+
      D SDALTN        E DS                  EXTNAME(SDALTNPD)
       ** ALTERNATE NAME AND ADDRESSES
- 
+
      D SDACOF        E DS                  EXTNAME(SDACOFPD)
       **   ACCOUNT OFFICER DETAILS
- 
+
      D SDPRFC        E DS                  EXTNAME(SDPRFCPD)
       **   PROFIT CENTRES
- 
+
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
      D QQDFAC1       E                     EXTFLD(QQDFAC)                                     CGL029
       **   CUSTOMER
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       **   CURRENCY TYPE
                                                                                               CAS011
@@ -458,41 +471,41 @@
                                                                                               CLE134
      D SDBSRT        E DS                  EXTNAME(SDBSRTPD)                                  CLE134
       ** External DS for base rate details                                                    CLE134
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       * FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D ValidFeem     E DS                  EXTNAME(LEVFEEMPD)
       * Valid Fee layout -> LEFEED
- 
+
      D TranInPrim    E DS                  EXTNAME(LEFEEMPD)
       * Incoming Transaction
- 
+
      D InPaySttmt    E DS                  EXTNAME(SDESSPPD)
       * Pay Settlement Instructions - Input
- 
+
      D InRecSttmt    E DS                  EXTNAME(SDESSRPD)
       * Receive Settlement Instructions - Input
- 
+
      D InFRASttmt    E DS                  EXTNAME(SDESSFPD)
       * FRA/IRS Settlement Instructions - Input
- 
+
       * (Current) Fee record in file Format
      D CrFeFilFmt    E DS                  EXTNAME(LEFEED) PREFIX(@@)
- 
+
       * Customer Loans record CL in file Format
      D ClilFilFmt    E DS                  EXTNAME(CLOANCL)
      D                                     PREFIX(CL_)
- 
+
       * Facility record FM in file Format
      D FacmFilFmt    E DS                  EXTNAME(FCLTYFM)
      D                                     PREFIX(FA_)
- 
+
      D ZMUSER          DS            17
      D  USRBCH                11     13
       * ZMUSER data layout
      D  DBRN                  11     13
- 
+
      D RUNDAT          DS            13
      D  RUNA                   1      7
      D  RUND                   8     10P 0
@@ -500,14 +513,14 @@
      D  DATF                  12     12
      D  AGMBIN                13     13
       * Rundate data area
- 
+
       * DS for calculating PC reference
      D LEALLO        E DS                  EXTNAME(LEALLO)
       *
       ** Fees/Profitability enhancement status data area
      D LERSTS        E DS                  EXTNAME(LERSTS)
      D  WHISST       E                     EXTFLD(FACHISD)
- 
+
      D                 DS
      D  WF3TDS                 1      8
      D  WF3DD                  1      2
@@ -521,7 +534,7 @@
      D  DDMMYY                14     19  0
      D  WFAC3                 20     22  0
      D  WA13                  23     35  0
- 
+
       ** Data structure to set Business Day Convention                                       CLE141A
      D CurLocDS        DS            60                                                      CLE141A
      D   CurLocDS1             1      3                                                      CLE141A
@@ -550,15 +563,15 @@
       ** Ê Declared variables                   Ê
       ** Ê ==================                   Ê
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
      D IdxNew          S              3P 0                                                    CAP084
- 
+
       ** Index for arrays of warning message ids etc
      D WId             S              3P 0
      D WIdNew          S              3P 0                                                    CAP084
- 
+
       ** Response Mode, received as a parameter from the common header
      D RespMode        S              1A
      D AIdx            S              3P 0                                                  BUG10955
@@ -578,7 +591,7 @@
       ** Amortisation Start & Date Date                                                       CAS019
      D WAStrDat        S              5P 0 INZ(*ZEROS)                                        CAS019
      D WAEndDat        S              5P 0 INZ(*ZEROS)                                        CAS019
- 
+
       **  Syndications Manager Switchable Feature                                             CLE106
      D CLE106          S              1                                                       CLE106
      D PRtcd           S              7                                                       CLE106
@@ -652,13 +665,13 @@
       ** Ê End of D-specs                       Ê
       ** Ê ==============                       Ê
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       ** Ê Hook for non-core D-specs (all types)  Ê
       ** Ê also any I-specs (if necessary)        Ê
       ** Ê =====================================  Ê
       ** +----------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       ** +--- Start of Main processing -----------------------------------+
@@ -698,7 +711,7 @@
      C                   Endif                                                                237347
       *                                                                                       237347
      C                   EXSR      RESETERRS
- 
+
      C     CLE141        IFEQ      'Y'                                                       CLE141A
      C     DDLNRF        ANDNE     *blanks                                                   CLE141A
      C                   Eval      Kpd_RECI = 'D'                                            CLE141A
@@ -733,11 +746,11 @@
       *
      C                   CALL      'SFC000026'
      C                   PARM      *BLANKS       USER             10
- 
+
      C                   IF        USER <> *BLANKS
      C                   EVAL      PSUSER = USER
      C                   ENDIF
- 
+
       ** Call Validation Modules in Sequence
       *
       ** Fee Type
@@ -851,13 +864,13 @@
      C**********         EXSR      VSSIs                                             AR314017 CLE164
       *****************************************************************              AR314017 CLE164
      C                   ENDIF                                                                CLE134
- 
+
      C                   EXSR      UPDATERRS
       *
       *  *-------------------------------------------------------*
       *  * If no errors set up outstanding fields for valid file *
       *  *-------------------------------------------------------*
- 
+
      C                   IF        Idx = 0
      C                   EXSR      SetupValid
      C                   ENDIF
@@ -935,7 +948,7 @@
      C                   MOVEL     ZAMSTP        DDFETP
      C                   MOVE      FA_PRTR       WPTFI
      C                   ENDIF
- 
+
      C     FA_PRTR       IFEQ      'I'
      C                   MOVE      *BLANKS       ZAMSID
      C                   MOVEL     'LER0204'     ZAMSID
@@ -1064,7 +1077,7 @@
      C                   ENDIF                                                                CLE134
       *
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -1076,13 +1089,13 @@
      C                   IF        CAS009 = 'Y'                                               CAS011
      C                   EVAL      WADJY = *BLANK                                             CAS011
      C                   ENDIF                                                                CAS011
- 
+
      C                   CALL      'AOFEER0'
      C                   PARM      '*BLANKS'     PRTCD             7
      C                   PARM      '*KEY   '     POPTN             7
      C                   PARM      DDECOD        FKEY              2
      C     SDFEE         PARM      SDFEE         DSFDY
- 
+
      C     PRTCD         IFNE      *BLANKS
      C                   Move      'N'           DDECODOK
      C                   Add       1             Idx
@@ -1184,7 +1197,7 @@
      C                   ENDIF                                                             AR826996B
      C                   ENDIF                                                             AR826996B
       *                                                                                    AR826996B
- 
+
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -1192,13 +1205,13 @@
       ** VECUR   - Validate Currency
       *****************************************************************
      C     VECUR         BEGSR
- 
+
      C                   CALL      'AOCURRR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY   '     POPTN
      C                   PARM      DDECUR        K101              3
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
      C     PRTCD         IFNE      *BLANKS
      C                   Move      'N'           DDECUROK
      C                   Add       1             Idx
@@ -1210,7 +1223,7 @@
      C                   MOVE      A6MDIN        ZMDI2             1                           ??
      C                   Z-ADD     A6SPRT        ZRATE2           13 8                         ??
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -1218,7 +1231,7 @@
       ** VEAMT   - Validate Fee amount
       *****************************************************************
      C     VEAMT         BEGSR
- 
+
       ***If*LOAN*reference*entered*then*amount*is*mandatory************                       CAP084
       **********                                                                              CAP084
      C*****DDLNRF        IFNE      *BLANKS                                                    CAP084
@@ -1315,7 +1328,7 @@
      C     DDESGN        IFEQ      '-'
      C                   Z-SUB     WFAMT         WFAMT
      C                   ENDIF
- 
+
      C     DDESGN        IFEQ      '-'
      C     DDESGN        OREQ      ' '
      C     DDESGN        OREQ      '+'
@@ -1366,7 +1379,7 @@
      C                   PARM                    ZDAYNO            5 0
      C                   PARM                    BJDFIN
      C                   PARM                    ErrorFlag         1
- 
+
       **   - invalid format or not numeric
      C     ErrorFlag     IFEQ      'Y'
      C     *IN97         OREQ      '0'
@@ -1408,10 +1421,19 @@
      C                   EVAL      FldNamXAr(Idx) = 'DDEPSD'                                  CAS011
      C                   EVAL      MsgIDXAr(Idx) = 'LEV1072'                                  CAS011
      C                   ELSE                                                                 CAS011
+     C                   IF        CLE073 = 'Y' AND WPSTD > CL_MDAT AND                     MD046370
+     C                             CL_MDAT <> 0 AND (DDCALT = '97' OR                       MD046370
+     C                             DDCALT = '98' OR DDCALT = '99')                          MD046370
+     C                   MOVE      'N'           DDEPSDOK                                   MD046370
+     C                   ADD       1             Idx                                        MD046370
+     C                   MOVEL     'DDEPSD'      FldNamXAr(Idx)                             MD046370
+     C                   MOVEL     'LER0112'     MsgIDXAr(Idx)                              MD046370
+     C                   ELSE                                                               MD046370
      C                   Move      'W'           DDEPSDOK
      C                   Add       1             WId
      C                   Movel     'DDEPSD'      WFldNmXAr(WId)
      C                   Movel     'LER0023'     WMsgIdXAr(WId)
+     C                   ENDIF                                                              MD046370
      C                   ENDIF                                                                CAS011
      C                   ENDIF
       *
@@ -1433,16 +1455,46 @@
      C                   MOVEL     'XLE0012'     MsgIDXAr(Idx)                                CLE073
      C                   ENDIF                                                                CLE073
       *                                                                                       CLE073
+     C     CLE073        IFEQ      'Y'                                                      MD046370
+     C     AutoEndFee    ANDEQ     'Y'                                                      MD046370
+     C     CL_CPAM       IFEQ      0                                                        MD046370
+     C     DDCALT        ANDEQ     '97'                                                     MD046370
+     C     CL_CPAM       OREQ      0                                                        MD046370
+     C     DDCALT        ANDEQ     '98'                                                     MD046370
+     C     CL_CPAM       OREQ      0                                                        MD046370
+     C     DDCALT        ANDEQ     '99'                                                     MD046370
+     C                   MOVE      '0'           *IN79                                      MD046370
+     C                   Z-ADD     99999         WVDAT             5 0                      MD046370
+     C                   Z-ADD     999           WLASN             3 0                      MD046370
+     C                   Z-ADD     0             NWMAT             5 0                      MD046370
+     C     KEYHST        SETGT     LEHISTLA                                                 MD046370
+     C     KEYPHS        READPE    LEHISTLA                               79                MD046370
+     C     *IN79         DOWEQ     '0'                                                      MD046370
+     C     HP_CPAM       ANDEQ     0                                                        MD046370
+     C                   Z-ADD     HP_VDAT       NWMAT                                      MD046370
+     C     KEYPHS        READPE    LEHISTLA                               79                MD046370
+     C                   ENDDO                                                              MD046370
+      *                                                                                     MD046370
+     C     WPSTD         IFGT      NWMAT                                                    MD046370
+     C                   MOVE      'N'           DDEPSDOK                                   MD046370
+     C                   ADD       1             Idx                                        MD046370
+     C                   MOVEL     'DDEPSD'      FldNamXAr(Idx)                             MD046370
+     C                   MOVEL     '5049054'     MsgIDXAr(Idx)                              MD046370
+     C                   ENDIF                                                              MD046370
+      *                                                                                     MD046370
+     C                   ENDIF                                                              MD046370
+     C                   ENDIF                                                              MD046370
+      *                                                                                     MD046370
      C                   ELSE
       *
       ** If facility based fee warning if date is either before
       ** the availabilty date or after the expiry Date
- 
+
       * Use WWDTEX if not zero (date set up in RTV module)
      C     WWDTEX        IFNE      0
      C                   Z-ADD     WWDTEX        FA_DTEX
      C                   ENDIF
- 
+
      C     WPSTD         IFLT      FA_DTAP
      C     WPSTD         ORGT      FA_DTEX
       *
@@ -1497,11 +1549,11 @@
      C     DDEPON        IFEQ      'S'
      C     DDEPON        OREQ      ' '
      C                   Z-ADD     WPSTD         ZDAYNO
- 
+
      C     @@FESTTL      IFEQ      01
      C     @@FESTTL      OREQ      07
      C     @@FESTTL      OREQ      08
- 
+
      C*****CLE141        IFEQ      'N'                                                CLE141 CLE141A
      C*****DDLNRF        OREQ      *blanks                                            CLE141 CLE141A
       *
@@ -1512,7 +1564,7 @@
      C                   ELSE
      C                   MOVE      DDECUR        ZCCY              3
      C                   ENDIF
- 
+
      C                   CALLB     'ZCHKH'
      C                   PARM                    ZDAYNO
      C                   PARM                    ZCCY              3
@@ -1533,7 +1585,7 @@
      C                   ENDIF
       *
      C**********         ENDIF                                                        CLE141 CLE141A
- 
+
      C                   ELSE
       *
       ** Local Ccy check
@@ -1576,7 +1628,7 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -1601,7 +1653,7 @@
      C                   PARM                    ZDAYNO            5 0
      C                   PARM                    BJDFIN
      C                   PARM                    ErrorFlag         1
- 
+
       **   - invalid format or not numeric
      C     ErrorFlag     IFEQ      'Y'
      C     *IN97         OREQ      '0'
@@ -1623,7 +1675,7 @@
      C                   ENDIF
       *
      C     DDEPEDOK      IFEQ      'Y'
- 
+
      C     DDLNRF        IFNE      *BLANKS
       *
       ** Warning if date is before start date or after maturity
@@ -1641,11 +1693,21 @@
      C                   EVAL      FldNamXAr(Idx) = 'DDEPED'                                  CAS011
      C                   EVAL      MsgIDXAr(Idx) = 'LEV1073'                                  CAS011
      C                   ELSE                                                                 CAS011
+     C                   IF        CLE073 = 'Y' AND AutoEndFee = 'Y' AND                    MD046370
+     C                             WPEND > CL_MDAT AND CL_MDAT <> 0 AND                     MD046370
+     C                             (DDCALT = '97' OR DDCALT = '98' OR                       MD046370
+     C                             DDCALT = '99')                                           MD046370
+     C                   MOVE      'N'           DDEPEDOK                                   MD046370
+     C                   ADD       1             Idx                                        MD046370
+     C                   MOVEL     'DDEPED'      FldNamXAr(Idx)                             MD046370
+     C                   MOVEL     'LER0114'     MsgIDXAr(Idx)                              MD046370
+     C                   ELSE                                                               MD046370
      C                   MOVE      'W'           DDEPEDOK
      C                   ADD       1             WId
      C                   MOVEL     'DDEPED'      WFldNmXAr(WId)
      C                   MOVEL     'LER0030'     WMsgIdXAr(WId)
      C                   MOVEL     'Y'           W#WARN                                     ??
+     C                   ENDIF                                                              MD046370
      C                   ENDIF                                                                CAS011
      C                   ENDIF
       *                                                                                       CLE073
@@ -1674,12 +1736,12 @@
       *
       ** Warning if Facility *ne 0 and date is either befor
       ** the Availabilty Date or after the Expiry Date
- 
+
       * Use WWDTEX if not zero (date set up in RTV module)
      C     WWDTEX        IFNE      0
      C                   Z-ADD     WWDTEX        FA_DTEX
      C                   ENDIF
- 
+
      C     WPEND         IFLT      FA_DTAP
      C     WPEND         ORGT      FA_DTEX
       *
@@ -1714,14 +1776,14 @@
      C     DDEPEDOK      IFEQ      'Y'
      C     DDEPON        IFEQ      'E'
      C                   Z-ADD     WPEND         ZDAYNO
- 
+
      C     @@FESTTL      IFEQ      01
      C     @@FESTTL      OREQ      07
      C     @@FESTTL      OREQ      08
       *
      C*****CLE141        IFEQ      'N'                                                CLE141 CLE141A
      C*****DDLNRF        OREQ      *blanks                                            CLE141 CLE141A
- 
+
      C     CEU004        IFEQ      'Y'
      C     WSCCY         ANDNE     *BLANKS
      C                   MOVE      WSCCY         ZCCY
@@ -1747,7 +1809,7 @@
      C                   MOVEL     'LER0031'     WMsgIdXAr(WId)
      C                   ENDIF
      C                   ENDIF
- 
+
      C**********         ENDIF                                                        CLE141 CLE141A
       *
       ** Fee Ccy check
@@ -2055,9 +2117,9 @@
       *****************************************************************
       * VCalt  - Validate Calculation type
       *****************************************************************
- 
+
      C     Vcalt         BEGSR
- 
+
      C                   MOVE      'N'           WFixfee           1                          CLE134
      C     CLE073        IFEQ      'Y'                                                        CLE134
      C     DDCALT        ANDEQ     '99'                                                       CLE134
@@ -2119,7 +2181,7 @@
      C                   ENDIF                                                                CLE073
       *
      C                   EXSR      SRCATP
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2786,7 +2848,7 @@
      C                   EVAL      FldNamXAr(Idx) = 'DDNPYD'                                  245071
      C                   EVAL      MsgIDXAr(Idx) = 'LER0060'                                  245071
      C                   ENDIF                                                                245071
- 
+
       ** Calculation type is blank then all other fields must be blank
       *
      C     DDRTE1        IFEQ      *BLANKS
@@ -2938,7 +3000,7 @@
      C     @@FESTTL      IFEQ      01                                                         CLE031
      C     @@FESTTL      OREQ      07                                                         CLE031
      C     @@FESTTL      OREQ      08                                                         CLE031
- 
+
      C*****CLE141        IFEQ      'N'                                                CLE141 CLE141A
      C*****DDLNRF        OREQ      *blanks                                            CLE141 CLE141A
                                                                                               CLE031
@@ -2957,9 +3019,9 @@
      C                   MOVEL     'DDNPYD'      WFldNmXAr(WId)                               CLE031
      C                   MOVEL     'LER0229'     WMsgIdXAr(WId)                               CLE031
      C                   ENDIF                                                                CLE031
- 
+
      C**********         ENDIF                                                        CLE141 CLE141A
- 
+
      C                   ELSE                                                                 CLE031
                                                                                               CLE031
       ** Local Ccy check                                                                      CLE031
@@ -3780,7 +3842,7 @@
      C                   ENDIF                                                                CLE073
       *                                                                                       CLE073
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -3799,13 +3861,13 @@
       **  Validate the input Profit Centre if entered
       *
      C     DDPRFC        IFNE      *BLANKS
- 
+
      C                   CALLB     'AOPRFCR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*KEY   '     POPTN
      C                   PARM      DDPRFC        PPRFC             4
      C     SDPRFC        PARM      SDPRFC        DSFDY
- 
+
      C     PRTCD         IFNE      *BLANKS
      C                   Move      'N'           DDPRFCOK
      C                   Add       1             Idx
@@ -3840,7 +3902,7 @@
      C                   PARM      ACOFDM        ACOFPR            2
      C                   PARM      CNUMDM        CNUMPR            6
      C                   PARM      *BLANKS       PRFCPR            4
- 
+
      C                   MOVE      PRFCPR        DDPRFC
      C     RTCDPR        IFEQ      '2'
      C                   Move      'N'           DDPRFCOK
@@ -3936,7 +3998,7 @@
      C                   MOVE      *BLANKS       VFSUTP
      C                   MOVE      *BLANKS       VFCLAS                                       CLE042
      C                   ENDIF
- 
+
      C     DDACTN        IFEQ      'I'                                                       BUG7528
      C                   Z-ADD     WAMTA         VFAMTA
      C**********         Z-ADD     WAMTS         VFAMTS                                       248820
@@ -3946,7 +4008,7 @@
      C                   ENDIF                                                               BUG7528
       *                                                                                      BUG7528
      C**********         Z-ADD     WFAMT         VFAMTO                             BUG7528 AR760725
- 
+
      C     ModeOfop      IFEQ      '*FRONT'
      C                   MOVEL     F3IUSR        VFIUSR
      C                   MOVEL     F3AUSR        VFAUSR
@@ -3964,14 +4026,14 @@
      C                   PARM                    ZDAYNO            5 0
      C                   PARM                    BJDFIN
      C                   PARM                    ErrorFlag         1
- 
+
      C     ErrorFlag     IFEQ      'N'
      C                   Z-ADD     ZDAYNO        VFLCHD
      C     DDACTN        IFEQ      'I'
      C                   Z-ADD     ZDAYNO        VFORED
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   MOVE      'A'           VFFSTS
       *
       ** Set up Last Change Type and PC transaction reference
@@ -3987,34 +4049,34 @@
      C                   MOVE      *BLANK        VFAUSR
      C                   MOVE      *BLANK        VFXUSR
      C                   ENDIF
- 
+
      C     DDACTN        IFEQ      'A'
      C                   MOVEL     PSUSER        VFAUSR
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C     DDLNRF        IFNE      *BLANKS
      C                   MOVEL     CL_BRCA       WWBRCA            3
      C                   ELSE
      C                   MOVEL     FA_BRCA       WWBRCA
      C                   ENDIF
- 
+
      C                   MOVEL     WWBRCA        VFBRCA
- 
+
      C     ModeOfop      IFNE      '*FRONT'
      C     DDACTN        ANDEQ     'I'
      C     VFPCRF        ANDEQ     *BLANKS                                                   CSF011A
      C     CLE106        ANDNE     'Y'                                                       CSF011A
- 
+
      C                   CALL      'AOBRCHR1'
      C                   PARM      *BLANKS       @RTCD             7
      C                   PARM      '*KEY   '     @OPTN             7
      C                   PARM      WWBRCA        @BRCA             3
      C     SDBRCH        PARM      SDBRCH        DSSDY
- 
+
      C     @RTCD         IFEQ      *BLANKS
- 
+
      C                   IF        A8MQSM <> *BLANKS                                         CSF011A
      C                   Movel     A8MQSM        W#1ST3            3
      C                   ELSE                                                                CSF011A
@@ -4055,9 +4117,9 @@
      C                   EVAL      VFPCRF = F3TNRF                                            CLE106
      C                   ENDIF                                                                CLE106
       *
- 
+
      C     CEU004        IFEQ      'Y'
- 
+
      C     DDACTN        IFEQ      'X'
       ** info coming from file LEFEED
      C                   EVAL      VFSCCY = WSCCY
@@ -4075,9 +4137,9 @@
      C                   EVAL      VFICCY = DDIC72
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   IF        CLE134      = 'Y'                                          CLE134
      C                   EVALR     DDPLNR      = %TRIM(DDPLNR)                                CLE134
      C                   MOVE      DDPLNR        VFEPLNR                                      CLE134
@@ -4180,9 +4242,9 @@
       *****************************************************************
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       * Response mode (1A), from source system common header
      C                   PARM                    RespMode
@@ -4223,9 +4285,9 @@
      C                   PARM                    F3TRDS            8
       * Customer Extra Data file data
      C                   PARM                    ExtData         500
- 
+
       * OUTPUTS
- 
+
       * Field OK flags (DS) from/to caller
      C                   PARM                    OKFee
       * Error fields/message IDs/message data (arrays) from/to caller
@@ -4282,7 +4344,7 @@
      C                   PARM      '*FIRST '     @OPTN
      C*****SDGELR        PARM      SDGELR        DSFDY                                        CGL029
      C     SDGELR        PARM      SDGELR        DSSDY                                        CGL029
- 
+
       **  ACCESS CUSTOMER LENDING DATA
      C                   CALL      'AOCLNDR0'
      C                   PARM      '*DBERR '     @RTCD
@@ -4487,7 +4549,7 @@
       *  Set up the name of the MSGF from which the message handler will
       *   get the messages
      C                   EVAL      #MsgFile = 'DRSMM'
- 
+
      C                   MOVE      *OFF          *IN77                               ???forcompil???
       *
       ** Program, module and procedure names for database error processing.
@@ -4537,6 +4599,18 @@
      C**********         KFLD                    Wpd_FCOD                            AR314017 CLE164
      C**********         KFLD                    Wpd_FCBR                            AR314017 CLE164
      C**********         KFLD                    Wpd_ACCY                            AR314017 CLE164
+      *                                                                                     MD046370
+     C     KEYHST        KLIST                                                              MD046370
+     C                   KFLD                    CL_BRCA                                    MD046370
+     C                   KFLD                    CL_CNUM                                    MD046370
+     C                   KFLD                    DDLNRF                                     MD046370
+     C                   KFLD                    WVDAT                                      MD046370
+     C                   KFLD                    WLASN                                      MD046370
+      *                                                                                     MD046370
+     C     KEYPHS        KLIST                                                              MD046370
+     C                   KFLD                    CL_BRCA                                    MD046370
+     C                   KFLD                    CL_CNUM                                    MD046370
+     C                   KFLD                    DDLNRF                                     MD046370
       *                                                                                       242377
       ** Check System Value: Use Original Borrower or Purchased From?                         242377
       ** Set up parameter so access object checks LoanCustOriginPurch                         242377
@@ -4546,6 +4620,8 @@
      C                   MOVEL     'iginP'       WPARM3                                       242377
      C                   MOVEL     'urch'        WPARM4                                       242377
      C                   MOVEL     WPARM         SVALK1                                       242377
+      *                                                                                     MD046370
+     C                   EVAL      SVALK2 = 'AutoEndCalcLoanFee'                            MD046370
       *                                                                                       242377
       * Call Access object:                                                                   242377
      C                   CALL      'AOSVALR0'                                                 242377
@@ -4586,6 +4662,9 @@
      C                   ELSE                                                                 242377
      C                   MOVE      'P'           PPCUST                                       242377
      C                   ENDIF                                                                242377
+      *                                                                                     MD046370
+     C                   MOVEL     SVAL2         AutoEndFee        1                        MD046370
+      *                                                                                     MD046370
      C                   ENDIF                                                                242377
       *
      C                   ENDSR
@@ -4595,9 +4674,9 @@
       * RESETERRS - Reset error information that is received back     *
       *    from each validation module.                               *
       *****************************************************************
- 
+
      C     RESETERRS     BEGSR
- 
+
      C                   EVAL      RetCodeOut = *Blanks
       *
       * Reset error & warning fields/message IDs/message data (arrays)
@@ -4614,7 +4693,7 @@
      C**********         Eval      FldNameArr = *Blanks                              BUG11390 242784
      C**********         Eval      IdxNew = 0                                        BUG11390 242784
      C**********         Eval      WidNew = 0                                        BUG11390 242784
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -4622,7 +4701,7 @@
       * UPDATERRS - Update error information with that received back  *
       *    from each validation module.                               *
       *****************************************************************
- 
+
      C     UPDATERRS     BEGSR
       *
       * Update error fields/message IDs/message data (arrays)
@@ -4812,7 +4891,7 @@
                                                                                               CAS011
      C*****CLE141        IFEQ      'N'                                                CLE141 CLE141A
      C*****DDLNRF        OREQ      *blanks                                            CLE141 CLE141A
- 
+
      C                   MOVE      DDECUR        ZCCY                                         CAS011
                                                                                               CAS011
      C                   CALLB     'ZCHKH'                                                    CAS011
@@ -4829,9 +4908,9 @@
      C                   MOVEL     'DDNPYD'      WFldNmXAr(WId)                               CAS011
      C                   MOVEL     'LER0229'     WMsgIdXAr(WId)                               CAS011
      C                   ENDIF                                                                CAS011
- 
+
      C**********         ENDIF                                                        CLE141 CLE141A
- 
+
      C                   ELSE                                                                 CAS011
                                                                                               CAS011
       ** Local Ccy check                                                                      CAS011

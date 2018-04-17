@@ -22,8 +22,9 @@
      F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD046080           Date 17Sep17               *
+      *  Last Amend No. MD046370           Date 16Nov17               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD046080           Date 17Sep17               *
       *                 MD047474           Date 16Oct17               *
       *                 MD047993           Date 23Sep17               *
       *                 MD035545           Date 11Sep15               *
@@ -262,6 +263,15 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD046370 - Component LERC135 is looping in COB. If system    *
+      *             value AutoEndCalcLoanFee is 'Y', ensure that fee  *
+      *             start date does not fall after fee end date/next  *
+      *             payment date.  If value is 'N', fee end date/next *
+      *             payment date should not be changed at all.        *
+      *             Applicable for all calculated loan fees.          *
+      *           - Remove fix 262735 as this causes fee not to early *
+      *             mature if loan principal is zero, system value Y  *
+      *             and fee last payment date is greater than zero.   *
       *  MD046248 - Finastra Rebranding                               *
       *  MD046080 - Gap between CLE031 (Settlement to different       *
       *             currency) and CLE134 (PDCL processing)            *
@@ -271,7 +281,7 @@
       *  MD047993 - Modified MD035545. Removed dependency on Accrue   *
       *             on Last Day indicator.                            *
       *  MD035545 - LE: Interest Calculation in Leap year. Consider   *
-      *             Accrue on Last Day Indicator for method 6.        *      
+      *             Accrue on Last Day Indicator for method 6.        *
       *  MD037173 - Formalise HOTFIX code.                            *
       *           - ROBN is now Alpha set to balnk instread of 00000  *
       *  MD046351 - Rounding and truncation in fee accrual            *
@@ -2235,6 +2245,7 @@
      I              'LER135001'           C         SECTN1                                    CFC006
      I              'LER135002'           C         SECTN2                                    CFC006
      I              'LECalcBasis6LeapYear'C         WPARML                                  MD035545
+     I              'AutoEndCalcLoanFee'  C         WPARM1                                  MD046370
       *
      IWVCATC      DS                                                                          CLE164
      I                                        1   50PFCLTY                                    CLE164
@@ -9347,6 +9358,39 @@
      C**********           MOVE 'N'       WCALC6                                   MD035545 MD047993
      C**********           ENDIF                                                   MD035545 MD047993
      C                     ENDIF                                                            MD035545
+      *                                                                                     MD046370
+     C                     CALL 'AOSVALR0'                                                  MD046370
+     C                     PARM *BLANKS   @RTCD                                             MD046370
+     C                     PARM WPARM1    P@OP01                                            MD046370
+     C                     PARM *BLANKS   P@VL01                                            MD046370
+     C                     PARM *BLANKS   P@OP02                                            MD046370
+     C                     PARM *BLANKS   P@VL02                                            MD046370
+     C                     PARM *BLANKS   P@OP03                                            MD046370
+     C                     PARM *BLANKS   P@VL03                                            MD046370
+     C                     PARM *BLANKS   P@OP04                                            MD046370
+     C                     PARM *BLANKS   P@VL04                                            MD046370
+     C                     PARM *BLANKS   P@OP05                                            MD046370
+     C                     PARM *BLANKS   P@VL05                                            MD046370
+     C                     PARM *BLANKS   P@OP06                                            MD046370
+     C                     PARM *BLANKS   P@VL06                                            MD046370
+     C                     PARM *BLANKS   P@OP07                                            MD046370
+     C                     PARM *BLANKS   P@VL07                                            MD046370
+     C                     PARM *BLANKS   P@OP08                                            MD046370
+     C                     PARM *BLANKS   P@VL08                                            MD046370
+     C                     PARM *BLANKS   P@OP09                                            MD046370
+     C                     PARM *BLANKS   P@VL09                                            MD046370
+     C                     PARM *BLANKS   P@OP10                                            MD046370
+     C                     PARM *BLANKS   P@VL10                                            MD046370
+      *                                                                                     MD046370
+     C           @RTCD     IFNE *BLANKS                                                     MD046370
+     C                     MOVEL'LER135  'DBPGM                                             MD046370
+     C                     MOVEL'SDSVALPD'DBFILE                                            MD046370
+     C                     MOVELWPARM1    DBKEY                                             MD046370
+     C                     Z-ADD112       DBASE                                             MD046370
+     C                     EXSR *PSSR                                                       MD046370
+     C                     ELSE                                                             MD046370
+     C                     MOVELP@VL01    AUENFE  1                                         MD046370
+     C                     ENDIF                                                            MD046370
       *
       ** Calculate the start of month date by converting the date of
       ** next working day to date format and inserting the start of
@@ -10980,16 +11024,24 @@
       *                                                                                       CLE073
      C           CHKDTE    BEGSR                                                              CLE073
       *                                                                                       CLE073
+     C           AUENFE    IFEQ 'N'                                                         MD046370
+     C           FECALT    IFEQ '97'                                                        MD046370
+     C           FECALT    OREQ '98'                                                        MD046370
+     C           FECALT    OREQ '99'                                                        MD046370
+     C                     GOTO ENDCHK                                                      MD046370
+     C                     ENDIF                                                            MD046370
+     C                     ENDIF                                                            MD046370
+      *                                                                                     MD046370
      C           MDATL     IFNE 0                                                             CLE073
      C           MDATL     IFLT FENPYD                                                        CLE073
      C           FENPYD    ANDGTBJRDNB                                                        CLE073
-     C           FELPDT    ANDLEMDATL                                                         262735
+     C********** FELPDT    ANDLEMDATL                                                262735 MD046370
      C                     Z-ADDMDATL     FENPYD                                              CLE073
      C                     ENDIF
       *                                                                                       CLE073
      C           MDATL     IFLT FEPEND                                                        CLE073
      C           FEPEND    ANDGTBJRDNB                                                        CLE073
-     C           FELPDT    ANDLEMDATL                                                         262735
+     C********** FELPDT    ANDLEMDATL                                                262735 MD046370
      C                     Z-ADDMDATL     FEPEND                                              CLE073
      C                     ENDIF                                                              CLE073
      C                     ENDIF                                                              CLE073
@@ -11027,18 +11079,65 @@
      C           FECALT    IFNE '90'                                                          CLE134
      C           NWMAT     IFLT FEPEND                                                        CLE073
      C           FEPEND    ANDGTBJRDNB                                                        CLE073
-     C           FELPDT    ANDLENWMAT                                                         262735
+     C********** FELPDT    ANDLENWMAT                                                262735 MD046370
      C                     Z-ADDNWMAT     FEPEND                                              CLE073
      C                     ENDIF                                                              CLE073
      C                     ENDIF                                                              CLE134
       *                                                                                       CLE073
      C           NWMAT     IFLT FENPYD                                                        CLE073
      C           FENPYD    ANDGTBJRDNB                                                        CLE073
-     C           FELPDT    ANDLENWMAT                                                         262735
+     C********** FELPDT    ANDLENWMAT                                                262735 MD046370
      C                     Z-ADDNWMAT     FENPYD                                              CLE073
      C                     ENDIF                                                              CLE073
       *                                                                                       CLE073
      C                     ENDIF                                                              CLE073
+      *                                                                                     MD046370
+     C           AUENFE    IFEQ 'Y'                                                         MD046370
+     C           FECALT    IFEQ '97'                                                        MD046370
+     C           FECALT    OREQ '98'                                                        MD046370
+     C           FECALT    OREQ '99'                                                        MD046370
+      *                                                                                     MD046370
+     C           FEPEND    IFLE FEPSTD                                                      MD046370
+     C           FELPDT    IFGT 0                                                           MD046370
+     C                     Z-ADDFELPDT    FEPEND                                            MD046370
+     C                     ENDIF                                                            MD046370
+     C           FELPDT    IFEQ 0                                                           MD046370
+     C                     SELEC                                                            MD046370
+     C           FEPSTD    WHEQ BJRDNB                                                      MD046370
+     C           FEPSTD    ADD  1         FEPEND                                            MD046370
+      *                                                                                     MD046370
+     C           FEPSTD    WHGT BJRDNB                                                      MD046370
+     C           FEPSTD    ADD  1         FEPEND                                            MD046370
+      *                                                                                     MD046370
+     C           FEPSTD    WHLT BJRDNB                                                      MD046370
+     C           FEPSTD    ADD  1         FEPEND                                            MD046370
+     C                     ENDSL                                                            MD046370
+     C                     ENDIF                                                            MD046370
+     C                     ENDIF                                                            MD046370
+      *                                                                                     MD046370
+     C           FENPYD    IFLE FEPSTD                                                      MD046370
+     C           FELPDT    IFGT 0                                                           MD046370
+     C                     Z-ADDFELPDT    FENPYD                                            MD046370
+     C                     ENDIF                                                            MD046370
+     C           FELPDT    IFEQ 0                                                           MD046370
+     C                     SELEC                                                            MD046370
+     C           FEPSTD    WHEQ BJRDNB                                                      MD046370
+     C           FEPSTD    ADD  1         FENPYD                                            MD046370
+      *                                                                                     MD046370
+     C           FEPSTD    WHGT BJRDNB                                                      MD046370
+     C           FEPSTD    ADD  1         FENPYD                                            MD046370
+      *                                                                                     MD046370
+     C           FEPSTD    WHLT BJRDNB                                                      MD046370
+     C           FEPSTD    ADD  1         FENPYD                                            MD046370
+     C                     ENDSL                                                            MD046370
+     C                     ENDIF                                                            MD046370
+     C                     ENDIF                                                            MD046370
+      *                                                                                     MD046370
+     C                     ENDIF                                                            MD046370
+     C                     ENDIF                                                            MD046370
+      *                                                                                     MD046370
+     C           ENDCHK    TAG                                                              MD046370
+      *                                                                                     MD046370
      C                     Z-ADD0         WVDAT                                               CLE073
      C                     Z-ADD0         VDATP                                               CLE073
      C                     Z-ADD0         CPAMP                                               CLE073

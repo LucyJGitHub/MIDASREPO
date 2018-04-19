@@ -12,8 +12,9 @@
 0007 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD049078           Date 12Jan18               *
+      *  Last Amend No. MD049444           Date 07Mar18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD049078           Date 12Jan18               *
       *                 MD048557           Date 27Nov17               *
       *                 MD048609           Date 22Nov17               *
       *                 MD046080           Date 21Sep17               *
@@ -381,6 +382,9 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD049444 - Allow negative input in Funding rate/spread.      *
+      *             Partially applied MD034915 fix. Also corrected    *
+      *             accrual processing based on MD034915 fix.         *
       *  MD046248 - Finastra Rebranding                               *
       *  MD049078 - Wrong postings of MR and RE of PDCL loan          *
       *  MD048557 - Failing COB Component - LEC000471A                *
@@ -13036,9 +13040,16 @@ L118 I                             P   72   77 7RTSPL
 1768 C     WRK13         ADD       IWOD          WRK13
 1769 C     AITC          ADD       AIAP          WRK13A           13 0
 1770 C     WRK13A        COMP      WRK13                              88
-1770 C   88WRK13A        COMP      AIPD                                 88                  AR897086
+1770 C***88WRK13A        COMP      AIPD                                 88         AR897086 MD049444
      C/COPY WNCPYSRC,LE0450C050
+     C     WRK13A        IFLT      WRK13                                                    MD049444
+     C     WRK13         ANDLT     0                                                        MD049444
+     C                   Z-ADD     WRK13A        WRK13                                      MD049444
+     C                   ELSE                                                               MD049444
+     C     WRK13A        IFGT      0                                                        MD049444
 1771 C   88              Z-ADD     WRK13A        WRK13
+     C                   ENDIF                                                              MD049444
+     C                   ENDIF                                                              MD049444
 1772 C**
 1773 C**   SAVE POSTING AMOUNT FOR W/TAX CALC.
 1774 C**
@@ -15152,7 +15163,7 @@ C    C                   ENDIF                                                  
      C***********AKYS10    ANDEQ'I'                                 160856182711
      C***********VDAT      ANDLTEVCD                                160856182711
 2158 C     WRK13A        COMP      WRK13                              88
-     C   88WRK13A        COMP      AIPD                                 88                  AR897086
+     C***88WRK13A        COMP      AIPD                                 88         AR897086 MD049444
      C***********          ELSE                                     160856182711
      C***********WRK13A    COMP WRK13                  88           160856182711
      C************IN88     IFEQ '1'                                 160856182711
@@ -15161,7 +15172,14 @@ C    C                   ENDIF                                                  
      C***********          MOVE '  '      AMTP                      160856182711
      C***********          END                                      160856182711
      C***********          MOVE *BLANKS   AKYS                      160856182711
+     C     WRK13A        IFLT      WRK13                                                    MD049444
+     C     WRK13         ANDLT     0                                                        MD049444
+     C                   Z-ADD     WRK13A        WRK13                                      MD049444
+     C                   ELSE                                                               MD049444
+     C     WRK13A        IFGT      0                                                        MD049444
 2159 C   88              Z-ADD     WRK13A        WRK13
+     C                   ENDIF                                                              MD049444
+     C                   ENDIF                                                              MD049444
 2160 C     WRK13         SUB       AIPD          WRK13
 2161 C**
 2162 C**   GENERATE ACCRUAL KEY

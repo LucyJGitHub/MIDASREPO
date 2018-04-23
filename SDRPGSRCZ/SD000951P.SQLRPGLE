@@ -11,10 +11,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2018                      *
       *                                                               *
-      *  Last Amend No. CRE113CC1 *CREATE  Date 27Mar18               *
+      *  Last Amend No. MD050571           Date 23Apr18               *
+      *  Prev Amend No. CRE113CC1 *CREATE  Date 27Mar18               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050571 - Adding an already deleted customer range is no    *
+      *             longer accepted by the system. Error in header in *
+      *             List P1 report if all records are deleted.        *
       *  CRE113CC1 - Include Audit Reports                            *
       *                                                               *
       *****************************************************************
@@ -98,6 +102,8 @@
      D WRecNo          S              7S 0 Inz
      D RqdLn1          S              3  0
      D DifLn1          S              4  0
+     D CountActiv      S              2  0                                                  MD050571
+     D CountToday      S              2  0                                                  MD050571
 
       ** Parameter list fields for ZDATE2
      D PzDayNo         S              5  0
@@ -164,6 +170,13 @@
      C+ into: CusRangeDS
      C/end-exec
 
+      ** Count Active Records                                                               MD050571
+     C                   EXSR      SRCntActiv                                               MD050571
+      ** Count Today's Changed Records                                                      MD050571
+     C                   EXSR      SRCntToday                                               MD050571
+                                                                                            MD050571
+     C                   IF        (CountActiv > 0 and PMode <> 'A')                        MD050571
+     C                             or (CountToday > 0 and PMode = 'A')                      MD050571
       ** Print Report Headers
 
      C                   EXSR      SRPrintHdr
@@ -210,6 +223,8 @@
      C/exec SQL
      C+ close LIST
      C/end-exec
+                                                                                            MD050571
+     C                   Endif                                                              MD050571
 
      C                   EXSR      SRPrintFtr
 
@@ -385,7 +400,7 @@
 
      C                   WRITE     HEADAU
 
-      ** Total Forecast
+      ** Total
      C                   EVAL      TCOUNT = WRecNo
 
       ** If there is a DB Error, Output the DB Error Information.
@@ -410,6 +425,66 @@
      C                   ENDSR
       *****************************************************************
       /EJECT
+      *****************************************************************                     MD050571
+      *                                                               *                     MD050571
+      * SRCntActiv - Count number of active records in SDCUSRTD       *                     MD050571
+      *                                                               *                     MD050571
+      *****************************************************************                     MD050571
+     C     SRCntActiv    BEGSR                                                              MD050571
+                                                                                            MD050571
+     C/exec sql                                                                             MD050571
+     C+ declare CustRangeActiv Cursor with return to client                                 MD050571
+     C+  for select count(*)                                                                MD050571
+     C+  from SDCUSRTD                                                                      MD050571
+     C+  where CRRECI = 'D'                                                                 MD050571
+     C/end-exec                                                                             MD050571
+                                                                                            MD050571
+     C/exec sql                                                                             MD050571
+     C+ open CustRangeActiv                                                                 MD050571
+     C/end-exec                                                                             MD050571
+                                                                                            MD050571
+     C/exec SQL                                                                             MD050571
+     C+ fetch CustRangeActiv                                                                MD050571
+     C+ into :CountActiv                                                                    MD050571
+     C/end-exec                                                                             MD050571
+                                                                                            MD050571
+     C/exec SQL                                                                             MD050571
+     C+ close CustRangeActiv                                                                MD050571
+     C/end-exec                                                                             MD050571
+                                                                                            MD050571
+     C                   ENDSR                                                              MD050571
+      *****************************************************************                     MD050571
+      /EJECT                                                                                MD050571
+      *****************************************************************                     MD050571
+      *                                                               *                     MD050571
+      * SRCntToday - Count number of today's amendment in SDCUSRTD    *                     MD050571
+      *                                                               *                     MD050571
+      *****************************************************************                     MD050571
+     C     SRCntToday    BEGSR                                                              MD050571
+                                                                                            MD050571
+     C/exec sql                                                                             MD050571
+     C+ declare CustRangeToday Cursor with return to client                                 MD050571
+     C+  for select count(*)                                                                MD050571
+     C+  from SDCUSRTD                                                                      MD050571
+     C+  where CRCHGD = :BJRDNB                                                             MD050571
+     C/end-exec                                                                             MD050571
+                                                                                            MD050571
+     C/exec sql                                                                             MD050571
+     C+ open CustRangeToday                                                                 MD050571
+     C/end-exec                                                                             MD050571
+                                                                                            MD050571
+     C/exec SQL                                                                             MD050571
+     C+ fetch CustRangeToday                                                                MD050571
+     C+ into :CountToday                                                                    MD050571
+     C/end-exec                                                                             MD050571
+                                                                                            MD050571
+     C/exec SQL                                                                             MD050571
+     C+ close CustRangeToday                                                                MD050571
+     C/end-exec                                                                             MD050571
+                                                                                            MD050571
+     C                   ENDSR                                                              MD050571
+      *****************************************************************                     MD050571
+      /EJECT                                                                                MD050571
       *****************************************************************
       *                                                               *
       *  *InzSr - Program Initialisation routine                      *

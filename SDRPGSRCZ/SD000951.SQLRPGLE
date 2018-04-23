@@ -13,11 +13,14 @@
       *                                                               *
       *  (c) Finastra International Limited 2018                      *
       *                                                               *
-      *  Last Amend No. CRE113CC1          Date 27Mar18               *
-      *  Prev Amend No. CRE113  *CREATE    Date 05Feb18               *
+      *  Last Amend No. MD050571           Date 23Apr18               *
+      *  Prev Amend No. CRE113CC1          Date 27Mar18               *
+      *                 CRE113  *CREATE    Date 05Feb18               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD050571 - Adding an already deleted customer range is no    *
+      *             longer accepted by the system.                    *
       *  CRE113CC1 - Include Audit Reports                            *
       *  CRE113 - COB Optimisation of REC376A                         *
       *                                                               *
@@ -1210,6 +1213,7 @@
      C+ from SDCUSRTD
      C+ where CRFCIR = :#1FCUS and
      C+       CRLCIR = :#1LCUS
+     C+       and CRRECI = 'D'                                                              MD050571
      C/END-EXEC
      C
      C                   IF        %Subst(SQLState:1:2) <> '02'
@@ -1264,6 +1268,7 @@
      C+ from SDCUSRTD
      C+ where CRFCIR = :#2FCIR and
      C+       CRLCIR = :#2LCIR
+     C+       and CRRECI = 'D'                                                              MD050571
      C/END-EXEC
 
      C                   IF        %Subst(SQLState:1:2) <> '02'
@@ -1329,6 +1334,7 @@
      C+ from SDCUSRTD
      C+ where CRFCIR = :#1FCIR and
      C+       CRLCIR = :#1LCIR
+     C+       and CRRECI = 'D'                                                              MD050571
      C/END-EXEC
 
       ** Record already deleted
@@ -1365,6 +1371,7 @@
      C+ from SDCUSRTD
      C+ where CRFCIR = :#1FCIR and
      C+       CRLCIR = :#1LCIR
+     C+       and CRRECI = 'D'                                                              MD050571
      C/END-EXEC
 
       ** Record not found

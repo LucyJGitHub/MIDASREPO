@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD034643           Date 11Sep17               *
-      *  Prev Amend No. MD032110           Date 11Sep17               *
+      *  Last Amend No. CLE168             Date 26Feb18               *
+      *  Prev Amend No. MD034643           Date 11Sep17               *
+      *                 MD032110           Date 11Sep17               *
       *                 MD044880           Date 15Jan18               *
       *                 MD046248           Date 27Oct17               *
       *                 MD048478           Date 21Nov17               *
@@ -129,6 +130,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE168 - Allow Debit of Blocked Account                      *
       *  MD034643 - Settlement branch not restored after reject. On   *
       *             reject, retrieve settlement details and convert   *
       *             screenfield shortname to file customer no.        *
@@ -308,6 +310,8 @@
 
      F***LEACCNL5  IF   E           K DISK                                           AR314017 CLE164
      F**********                           PREFIX(@@)                                AR314017 CLE164
+     FLEFCLTLH  IF   E           K DISK    INFSR(*PSSR)                                       CLE168
+     F                                     PREFIX(C_)                                         CLE168
 
       *****************************************************************
       ** +--------------------------------------+
@@ -777,6 +781,9 @@
      D  #1PTYP                13     14                                                       CER001
      D  #1CCY                 15     17                                                       CER001
      D  #1AMNT                18     32S 0                                                    CER001
+      *                                                                                       CLE168
+     D LEFCLY        E DS                  EXTNAME(LEFCLYPP) DTAARA                           CLE168
+     D                                     PREFIX(A_)                                         CLE168
       *                                                                                       CSC022
      D SCCMTJOB      E DS           256    DTAARA(SCCMTJOB)                                   CSC022
       ** Midas SC Jobs handling commitment control data area                                  CSC022
@@ -1273,6 +1280,24 @@
      C                   MOVEL     DDCUST        WWCUST                                      BUG6010
      C                   END                                                                 BUG6010
      C                   RESET                   ReturnCode                                  BUG6010
+      *                                                                                       CLE168
+      ** Set Facility Customer, Facility Type, Facility Sequence                              CLE168
+      *                                                                                       CLE168
+     C                   IF        CLE168 = 'Y'                                               CLE168
+     C     *LOCK         IN        LEFCLY                                                     CLE168
+     C                   EVAL      KFCUN = DDFCUS                                             CLE168
+     C                   EVAL      KFTYP = DDFTYP                                             CLE168
+     C                   EVAL      KFSEQ = DDFSEQ                                             CLE168
+     C     LEFCLT1       CHAIN     LEFCLTD0                           89                      CLE168
+     C                   IF        *IN89 = '0'                                                CLE168
+     C                   EVAL      A_XBKPT = C_FCBKPT                                         CLE168
+     C                   ENDIF                                                                CLE168
+     C                   EVAL      A_XCNUM = DDFCUS                                           CLE168
+     C                   EVAL      A_XFACT = DDFTYP                                           CLE168
+     C                   EVAL      A_XFCNO = DDFSEQ                                           CLE168
+     C                   OUT       LEFCLY                                                     CLE168
+     C                   ENDIF                                                                CLE168
+      *                                                                                       CLE168
      C                   CALLB     'ZASETINVAL'                                              BUG6010
       *                                                                                      BUG6010
       ** Return Code                                                                         BUG6010
@@ -2325,6 +2350,24 @@
      C                   EVAL      DDRSTM = '00'                                              CLE034
      C                   ENDIF                                                                CLE034
                                                                                               CLE034
+      *                                                                                       CLE168
+      **	Set Facility Customer, Facility Type, Facility Sequence                              CLE168
+      *                                                                                       CLE168
+     C                   IF        CLE168 = 'Y'                                               CLE168
+     C     *LOCK         IN        LEFCLY                                                     CLE168
+     C                   EVAL      KFCUN = DDFCUS                                             CLE168
+     C                   EVAL      KFTYP = DDFTYP                                             CLE168
+     C                   EVAL      KFSEQ = DDFSEQ                                             CLE168
+     C     LEFCLT1       CHAIN     LEFCLTD0                           89                      CLE168
+     C                   IF        *IN89 = '0'                                                CLE168
+     C                   EVAL      A_XBKPT = C_FCBKPT                                         CLE168
+     C                   ENDIF                                                                CLE168
+     C                   EVAL      A_XCNUM = DDFCUS                                           CLE168
+     C                   EVAL      A_XFACT = DDFTYP                                           CLE168
+     C                   EVAL      A_XFCNO = DDFSEQ                                           CLE168
+     C                   OUT       LEFCLY                                                     CLE168
+     C                   ENDIF                                                                CLE168
+      *                                                                                       CLE168
      C                   CALLB     'ZASETINVAL'
 
       * Return Code
@@ -4162,6 +4205,26 @@
      C                   EXSR      *PSSR                                                      CLE106
      C                   ENDIF                                                                CLE106
      C                   ENDIF                                                                CLE106
+      *                                                                                       CLE168
+      ** Access SAR details file                                                              CLE168
+      *                                                                                       CLE168
+     C                   CALLB     'AOSARDR0'                                                 CLE168
+     C                   PARM      *BLANKS       @RTCD                                        CLE168
+     C                   PARM      '*VERIFY'     @OPTN                                        CLE168
+     C                   PARM      'CLE168'      @SARD                                        CLE168
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CLE168
+                                                                                              CLE168
+     C                   IF        @RTCD = *BLANK                                             CLE168
+     C                   MOVEL     'Y'           CLE168            1                          CLE168
+     C                   ELSE                                                                 CLE168
+     C                   MOVEL     'N'           CLE168                                       CLE168
+     C                   ENDIF                                                                CLE168
+      *                                                                                       CLE168
+     C     LEFCLT1       KLIST                                                                CLE168
+     C                   KFLD                    KFCUN             6                          CLE168
+     C                   KFLD                    KFTYP             3                          CLE168
+     C                   KFLD                    KFSEQ             2                          CLE168
+      *                                                                                       CLE168
       ** Key Fields for Facility File                                                         CLE031
      C     CHKFAC        KLIST                                                                CLE031
      C                   KFLD                    KFCUS                                        CLE031

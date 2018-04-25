@@ -1,0 +1,70 @@
+/*********************************************************************/
+/*STD    CLPBASEBND                                                  */
+/*EXI    TEXT('Midas LE Migration Program for CLE168')               */
+/*********************************************************************/
+/*                                                                   */
+/*       Midas - Customer Lending Module                             */
+/*                                                                   */
+/*       LEC000499 - Midas LE Migration Program for CLE168           */
+/*                                                                   */
+/*       (c) Finastra International Limited 2018                     */
+/*                                                                   */
+/*       Last Amend No. CLE168 *CREATE     Date 26Feb18              */
+/*                                                                   */
+/*********************************************************************/
+/*                                                                   */
+/*       CLE168 - Allow Debit of Blocked Account                     */
+/*                                                                   */
+/*********************************************************************/
+
+             PGM
+
+             DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) Finastra +
+                          International Limited 2018')
+             DCL        VAR(&SYSID) TYPE(*CHAR) LEN(2)
+             DCL        VAR(&DMLIB) TYPE(*CHAR) LEN(10)
+
+/* Global monitor message */
+
+             MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO CMDLBL(ABNOR))
+
+             RTVDTAARA  DTAARA(SDSTAT (6 2)) RTNVAR(&SYSID)
+
+             CHGVAR     VAR(&DMLIB) VALUE(&SYSID *CAT 'DMLIB')
+
+             CHGJOB     SWS(00000000)
+
+             CRTDTAARA  DTAARA(QTEMP/LDA) TYPE(*CHAR) LEN(256)
+             MONMSG     MSGID(CPF1023)
+
+             SCRUNSQL   SQL('UPDATE LEFCLTQD SET FCBKPT = ''N'' WHERE FCBKPT = +
+                          ''''')
+
+             MONMSG     MSGID(SQL0000) EXEC(GOTO CMDLBL(ABNOR))
+
+             CHKOBJ     OBJ(&DMLIB/XXFCLYPP) OBJTYPE(*FILE)
+             MONMSG     MSGID(CPF9801) EXEC(GOTO ENDPGM)
+
+             SCRUNSQL   SQL('MERGE INTO LEFCLTQD AS T1 USING XXFCLYPP AS T2 ON +
+                          T2.XCNUM = T1.FCXFCU AND T2.XFACT = CAST(T1.FCXFTP AS +
+                          NUMERIC(3,0)) AND T2.XFCNO = CAST(T1.FCXFNO AS +
+                          NUMERIC(2,0)) WHEN MATCHED THEN UPDATE SET T1.FCBKPT = +
+                          T2.XBKRPT')
+             MONMSG     MSGID(SQL0000) EXEC(GOTO CMDLBL(ABNOR))
+
+             GOTO       CMDLBL(ENDPGM)
+
+/** Abnormal termination */
+
+ ABNOR:
+             SNDPGMMSG  MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program LEC000499 +
+                          ended abnormally - see joblog ') TOMSGQ(MOPERQ)
+             MONMSG     MSGID(CPF0000 MCH0000)
+             CHGJOB     SWS(XXXXXX11)
+             GOTO       CMDLBL(ENDPGM)
+
+/** Termination Process */
+
+ ENDPGM:
+
+             ENDPGM

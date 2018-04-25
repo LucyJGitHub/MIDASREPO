@@ -3,7 +3,7 @@
      H COPYRIGHT('(c) Finastra International Limited 2014')
       *****************************************************************
 /*STD *  RPGSQLBND                                                    *
-/*EXI *  TEXT('Midas LE PDP New Available Balance Computation')
+/*EXI *  TEXT('Midas LE PDP New Available Balance Computation')       *
       *****************************************************************
       *                                                               *
       *  Midas - Customer Lending Module                              *
@@ -12,13 +12,15 @@
       *                                                               *
       *  (c) Finastra International Limited 2014                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD039450           Date 04Aug16               *
+      *  Last Amend No. CLE168             Date 26Feb18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD039450           Date 04Aug16               *
       *                 MD031723 *REWRITE  Date 09Jan15               *
       *                 CLE164 *CREATE     Date 18Aug14               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  CLE168 - Allow Debit of Blocked Account                      *
       *  MD046248 - Finastra Rebranding                               *
       *  MD039450 - Improve COB component LEC000495 performance       *
       *             Added 1 column to prevent SQL0030                 *
@@ -93,6 +95,12 @@
      D    pCAP205                     1a
      D    pABCFlag                    1a
 
+     D  check_SARD     pr                  extpgm('AOSARDR0')                                 CLE168
+     D    pReturnCode                 7A                                                      CLE168
+     D    pOption                     7A                                                      CLE168
+     D    pSARD                       6A                                                      CLE168
+     D    pDSSDY                    200A                                                      CLE168
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
@@ -118,6 +126,8 @@
      D                                     dim(1000)
      D CustSaveDS      ds                  likeds(CombineFile)
      D                                     dim(1000)
+     D SCSARD        e ds                  extname(SCSARDPD)                                  CLE168
+     D BankruptExrt  e ds                  extname(LEFCBKPP)                                  CLE168
 
       ** +--------------------------------------+
       ** ¦ Constants declaration                ¦
@@ -163,6 +173,11 @@
      D wBlockDebit     s              1a
      D wCAP205         s              1a
      D wABCFlag        s              1a
+     D CLE168          s              1a                                                      CLE168
+     D pReturnCode     s              7A                                                      CLE168
+     D pOption         s              7A                                                      CLE168
+     D pSARD           s              6A                                                      CLE168
+     D pDSSDY          s            200A                                                      CLE168
 
      D sortSequence    s           2000a   inz(*blanks)
      D wSqlStr         s           2000a   inz(*blanks)
@@ -251,7 +266,9 @@
                    for i = START to MAX_TABLE;
                       exsr combineExtractTable;
                    endFor;
-
+                                                                                            //CLE168
+                   exsr extractBankruptcyFlag;                                              //CLE168
+                                                                                            //CLE168
                    exsr processCustomerBalances;
 
                    exsr processAvailableBalance;
@@ -1105,17 +1122,43 @@
 
        // Current Available Balance is set from previous Available
        // Amount without Overdraft + previous Amount Repaid
-
+                                                                                            //CLE168
+                   if CLE168 = 'Y';                                                         //CLE168
+                      if (sortedDS(wIdxPrvBal).C_SERETB = 'Y' and                           //CLE168
+                          sortedDS(wIdxPrvBal).C_SEBNKFL = 'Y') or                          //CLE168
+                          (sortedDS(wIdxPrvBal).C_SERETB <> 'Y');                           //CLE168
+                           wAvailBalance =                                                  //CLE168
+                           sortedDS(wIdxPrvBal).C_SEAAMT +                                  //CLE168
+                           sortedDS(wIdxPrvBal).C_SERAMT;                                   //CLE168
+                      else;                                                                 //CLE168
+                           wAvailBalance =                                                  //CLE168
+                           sortedDS(wIdxPrvBal).C_SEAAMT;                                   //CLE168
+                      endif;                                                                //CLE168
+                   else;                                                                    //CLE168
                    wAvailBalance =
                       sortedDS(wIdxPrvBal).C_SEAAMT +
                          sortedDS(wIdxPrvBal).C_SERAMT;
+                   endif;                                                                   //CLE168
 
        // Current Available Amount with Ovderdraft is set to Previous
        // Available Amount with Overdraft + previous Amount Repaid
-
+                                                                                            //CLE168
+                   if CLE168 = 'Y';                                                         //CLE168
+                      if (sortedDS(wIdxPrvBal).C_SERETB = 'Y' and                           //CLE168
+                          sortedDS(wIdxPrvBal).C_SEBNKFL = 'Y') or                          //CLE168
+                          (sortedDS(wIdxPrvBal).C_SERETB <> 'Y');                           //CLE168
+                           wOverdraftAmt =                                                  //CLE168
+                           sortedDS(wIdxPrvBal).C_SEAVOD +                                  //CLE168
+                           sortedDS(wIdxPrvBal).C_SERAMT;                                   //CLE168
+                      else;                                                                 //CLE168
+                           wOverdraftAmt =                                                  //CLE168
+                           sortedDS(wIdxPrvBal).C_SEAVOD;                                   //CLE168
+                      endif;                                                                //CLE168
+                   else;                                                                    //CLE168
                    wOverdraftAmt =
                       sortedDS(wIdxPrvBal).C_SEAVOD +
                             sortedDS(wIdxPrvBal).C_SERAMT;
+                   endif;                                                                   //CLE168
 
        // Set Current Balance to Computed Available Amount without
        // Overdraft. If current transaction Overdraft Flag is 'Y'
@@ -1130,6 +1173,26 @@
        // event amount set amount repaid to event amount otherwise
        // set this to current available balance
 
+                   if CLE168 = 'Y';                                                         //CLE168
+                      if transactDS(i).C_SERETB =  'Y' and                                  //CLE168
+                         transactDS(i).C_SEBNKFL=  'Y' or                                   //CLE168
+                         transactDS(i).C_SERETB <> 'Y';                                     //CLE168
+                         if CurBalance >= 0;                                                //CLE168
+                            transactDS(i).C_SERAMT = transactDS(i).C_SEEAMT;                //CLE168
+                              sortedDS(TransactDS(i).C_SEIND2).C_SERAMT =                   //CLE168
+                            transactDS(i).C_SEEAMT;                                         //CLE168
+                            if CurBalance < transactDS(i).C_SEEAMT;                         //CLE168
+                               transactDS(i).C_SERAMT = CurBalance;                         //CLE168
+                               sortedDS(TransactDS(i).C_SEIND2).C_SERAMT =                  //CLE168
+                                  CurBalance;                                               //CLE168
+                            endif;                                                          //CLE168
+                         endif;                                                             //CLE168
+                      else;                                                                 //CLE168
+                         transactDS(i).C_SERAMT = 0;                                        //CLE168
+                         sortedDS(TransactDS(i).C_SEIND2).C_SERAMT = 0;                     //CLE168
+                      endif;                                                                //CLE168
+                                                                                            //CLE168
+                   else;                                                                    //CLE168
                    if CurBalance >= 0;
                       transactDS(i).C_SERAMT = transactDS(i).C_SEEAMT;
                       sortedDS(TransactDS(i).C_SEIND2).C_SERAMT =
@@ -1140,6 +1203,7 @@
                             CurBalance;
                       endif;
                    endif;
+                   endif;                                                                   //CLE168
 
                    sortedDS(wIdxPrvBal).C_SEAVFL = ' ';
                    transactDS(i).C_SEAAMT = wAvailBalance;
@@ -1204,13 +1268,31 @@
 
        // Current Available Balance is set from previous Available
        // Amount without Overdraft + previous Amount Repaid
-
+                                                                                            //CLE168
+                   if CLE168 = 'Y';                                                         //CLE168
+                       if (B_SERETB = 'Y' and B_SEBNKFL = 'Y')                              //CLE168
+                         or (B_SERETB <>  'Y');                                             //CLE168
+                           wAvailBalance = B_SEAAMT + B_SERAMT;                             //CLE168
+                       else;                                                                //CLE168
+                           wAvailBalance = B_SEAAMT;                                        //CLE168
+                       endif;                                                               //CLE168
+                   else;                                                                    //CLE168
                    wAvailBalance = B_SEAAMT + B_SERAMT;
+                   endif;                                                                   //CLE168
 
        // Current Available Amount with Ovderdraft is set to Previous
        // Available Amount with Overdraft + previous Amount Repaid
-
+                                                                                            //CLE168
+                   if CLE168 = 'Y';                                                         //CLE168
+                       if (B_SERETB = 'Y' and B_SEBNKFL = 'Y')                              //CLE168
+                         or (B_SERETB <>  'Y');                                             //CLE168
+                          wOverdraftAmt = B_SEAVOD + B_SERAMT;                              //CLE168
+                       else;                                                                //CLE168
+                          wOverdraftAmt = B_SEAVOD;                                         //CLE168
+                       endif;                                                               //CLE168
+                   else;                                                                    //CLE168
                    wOverdraftAmt = B_SEAVOD + B_SERAMT;
+                   endif;                                                                   //CLE168
 
        // Set Current Balance to Computed Available Amount without
        // Overdraft. If current transaction Overdraft Flag is 'Y'
@@ -1290,9 +1372,20 @@
                          wSEIPFL = 'SEIPFL';
                    endsl;
 
+       // if CLE168 is switched ON, allow debit for blocked account                         //CLE168
+                                                                                            //CLE168
+                   if CLE168 = 'Y';                                                         //CLE168
+                   wStr1 = 'case when SERETB <> ' + QUO + 'Y' + QUO +                       //CLE168
+                           ' or (SERETB = ' + QUO + 'Y' + QUO +                             //CLE168
+                           ' and SEBNKFL = ' + QUO + 'Y' + QUO + ')' +                      //CLE168
+                           ' then case when SEOVFL = ' + QUO + 'Y' + QUO +                  //CLE168
+                           ' then SEAVOD else SEAAMT end else 0 end';                       //CLE168
+                   else;                                                                    //CLE168
                    wStr1 = 'case when SERETB <> ' + QUO + 'Y' + QUO +
                            ' then case when SEOVFL = ' + QUO + 'Y' + QUO +
                            ' then SEAVOD else SEAAMT end else 0 end';
+                   endif;                                                                   //CLE168
+
                    wSqlStr = 'update ' + wSEFILE + ' A' +
                               ' set (A.' + %Trim(wSEAAMT) + ',' +
                               ' A.' + %Trim(wSEIPFL) + ') = ' +
@@ -1337,6 +1430,77 @@
 
        //*************************************************************
        /EJECT
+       //*************************************************************                      //CLE168
+       //                                                            *                      //CLE168
+       // extractBankruptcyFlag - Update record if Facilty used is   *                      //CLE168
+       // =====================     Bankrupt                         *                      //CLE168
+       //                                                            *                      //CLE168
+       // Called by: Main Processing                                 *                      //CLE168
+       //                                                            *                      //CLE168
+       // Calls: None                                                *                      //CLE168
+       //                                                            *                      //CLE168
+       //*************************************************************                      //CLE168
+                                                                                            //CLE168
+       begsr extractBankruptcyFlag;                                                         //CLE168
+                                                                                            //CLE168
+                   wSQLStr = 'select * from LEFCBKPP order by ' +                           //CLE168
+                              'XXFCUS, XXFACL, XXLNRF';                                     //CLE168
+                                                                                            //CLE168
+                   exec sql prepare P5 from :wSQLStr;                                       //CLE168
+                   exec sql declare P5 cursor for P5;                                       //CLE168
+                   exec sql open P5;                                                        //CLE168
+                   exec sql fetch next From P5 into :BankruptExrt;                          //CLE168
+                                                                                            //CLE168
+                   if sqlCod = TABLE_IS_OPEN;                                               //CLE168
+                      exec sql open P5;                                                     //CLE168
+                      exec sql fetch next From P5 into :BankruptExrt;                       //CLE168
+                   endif;                                                                   //CLE168
+                                                                                            //CLE168
+                   if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;                           //CLE168
+                      dBkey = *Blanks;                                                      //CLE168
+                      dBfile = 'LEFCBKPP';                                                  //CLE168
+                      dBase = 016;                                                          //CLE168
+                      dBpgm  = 'LE000495';                                                  //CLE168
+                      exsr *pssr;                                                           //CLE168
+                   endif;                                                                   //CLE168
+                                                                                            //CLE168
+                   dow sqlCod = NO_ERROR;                                                   //CLE168
+                                                                                            //CLE168
+                   if XXFCUS <> *Blanks and XXFACL <> *Blanks                               //CLE168
+                         and XXLNRF = *Blanks;                                              //CLE168
+                   wSqlStr = 'UPDATE LETMPLTD SET SEBNKFL = ' + x'7D' +                     //CLE168
+                             'Y' + x'7D' + 'WHERE SEFCUS = ' +                              //CLE168
+                              x'7D' + XXFCUS + x'7D' + ' AND SEFACL = ' +                   //CLE168
+                              x'7D' + XXFACL + x'7D';                                       //CLE168
+                      exec sql                                                              //CLE168
+                      execute immediate :wSqlStr;                                           //CLE168
+                   endif;                                                                   //CLE168
+                                                                                            //CLE168
+                   if XXLNRF <> *Blanks;                                                    //CLE168
+                   wSqlStr = 'UPDATE LETMPLTD SET SEBNKFL = ' + x'7D' +                     //CLE168
+                             'Y' + x'7D' + 'WHERE SELNRF = ' +                              //CLE168
+                              x'7D' + XXLNRF + x'7D';                                       //CLE168
+                      exec sql                                                              //CLE168
+                      execute immediate :wSqlStr;                                           //CLE168
+                   endif;                                                                   //CLE168
+                                                                                            //CLE168
+                      exec sql fetch next from P5 into :BankruptExrt;                       //CLE168
+                                                                                            //CLE168
+                      if sqlCod <> NO_ERROR and sqlCod <> NO_RECORD;                        //CLE168
+                         dBkey = *Blanks;                                                   //CLE168
+                         dBfile = 'LEFCBKPP';                                               //CLE168
+                         dBase = 017;                                                       //CLE168
+                         dBpgm  = 'LE000495';                                               //CLE168
+                         exsr *pssr;                                                        //CLE168
+                      endif;                                                                //CLE168
+                                                                                            //CLE168
+                   enddo;                                                                   //CLE168
+                                                                                            //CLE168
+                   exec sql close P5;                                                       //CLE168
+       endsr;                                                                               //CLE168
+                                                                                            //CLE168
+       //*************************************************************                      //CLE168
+       /EJECT                                                                               //CLE168
        //*************************************************************
        //                                                            *
        // commitTransaction - Commit changes to tables               *
@@ -1369,6 +1533,22 @@
        begsr *inzsr;
                    In Sdstat;
                    wLibrary = LIBR + 'DMLIB';
+                                                                                            //CLE168
+       //Check if CLE168 is switched on                                                     //CLE168
+                   pOption = '*VERIFY';                                                     //CLE168
+                   pSARD = 'CLE168';                                                        //CLE168
+                   callp check_SARD(                                                        //CLE168
+                                  pReturnCode                                               //CLE168
+                                : pOption                                                   //CLE168
+                                : pSARD                                                     //CLE168
+                                : pDSSDY                                                    //CLE168
+                               );                                                           //CLE168
+                   SCSARD = pDSSDY;                                                         //CLE168
+                                                                                            //CLE168
+                   if pReturnCode = *blanks;                                                //CLE168
+                      CLE168 = 'Y';                                                         //CLE168
+                   endif;                                                                   //CLE168
+                                                                                            //CLE168
        endsr;
 
        //*************************************************************

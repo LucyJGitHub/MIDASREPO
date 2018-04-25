@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2003                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CGP017             Date 06Aug12               *
+      *  Last Amend No. CLE168             Date 26Feb18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CGP017             Date 06Aug12               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE147             Date 30Sep11               *
       *                 AR821923           Date 29Aug11               *
@@ -29,6 +30,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE168 - Allow Debit of Blocked Account (Recompile)          *
       *  MD046248 - Finastra Rebranding                               *
       *  CGP017 - Global Layer - GOC0100 Task Split                   *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
@@ -42,7 +44,7 @@
       *  CLE025 - Credit Lines                                        *
       *                                                               *
       *****************************************************************
- 
+
 O    FGZLEFCLTL1UF   E           K DISK    INFSR(*PSSR) PREFIX(G_) COMMIT(D_COM)
 O    F                                     USROPN
 O    FGZLEFCLTQDO  A E           K DISK    INFSR(*PSSR) PREFIX(G_) COMMIT(D_COM)
@@ -51,9 +53,9 @@ O    F                                     USROPN
 O
 O    D Z_LEFCLTQD    E DS                  EXTNAME(GZLEFCLTQD)
 O    D G_LEFCLTQD    E DS                  EXTNAME(GZLEFCLTQD) PREFIX(G_)
- 
+
       * ENTRY PARAMETERS
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7
      C                   PARM                    I#ERMS           50
@@ -97,9 +99,9 @@ O    C                   ELSE
 O    C                   WRITE     W_LEFCLTD0
 O    C                   ENDIF
 O    C                   ENDIF
- 
+
      C                   RETURN
- 
+
      C/SPACE 5
       ********************************************************************
       * *INZSR - Initial subroutine called automatically at program start
@@ -120,7 +122,7 @@ O    C                   KFLD                    FCXBRC
 O    C                   KFLD                    FCXFCU
 O    C                   KFLD                    FCXFTP
 O    C                   KFLD                    FCXFNO
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5
@@ -128,15 +130,15 @@ O    C                   KFLD                    FCXFNO
       * *PSSR  --- ABNORMAL ERROR CONDITIONS
       *********************************************************************
      C     *PSSR         BEGSR
- 
+
      C     W#RUN         IFEQ      *BLANKS
- 
+
      C                   MOVE      'Y'           W#RUN             1
- 
+
      C                   MOVEL     '*ERROR'      I#RTCD
      C                   MOVE      '1'           *INU7
      C                   MOVE      '1'           *INU8
- 
+
      C                   DUMP
       *
       * If no identified cause of error
@@ -151,10 +153,10 @@ O    C                   KFLD                    FCXFNO
      C                   EVAL      BUFFER = I#ERMS
      C                   CALL      'GPWRTELOG'
      C                   PARM                    BUFFER         4000
- 
+
      C                   SETON                                        LRU7U8
      C                   RETURN
      C                   ENDIF
- 
+
      C                   ENDSR
       *********************************************************************

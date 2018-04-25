@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. LLN022A            Date 03Jun15               *
+      *  Last Amend No. CLE168             Date 26Feb18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 LLN022A            Date 03Jun15               *
       *                 LLN022             Date 03Jun15               *
       *                 AR937578A          Date 04Apr12               *
       *                 CLE147             Date 30Sep11               *
@@ -37,6 +38,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE168 - Allow Debit of Blocked Account (Recompile)          *
       *  MD046248 - Finastra Rebranding                               *
       *  LLN022A - BOE Upgrade to MidasPlus - incorporate code from   *
       *            /COPY members and add switchability.               *
@@ -82,7 +84,7 @@
       **  Facilities Details file
      FFCLTY     IF   E           K DISK    INFSR(*PSSR)
      F                                     INCLUDE(FCLTYFMF)
- 
+
      FLEVFCLX1L0UF A E           K DISK                                                       CER001
      F                                     COMMIT                                             CER001
      F                                     RENAME(LEVFCIPX6:VFCIPY6)                          CER001
@@ -98,7 +100,7 @@
      FLEFCLTLH  UF A E           K DISK    INFSR(*PSSR)                                       245219
       * Hook to enable non-core files to be included
       /COPY WNCPYSRC,LEFCIPU010
- 
+
      FLEVFCIPY0 UF   E           K DISK                                                      LLN022A
      F                                     RENAME(LEVFCIX0:VFCIPD0)                          LLN022A
      FLEVEFCIPX0UF A E             DISK                                                      LLN022A
@@ -122,59 +124,59 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** The following /COPY line includes the definitions for fields
       ** used in checking whether there are messages on the data queue.
      D/COPY ZACPYSRC,DTAQCHKDCL
       **------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       **   End of automatically included D-specs 
       **   ===================================== 
       ** +--------------------------------------+
      D DBerrUpd        C                   CONST('DB error in FCIP API update')
- 
+
       *****************************************************************
- 
+
       **  EXTERNALLY DESCRIBED DATA STRUCTURE FOR VALID FACILITY
      D LEVFCIM       E DS                  EXTNAME(LEVFCIMPD)
      D LEVFCIN       E DS                  EXTNAME(LEVFCINPD)
- 
+
      D LEFCIPUPC       DS             1    DTAARA(LEFCIPUPC)
- 
+
      D FCIP_OK       E DS                  EXTNAME(LEEFCIPPD)
       ** Assignment Details OK indicator
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
       ** External data structure for SAR details
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for Bank Details
                                                                                               CER001
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)                                  CER001
       ** External DS for module details                                                       CER001
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** First DS for access programs, short date structure
- 
+
      D NwFCIPFilFmt  E DS                  EXTNAME(LEVFCLX1L0)                                CER001
       *                                                                                       CER001
       ** Facility LUX Valids extension file                                                   CER001
@@ -192,18 +194,18 @@
      D Return2         S              7A                                                      201589
      D Endjob          S              1A   INZ('Y')                                           201589
      D @Timestamp      S             26Z
- 
+
       ** Dummy message ID and message file fields for use on the calls to
       ** ZAMSGTOOPR
      D DummyMsgID      S                   LIKE(#MsgID)
      D DummyMsgF       S             10A
      D ULX004          S              1A                                                      CER001
- 
+
       ** +--------------------------------------+
       **   End of D-specs                        
       **   ==============                        
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       **   Hook for non-core D-specs (all types)   
       **   also any I-specs (if necessary)         
@@ -213,26 +215,26 @@
                                                                                              LLN022A
      D ValidFCIPEx   E DS                  EXTNAME(LEVFCIPX0)                                LLN022A
      D                                     Prefix(N)                                         LLN022A
- 
+
       /EJECT
      C*****************************************************************
      C*                                                               *
      C* MAIN - MAIN BODY                                              *
      C*                                                               *
      C*****************************************************************
- 
+
       /COPY WNCPYSRC,LEFCIPU001
- 
+
       ** Set up the name of the server/database updater data queue.
      C                   EVAL      DtaQName = 'APFCIPDTQ'
- 
+
       **-----------------------------------------------------------------------
       ** The following /COPY line includes a check for whether there
       ** are messages on the server/updater data queue, and sends a 'GO'.
       ** message to the data queue if there are not.
      D/COPY ZACPYSRC,DTAQCHK
       **-----------------------------------------------------------------------
- 
+
       *  Initialise Data queue parms
      C                   EVAL      DtqLen = 10
      C                   EVAL      DtqWait = -1
@@ -260,42 +262,42 @@
      C                   PARM                    WaitTime
      C                   PARM                    Dlcobj
      C                   PARM                    Return
- 
+
       ** Ensure the U7 and U8 indicators are off, to prevent problems
       ** caused by earlier errors.
      C                   CLEAR                   *inu7
      C                   CLEAR                   *inu8
- 
+
       /COPY WNCPYSRC,LEFCIPU002
- 
+
       ** Position file cursor to start of file to prevent problems on
       ** later calls
      C     1             SETLL     LEVFCIMPD
      C     1             SETLL     LEVFCINPD
- 
+
       ** READ VALID FACILITY FM AND FN
      C                   READ      LEVFCIMD0                              99    *
      C                   READ      LEVFCIND0                              99    *
      C                   DOW       *IN99 = *OFF
- 
+
       /COPY WNCPYSRC,LEFCIPU003
- 
+
       ** Load the API Dump data area with as many fields from the message
       **  header as are available, so that dumps in any lowere level modules
       **  will include the key information
      C                   EVAL      ARFOTranID = FPPCRF
- 
+
       /COPY WNCPYSRC,LEFCIPU004
- 
+
       ** Retrieve the transaction number of last update from FCLTYFM
- 
+
      C                   MOVE      FPCNUM        K#CNUM
      C                   MOVE      FPFACT        K#FACT
      C                   MOVE      FPFCNO        K#FCNO
      C                   MOVE      'A'           K#RCTP
- 
+
      C     FCLTYK        CHAIN     FCLTY                              80
- 
+
       ** LE DATABASE UPDATE
      C                   CALLB     'LEFCIPUPD'
      C                   PARM      *BLANKS       @@RTCD            7
@@ -331,9 +333,9 @@
      C                   PARM                    WMsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM                    Wx                3 0
- 
+
       /COPY WNCPYSRC,LEFCIPU007
- 
+
       ** If LLN007 is on update BOE extension file.                                          LLN022A
       *                                                                                      LLN022A
      C                   IF        LLN007 = 'Y'                                              LLN022A
@@ -414,14 +416,14 @@
       *                                                                                       CER001
      C                   COMMIT
      C                   END
- 
+
       /COPY WNCPYSRC,LEFCIPU008
- 
+
      ** If an error has occurred, reaccess record in error and remove from
      ** the file to prevent program processing the same record again
      C     @@RTCD        IFEQ      '*ERROR '
      C     @@RTCD        OREQ      '*RECUPD'
- 
+
       * Check for Facility on valid file
      C     @KEYFCIP      CHAIN     LEVFCIML1                          89
      C     @KEYFCIP      CHAIN     LEVFCINL1                          89
@@ -462,9 +464,9 @@
      C                   PARM                    DBError
      C                   PARM                    DummyMsgID
      C                   PARM                    DummyMsgF
- 
+
      C                   ENDIF
- 
+
       ** READ VALID FCLTY
      C                   READ      LEVFCIMD0                              99    *
      C                   READ      LEVFCIND0                              99    *
@@ -480,15 +482,15 @@
      C                   END
       ** End loop for data queue prompt
      C                   END
- 
+
       /COPY WNCPYSRC,LEFCIPU009
- 
+
       * EXIT FROM PROGRAM
      C                   RETURN
- 
+
       * Hook to enable non-core subroutines to be included
       /COPY WNCPYSRC,LEFCIPU012
- 
+
       *****************************************************************
       /EJECT                                                                                  245219
       *****************************************************************                       245219
@@ -531,19 +533,19 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
- 
+
+
      C     *LIKE         DEFINE    FPCNUM        K#CNUM
      C     *LIKE         DEFINE    FPFACT        K#FACT
      C     *LIKE         DEFINE    FPFCNO        K#FCNO
      C     *LIKE         DEFINE    RCTP          K#RCTP
- 
+
       *  Define key list for LEVFCINL1
      C     @KeyFcip      KLIST
      C                   KFLD                    FPCNUM
      C                   KFLD                    FPFACT
      C                   KFLD                    FPFCNO
- 
+
       *  Define key list for FCLTY
      C     FCLTYK        KLIST
      C                   KFLD                    K#CNUM
@@ -568,24 +570,24 @@
      C                   PARM                    Return2                                      201589
                                                                                               201589
       *  Lock allocation data area
- 
+
       *   The data area is allocated *SHRRD here and *EXCL whilst processing
       *    of the valid file is actually taking place.
       *   The function to submit this updater tries to get a *EXCL lock.
       *   The controller tries to get a *SHRRD lock.
- 
+
       *                         Submitter             Controller
       *                 Lock      Lock     Submitter     Lock     Controller
       *      Status    Status   Successful   Action   Successful    Action
       *      ------    ------   ---------- ---------  ----------  ----------
       *   Not running  None        Yes      Submit       Yes        Prompt
       *                                     updater                 updater
- 
+
       *   Running not  *SHRRD      No        None        Yes        Prompt
       *    processing                                               updater
- 
+
       *   Processing   *EXCL       No        None        No         None
- 
+
      C                   CALLB     'APCALCOBJ'
      C                   PARM                    Object
      C                   PARM                    Lib
@@ -595,14 +597,14 @@
      C                   PARM                    WaitTime
      C                   PARM                    Dlcobj
      C                   PARM                    Return
- 
+
       ** Create required QTEMP objects
      C                   CALL      'APCCRTQTO'
      C                   PARM                    ReturnCde        10
- 
+
       *  Hook to enable non-core initial processing to be included
       /COPY WNCPYSRC,LEFCIPU013
- 
+
       ** Access Bank details via access program
       *  (database error handling done in access program)
      C                   CALLB     'AOBANKR0'
@@ -614,27 +616,27 @@
      C                   PARM      '*DBERR '     @RTCD                                        CER001
      C                   PARM      '*FIRST '     @OPTN                                        CER001
      C     SDMMOD        PARM      SDMMOD        DSFDY                                        CER001
- 
+
       ** Determine if CLE008 is installed
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CLE008'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   MOVEL     'N'           CLE008            1
      C                   ELSE
      C                   MOVEL     'Y'           CLE008
      C                   ENDIF
- 
+
       ** Determine if CSC011 is installed
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CSC011'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   MOVEL     'N'           CSC011            1
      C                   ELSE
@@ -685,9 +687,9 @@
      C                   EXSR      *PSSR                                                      CER001
      C                   ENDIF                                                                CER001
      C                   ENDIF                                                                CER001
- 
+
      C                   EVAL      @RTCD = *BLANKS
- 
+
      C                   ENDSR
       ****************************************************************
       /EJECT

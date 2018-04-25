@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD046115           Date 24Jul17               *
+      *  Last Amend No. CLE168             Date 26Feb18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD046115           Date 24Jul17               *
       *                 MD036475           Date 04Dec15               *
       *                 MD024884A          Date 04Jul17               *
       *                 MD032089           Date 28Apr15               *
@@ -131,6 +132,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE168 - Allow Debit of Blocked Account                      *
       *  MD046248 - Finastra Rebranding                               *
       *  MD046115 - The error messages for CDL094 were not properly   *
       *             formatted.                                        *
@@ -343,6 +345,7 @@
       /EJECT
       *****************************************************************
      C/COPY WNCPYSRC,ZASETINVF1
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
@@ -485,6 +488,8 @@
       ** External DS for SAR Details                                            CDL008
       *                                                                         CDL008
      D DLUFBO        E DS                  EXTNAME(DLUFBOPD) DTAARA                           CGL014
+     D LEFCLY        E DS                  EXTNAME(LEFCLYPP) DTAARA                           CLE168
+     D                                     PREFIX(A_)                                         CLE168
 
       ** Array containing Copyright statement                                                 CLE033
      D SVAL            S             80    DIM(4) CTDATA PERRCD(1)                            CLE033
@@ -1038,6 +1043,10 @@
       ** CLEAR OUTPUT RECEIVE FIELDS
       *
      C                   CLEAR                   ##RECF
+      *                                                                                       CLE168
+     C                   IF        CLE168 = 'Y'                                               CLE168
+     C                   IN        LEFCLY                                                     CLE168
+     C                   ENDIF                                                                CLE168
       *
       ** RECEIVE SETTLEMENT FIELDS
       ** -------------------------
@@ -2092,6 +2101,25 @@
       ** A/C IS BLOCKED                                                                       182114
       *                                                                                       182114
      C     ##PREC        IFNE      'Y'                                                        260863
+      *                                                                                       CLE168
+      ** Allow debit of blocked account when bankrupt flag is 'Y'                             CLE168
+      *                                                                                       CLE168
+     C                   IF        *IN91 = '1' AND CLE168 = 'Y'                               CLE168
+     C                   IF        ##CALP = 'LERI' OR ##CALP = 'LEND'                         CLE168
+     C                             OR ##CALP = 'MAPY'                                         CLE168
+     C                   IF        A_XBKPT = 'Y'                                              CLE168
+     C                   EVAL      WIdx = WIdx + 1                                            CLE168
+     C                   EVAL      WFldNameArr(WIdx)  = 'DDRONX'                              CLE168
+     C                   EVAL      WMsgIDArr(WIdx)    = 'XXX8000'                             CLE168
+     C                   ELSE                                                                 CLE168
+     C                   ADD       1             Idx                                          CLE168
+     C                   EVAL      FldNameArr(Idx) = 'DDRONX'                                 CLE168
+     C                   EVAL      MsgIDArr(Idx) = 'ESM0991'                                  CLE168
+     C                   MOVE      'N'           DDRonxOK                                     CLE168
+     C                   ENDIF                                                                CLE168
+     C                   ENDIF                                                                CLE168
+     C                   ELSE                                                                 CLE168
+      *                                                                                       CLE168
      C     *IN91         IFEQ      '1'                                                        182114
      C     *IN92         OREQ      '1'                                                        182114
      C                   ADD       1             Idx                                          182114
@@ -2099,6 +2127,7 @@
      C                   EVAL      MsgIDArr(Idx) = 'ESM0991'                                  182114
      C                   MOVE      'N'           DDRonxOK                                     182114
      C                   END                                                                  182114
+     C                   ENDIF                                                                CLE168
      C                   EXSR      SRExtChkBlkAc                                            MD036475
      C                   ENDIF                                                                260863
      C                   END
@@ -2396,12 +2425,32 @@
       ** A/C IS BLOCKED                                                                       182114
       *                                                                                       182114
      C     ##PREC        IFNE      'Y'                                                        260863
+      *                                                                                       CLE168
+      ** Allow debit of blocked account when bankrupt flag is 'Y'                             CLE168
+      *                                                                                       CLE168
+     C                   IF        *IN91 = '1' AND CLE168 = 'Y'                               CLE168
+     C                   IF        ##CALP = 'LERI' OR ##CALP = 'LEND'                         CLE168
+     C                             OR ##CALP = 'MAPY'                                         CLE168
+     C                   IF        A_XBKPT = 'Y'                                              CLE168
+     C                   EVAL      WIdx = WIdx + 1                                            CLE168
+     C                   EVAL      WFldNameArr(WIdx)  = 'DDRONX'                              CLE168
+     C                   EVAL      WMsgIDArr(WIdx)    = 'XXX8000'                             CLE168
+     C                   ELSE                                                                 CLE168
+     C                   ADD       1             Idx                                          CLE168
+     C                   EVAL      FldNameArr(Idx) = 'DDRONX'                                 CLE168
+     C                   EVAL      MsgIDArr(Idx) = 'ESM0991'                                  CLE168
+     C                   MOVE      'N'           DDRonxOK                                     CLE168
+     C                   ENDIF                                                                CLE168
+     C                   ENDIF                                                                CLE168
+     C                   ELSE                                                                 CLE168
+      *                                                                                       CLE168
      C     *IN91         IFEQ      '1'                                                        182114
      C                   ADD       1             Idx                                          182114
      C                   EVAL      FldNameArr(Idx) = 'DDRONX'                                 182114
      C                   EVAL      MsgIDArr(Idx) = 'ESM0991'                                  182114
      C                   MOVE      'N'           DDRonxOK                                     182114
      C                   END                                                                  182114
+     C                   ENDIF                                                                CLE168
      C                   EXSR      SRExtChkBlkAc                                            MD036475
      C                   ENDIF                                                                260863
       *
@@ -2538,12 +2587,32 @@
       ** A/C IS BLOCKED                                                                       182114
       *                                                                                       182114
      C     ##PREC        IFNE      'Y'                                                        260863
+      *                                                                                       CLE168
+      ** Allow debit of blocked account when bankrupt flag is 'Y'                             CLE168
+      *                                                                                       CLE168
+     C                   IF        *IN91 = '1' AND CLE168 = 'Y'                               CLE168
+     C                   IF        ##CALP = 'LERI' OR ##CALP = 'LEND'                         CLE168
+     C                             OR ##CALP = 'MAPY'                                         CLE168
+     C                   IF        A_XBKPT = 'Y'                                              CLE168
+     C                   EVAL      WIdx = WIdx + 1                                            CLE168
+     C                   EVAL      WFldNameArr(WIdx)  = 'DDRONX'                              CLE168
+     C                   EVAL      WMsgIDArr(WIdx)    = 'XXX8000'                             CLE168
+     C                   ELSE                                                                 CLE168
+     C                   ADD       1             Idx                                          CLE168
+     C                   EVAL      FldNameArr(Idx) = 'DDRONX'                                 CLE168
+     C                   EVAL      MsgIDArr(Idx) = 'ESM0991'                                  CLE168
+     C                   MOVE      'N'           DDRonxOK                                     CLE168
+     C                   ENDIF                                                                CLE168
+     C                   ENDIF                                                                CLE168
+     C                   ELSE                                                                 CLE168
+      *                                                                                       CLE168
      C     *IN91         IFEQ      '1'                                                        182114
      C                   ADD       1             Idx                                          182114
      C                   EVAL      FldNameArr(Idx) = 'DDRONX'                                 182114
      C                   EVAL      MsgIDArr(Idx) = 'ESM0991'                                  182114
      C                   MOVE      'N'           DDRonxOK                                     182114
      C                   END                                                                  182114
+     C                   ENDIF                                                                CLE168
      C                   EXSR      SRExtChkBlkAc                                            MD036475
      C                   ENDIF                                                                260863
      C                   END
@@ -2640,6 +2709,25 @@
       ** A/C IS BLOCKED
       *
      C     ##PREC        IFNE      'Y'                                                        260863
+      *                                                                                       CLE168
+      ** Allow debit of blocked account when bankrupt flag is 'Y'                             CLE168
+      *                                                                                       CLE168
+     C                   IF        *IN91 = '1' AND CLE168 = 'Y'                               CLE168
+     C                   IF        ##CALP = 'LERI' OR ##CALP = 'LEND'                         CLE168
+     C                             OR ##CALP = 'MAPY'                                         CLE168
+     C                   IF        A_XBKPT = 'Y'                                              CLE168
+     C                   EVAL      WIdx = WIdx + 1                                            CLE168
+     C                   EVAL      WFldNameArr(WIdx)  = 'DDRONX'                              CLE168
+     C                   EVAL      WMsgIDArr(WIdx)    = 'XXX8000'                             CLE168
+     C                   ELSE                                                                 CLE168
+     C                   ADD       1             Idx                                          CLE168
+     C                   EVAL      FldNameArr(Idx) = 'DDRONX'                                 CLE168
+     C                   EVAL      MsgIDArr(Idx) = 'ESM0991'                                  CLE168
+     C                   MOVE      'N'           DDRonxOK                                     CLE168
+     C                   ENDIF                                                                CLE168
+     C                   ENDIF                                                                CLE168
+     C                   ELSE                                                                 CLE168
+      *                                                                                       CLE168
      C     *IN91         IFEQ      '1'
      C******IN92         OREQ      '1'                                                        182114
      C                   ADD       1             Idx
@@ -2647,6 +2735,7 @@
      C                   EVAL      MsgIDArr(Idx) = 'ESM0991'
      C                   MOVE      'N'           DDRonxOK
      C                   END
+     C                   ENDIF                                                                CLE168
      C                   EXSR      SRExtChkBlkAc                                            MD036475
      C                   ENDIF                                                                260863
       *
@@ -9453,6 +9542,21 @@
      C                   ENDIF                                                                CSW214
       *                                                                                       CSW214
      C/COPY WNCPYSRC,ZASETINV21                                                               CUT009
+      *                                                                                       CLE168
+      ** Access SAR details file                                                              CLE168
+      *                                                                                       CLE168
+     C                   CALLB     'AOSARDR0'                                                 CLE168
+     C                   PARM      *BLANKS       @RTCD                                        CLE168
+     C                   PARM      '*VERIFY'     @OPTN                                        CLE168
+     C                   PARM      'CLE168'      @SARD                                        CLE168
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CLE168
+                                                                                              CLE168
+     C                   IF        @RTCD = *BLANK                                             CLE168
+     C                   MOVEL     'Y'           CLE168            1                          CLE168
+     C                   ELSE                                                                 CLE168
+     C                   MOVEL     'N'           CLE168                                       CLE168
+     C                   ENDIF                                                                CLE168
+      *                                                                                       CLE168
       *                                                                         CSW200
      C                   ENDSR
      C*****************************************************************

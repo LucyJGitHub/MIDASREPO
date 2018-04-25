@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2002                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. BUG6689            Date 13Aug12               *
+      *  Last Amend No. CLE168             Date 26Feb18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 BUG6689            Date 13Aug12               *
       *                 LLN022A            Date 13Aug12               *
       *                 LLN022             Date 13Aug12               *
       *                 CLE134             Date 01Aug12               *
@@ -51,6 +52,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE168 - Allow Debit of Blocked Account (Recompile)          *
       *  MD046248 - Finastra Rebranding                               *
       *  BUG6689 - Program should execute the confirmation screen     *
       *            before executing the update.                       *
@@ -123,7 +125,7 @@
       *                                                                                       CER001
       ** Midas LE Facilities Extension file                                                   245219
      FLEFCLTLH  UF A E           K DISK    INFSR(*PSSR)                                       245219
- 
+
       ***  Hook to enable non-core files to be included
       *
      FLEIFCIPY0 UF   E           K DISK    INFSR(*PSSR) COMMIT                               LLN022A
@@ -245,10 +247,10 @@
       *
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ***  External DS for bank details
- 
+
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
       ** EXTERNAL DS FOR GENERAL LEDGER DETAILS
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ***  Midas modules details accessed via access program
       *
@@ -266,16 +268,16 @@
                                                                                               CGL029
      D ExtData       E DS                  EXTNAME(LEFCEXPD)
       ***  LE (FCIP) Extra Data - File (D/B) format
- 
+
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)
       ** 24X7 status dataarea
- 
+
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)
       ** SD data area
                                                                                              LLN022A
      D ValidFCIPEx   E DS                  EXTNAME(LEVFCIPX0)                                LLN022A
      D                                     Prefix(N)                                         LLN022A
- 
+
      D                 DS
      D  @SIFACR                1     11
      D  @SICSSN                1      6
@@ -660,7 +662,7 @@
      C                   MOVEL     DDCSSN        ##DDCSSN         10
      C                   MOVEL     DDFACT        ##DDFACT          3
      C                   MOVEL     DDFCNO        ##DDFCNO          2
- 
+
      C     ZATRNKX0      CHAIN     LEIFCIPX0                          99
      C     *IN99         IFEQ      *OFF
      C     DDACTN        ANDNE     'I'
@@ -686,7 +688,7 @@
      C                   EXSR      TDtDtaSubs
      C                   END
      C                   END
- 
+
      C                   END
       *
       ***  If action code, or Fclty number were NOT OK
@@ -735,7 +737,7 @@
       * SNDM@1 - Send a message to first screen
       *****************************************************************
      C     SNDM@1        BEGSR
- 
+
      C                   Z-ADD     Idx           E                 3 0
       *
       ***  If there are fundamental errors in this transaction
@@ -810,7 +812,7 @@
      C                   ELSE
      C                   MOVEL     'N'           @EINKJ
      C                   END
- 
+
       ***  Write/read display screen
       *
      C                   CALLB     'LEFCIP1DP'
@@ -976,7 +978,7 @@
      C                   PARM                    CLE005
      C                   PARM                    CLE006
      C                   PARM                    CLE008
- 
+
       * Participant Facility ind. from FCLTYFM file
      C                   PARM                    H#PRTR
       *
@@ -1171,7 +1173,7 @@
      C                   PARM                    F1XUSR           10
      C                   PARM                    F1AUSR           10
      C                   PARM                    ExtData         500
- 
+
       * OUTPUTS
      C                   PARM                    LEEFCIP1
      C                   PARM                    FldNameArr
@@ -1333,7 +1335,7 @@
      C                   PARM                    WWNBDP            1
       * OK indicator - filed TRCA
      C                   PARM                    OKTRCA            1
- 
+
       * OK indicator - filed CAFT
      C                   PARM                    OKCAFT            1
       * OK indicator - filed CAFN
@@ -1346,7 +1348,7 @@
      C                   PARM                    WBLACF            1
       * Participant Facility ind. from FCLTYFM file
      C                   PARM                    H#PRTR
- 
+
       * Customer Extra Data file data
      C                   PARM                    ExtData         500
       * CLE005
@@ -1361,7 +1363,7 @@
      C                   PARM                    CSC011            1
       * CEU013
      C                   PARM                    CEU013            1
- 
+
       * OUTPUTS
       * Field OK flags (DS) from/to caller
      C                   PARM                    LEEFCIP2
@@ -1384,7 +1386,7 @@
      C                   PARM                    FacAmChg          1
       * Table OAM to be updated
      C                   PARM                    UpdOam            1
- 
+
       *
       ***  If errors returned
       *
@@ -1491,7 +1493,7 @@
       *
      C                   MOVEL     MPRTR         H#PRTR            1
      C                   MOVEL     MTNLU         H#TNLU            5 0
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1658,7 +1660,7 @@
       *
      C                   MOVEL     '*ANY'        FldNameArr(1)
      C                   MOVEL     'MMM1030'     MsgIdArr(1)
- 
+
       ***  Write/read display screen
       *
      C                   CALLB     'LEFCIP1DP'
@@ -1800,7 +1802,7 @@
      C     DDFCNO        ANDEQ     *BLANKS
      C                   MOVEL     WWFCNO        DDFCNO
      C                   END
- 
+
      C                   MOVEL     DDCSSN        @SICSSN
      C                   MOVEL     DDFACT        @SIFACT
      C                   MOVEL     DDFCNO        @SIFCNO
@@ -1810,7 +1812,7 @@
      C                   MOVEL     DDCSSN        FPCNUM
      C                   MOVE      DDFACT        FPFACT
      C                   MOVE      DDFCNO        FPFCNO
- 
+
      C                   MOVEL     DDCSSN        N_FNCNUM
      C                   MOVE      DDFACT        N_FNFACT
      C                   MOVE      DDFCNO        N_FNFCNO
@@ -1857,7 +1859,7 @@
      C                   PARM                    WMsgDtaArr
       * Array index (3P0) from/to caller
      C                   PARM                    Wx                3 0
- 
+
      C                   END
       *                                                                                      LLN022A
       ** If LLN007 installed update BOE data                                                 LLN022A
@@ -2187,7 +2189,7 @@
      C                   PARM      '*FIRST '     @OPTN
      C*****SDGELR        PARM      SDGELR        DSFDY                                        CGL029
      C     SDGELR        PARM      SDGELR        DSSDY                                        CGL029
- 
+
       *
       ***  Access API ICD Details
       *
@@ -2202,40 +2204,40 @@
      C                   MOVEL     @OPTN         DBKEY                          *************
      C                   EXSR      *PSSR
      C                   END
- 
+
       ** Determine if CLE002 is installed
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CLE002'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   MOVEL     'N'           CLE002            1
      C                   ELSE
      C                   MOVEL     'Y'           CLE002
      C                   ENDIF
- 
+
       ** Determine if CLE005 is installed
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CLE005'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   MOVEL     'N'           CLE005            1
      C                   ELSE
      C                   MOVEL     'Y'           CLE005
      C                   ENDIF
- 
+
       ** Determine if CLE006 is installed
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CLE006'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   MOVEL     'N'           CLE006            1
      C                   ELSE
@@ -2248,20 +2250,20 @@
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CLE007'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   MOVEL     'N'           CLE007            1
      C                   ELSE
      C                   MOVEL     'Y'           CLE007
      C                   ENDIF
- 
+
       ** Determine if CLE008 is installed
      C                   CALLB     'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CLE008'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   MOVEL     'N'           CLE008            1
      C                   ELSE
@@ -2274,7 +2276,7 @@
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CLE014'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   MOVEL     'N'           CLE014            1
      C                   ELSE
@@ -2287,15 +2289,15 @@
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CSC011'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   MOVEL     'N'           CSC011            1
      C                   ELSE
      C                   MOVEL     'Y'           CSC011
- 
+
      C                   IN        SC24X7
      C                   IN        SDSTAT
- 
+
      C                   ENDIF
       *
       ** Determine if CEU013 is installed
@@ -2304,7 +2306,7 @@
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CEU013'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANKS
      C                   MOVEL     'N'           CEU013            1
      C                   ELSE
@@ -2379,7 +2381,7 @@
      C                   KFLD                    KMsgType
      C                   KFLD                    KFrntOffID
      C                   KFLD                    KTimeStamp
- 
+
      C     ZATRNKD0      KLIST
      C                   KFLD                    @FOTRANSEL
      C                   KFLD                    @TMESTPSEL
@@ -2426,7 +2428,7 @@
       *
      C                   MOVEL     'B'           @SCRN             1
       *
- 
+
      C                   EVAL      @RTCD = *BLANKS
       *
      C                   ENDSR

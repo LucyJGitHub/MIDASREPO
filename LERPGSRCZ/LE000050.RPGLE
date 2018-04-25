@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *  Last Amend No. CLE168             Date 26Feb18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE148             Date 23Jul12               *
       *                 CLE147             Date 28Sep11               *
       *                 CLE064             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -31,6 +32,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE168 - Allow Debit of Blocked Account (Recompile)          *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE148 - Alpha Loan Reference (Recompile)                    *
       *  CLE147 - Aggregate Facility                                  *
@@ -41,34 +43,34 @@
       *  CLE041 - Collateralised Lending Phase 2B                     *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FFCLTYL5   IF   E           K DISK    INFSR(*PSSR)
       ** Midas LE Facilities detail B record
- 
+
      FLEFCLTLG  IF   E           K DISK    INFSR(*PSSR)
       ** Midas LE Facilities extension record
- 
+
      FLEFCLTJ0  IF   E           K DISK    INFSR(*PSSR)
       ** Midas LE Joined Logical File of FCLTYFM and FCLTYFN
- 
+
      FLETRAGL0  IF   E           K DISK    INFSR(*PSSR)
       ** Midas LE Aggregate Facilities Relationship by Tranche
- 
+
      FLEAGFYL1  UF   E           K DISK    INFSR(*PSSR)
      F                                     Rename(FCLTYFMF:AGFCLTYA)
      F                                     PREFIX(AA)
       ** Midas LE Facilities Aggregate Facilities detail A file
- 
+
      FLEAGFYL2  UF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(FCLTYFNF:AGFCLTYB)
      F                                     PREFIX(AB)
       ** Midas LE Facilities Aggregate Facilities detail B file
- 
+
      FLEAGFYL3  UF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(LEFCLTD0:AGFCLTYX)
      F                                     PREFIX(AX)
@@ -76,7 +78,7 @@
                                                                                               CLE147
      FLEAGHSL0  IF   E           K DISK    INFSR(*PSSR)                                       CLE147
       ** Midas LE Aggregate Facility History file                                             CLE147
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -84,7 +86,7 @@
       ** ¦ D-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      D LDA           E DS           256    EXTNAME(LDA) DTAARA(LDA)
       ** Local data area for database error details
       ** *LOCK IN LDA immediately before and OUT LDA immediately
@@ -94,44 +96,44 @@
       **       Defines:                     142 170 DBKEY
       **                                    171 180 DBPGM
       **                                    181 1830DBASE
- 
+
       ** Bank Details Data Structure
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** Currency Details Data Structure
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CLE147
       ** SAR Details Data Structure                                                           CLE147
                                                                                               CLE147
       ** Short Access Object Data Structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Long Access Object Data Structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D KCNum           S              6  0
      D KFacT           S              3  0
      D KFcNo           S              2  0
@@ -152,7 +154,7 @@
      D KCust           S                   LIKE(CNUM)                                         CLE147
      D KFclty          S                   LIKE(AIFCTY)                                       CLE147
      D CLE147          S              1                                                       CLE147
- 
+
       ** Parameters for ZXRATE module
      D ZRATE1          S             13P 8
      D ZMDI1           S              1
@@ -160,7 +162,7 @@
      D ZMDI2           S              1
      D ZRATEX          S             13P 8
      D ZMDIX           S              1
- 
+
       ** Parameters for ZCONVZ1 module
      D ZAMTCI          S             15  0
      D ZEXCH           S             13P 8
@@ -170,7 +172,7 @@
      D ZCDPI           S              1  0
      D ZCDPO           S              1  0
      D ZAMTCO          S             15  0
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -178,24 +180,24 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** The main subroutine is comprised of 2 looping processes:
       ** 1st, to initialise dates and amounts in LEAGFMPD/LEAGFNPD/LEAGFTQD
       ** 2nd, to update amounts in LEAGFMPD/LEAGFNPD/LEAGFTQD with the
       **  corresponding aggregate facilities found in FCLTYFM/FCLTYFN/LEFCLTQD
- 
+
       ** Access the first record from the Facilities detail B table to get
       ** the availability dates
      C     *LOVAL        SETLL     FCLTYL5
      C                   READ      FCLTYL5
- 
+
       ** If no record is found, initialise all rundates to zeros
      C                   IF        %EOF(FCLTYL5)
      C                   EVAL      RUN0 = *ZEROS
@@ -209,42 +211,42 @@
      C                   EVAL      RUN8 = *ZEROS
      C                   EVAL      RUN9 = *ZEROS
      C                   ENDIF
- 
+
       ** Read all records from the Aggregate Facilities detail A table
      C     *LOVAL        SETLL     LEAGFYL1
      C                   READ      LEAGFYL1                               10
- 
+
      C                   DOW       *IN10 = *OFF
- 
+
       ** Process only live facilities
      C                   IF        AARECI = 'D'
      C                   EXSR      SRInitAGRecB
      C                   EXSR      SRInitAGRecX
      C                   ENDIF
- 
+
       ** Read next record
      C                   READ      LEAGFYL1                               10
- 
+
      C                   ENDDO
- 
+
       ** Read all records from the joined tables FCLTYFM/FCLTYFN, process live
       ** tranches only
      C     *LOVAL        SETLL     LEFCLTJ0
      C                   READ      LEFCLTJ0                               10
- 
+
      C                   DOW       *IN10 = *OFF
- 
+
       ** Position to corresponding record in extension file
      C                   EXSR      SRPosToRecX
- 
+
       ** Update Aggregated Facilities
      C                   EXSR      SRUpdAggFac
- 
+
      C                   READ      LEFCLTJ0                               10
      C                   ENDDO
- 
+
       ** Terminate Program
- 
+
      C                   EVAL      *INLR = *ON
      C                   RETURN
       *****************************************************************
@@ -256,7 +258,7 @@
       *                                                               *
       *****************************************************************
      C     SRCvtAmount   BEGSR
- 
+
      C                   CALL      'ZCONVZ1'
      C                   PARM                    ZAMTCI
      C                   PARM                    ZEXCH
@@ -267,7 +269,7 @@
      C                   PARM                    ZCDPO
       ** Output
      C                   PARM      *ZEROS        ZAMTCO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -278,10 +280,10 @@
       *                                                               *
       *****************************************************************
      C     SRGetCurDet   BEGSR
- 
+
      C                   CALLB     'MXACSCURR'
       /COPY MXCPYSRC,MXACSPRME
- 
+
      C                   IF        ACS_RTCD = '*ERROR '
      C     *LOCK         IN        LDA
      C                   EVAL      DBASE = 8
@@ -290,9 +292,9 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EVAL      SDCURR = InData
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -303,9 +305,9 @@
       *                                                               *
       *****************************************************************
      C     SrUpdtAGRecB  BEGSR
- 
+
      C     KFclt2        CHAIN     LEAGFYL2                           11
- 
+
       ** If not found, database error
      C                   IF        *IN11 = *ON
      C                   MOVE      AACNUM        WCNumA
@@ -318,78 +320,78 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Get the cross rate between the tranche's ccy & aggregate facility's ccy
      C                   EVAL      ZCCYI = FCCY
      C                   EVAL      ZCCYO = AAFCCY
      C                   EXSR      SRGetXRate
- 
+
      C                   EVAL      ZEXCH = ZRATEX
      C                   EVAL      ZMD = ZMDIX
- 
+
       ** Convert Tranche's Exposure Amounts to aggregate facility's currency
      C                   EVAL      ZAMTCI = CAMD
      C                   EXSR      SRCvtAmount
- 
+
      C                   EVAL      ABCAMD = ABCAMD + ZAMTCO
- 
+
      C                   EVAL      ZAMTCI = OAM1
      C                   EXSR      SRCvtAmount
- 
+
      C                   EVAL      ABOAM1 = ABOAM1 + ZAMTCO
- 
+
      C                   EVAL      ZAMTCI = OAM2
      C                   EXSR      SRCvtAmount
- 
+
      C                   EVAL      ABOAM2 = ABOAM2 + ZAMTCO
- 
+
      C                   EVAL      ZAMTCI = OAM3
      C                   EXSR      SRCvtAmount
- 
+
      C                   EVAL      ABOAM3 = ABOAM3 + ZAMTCO
- 
+
      C                   EVAL      ZAMTCI = OAM4
      C                   EXSR      SRCvtAmount
- 
+
      C                   EVAL      ABOAM4 = ABOAM4 + ZAMTCO
- 
+
      C                   EVAL      ZAMTCI = OAM5
      C                   EXSR      SRCvtAmount
- 
+
      C                   EVAL      ABOAM5 = ABOAM5 + ZAMTCO
- 
+
      C                   EVAL      ZAMTCI = OAM6
      C                   EXSR      SRCvtAmount
- 
+
      C                   EVAL      ABOAM6 = ABOAM6 + ZAMTCO
- 
+
      C                   EVAL      ZAMTCI = OAM7
      C                   EXSR      SRCvtAmount
- 
+
      C                   EVAL      ABOAM7 = ABOAM7 + ZAMTCO
- 
+
      C                   EVAL      ZAMTCI = OAM8
      C                   EXSR      SRCvtAmount
- 
+
      C                   EVAL      ABOAM8 = ABOAM8 + ZAMTCO
- 
+
      C                   EVAL      ZAMTCI = OAM9
      C                   EXSR      SRCvtAmount
- 
+
      C                   EVAL      ABOAM9 = ABOAM9 + ZAMTCO
- 
+
      C                   EVAL      ZAMTCI = OA10
      C                   EXSR      SRCvtAmount
- 
+
      C                   EVAL      ABOA10 = ABOA10 + ZAMTCO
- 
+
      C                   EVAL      ZAMTCI = CEXP
      C                   EXSR      SRCvtAmount
- 
+
      C                   EVAL      ABCEXP = ABCEXP + ZAMTCO
- 
+
      C                   UPDATE    AGFCLTYB
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -400,14 +402,14 @@
       *                                                               *
       *****************************************************************
      C     SrUpdtAGRecX  BEGSR
- 
+
      C                   MOVE      AABRCA        KBrcA
      C                   MOVE      AACNUM        KCNumA
      C                   MOVE      AAFACT        KFacTA
      C                   MOVE      AAFCNO        KFcNoA
- 
+
      C     KFcltX        CHAIN     LEAGFYL3                           11
- 
+
       ** If not found, database error
      C                   IF        *IN11 = *ON
      C     *LOCK         IN        LDA
@@ -417,170 +419,170 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Since Cross Rate is already determined previously during update of
       ** aggr. facilities detail B file, just carry on with offset amount
       ** conversions
- 
+
      C                   EVAL      ZAMTCI = FCXCOF
      C                   EXSR      SRCvtAmount
- 
+
      C                   EVAL      AXFCXCOF = AXFCXCOF + ZAMTCO
- 
+
      C                   EVAL      ZAMTCI = FCXOF1
      C                   EXSR      SRCvtAmount
- 
+
      C                   EVAL      AXFCXOF1 = AXFCXOF1 + ZAMTCO
- 
+
      C                   EVAL      ZAMTCI = FCXOF2
      C                   EXSR      SRCvtAmount
- 
+
      C                   EVAL      AXFCXOF2 = AXFCXOF2 + ZAMTCO
- 
+
      C                   EVAL      ZAMTCI = FCXOF3
      C                   EXSR      SRCvtAmount
- 
+
      C                   EVAL      AXFCXOF3 = AXFCXOF3 + ZAMTCO
- 
+
      C                   EVAL      ZAMTCI = FCXOF4
      C                   EXSR      SRCvtAmount
- 
+
      C                   EVAL      AXFCXOF4 = AXFCXOF4 + ZAMTCO
- 
+
      C                   EVAL      ZAMTCI = FCXOF5
      C                   EXSR      SRCvtAmount
- 
+
      C                   EVAL      AXFCXOF5 = AXFCXOF5 + ZAMTCO
- 
+
      C                   EVAL      ZAMTCI = FCXOF6
      C                   EXSR      SRCvtAmount
- 
+
      C                   EVAL      AXFCXOF6 = AXFCXOF6 + ZAMTCO
- 
+
      C                   EVAL      ZAMTCI = FCXOF7
      C                   EXSR      SRCvtAmount
- 
+
      C                   EVAL      AXFCXOF7 = AXFCXOF7 + ZAMTCO
- 
+
      C                   EVAL      ZAMTCI = FCXOF8
      C                   EXSR      SRCvtAmount
- 
+
      C                   EVAL      AXFCXOF8 = AXFCXOF8 + ZAMTCO
- 
+
      C                   EVAL      ZAMTCI = FCXOF9
      C                   EXSR      SRCvtAmount
- 
+
      C                   EVAL      AXFCXOF9 = AXFCXOF9 + ZAMTCO
- 
+
      C                   EVAL      ZAMTCI = FCXO10
      C                   EXSR      SRCvtAmount
- 
+
      C                   EVAL      AXFCXO10 = AXFCXO10 + ZAMTCO
- 
+
       ** Convert Tranche's Collateral Lending Values Day 1 to 10
      C                   EVAL      ZAMTCI = FCXCV1
      C                   EXSR      SRCvtAmount
- 
+
      C                   EVAL      AXFCXCV1 = AXFCXCV1 + ZAMTCO
- 
+
      C                   EVAL      ZAMTCI = FCXCV2
      C                   EXSR      SRCvtAmount
- 
+
      C                   EVAL      AXFCXCV2 = AXFCXCV2 + ZAMTCO
- 
+
      C                   EVAL      ZAMTCI = FCXCV3
      C                   EXSR      SRCvtAmount
- 
+
      C                   EVAL      AXFCXCV3 = AXFCXCV3 + ZAMTCO
- 
+
      C                   EVAL      ZAMTCI = FCXCV4
      C                   EXSR      SRCvtAmount
- 
+
      C                   EVAL      AXFCXCV4 = AXFCXCV4 + ZAMTCO
- 
+
      C                   EVAL      ZAMTCI = FCXCV5
      C                   EXSR      SRCvtAmount
- 
+
      C                   EVAL      AXFCXCV5 = AXFCXCV5 + ZAMTCO
- 
+
      C                   EVAL      ZAMTCI = FCXCV6
      C                   EXSR      SRCvtAmount
- 
+
      C                   EVAL      AXFCXCV6 = AXFCXCV6 + ZAMTCO
- 
+
      C                   EVAL      ZAMTCI = FCXCV7
      C                   EXSR      SRCvtAmount
- 
+
      C                   EVAL      AXFCXCV7 = AXFCXCV7 + ZAMTCO
- 
+
      C                   EVAL      ZAMTCI = FCXCV8
      C                   EXSR      SRCvtAmount
- 
+
      C                   EVAL      AXFCXCV8 = AXFCXCV8 + ZAMTCO
- 
+
      C                   EVAL      ZAMTCI = FCXCV9
      C                   EXSR      SRCvtAmount
- 
+
      C                   EVAL      AXFCXCV9 = AXFCXCV9 + ZAMTCO
- 
+
      C                   EVAL      ZAMTCI = FCXC10
      C                   EXSR      SRCvtAmount
- 
+
      C                   EVAL      AXFCXC10 = AXFCXC10 + ZAMTCO
- 
+
       ** Convert Tranche's Margin Requirement Values Day 1 to 10
      C                   EVAL      ZAMTCI = FCXMR1
      C                   EXSR      SRCvtAmount
- 
+
      C                   EVAL      AXFCXMR1 = AXFCXMR1 + ZAMTCO
- 
+
      C                   EVAL      ZAMTCI = FCXMR2
      C                   EXSR      SRCvtAmount
- 
+
      C                   EVAL      AXFCXMR2 = AXFCXMR2 + ZAMTCO
- 
+
      C                   EVAL      ZAMTCI = FCXMR3
      C                   EXSR      SRCvtAmount
- 
+
      C                   EVAL      AXFCXMR3 = AXFCXMR3 + ZAMTCO
- 
+
      C                   EVAL      ZAMTCI = FCXMR4
      C                   EXSR      SRCvtAmount
- 
+
      C                   EVAL      AXFCXMR4 = AXFCXMR4 + ZAMTCO
- 
+
      C                   EVAL      ZAMTCI = FCXMR5
      C                   EXSR      SRCvtAmount
- 
+
      C                   EVAL      AXFCXMR5 = AXFCXMR5 + ZAMTCO
- 
+
      C                   EVAL      ZAMTCI = FCXMR6
      C                   EXSR      SRCvtAmount
- 
+
      C                   EVAL      AXFCXMR6 = AXFCXMR6 + ZAMTCO
- 
+
      C                   EVAL      ZAMTCI = FCXMR7
      C                   EXSR      SRCvtAmount
- 
+
      C                   EVAL      AXFCXMR7 = AXFCXMR7 + ZAMTCO
- 
+
      C                   EVAL      ZAMTCI = FCXMR8
      C                   EXSR      SRCvtAmount
- 
+
      C                   EVAL      AXFCXMR8 = AXFCXMR8 + ZAMTCO
- 
+
      C                   EVAL      ZAMTCI = FCXMR9
      C                   EXSR      SRCvtAmount
- 
+
      C                   EVAL      AXFCXMR9 = AXFCXMR9 + ZAMTCO
- 
+
      C                   EVAL      ZAMTCI = FCXM10
      C                   EXSR      SRCvtAmount
- 
+
      C                   EVAL      AXFCXM10 = AXFCXM10 + ZAMTCO
- 
+
      C                   UPDATE    AGFCLTYX
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -591,19 +593,19 @@
       *                                                               *
       *****************************************************************
      C     SRGetXRate    BEGSR
- 
+
      C                   EVAL      I#LFD1 = ZCCYI
      C                   EXSR      SRGetCurDet
      C                   EVAL      ZRATE1 = A6SPRT
      C                   EVAL      ZMDI1 = A6MDIN
      C                   EVAL      ZCDPI = A6NBDP
- 
+
      C                   EVAL      I#LFD1 = ZCCYO
      C                   EXSR      SRGetCurDet
      C                   EVAL      ZRATE2 = A6SPRT
      C                   EVAL      ZMDI2 = A6MDIN
      C                   EVAL      ZCDPO = A6NBDP
- 
+
      C                   CALLB     'ZXRATE'
      C                   PARM                    ZRATE1
      C                   PARM                    ZMDI1
@@ -612,7 +614,7 @@
       ** Outputs
      C                   PARM      *ZEROS        ZRATEX
      C                   PARM      *BLANKS       ZMDIX
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -623,9 +625,9 @@
       *                                                               *
       *****************************************************************
      C     SrAccsAGRecA  BEGSR
- 
+
      C     KFclt1        CHAIN     LEAGFYL1                           11
- 
+
       ** If not found, database error
      C                   IF        *IN11 = *ON
      C                   MOVE      AGAGBR        WBrcA
@@ -686,7 +688,7 @@
      C                   EVAL      AAFAMT = WWAFAM                                            CLE147
      C                   UPDATE    AGFCLTYA                                                   CLE147
      C                   ENDIF                                                                CLE147
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -697,19 +699,19 @@
       *                                                               *
       *****************************************************************
      C     SrUpdAggFac   BEGSR
- 
+
       ** Access the corresponding records from the Tranche - Aggregate
       ** Facilities Relationship by Tranche Table
      C     KFcltB        SETLL     LETRAGL0
      C     KFcltB        READE     LETRAGL0                               12
- 
+
      C                   DOW       *IN12 = *OFF
      C                   EXSR      SRAccsAGRecA
      C                   EXSR      SRUpdtAGRecB
      C                   EXSR      SRUpdtAGRecX
      C     KFcltB        READE     LETRAGL0                               12
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -720,14 +722,14 @@
       *                                                               *
       *****************************************************************
      C     SRPosToRecX   BEGSR
- 
+
      C                   MOVE      BRCA          KBrcA
      C                   MOVE      CNUM          KCNumA
      C                   MOVE      FACT          KFacTA
      C                   MOVE      FCNO          KFcNoA
- 
+
      C     KFcltX        CHAIN     LEFCLTLG                           11
- 
+
       ** If not found, database error
      C                   IF        *IN11 = *ON
      C     *LOCK         IN        LDA
@@ -737,7 +739,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -748,14 +750,14 @@
       *                                                               *
       *****************************************************************
      C     SrInitAGRecX  BEGSR
- 
+
      C                   MOVE      AABRCA        KBrcA
      C                   MOVE      AACNUM        KCNumA
      C                   MOVE      AAFACT        KFacTA
      C                   MOVE      AAFCNO        KFcNoA
- 
+
      C     KFcltX        CHAIN     LEAGFYL3                           11
- 
+
       ** If not found, database error
      C                   IF        *IN11 = *ON
      C     *LOCK         IN        LDA
@@ -765,7 +767,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EVAL      AXFCXCOF = *ZEROS
      C                   EVAL      AXFCXOF1 = *ZEROS
      C                   EVAL      AXFCXOF2 = *ZEROS
@@ -797,9 +799,9 @@
      C                   EVAL      AXFCXMR8 = *ZEROS
      C                   EVAL      AXFCXMR9 = *ZEROS
      C                   EVAL      AXFCXM10 = *ZEROS
- 
+
      C                   UPDATE    AGFCLTYX
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -810,9 +812,9 @@
       *                                                               *
       *****************************************************************
      C     SrInitAGRecB  BEGSR
- 
+
      C     KFclt2        CHAIN     LEAGFYL2                           11
- 
+
       ** If not found, database error
      C                   IF        *IN11 = *ON
      C                   MOVE      AACNUM        WCNumA
@@ -825,7 +827,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EVAL      ABRUN0 = RUN0
      C                   EVAL      ABRUN1 = RUN1
      C                   EVAL      ABRUN2 = RUN2
@@ -849,9 +851,9 @@
      C                   EVAL      ABOAM9 = *ZERO
      C                   EVAL      ABOA10 = *ZERO
      C                   EVAL      ABCEXP = *ZERO
- 
+
      C                   UPDATE    AGFCLTYB
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -861,7 +863,7 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = *BLANKS
      C                   EVAL      DBKEY = *BLANKS
@@ -869,13 +871,13 @@
      C                   EVAL      DBMOD = 'LE000050'
      C                   EVAL      DBASE = *ZEROS
      C                   OUT       LDA
- 
+
       ** Access Bank Details
      C                   CALL      'AOBANKR0'
      C                   PARM      *BLANKS       PRetCode
      C                   PARM      '*FIRST '     POption
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
      C                   IF        PRetCode <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = 'SDBANKPD'
@@ -884,7 +886,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Check if SAR CLE147 is switched *ON                                                  CLE147
      C                   CALL      'AOSARDR0'                                                 CLE147
      C                   PARM      *BLANKS       PRetCode                                     CLE147
@@ -911,27 +913,27 @@
      C                   KFLD                    CNUM
      C                   KFLD                    FACT
      C                   KFLD                    FCNO
- 
+
       ** Key list for Facility extension record file
      C     KFcltX        KLIST
      C                   KFLD                    KBrcA
      C                   KFLD                    KCNumA
      C                   KFLD                    KFacTA
      C                   KFLD                    KFcNoA
- 
+
       ** Key list for Facility extension record file
      C     KFclt1        KLIST
      C                   KFLD                    AGAGBR
      C                   KFLD                    AGAGNM
      C                   KFLD                    AGAGFT
      C                   KFLD                    AGAGFN
- 
+
       ** Key list for Facility record A file
      C     KFclt2        KLIST
      C                   KFLD                    AACNUM
      C                   KFLD                    AAFACT
      C                   KFLD                    AAFCNO
- 
+
       ** Key list for Facility Aggregate History file                                         CLE147
      C     KLEAGHS       KLIST                                                                CLE147
      C                   KFLD                    KBranch                                      CLE147
@@ -947,17 +949,17 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
      C                   IF        WRun = *BLANKS
      C                   EVAL      WRun = 'Y'
      C                   DUMP
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

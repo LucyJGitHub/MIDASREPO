@@ -49,8 +49,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2005                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. MD040963           Date 06Sep16               *
+      *  Last Amend No. CLE168             Date 26Feb18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 MD040963           Date 06Sep16               *
       *                 CLE141             Date 08Feb16               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
@@ -73,6 +74,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE168 - Allow Debit of Blocked Account (Recompile)          *
       *  MD046248 - Finastra Rebranding                               *
       *  MD040963 - CLE106 initialisation program ended in error      *
       *  CLE141 - Currency and Location Business Day Convention       *
@@ -114,11 +116,11 @@
       ** Ê F-specs                              Ê
       ** Ê =======                              Ê
       ** +--------------------------------------+
- 
+
       ** Midas LE Generated PC Reference file (Conssolidated)
      FLEPCRFL2  IF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(RF_)
- 
+
       ** Midas LE Facility File
      FFCLTY     UF   E           K DISK    INFSR(*PSSR)
      F                                     COMMIT
@@ -137,87 +139,87 @@
       ** Midas LE Facility Extension File
      FLEFCLTQD  UF   E             DISK    INFSR(*PSSR)
      F                                     COMMIT
- 
+
       ** Midas LE Aggregate Facilities Trailer File
      FLEAGFTQD  UF   E             DISK    INFSR(*PSSR)
      F                                     COMMIT
      F                                     RENAME(LEFCLTD0:LEAGFTD0)
- 
+
       ** Midas LE Participant details files
      FLEPARTPD  UF   E             DISK    INFSR(*PSSR)
      F                                     COMMIT
      F                                     PREFIX(PA)
- 
- 
+
+
       ** Midas LE Accrued Margin Adjustments File
      FMTRAND    UF   E             DISK    INFSR(*PSSR)
      F                                     COMMIT
      F                                     PREFIX(M)
- 
+
       ** Midas LE Facility Amendment File
      FLEFCAMPD  UF   E             DISK    INFSR(*PSSR)
      F                                     COMMIT
      F                                     PREFIX(FC)
- 
+
       ** Midas LE Aggregate Facility Amendment File
      FLEAGAMPD  UF   E             DISK    INFSR(*PSSR)
      F                                     COMMIT
      F                                     RENAME(LEFCAMPF:LEAGAMPF)
      F                                     PREFIX(AG)
- 
+
       ** Midas LE Customer Loans File
      FCLOANCL   UF   E             DISK    INFSR(*PSSR)
      F                                     COMMIT
- 
+
       ** Midas LE Matured Loans File
      FMCLONCL   UF   E             DISK    INFSR(*PSSR)
      F                                     COMMIT
      F                                     RENAME(CLOANCLF:MCLONCLF)
- 
+
       ** Midas LE Fees Master Details File
      FLEFEED    UF   E             DISK    INFSR(*PSSR)
      F                                     COMMIT
      F                                     PREFIX(FE)
- 
+
       ** Midas LE Adjustments to Accrued Interest Detail File
      FLEADINPD  UF A E             DISK    INFSR(*PSSR)
      F                                     COMMIT
      F                                     PREFIX(IN)
- 
+
       ** Midas GL Single Transactions file
      FSTRAN     UF   E             DISK    INFSR(*PSSR)
      F                                     COMMIT
      F                                     PREFIX(ST)
- 
+
       ** Midas LE Loan Amendments file
      FLOAMSDK   UF   E             DISK    INFSR(*PSSR)
      F                                     COMMIT
      F                                     PREFIX(DK)
- 
+
       ** Midas LE Fees Settlement/Adjustment Detail File
      FLEFEEAD   UF   E             DISK    INFSR(*PSSR)
      F                                     COMMIT
      F                                     PREFIX(FA)
- 
+
       ** Midas GP Manual Transactions File
      FT_MLMTRAN UF   E             DISK    INFSR(*PSSR)
      F                                     COMMIT
      F                                     RENAME(T_MLMTRAN:MLMTRAN)
- 
+
       ** Midas LE Manual Utilisation Transaction
      FLEMNFUL9  UF   E           K DISK    INFSR(*PSSR)
      F                                     COMMIT
- 
+
       ** Midas LE Transaction References File
      F***LETREFPD  O    E             DISK    INFSR(*PSSR)                                  MD040963
      FLETREFL0  UF A E           K DISK    INFSR(*PSSR)                                     MD040963
      F                                     COMMIT
      F                                     PREFIX(TR)
- 
+
       ** Midas LE Aggregate Facilities
      FLEFEEDFC  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(LEFEEDF:LEFEADF)
- 
+
       ** Midas LE Printer File for LE000106
      FLE000106P1O    E             PRINTER INFDS(SPOOL)
      F                                     INFSR(*PSSR)
@@ -228,10 +230,10 @@
       ** Ê D-specs                              Ê
       ** Ê =======                              Ê
       ** +--------------------------------------+
- 
+
       ** Data Area giving Installation Control Details
      D RUNDAT        E DS                  EXTNAME(RUNDAT)
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
       ** Program Status Data Structure
@@ -247,26 +249,26 @@
       **    RunBefore  1A (for the PSSR)
       *
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** +--------------------------------------+
       ** Ê Named constants                      Ê
       ** Ê ===============                      Ê
       ** +--------------------------------------+
- 
- 
+
+
       ** +--------------------------------------+
       ** Ê Arrays and Data Structures           Ê
       ** Ê ==========================           Ê
       ** +--------------------------------------+
- 
- 
+
+
       ** +--------------------------------------+
       ** Ê Declared variables                   Ê
       ** Ê ==================                   Ê
       ** +--------------------------------------+
- 
+
      D FIRSTTIME       S              1
- 
+
      D WRUN            S              1
      D KRCTP           S              1
      D WKCNUM          S              6
@@ -328,34 +330,34 @@
      D WPCRF                   1     15                                                       248520
      D WBRCA                   1      3                                                       248520
      D WRK12                   4     15                                                       248520
- 
+
       ** External DS for Customer Details
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
- 
+
       ** External DS for Branch Codes
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
- 
+
      D QQDFAC2       E                     EXTFLD(QQDFAC)
- 
+
       ** External DS for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** First DS for Access programs - short data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       * LE Loans details Extra Data - File (D/B) format
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** LEALLO Data Structure
      D LEALLO        E DS                  EXTNAME(LEALLO)
      D**********                           DTAARA(LEALLO)                                     CLE148
- 
+
       ** LEMUTN Data Structure
      D LEMUTN        E DS                  EXTNAME(LEMUTN)
      D                                     DTAARA(LEMUTN)
      D MCLAST        E                     EXTFLD(PCLAST)
      D MILLER        E                     EXTFLD(FILLER)
- 
+
       ** File Information Data Structure for LE000106P1
      D SPOOL           DS
      D  WKOVRFLW             188    189B 0
@@ -375,35 +377,35 @@
       ** Ê executed at program activation.                                Ê
       ** Ê                                                                Ê
       ** +----------------------------------------------------------------+
- 
+
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
- 
+
      C                   SELECT
- 
+
      C                   WHEN      PMODE = 'U'
      C                   EVAL      WKMODE = 'Update'
- 
+
      C                   WHEN      PMODE = 'A'
      C                   EVAL      WKMODE = 'Audit'
- 
+
      C                   ENDSL
- 
+
       ** Initialise new PCRF field on Accrued Margin Adjustment File
- 
+
      C                   EVAL      WKLAST = *BLANKS
- 
+
      C     1             SETLL     MTRAND
      C                   READ      MTRAND                                 01
- 
+
      C                   DOW       *IN01 = *OFF
      C                   IF        MRECI = 'J'
- 
+
      C******LOCK         IN        LEALLO                                                     CLE148
      C**********         MOVEL     PCLAST        WKLAST                                       CLE148
      C**********         EVAL      PCLAST = PCLAST + 1                                        CLE148
- 
+
      C**********         IF        PMODE = 'U'                                                CLE148
      C**********         OUT       LEALLO                                                     CLE148
      C**********         ENDIF                                                                CLE148
@@ -421,36 +423,36 @@
      C                   PARM      *BLANKS       PCNEXT                                       CLE148
       *                                                                                       CLE148
      C                   MOVEL     PCLAST        WKLAST                                       CLE148
- 
+
      C                   EVAL      MPCRF = MBRCA + WKLAST + '0001'
      C                   MOVEL     'A'           MASTS
      C                   MOVEL     'I'           MCHTP
      C                   MOVEL     'MM'          MAMTP
- 
+
      C                   IF        PMODE = 'U'
      C                   UPDATE    MTRANDF
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   READ      MTRAND                                 01
- 
+
      C                   ENDDO
- 
+
       * Initialise new fields on Facility Extension File
      C                   EVAL      WKFILE = 'LEFCLTQD'
- 
+
      C                   WRITE     HEADFCLT
- 
+
      C     1             SETLL     LEFCLTQD
      C                   READ      LEFCLTQD                               01
- 
+
      C                   IF        *IN01 = *ON
      C                   EXSR      SRNODETL
      C                   ENDIF
- 
+
      C                   DOW       *IN01 = *OFF
- 
+
      C                   Z-ADD     *ZEROS        FCXAFA
      C                   EVAL      FCXFAS = ' '
      C                   EVAL      FCXAFC = '  '
@@ -470,9 +472,9 @@
      C                   MOVEL     FCXFTP        KFACT
      C                   MOVEL     FCXFNO        KFCNO
      C                   EVAL      KRCTP = 'A'
- 
+
      C     CHKFAC        CHAIN     FCLTY
- 
+
      C                   IF        NOT %FOUND(FCLTY)
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = *BLANKS
@@ -483,7 +485,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        FLPTP = 'P' AND FLPAM <> 0
      C                   IF        FLPBR = 0
      C                   MOVE      FLPAM         FCXPFR
@@ -491,36 +493,36 @@
      C                   MOVE      FLPAM         FCXPSR
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   EVAL      FCXSLT = FDFTP
      C                   EVAL      FCXSLS = FDFST
      C                   EVAL      FCXSLC = FDFCL                                             CLE042
      C                   EVAL      FCXAMT = FFAMT
- 
+
      C                   EXSR      SRREPORT
- 
+
      C                   IF        PMODE = 'U'
      C                   UPDATE    LEFCLTD0
      C                   ENDIF
- 
+
      C                   READ      LEFCLTQD                               01
- 
+
      C                   ENDDO
- 
+
       * Initialise new fields on Aggregate Facilities Trailer File
      C                   EVAL      WKFILE = 'LEAGFTQD'
- 
+
      C                   WRITE     HEADAGFT
- 
+
      C     1             SETLL     LEAGFTQD
      C                   READ      LEAGFTQD                               01
- 
+
      C                   IF        *IN01 = *ON
      C                   EXSR      SRNODETL
      C                   ENDIF
- 
+
      C                   DOW       *IN01 = *OFF
- 
+
      C                   Z-ADD     *ZEROS        FCXAFA
      C                   EVAL      FCXFAS = ' '
      C                   EVAL      FCXAFC = '  '
@@ -540,9 +542,9 @@
      C                   MOVEL     FCXFTP        KFACT
      C                   MOVEL     FCXFNO        KFCNO
      C                   EVAL      KRCTP = 'A'
- 
+
      C     CHKFAC        CHAIN     LEAGFCL0
- 
+
      C                   IF        NOT %FOUND(LEAGFCL0)
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = *BLANKS
@@ -553,7 +555,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        ALPTP = 'P' AND ALPAM <> 0
      C                   IF        ALPBR = 0
      C                   MOVE      ALPAM         FCXPFR
@@ -561,28 +563,28 @@
      C                   MOVE      ALPAM         FCXPSR
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   EVAL      FCXSLT = ADFTP
      C                   EVAL      FCXSLS = ADFST
      C                   EVAL      FCXSLC = ADFCL                                             CLE042
      C                   EVAL      FCXAMT = AFAMT
- 
+
      C                   EXSR      SRREPORT
- 
+
      C                   IF        PMODE = 'U'
      C                   UPDATE    LEAGFTD0
      C                   ENDIF
- 
+
      C                   READ      LEAGFTQD                               01
- 
+
      C                   ENDDO
- 
+
       * Initialise new fields on Assignments File:
      C     1             SETLL     LEPARTPD
      C                   READ      LEPARTPD                               01
- 
+
      C                   DOW       *IN01 = *OFF
- 
+
      C                   EVAL      PAPRTR = ' '
      C                   Z-ADD     *ZEROS        PAAFEE
      C                   EVAL      PAAGFS = ' '
@@ -592,37 +594,37 @@
      C                   EVAL      PAASCD = '  '
      C                   EVAL      PAGTYP = ' '
      C                   Z-ADD     *ZEROS        PASEQN
- 
+
      C                   IF        PMODE = 'U'
      C                   UPDATE    LEPARTD0
      C                   ENDIF
- 
+
      C                   READ      LEPARTPD                               01
- 
+
      C                   ENDDO
- 
+
       ** Initialise new fields on Facility Amendment File
- 
+
      C                   EVAL      WKFILE = 'LEFCAMPD'
- 
+
      C                   WRITE     HEADFCAM
- 
+
      C     1             SETLL     LEFCAMPD
      C                   READ      LEFCAMPD                               01
- 
+
      C                   IF        *IN01 = *ON
      C                   EXSR      SRNODETL
      C                   ENDIF
- 
+
      C                   DOW       *IN01 = *OFF
- 
+
      C                   MOVEL     FCCNUM        KCNUM
      C                   MOVEL     FCFACT        KFACT
      C                   MOVEL     FCFCNO        KFCNO
      C                   EVAL      KRCTP = 'A'
- 
+
      C     CHKFAC        CHAIN     FCLTY
- 
+
      C                   IF        NOT %FOUND(FCLTY)
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = *BLANKS
@@ -633,15 +635,15 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EVAL      FCNPRT = 'N'
- 
+
      C                   IF        FCPCRF = *BLANKS
- 
+
      C******LOCK         IN        LEALLO                                                     CLE148
      C**********         MOVEL     PCLAST        WKLAST                                       CLE148
      C**********         EVAL      PCLAST = PCLAST + 1                                        CLE148
- 
+
      C**********         IF        PMODE = 'U'                                                CLE148
      C**********         OUT       LEALLO                                                     CLE148
      C**********         ENDIF                                                                CLE148
@@ -659,10 +661,10 @@
      C                   PARM      *BLANKS       PCNEXT                                       CLE148
       *                                                                                       CLE148
      C                   MOVEL     PCLAST        WKLAST                                       CLE148
- 
+
      C                   EVAL      FCPCRF = FCBRCA + WKLAST + '0001'
      C                   ENDIF
- 
+
      C                   EVAL      TRPCRF = FCPCRF
      C                   EVAL      TRBRCA = FCBRCA
      C                   EVAL      TRCNUM = FCCNUM
@@ -670,7 +672,7 @@
      C                   EVAL      TRFCNO = FCFCNO
      C**********         EVAL      TRLNRF = 0                                                 CLE148
      C                   EVAL      TRLNRF = *BLANKS                                           CLE148
- 
+
      C                   SELECT
      C                   WHEN      FCFATP = 'FI'
      C                   EVAL      TRTDSC = 'Facility Increase'
@@ -681,37 +683,37 @@
      C                   WHEN      FCFATP = 'FR'
      C                   EVAL      TRTDSC = 'Facility Reactivation'
      C                   ENDSL
- 
+
      C                   IF        FCCHTP = 'I'
      C                   EVAL      TRACTM = 'I'
      C                   ELSE
      C                   EVAL      TRACTM = 'A'
      C                   ENDIF
- 
+
      C                   IF        FCAUSR <> *BLANKS
      C                   EVAL      TRUSID = FCAUSR
      C                   ELSE
      C                   EVAL      TRUSID = FCIUSR
      C                   ENDIF
- 
+
      C                   EVAL      TRSPRN = FPCRF
      C                   MOVEL     FCCNUM        WKCNUM
      C                   MOVEL     FCFACT        WKFACT
      C                   MOVEL     FCFCNO        WKFCNO
      C                   MOVEL     FCSQNO        WKSQNO
- 
+
       ** Convert Midas Day No to YYYYMMDD format for Change Date
      C                   CALLB     'ZDATE9'
      C                   PARM      FCVLDT        PRDNB
      C                   PARM      0             PCHGDAT
      C                   PARM                    PRTN
- 
+
      C                   MOVEL     PCHGDAT       WKYYYY
- 
+
      C                   EVAL      TRAREF = WKCNUM + '¦' + WKFACT + '¦' +
      C                                      WKFCNO + '¦' + FCFATP + '¦' +
      C                                      WKYYYY + '¦' + WKSQNO
- 
+
      C                   SELECT
      C                   WHEN      FCFATP = 'FI'
      C                   EVAL      TRTRTP = 'FAMD FI'
@@ -722,39 +724,39 @@
      C                   WHEN      FCFATP = 'FR'
      C                   EVAL      TRTRTP = 'FAMD FR'
      C                   ENDSL
- 
+
      C                   EXSR      SRREPORT
- 
+
      C                   IF        PMODE = 'U'
      C                   EXSR      SRWRITELTREF
      C                   UPDATE    LEFCAMPF
      C                   ENDIF
- 
+
      C                   READ      LEFCAMPD                               01
      C                   ENDDO
- 
+
       ** Initialise new field on Aggregate Facility Amendment File
- 
+
      C                   EVAL      WKFILE = 'LEAGAMPD'
- 
+
      C                   WRITE     HEADAGAM
- 
+
      C     1             SETLL     LEAGAMPD
      C                   READ      LEAGAMPD                               01
- 
+
      C                   IF        *IN01 = *ON
      C                   EXSR      SRNODETL
      C                   ENDIF
- 
+
      C                   DOW       *IN01 = *OFF
- 
+
      C                   MOVEL     AGCNUM        KCNUM
      C                   MOVEL     AGFACT        KFACT
      C                   MOVEL     AGFCNO        KFCNO
      C                   EVAL      KRCTP = 'A'
- 
+
      C     CHKFAC        CHAIN     LEAGFCL0
- 
+
      C                   IF        NOT %FOUND(LEAGFCL0)
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = *BLANKS
@@ -765,14 +767,14 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EVAL      AGNPRT = 'N'
- 
+
      C                   IF        AGPCRF = *BLANKS
      C******LOCK         IN        LEALLO                                                     CLE148
      C**********         MOVEL     PCLAST        WKLAST                                       CLE148
      C**********         EVAL      PCLAST = PCLAST + 1                                        CLE148
- 
+
      C**********         IF        PMODE = 'U'                                                CLE148
      C**********         OUT       LEALLO                                                     CLE148
      C**********         ENDIF                                                                CLE148
@@ -790,10 +792,10 @@
      C                   PARM      *BLANKS       PCNEXT                                       CLE148
       *                                                                                       CLE148
      C                   MOVEL     PCLAST        WKLAST                                       CLE148
- 
+
      C                   EVAL      AGPCRF = AGBRCA + WKLAST + '0001'
      C                   ENDIF
- 
+
      C                   EVAL      TRPCRF = AGPCRF
      C                   EVAL      TRBRCA = AGBRCA
      C                   EVAL      TRCNUM = AGCNUM
@@ -801,7 +803,7 @@
      C                   EVAL      TRFCNO = AGFCNO
      C**********         EVAL      TRLNRF = 0                                                 CLE148
      C                   EVAL      TRLNRF = *BLANKS                                           CLE148
- 
+
      C                   SELECT
      C                   WHEN      AGFATP = 'FI'
      C                   EVAL      TRTDSC = 'Facility Increase'
@@ -812,37 +814,37 @@
      C                   WHEN      AGFATP = 'FR'
      C                   EVAL      TRTDSC = 'Facility Reactivation'
      C                   ENDSL
- 
+
      C                   IF        AGCHTP = 'I'
      C                   EVAL      TRACTM = 'I'
      C                   ELSE
      C                   EVAL      TRACTM = 'A'
      C                   ENDIF
- 
+
      C                   IF        AGAUSR <> *BLANKS
      C                   EVAL      TRUSID = AGAUSR
      C                   ELSE
      C                   EVAL      TRUSID = AGIUSR
      C                   ENDIF
- 
+
      C                   EVAL      TRSPRN = FPCRF
      C                   MOVEL     FCCNUM        WKCNUM
      C                   MOVEL     FCFACT        WKFACT
      C                   MOVEL     FCFCNO        WKFCNO
      C                   MOVEL     FCSQNO        WKSQNO
- 
+
       ** Convert Midas Day No to YYYYMMDD format for Change Date
      C                   CALLB     'ZDATE9'
      C                   PARM      FCVLDT        PRDNB
      C                   PARM      0             PCHGDAT
      C                   PARM                    PRTN
- 
+
      C                   MOVEL     PCHGDAT       WKYYYY
- 
+
      C                   EVAL      TRAREF = WKCNUM + '¦' + WKFACT + '¦' +
      C                                      WKFCNO + '¦' + FCFATP + '¦' +
      C                                      WKYYYY + '¦' + WKSQNO
- 
+
      C                   SELECT
      C                   WHEN      FCFATP = 'FI'
      C                   EVAL      TRTRTP = 'FAMD FI'
@@ -853,52 +855,52 @@
      C                   WHEN      FCFATP = 'FR'
      C                   EVAL      TRTRTP = 'FAMD FR'
      C                   ENDSL
- 
+
      C                   EXSR      SRREPORT
- 
+
      C                   IF        PMODE = 'U'
      C                   EXSR      SRWRITELTREF
      C                   UPDATE    LEAGAMPF
      C                   ENDIF
- 
+
      C                   READ      LEAGAMPD                               01
      C                   ENDDO
- 
+
       ** Initialise new fields on Customer Loans File
- 
+
      C                   EVAL      WKFILE = 'CLOANCL'
- 
+
      C                   WRITE     HEADLOAN
      C     1             SETLL     CLOANCL
      C                   READ      CLOANCL                                01
- 
+
      C                   DOW       *IN01 = *OFF
- 
+
      C**********         IF        PTFC = 0                                                  CSD027A
      C                   IF        PTFC = *Blanks                                            CSD027A
- 
+
      C                   EVAL      TRCNUM = FCUS
      C                   EVAL      TRFACT = FTYP
      C                   EVAL      TRFCNO = FSEQ
      C                   MOVEL     FCUS          KCNUM
      C                   MOVEL     FTYP          KFACT
      C                   MOVEL     FSEQ          KFCNO
- 
+
      C                   ELSE
- 
+
      C                   EVAL      TRCNUM = PTFC
      C                   EVAL      TRFACT = PTFT
      C                   EVAL      TRFCNO = PTFN
      C                   MOVEL     PTFC          KCNUM
      C                   MOVEL     PTFT          KFACT
      C                   MOVEL     PTFN          KFCNO
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      KRCTP = 'A'
- 
+
      C     CHKFAC        CHAIN     FCLTY
- 
+
      C                   IF        NOT %FOUND(FCLTY)
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = *BLANKS
@@ -909,11 +911,11 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EVAL      SLTP = DFTP
      C                   EVAL      SLST = DFST
      C                   EVAL      SLCL = DFCL                                                CLE042
- 
+
      C                   MOVE      PCRF          WPCRF                                        248520
       *                                                                                       248520
      C                   IF        PCRF = *BLANKS
@@ -923,7 +925,7 @@
      C******LOCK         IN        LEALLO                                                     CLE148
      C**********         MOVEL     PCLAST        WKLAST                                       CLE148
      C**********         EVAL      PCLAST = PCLAST + 1                                        CLE148
- 
+
      C**********         IF        PMODE = 'U'                                                CLE148
      C**********         OUT       LEALLO                                                     CLE148
      C**********         ENDIF                                                                CLE148
@@ -941,7 +943,7 @@
      C                   PARM      *BLANKS       PCNEXT                                       CLE148
       *                                                                                       CLE148
      C                   MOVEL     PCLAST        WKLAST                                       CLE148
- 
+
      C                   EVAL      PCRF = BRCA + WKLAST + '0001'
       *                                                                                       248520
      C                   ELSE                                                                 248520
@@ -949,11 +951,11 @@
      C                   ENDIF                                                                248520
       *                                                                                       248520
      C                   ENDIF
- 
+
      C                   EVAL      TRPCRF = PCRF
      C                   EVAL      TRBRCA = BRCA
      C                   EVAL      TRLNRF = LNRF
- 
+
      C                   SELECT
      C                   WHEN      PTYP = 61 OR PTYP = 62 OR PTYP = 63
      C                             OR PTYP = 70 OR PTYP = 80
@@ -965,87 +967,87 @@
      C                             OR PTYP = 72
      C                   EVAL      TRTDSC = 'Parts Sold'
      C                   ENDSL
- 
+
      C                   IF        CHTP = 'I'
      C                   EVAL      TRACTM = 'I'
      C                   ELSE
      C                   EVAL      TRACTM = 'A'
      C                   ENDIF
- 
+
      C                   IF        AUSR <> *BLANKS
      C                   EVAL      TRUSID = AUSR
      C                   ELSE
      C                   EVAL      TRUSID = IUSR
      C                   ENDIF
- 
+
      C                   EVAL      TRSPRN = FPCRF
      C                   MOVEL     LNRF          WKLNRF
      C                   EVAL      TRAREF = WKLNRF + '¦' + 'E'
      C                   EVAL      TRTRTP = 'CLIP'
      C                   EXSR      SRREPORT
- 
+
      C                   IF        PMODE = 'U'
      C                   EXSR      SRWRITELTREF
      C                   UPDATE    CLOANCLF
      C                   ENDIF
- 
+
      C                   READ      CLOANCL                                01
- 
+
      C                   ENDDO
- 
+
       ** Initialise new fields on Matured Loans File
- 
+
      C                   EVAL      WKFILE = 'MCLONCL'
- 
+
      C                   WRITE     HEADMOAN
- 
+
      C     1             SETLL     MCLONCL
      C                   READ      MCLONCL                                01
- 
+
      C                   DOW       *IN01 = *OFF
- 
+
      C                   EVAL      SLTP = DFTP
      C                   EVAL      SLST = DFST
      C                   EVAL      SLCL = DFCL                                                CLE042
- 
+
      C                   EXSR      SRREPORT
- 
+
      c                   IF        PMODE = 'U'
      C                   UPDATE    MCLONCLF
      C                   ENDIF
- 
+
      C                   READ      MCLONCL                                01
      C                   ENDDO
- 
+
       ** Initialise new fields on Fees Master Details File
- 
+
      C                   EVAL      WKFILE = 'LEFEED'
- 
+
      C     1             SETLL     LEFEED
      C                   EVAL      FEPCRF = *BLANKS
      C                   EVAL      FIRSTTIME = 'Y'
- 
+
      C                   READ      LEFEED                                 01
- 
+
      C                   IF        *IN01 = *ON
      C                   EXSR      SRNODETL
      C                   ENDIF
- 
+
      C                   DOW       *IN01 = *OFF
- 
+
      C                   IF        FEFERECI = 'D'
- 
+
      C**********         IF        FEFELOAN = 0                                               CLE148
      C                   IF        FEFELOAN = *BLANKS                                         CLE148
- 
+
      C                   EVAL      *IN30 = *OFF
      C                   MOVEL     FEFECNUM      KCNUM
      C                   MOVEL     FEFEFACL      KFACT
      C                   MOVE      FEFEFACL      KFCNO
      C                   EVAL      KRCTP = 'A'
- 
+
      C     CHKFAC        CHAIN     FCLTY
- 
+
      C                   IF        NOT %FOUND(FCLTY)
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = *BLANKS
@@ -1056,14 +1058,14 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EVAL      FEFESYIN = FSYIN
- 
+
      C                   ELSE
- 
+
      C                   EVAL      *IN30 = *ON
      C     FEFELOAN      CHAIN     CLOAN
- 
+
      C                   IF        NOT %FOUND(CLOAN)
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = *BLANKS
@@ -1074,16 +1076,16 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C**********         IF        PTFC = 0                                                  CSD027A
      C                   IF        PTFC = *Blanks                                            CSD027A
      C                   MOVEL     FCUS          KCNUM
      C                   MOVEL     FTYP          KFACT
      C                   MOVEL     FSEQ          KFCNO
      C                   EVAL      KRCTP = 'A'
- 
+
      C     CHKFAC        CHAIN     FCLTY
- 
+
      C                   IF        NOT %FOUND(FCLTY)
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = *BLANKS
@@ -1094,18 +1096,18 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EVAL      FEFESYIN = FSYIN
- 
+
      C                   ELSE
- 
+
      C                   MOVEL     PTFC          KCNUM
      C                   MOVEL     PTFT          KFACT
      C                   MOVEL     PTFN          KFCNO
      C                   EVAL      KRCTP = 'A'
- 
+
      C     CHKFAC        CHAIN     FCLTY
- 
+
      C                   IF        NOT %FOUND(FCLTY)
      C                   MOVEL     'FCLTYFM'     DBFILE
      C                   Z-ADD     9             DBASE
@@ -1113,15 +1115,15 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EVAL      FEFESYIN = FSYIN
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      FEFEMASF = 'N'
      C                   MOVE      FEPCRF        WPCRF                                        248520
- 
+
      C                   IF        FEPCRF = *BLANKS
      C                             OR WBRCA = *BLANKS                                         248520
       *                                                                                       248520
@@ -1129,7 +1131,7 @@
      C******LOCK         IN        LEALLO                                                     CLE148
      C**********         MOVEL     PCLAST        WKLAST                                       CLE148
      C**********         EVAL      PCLAST = PCLAST + 1                                        CLE148
- 
+
      C**********         IF        PMODE = 'U'                                                CLE148
      C**********         OUT       LEALLO                                                     CLE148
      C**********         ENDIF                                                                CLE148
@@ -1147,7 +1149,7 @@
      C                   PARM      *BLANKS       PCNEXT                                       CLE148
       *                                                                                       CLE148
      C                   MOVEL     PCLAST        WKLAST                                       CLE148
- 
+
      C                   EVAL      FEPCRF = FEFEBRCA + WKLAST + '0001'
       *                                                                                       248520
      C                   ELSE                                                                 248520
@@ -1155,57 +1157,57 @@
       *                                                                                       248520
      C                   ENDIF                                                                248520
      C                   ENDIF
- 
+
      C**********         IF        PTFC = 0                                                  CSD027A
      C                   IF        PTFC = *Blanks                                            CSD027A
- 
+
      C                   EVAL      TRCNUM = FCUS
      C                   EVAL      TRFACT = FTYP
      C                   EVAL      TRFCNO = FSEQ
- 
+
      C                   ELSE
- 
+
      C                   EVAL      TRCNUM = PTFC
      C                   EVAL      TRFACT = PTFT
      C                   EVAL      TRFCNO = PTFN
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      TRPCRF = FEPCRF
      C                   EVAL      TRBRCA = FEFEBRCA
      C                   EVAL      TRLNRF = FEFELOAN
- 
+
      C**********         IF        FEFELOAN = 0                                               CLE148
      C                   IF        FEFELOAN = *BLANKS                                         CLE148
      C                   EVAL      TRTDSC = 'Facility Fees'
      C                   ELSE
      C                   EVAL      TRTDSC = 'Loan Fees'
      C                   ENDIF
- 
+
      C                   IF        FEFELCHT = 'I'
      C                   EVAL      TRACTM = 'I'
      C                   ELSE
      C                   EVAL      TRACTM = 'A'
      C                   ENDIF
- 
+
      C                   IF        FEAUSR <> *BLANKS
      C                   EVAL      TRUSID = FEAUSR
      C                   ELSE
      C                   EVAL      TRUSID = FEIUSR
      C                   ENDIF
- 
+
      C**********         IF        FEFELOAN = 0                                               CLE148
      C                   IF        FEFELOAN = *BLANKS                                         CLE148
      C                   EVAL      TRSPRN = FPCRF
      C                   ELSE
      C                   EVAL      TRSPRN = PCRF
      C                   ENDIF
- 
+
      C                   MOVEL     FEFEFSEQ      WKFSEQ
      C                   MOVEL     KFCNO         WKFCNO
      C                   MOVEL     FEFELOAN      WKLNRF
      C                   MOVEL     FEFECNUM      WKCNUM
- 
+
      C**********         IF        FEFELOAN = 0                                               CLE148
      C                   IF        FEFELOAN = *BLANKS                                         CLE148
      C                   EVAL      TRAREF = WKCNUM + '¦' + WKFACT + '¦' +
@@ -1214,29 +1216,29 @@
      C                   EVAL      TRAREF = WKCNUM + '¦¦¦' + WKLNRF +
      C                                      '¦' + WKFSEQ
      C                   ENDIF
- 
+
      C                   EVAL      TRTRTP = 'FEEM'
- 
+
      C                   EXSR      SRREPORT
- 
+
      C                   IF        PMODE = 'U'
      C                   EXSR      SRWRITELTREF
      C                   UPDATE    LEFEEDF
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   READ      LEFEED                                 01
- 
+
      C                   ENDDO
- 
+
       ** Initialise new fields on Adjustments to Accrued Interest Detail File
- 
+
      C     1             SETLL     STRAN
      C                   READ      STRAN                                  01
- 
+
      C                   DOW       *IN01 = *OFF
- 
+
      C                   IF        STRECI = 'J'
      C                   EVAL      INRECI = 'D'
      C                   EVAL      INZZ120 = *BLANKS
@@ -1245,14 +1247,14 @@
      C                   EVAL      INCHTP = 'I'
      C                   EVAL      INAMTP = 'MI'
      C                   MOVEL     CNUM          WKCNUM
- 
+
      C                   CALLB     'AOCUSTR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*KEY'        @OPTN
      C                   PARM      WKCNUM        @CUST            10
      C                   PARM      *BLANKS       @KEYSTS           7
      C     SDCUST        PARM      SDCUST        DSSDY
- 
+
      C                   IF        @RTCD <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = *BLANKS
@@ -1263,13 +1265,13 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EVAL      INCRNM = BBCRNM
      C                   EVAL      INCTWN = BBCRTN
      C******LOCK         IN        LEALLO                                                     CLE148
      C**********         MOVEL     PCLAST        WKLAST                                       CLE148
      C**********         EVAL      PCLAST = PCLAST + 1                                        CLE148
- 
+
      C**********         IF        PMODE = 'U'                                                CLE148
      C**********         OUT       LEALLO                                                     CLE148
      C**********         ENDIF                                                                CLE148
@@ -1287,9 +1289,9 @@
      C                   PARM      *BLANKS       PCNEXT                                       CLE148
       *                                                                                       CLE148
      C                   MOVEL     PCLAST        WKLAST                                       CLE148
- 
+
      C     INLNRF        CHAIN     CLOAN
- 
+
      C                   IF        NOT %FOUND(CLOAN)
      C                   MOVEL     'CLOANCL'     DBFILE
      C                   Z-ADD     11            DBASE
@@ -1297,31 +1299,31 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EVAL      INPCRF = INBRCA + WKLAST + '0001'
- 
+
      C                   IF        PMODE = 'U'
      C                   WRITE     LEADINP0
      C                   DELETE    STRANF
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   READ      STRAN                                  01
- 
+
      C                   ENDDO
- 
+
      ** Initialise PC Reference fields
- 
+
      C                   EXSR      SRINITPCRF
- 
+
      ** Initialise new fields on Manual Transactions File
- 
+
      C     1             SETLL     T_MLMTRAN
      C                   READ      T_MLMTRAN                              01
- 
+
      C                   DOW       *IN01 = *OFF
- 
+
      C                   IF        MTUTN = *BLANKS
      C     *LOCK         IN        LEMUTN
      C                   MOVEL     MCLAST        WKLAST
@@ -1329,25 +1331,25 @@
      C                   OUT       LEMUTN
      C                   EVAL      MTUTN = 'LE0' + WKLAST + '0001'
      C                   ENDIF
- 
+
      C                   IF        MTFACCUST <> *BLANKS AND MTFACTYPE <> *BLANKS
      C                             AND MTFACSEQ <> *BLANKS
      C                   EVAL      @BRCD = MTBRCHCODE
- 
+
      C                   CALL      'AOBRCHR1'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*KEY   '     @OPTN
      C                   PARM                    @BRCD             3
      C     SDBRCH        PARM      SDBRCH        DSSDY
- 
+
      C                   IF        @RTCD = *BLANKS
      C                   MOVEL     MTFACCUST     KCNUM
      C                   MOVEL     MTFACTYPE     KFACT
      C                   MOVEL     MTFACSEQ      KFCNO
      C                   EVAL      KRCTP = 'A'
- 
+
      C     CHKFAC        CHAIN     FCLTY
- 
+
      C                   IF        NOT %FOUND(FCLTY)
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = *BLANKS
@@ -1358,11 +1360,11 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EVAL      MTFUTN = FPCRF
- 
+
      C     MTID          CHAIN     LEMNFUL9
- 
+
      C                   IF        NOT %FOUND(LEMNFUL9)
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = *BLANKS
@@ -1373,40 +1375,40 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EVAL      MUTN = MTUTN
      C                   EVAL      FUTN = MTFUTN
- 
+
      C                   IF        PMODE = 'U'
      C                   UPDATE    LEMNFUPF
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   IF        PMODE = 'U'
      C                   UPDATE    MLMTRAN
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   READ      T_MLMTRAN                              01
- 
+
      C                   ENDDO
- 
+
      ** Populate Transaction Reference File (LETREFPD)
- 
+
      C                   EXSR      SRPOPLTREF
- 
+
      C                   EXSR      SRSKIPPAGE
      C                   WRITE     TRAILPY
- 
+
      C                   IF        PMODE = 'U'
      C                   COMMIT
      C                   ENDIF
- 
+
      C                   EXSR      SRENDPGM
- 
- 
+
+
       *********************************************************************
       /EJECT
       *********************************************************************
@@ -1417,18 +1419,18 @@
       *                                                                   *
       *********************************************************************
      C     SRINITPCRF    BEGSR
- 
+
       ** FCLTYFM
      C     *LOVAL        SETLL     FCLTY
      C                   READ      FCLTY                                  01
- 
+
      C                   DOW       *IN01 = *OFF
- 
+
      C                   IF        FPCRF = *BLANKS
      C******LOCK         IN        LEALLO                                                     CLE148
      C**********         MOVEL     PCLAST        WKLAST                                       CLE148
      C**********         EVAL      PCLAST = PCLAST + 1                                        CLE148
- 
+
      C**********         IF        PMODE = 'U'                                                CLE148
      C**********         OUT       LEALLO                                                     CLE148
      C**********         ENDIF                                                                CLE148
@@ -1446,25 +1448,25 @@
      C                   PARM      *BLANKS       PCNEXT                                       CLE148
       *                                                                                       CLE148
      C                   MOVEL     PCLAST        WKLAST                                       CLE148
- 
+
      C                   EVAL      FPCRF = FBRCA + WKLAST + '0001'
- 
+
      C                   IF        PMODE = 'U'
      C                   UPDATE    FCLTYFMF
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   READ      FCLTY                                  01
- 
+
      C                   ENDDO
- 
+
       ** LOAMSDK
      C     1             SETLL     LOAMSDK
      C                   READ      LOAMSDK                                01
- 
+
      C                   DOW       *IN01 = *OFF
- 
+
      C                   MOVE      DKPCRF        WPCRF                                        248520
       *                                                                                       248520
      C                   IF        DKPCRF = *BLANKS
@@ -1474,7 +1476,7 @@
      C******LOCK         IN        LEALLO                                                     CLE148
      C**********         MOVEL     PCLAST        WKLAST                                       CLE148
      C**********         EVAL      PCLAST = PCLAST + 1                                        CLE148
- 
+
      C**********         IF        PMODE = 'U'                                                CLE148
      C**********         OUT       LEALLO                                                     CLE148
      C**********         ENDIF                                                                CLE148
@@ -1492,35 +1494,35 @@
      C                   PARM      *BLANKS       PCNEXT                                       CLE148
       *                                                                                       CLE148
      C                   MOVEL     PCLAST        WKLAST                                       CLE148
- 
+
      C                   EVAL      DKPCRF = DKBRCA + WKLAST + '0001'
      C                   ENDIF                                                                248520
       *                                                                                       248520
      C                   IF        WBRCA = *BLANKS                                            248520
      C                   EVAL      DKPCRF = DKBRCA + WRK12                                    248520
      C                   ENDIF                                                                248520
- 
+
      C                   IF        PMODE = 'U'
      C                   UPDATE    LOAMSDKF
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   READ      LOAMSDK                                01
- 
+
      C                   ENDDO
- 
+
       ** LEFEEAD
      C     1             SETLL     LEFEEAD
      C                   READ      LEFEEAD                                01
- 
+
      C                   DOW       *IN01 = *OFF
- 
+
      C                   IF        FAPCRF = *BLANKS
      C******LOCK         IN        LEALLO                                                     CLE148
      C**********         MOVEL     PCLAST        WKLAST                                       CLE148
      C**********         EVAL      PCLAST = PCLAST + 1                                        CLE148
- 
+
      C**********         IF        PMODE = 'U'                                                CLE148
      C**********         OUT       LEALLO                                                     CLE148
      C**********         ENDIF                                                                CLE148
@@ -1538,19 +1540,19 @@
      C                   PARM      *BLANKS       PCNEXT                                       CLE148
       *                                                                                       CLE148
      C                   MOVEL     PCLAST        WKLAST                                       CLE148
- 
+
      C                   EVAL      FAPCRF = FAFABRCA + WKLAST + '0001'
- 
+
      C                   IF        PMODE = 'U'
      C                   UPDATE    LEFEEADF
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   READ      LEFEEAD                                01
- 
+
      C                   ENDDO
- 
+
      C                   ENDSR
       /EJECT
       *********************************************************************
@@ -1561,13 +1563,13 @@
       *                                                                   *
       *********************************************************************
      C     SRPOPLTREF    BEGSR
- 
+
       ** FCLTYFM
      C     *LOVAL        SETLL     FCLTY
      C                   READ      FCLTY                                  01
- 
+
      C                   DOW       *IN01 = *OFF
- 
+
      C                   EVAL      TRPCRF = FPCRF
      C                   EVAL      TRBRCA = FBRCA
      C                   EVAL      TRCNUM = FCNUM
@@ -1576,19 +1578,19 @@
      C**********         EVAL      TRLNRF = 0                                                 CLE148
      C                   EVAL      TRLNRF = *BLANKS                                           CLE148
      C                   EVAL      TRTDSC = 'Facility'
- 
+
      C                   IF        FCHTP = 'I'
      C                   EVAL      TRACTM = 'I'
      C                   ELSE
      C                   EVAL      TRACTM = 'A'
      C                   ENDIF
- 
+
      C                   IF        FAUSR <> *BLANKS
      C                   EVAL      TRUSID = FAUSR
      C                   ELSE
      C                   EVAL      TRUSID = FIUSR
      C                   ENDIF
- 
+
      C                   EVAL      TRSPRN = *BLANKS
      C                   MOVEL     FCNUM         WKCNUM
      C                   MOVEL     FFACT         WKFACT
@@ -1596,25 +1598,25 @@
      C                   EVAL      TRAREF = WKCNUM + '¦' + WKFACT + '¦' +
      C                                      WKFCNO
      C                   EVAL      TRTRTP = 'FCIP'
- 
+
      C                   IF        PMODE = 'U'
      C                   EXSR      SRWRITELTREF
      C                   ENDIF
- 
+
      C                   READ      FCLTY                                  01
- 
+
      C                   ENDDO
- 
+
       ** LOAMSDK
      C     1             SETLL     LOAMSDK
      C                   READ      LOAMSDK                                01
- 
+
      C                   DOW       *IN01 = *OFF
      C
      C                   IF        DKAMTP <> 'PT'
- 
+
      C     DKLNRF        CHAIN     CLOAN
- 
+
      C                   IF        NOT %FOUND(CLOAN)
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = *BLANKS
@@ -1625,12 +1627,12 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EXSR      SRLOANFCLTY
      C                   EVAL      TRPCRF = DKPCRF
      C                   EVAL      TRBRCA = DKBRCA
      C                   EVAL      TRLNRF = DKLNRF
- 
+
      C                   SELECT
      C                   WHEN      DKAMTP = 'BC'
      C                   EVAL      TRTDSC = 'Base Rate Code Change'
@@ -1649,19 +1651,19 @@
      C                   WHEN      DKAMTP = 'PF'
      C                   EVAL      TRTDSC = 'Principal Transfer'
      C                   ENDSL
- 
+
      C                   IF        DKCHTP = 'I'
      C                   EVAL      TRACTM = 'I'
      C                   ELSE
      C                   EVAL      TRACTM = 'A'
      C                   ENDIF
- 
+
      C                   IF        DKAUSR <> *BLANKS
      C                   EVAL      TRUSID = DKAUSR
      C                   ELSE
      C                   EVAL      TRUSID = DKIUSR
      C                   ENDIF
- 
+
      C                   EVAL      TRSPRN = PCRF
      C                   MOVEL     DKLNRF        WKLNRF
      C                   MOVEL     DKLASN        WKLASN
@@ -1670,7 +1672,7 @@
      C                   PARM      DKVDAT        PRDNB
      C                   PARM      0             PCHGDAT
      C                   PARM                    PRTN
- 
+
      C                   MOVEL     PCHGDAT       WKYYYY
      C                   EVAL      TRAREF = WKLNRF + '¦' + WKYYYY + '¦' +
      C                                      WKLASN
@@ -1692,24 +1694,24 @@
      C                   WHEN      DKAMTP = 'PF'
      C                   EVAL      TRTRTP = 'PTPF'
      C                   ENDSL
- 
+
      C                   IF        PMODE = 'U'
      C                   EXSR      SRWRITELTREF
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   READ      LOAMSDK                                01
      C                   ENDDO
- 
+
       ** LEADINPD
      C     1             SETLL     LEADINPD
      C                   READ      LEADINPD                               01
- 
+
      C                   DOW       *IN01 = *OFF
- 
+
      C     INLNRF        CHAIN     CLOAN
- 
+
      C                   IF        NOT %FOUND(CLOAN)
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = *BLANKS
@@ -1720,47 +1722,47 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EXSR      SRLOANFCLTY
      C                   EVAL      TRPCRF = INPCRF
      C                   EVAL      TRBRCA = INBRCA
      C                   EVAL      TRLNRF = INLNRF
      C                   EVAL      TRTDSC = 'Adjustments to Accrued Interest'
- 
+
      C                   IF        INCHTP = 'I'
      C                   EVAL      TRACTM = 'I'
      C                   ELSE
      C                   EVAL      TRACTM = 'A'
      C                   ENDIF
- 
+
      C                   IF        INAUSR <> *BLANKS
      C                   EVAL      TRUSID = INAUSR
      C                   ELSE
      C                   EVAL      TRUSID = INIUSR
      C                   ENDIF
- 
+
      C                   EVAL      TRSPRN = PCRF
      C                   MOVEL     LNRF          TRAREF
      C                   EVAL      TRTRTP = 'AIAJ'
- 
+
      C                   IF        PMODE = 'U'
      C                   EXSR      SRWRITELTREF
      C                   ENDIF
- 
+
      C                   READ      LEADINPD                               01
- 
+
      C                   ENDDO
- 
+
       ** MTRAND
      C     1             SETLL     MTRAND
      C                   READ      MTRAND                                 01
- 
+
      C                   DOW       *IN01 = *OFF
- 
+
      C                   IF        MRECI = 'J'
- 
+
      C     MLNRF         CHAIN     CLOAN
- 
+
      C                   IF        NOT %FOUND(CLOAN)
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = *BLANKS
@@ -1771,57 +1773,57 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EXSR      SRLOANFCLTY
      C                   EVAL      TRPCRF = MPCRF
      C                   EVAL      TRBRCA = MBRCA
      C                   EVAL      TRLNRF = MLNRF
      C                   EVAL      TRTDSC = 'Adjustments to Accrued Margin'
- 
+
      C                   IF        MCHTP = 'I'
      C                   EVAL      TRACTM = 'I'
      C                   ELSE
      C                   EVAL      TRACTM = 'A'
      C                   ENDIF
- 
+
      C                   IF        MAUSR <> *BLANKS
      C                   EVAL      TRUSID = MAUSR
      C                   ELSE
      C                   EVAL      TRUSID = MIUSR
      C                   ENDIF
- 
+
      C                   EVAL      TRSPRN = PCRF
      C                   MOVEL     LNRF          TRAREF
      C                   EVAL      TRTRTP = 'AMAJ'
- 
+
      C                   IF        PMODE = 'U'
      C                   EXSR      SRWRITELTREF
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   READ      MTRAND                                 01
- 
+
      C                   ENDDO
- 
+
       ** LEFEEAD
      C     1             SETLL     LEFEEAD
      C                   READ      LEFEEAD                                01
- 
+
      C                   DOW       *IN01 = *OFF
- 
+
      C                   IF        FAFARECI <> '*'
      C                   MOVEL     FAFACNUM      KCNUM
      C                   MOVEL     FAFAFACL      KFACL
      C                   MOVEL     FAFAFACL      KFACT
      C                   MOVE      FAFAFACL      KFCNO
      C                   EVAL      KRCTP = 'A'
- 
+
      C     CHKFEE        CHAIN     LEFEEDFC
- 
+
      C                   MOVEL     KCNUM         FEEKEY
      C                   MOVE      KFACL         FEEKEY
- 
+
      C                   IF        NOT %FOUND(LEFEEDFC)
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = *BLANKS
@@ -1832,9 +1834,9 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C     CHKFAC        CHAIN     FCLTY
- 
+
      C                   IF        NOT %FOUND(FCLTY)
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = *BLANKS
@@ -1845,7 +1847,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EVAL      TRPCRF = FAPCRF
      C                   EVAL      TRBRCA = FAFABRCA
      C                   EVAL      TRCNUM = FAFACNUM
@@ -1859,33 +1861,33 @@
      C                   WHEN      FAFARECI = 'S'
      C                   EVAL      TRTDSC = 'Fee Settlement'
      C                   ENDSL
- 
+
      C                   IF        FAFAACTN = 'I'
      C                   EVAL      TRACTM = 'A'
      C                   ELSE
      C                   EVAL      TRACTM = 'I'
      C                   ENDIF
- 
+
      C                   IF        FAAUSR <> *BLANKS
      C                   EVAL      TRUSID = FAAUSR
      C                   ELSE
      C                   EVAL      TRUSID = FAIUSR
      C                   ENDIF
- 
+
      C                   EVAL      TRSPRN = FEPCRF
      C                   MOVEL     FAFACNUM      WKCNUM
      C                   MOVEL     FAFAFACL      WKFACT
      C                   MOVE      FAFAFACL      WKFCNO
      C                   MOVEL     FAFAFSEQ      WKFSEQ
- 
+
       ** Convert Midas Day No to YYYYMMDD format for Change Date
      C                   CALLB     'ZDATE9'
      C                   PARM      FAFAVDAT      PRDNB
      C                   PARM      0             PCHGDAT
      C                   PARM                    PRTN
- 
+
      C                   MOVEL     PCHGDAT       WKYYYY
- 
+
      C                   SELECT
      C                   WHEN      FAFARECI = 'A'
      C                   EVAL      TRAREF = WKCNUM + '¦' + WKFACT + '¦' +
@@ -1897,18 +1899,18 @@
      C                                      WKYYYY
      C                   EVAL      TRTRTP = 'FEST'
      C                   ENDSL
- 
+
      C                   IF        PMODE = 'U'
      C                   EXSR      SRWRITELTREF
      C                   ENDIF
- 
+
      C                   IF        PMODE = 'U'
      C                   UPDATE    LEFEEADF
      C                   ENDIF
      C                   ENDIF
      C                   READ      LEFEEAD                                01
      C                   ENDDO
- 
+
       ** T_MLMTRAN
      C     1             SETLL     T_MLMTRAN
      C                   READ      T_MLMTRAN                              01
@@ -1921,15 +1923,15 @@
      C                   PARM      '*KEY   '     @OPTN
      C                   PARM                    @BRCD             3
      C     SDBRCH        PARM      SDBRCH        DSSDY
- 
+
      C                   IF        @RTCD = *BLANKS
      C                   MOVEL     MTFACCUST     KCNUM
      C                   MOVEL     MTFACTYPE     KFACT
      C                   MOVEL     MTFACSEQ      KFCNO
      C                   EVAL      KRCTP = 'A'
- 
+
      C     CHKFAC        CHAIN     FCLTY
- 
+
      C                   IF        NOT %FOUND(FCLTY)
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE = *BLANKS
@@ -1940,7 +1942,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EVAL      TRPCRF = MTUTN
      C                   EVAL      TRBRCA = MTBRCHCODE
      C                   MOVEL     MTFACCUST     TRCNUM
@@ -1953,17 +1955,17 @@
      C                   EVAL      TRUSID = MTUSERID
      C                   EVAL      TRSPRN = FPCRF
      C                   EVAL      TRTRTP = 'MLMTRAN'
- 
+
      C                   IF        PMODE = 'U'
      C                   EXSR      SRWRITELTREF
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   READ      T_MLMTRAN                              01
      C                   ENDDO
- 
+
      C                   ENDSR
       /EJECT
       *********************************************************************
@@ -1974,12 +1976,12 @@
       *                                                                   *
       *********************************************************************
      C     SRWRITELTREF  BEGSR
- 
+
       ** Generate Timestamp
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    TIMESTAMP
      C                   EVAL      TRSTMP = TIMESTAMP
- 
+
      C                   EVAL      TRPRNT = *BLANKS
      C                   EVAL      TRISTS = 'X'
      C                   EVAL      TRAUTN = *BLANKS
@@ -1988,14 +1990,14 @@
      C                   EVAL      TRCDAT = BJRDNB
      C                   EVAL      TRSHPC = 0
      C                   EVAL      TRPRTR = FPRTR
- 
+
      C                   IF        PMODE = 'U'
      C     TRPCRF        CHAIN     LETREFL0                                                 MD040963
      C                   IF        NOT %FOUND(LETREFL0)                                     MD040963
      C                   WRITE     LETREFD0
      C                   ENDIF                                                              MD040963
      C                   ENDIF
- 
+
      C                   ENDSR
       /EJECT
       *********************************************************************
@@ -2006,10 +2008,10 @@
       *                                                                   *
       *********************************************************************
      C     SRREPORT      BEGSR
- 
+
       ** Choose which file to process
      C                   SELECT
- 
+
       ** LEFCLTQD
      C                   WHEN      WKFILE = 'LEFCLTQD'
      C                   EVAL      WKFRPT = FCXFCU + '-' + FCXFTP + '-' + FCXFNO
@@ -2028,21 +2030,21 @@
      C                   EVAL      ZDECS = 0
      C                   EXSR      SRZSEDIT
      C                   MOVE      ZOUT21        WKFATO
- 
+
       ** Write header when overflow line is reached
      C                   EVAL      WKRQDLIN = 2
      C                   EVAL      WKDIFLIN = WKOVRFLW - WKCRTLIN
- 
+
      C                   IF        WKDIFLIN <= WKRQDLIN
      C                   WRITE     HEADFCLT
      C                   ENDIF
- 
+
       ** Write Detail line
      C                   WRITE     DETFCLT
- 
- 
+
+
       ** LEAGFTQD
- 
+
      C                   WHEN      WKFILE = 'LEAGFTQD'
      C                   EVAL      WKFRPT = FCXFCU + '-' + FCXFTP + '-' + FCXFNO
      C                   MOVE      FCXPFR        ZFLD15
@@ -2060,109 +2062,109 @@
      C                   EVAL      ZDECS = 0
      C                   EXSR      SRZSEDIT
      C                   MOVE      ZOUT21        WKFATO
- 
+
       ** Write header when overflow line is reached
      C                   EVAL      WKRQDLIN = 2
      C                   EVAL      WKDIFLIN = WKOVRFLW - WKCRTLIN
- 
+
      C                   IF        WKDIFLIN <= WKRQDLIN
      C                   WRITE     HEADAGFT
      C                   ENDIF
- 
+
       ** Write Detail line
      C                   WRITE     DETAGFT
- 
+
       ** LEFCAMPD
- 
+
      C                   WHEN      WKFILE = 'LEFCAMPD'
- 
+
      C                   MOVEL     FCCNUM        WKCNUM
      C                   MOVEL     FCFACT        WKFACT
      C                   MOVEL     FCFCNO        WKFCNO
      C                   EVAL      WKFRPT = WKCNUM + '-' + WKFACT + '-' + WKFCNO
      C                   EVAL      WKNPTO = FCNPRT
- 
+
       ** Write header when overflow line is reached
      C                   EVAL      WKRQDLIN = 2
      C                   EVAL      WKDIFLIN = WKOVRFLW - WKCRTLIN
- 
+
      C                   IF        WKDIFLIN <= WKRQDLIN
      C                   WRITE     HEADFCAM
      C                   ENDIF
- 
+
       ** Write Detail line
      C                   WRITE     DETFCAM
- 
+
       ** LEAGAMPD
- 
+
      C                   WHEN      WKFILE = 'LEAGAMPD'
- 
+
      C                   MOVEL     AGCNUM        WKCNUM
      C                   MOVEL     AGFACT        WKFACT
      C                   MOVEL     AGFCNO        WKFCNO
      C                   EVAL      WKFRPT = WKCNUM + '-' + WKFACT + '-' + WKFCNO
      C                   EVAL      WKNPTO = AGNPRT
- 
+
       ** Write header when overflow line is reached
      C                   EVAL      WKRQDLIN = 2
      C                   EVAL      WKDIFLIN = WKOVRFLW - WKCRTLIN
- 
+
      C                   IF        WKDIFLIN <= WKRQDLIN
      C                   WRITE     HEADAGAM
      C                   ENDIF
- 
+
       ** Write Detail line
      C                   WRITE     DETAGAM
- 
+
       ** CLOANCL
- 
+
      C                   WHEN      WKFILE = 'CLOANCL'
- 
+
      C                   MOVEL     LNRF          WKLOAN
      C                   EVAL      WKSLTP = SLTP
      C                   EVAL      WKSLST = SLST
      C                   EVAL      WKSLCL = SLCL                                              CLE042
- 
+
       ** Write header when overflow line is reached
      C                   EVAL      WKRQDLIN = 2
      C                   EVAL      WKDIFLIN = WKOVRFLW - WKCRTLIN
- 
+
      C                   IF        WKDIFLIN <= WKRQDLIN
      C                   WRITE     HEADLOAN
      C                   ENDIF
- 
+
       ** Write Detail line
      C                   WRITE     DETLOAN
- 
+
       ** MCLONCL
- 
+
      C                   WHEN      WKFILE = 'MCLONCL'
- 
+
      C                   MOVEL     LNRF          WKLOAN
      C                   EVAL      WKSLTP = SLTP
      C                   EVAL      WKSLST = SLST
      C                   EVAL      WKSLCL = SLCL                                              CLE042
- 
+
       ** Write header when overflow line is reached
      C                   EVAL      WKRQDLIN = 2
      C                   EVAL      WKDIFLIN = WKOVRFLW - WKCRTLIN
- 
+
      C                   IF        WKDIFLIN <= WKRQDLIN
      C                   WRITE     HEADMOAN
      C                   ENDIF
- 
+
       ** Write Detail line
      C                   WRITE     DETMOAN
- 
+
       ** LEFEED
- 
+
      C                   WHEN      WKFILE = 'LEFEED'
- 
+
      C                   IF        FIRSTTIME = 'Y'
      C                   WRITE     HEADFEES
      C                   EVAL      FIRSTTIME = 'N'
      C                   ENDIF
- 
+
      C                   IF        *IN30 = *ON
      C                   MOVEL     FEFELOAN      WKLOAN
      C                   ELSE
@@ -2172,23 +2174,23 @@
      C                   EVAL      WKFRPT = WKCNUM + '-' + WKFACT + '-' + WKFCNO
      C                   MOVEL     FEFEFSEQ      WKFSEQ
      C                   ENDIF
- 
+
      C                   EVAL      WKSYIN = FSYIN
      C                   EVAL      WKMASF = 'N'
- 
+
       ** Write header when overflow line is reached
      C                   EVAL      WKRQDLIN = 2
      C                   EVAL      WKDIFLIN = WKOVRFLW - WKCRTLIN
- 
+
      C                   IF        WKDIFLIN <= WKRQDLIN
      C                   WRITE     HEADFEES
      C                   ENDIF
- 
+
       ** Write Detail line
      C                   WRITE     DETFEES
- 
+
      C                   ENDSL
- 
+
      C                   ENDSR
       /EJECT
       *********************************************************************
@@ -2199,37 +2201,37 @@
       *                                                                   *
       *********************************************************************
      C     SRLOANFCLTY   BEGSR
- 
+
      C**********         IF        PTFC = 0                                                  CSD027A
      C                   IF        PTFC = *Blanks                                            CSD027A
- 
+
      C                   MOVEL     FCUS          WKCNUM
      C                   MOVEL     FTYP          WKFACT
      C                   MOVEL     FSEQ          WKFCNO
- 
+
      C                   ELSE
- 
+
      C                   MOVEL     PTFC          WKCNUM
      C                   MOVEL     PTFT          WKFACT
      C                   MOVEL     PTFN          WKFCNO
- 
+
      C                   ENDIF
- 
+
      C     CHKFAC        CHAIN     FCLTY
- 
+
      C**********         IF        PTFC = 0                                                  CSD027A
      C                   IF        PTFC = *Blanks                                            CSD027A
      C                   EVAL      TRCNUM = FCUS
      C                   EVAL      TRFACT = FTYP
      C                   EVAL      TRFCNO = FSEQ
- 
+
      C                   ELSE
- 
+
      C                   EVAL      TRCNUM = PTFC
      C                   EVAL      TRFACT = PTFT
      C                   EVAL      TRFCNO = PTFN
      C                   ENDIF
- 
+
      C                   ENDSR
       /EJECT
       *********************************************************************
@@ -2240,17 +2242,17 @@
       *                                                                   *
       *********************************************************************
      C     SRINITLEALLO  BEGSR
- 
+
      C     *LIKE         DEFINE    PCLAST        NCPCRF
- 
+
      C     *HIVAL        SETGT     LEPCRFL2
      C                   READP     LEPCRFL2
- 
+
      C                   MOVE      RF_CPCRF      NCPCRF
- 
+
      C******LOCK         IN        LEALLO                                                     CLE148
      C**********         EVAL      PCLAST = NCPCRF + 1                                        CLE148
- 
+
      C**********         IF        PMODE = 'U'                                                CLE148
      C**********         OUT       LEALLO                                                     CLE148
      C**********         ENDIF                                                                CLE148
@@ -2266,7 +2268,7 @@
      C                   PARM                    PUPDT                                        CLE148
      C                   PARM      NCPCRF        PCLAST                                       CLE148
      C                   PARM      *BLANKS       PCNEXT                                       CLE148
- 
+
      C                   ENDSR
       /EJECT
       *********************************************************************
@@ -2277,10 +2279,10 @@
       *                                                                   *
       *********************************************************************
      C     SRNODETL      BEGSR
- 
+
      C                   EXSR      SRSKIPPAGE
      C                   WRITE     NODETL
- 
+
      C                   ENDSR
       /EJECT
       *********************************************************************
@@ -2291,14 +2293,14 @@
       *                                                                   *
       *********************************************************************
      C     SRSKIPPAGE    BEGSR
- 
+
      C                   EVAL      WKRQDLIN = 2
      C                   EVAL      WKDIFLIN = WKOVRFLW - WKCRTLIN
- 
+
      C                   IF        WKDIFLIN <= WKRQDLIN
      C                   WRITE     SKIPAG
      C                   ENDIF
- 
+
      C                   ENDSR
       /EJECT
       *********************************************************************
@@ -2309,9 +2311,9 @@
       *                                                                   *
       *********************************************************************
      C     SRENDPGM      BEGSR
- 
+
      C                   EVAL      *INLR = *ON
- 
+
      C                   ENDSR
       /EJECT
       *********************************************************************
@@ -2322,14 +2324,14 @@
       *                                                                   *
       *********************************************************************
      C     SRZSEDIT      BEGSR
- 
+
      C                   CALLB     'ZSEDIT'
      C                   PARM                    ZFLD15
      C                   PARM                    ZDECS
      C                   PARM      'J'           ZECODE
      C                   PARM                    ZOUT21
      C                   EVAL      ZFLD15 = *ZEROS
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -2351,27 +2353,27 @@
      C                   PARM      '*DBERR '     @RTCD             7
      C                   PARM      '*FIRST '     @OPTN             7
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
      C     CHKFAC        KLIST
      C                   KFLD                    KCNUM
      C                   KFLD                    KFACT
      C                   KFLD                    KFCNO
      C                   KFLD                    KRCTP
- 
+
      C     CHKFEE        KLIST
      C                   KFLD                    KCNUM
      C                   KFLD                    KFACL
- 
- 
+
+
      C                   EXSR      SRINITLEALLO
- 
+
      C     *DTAARA       DEFINE                  RUNDAT
      C                   IN        RUNDAT
- 
+
      C     *LOCK         IN        LEMUTN
      C                   EVAL      MCLAST = MCLAST + 1
      C                   OUT       LEMUTN
- 
+
      C                   ENDSR
       /EJECT
       ********************************************************************

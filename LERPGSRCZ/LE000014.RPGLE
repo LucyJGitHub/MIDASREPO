@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2004                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. CLE168             Date 26Feb18               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 CLE147             Date 30Sep11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -37,6 +38,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE168 - Allow Debit of Blocked Account (Recompile)          *
       *  MD046248 - Finastra Rebranding                               *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  CLE148 - Alpha Loan Reference (Recompile)                    *
@@ -55,26 +57,26 @@
       *  CLE025 - Credit Lines                                        *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** LE Facilities Extension File
      FLEFCLTLG  UF A E           K DISK    INFSR(*PSSR)
      F                                     COMMIT
- 
+
       ** Customer Hierarchy Table by CHID
      FLEGRCHL0  UF A E           K DISK    INFSR(*PSSR)
      F                                     RENAME(T_GRCUSTH:HierTabF)
      F                                     COMMIT
- 
+
       ** Customer Group Table by CGHYID/CGID
      FLEGRCGL0  UF A E           K DISK    INFSR(*PSSR)
      F                                     RENAME(T_GRCUSTG:GroupTabF)
      F                                     COMMIT
- 
+
       ** Customer Link Table by CLHYID/CLGRPID/CLID
      FLEGRCLL3  UF   E           K DISK    INFSR(*PSSR)                                      BUG3264
      F                                     RENAME(T_GRCUSTL:LinkTab1)                        BUG3264
@@ -82,27 +84,27 @@
      FLEGRCLL1  UF A E           K DISK    INFSR(*PSSR)
      F                                     RENAME(T_GRCUSTL:LinkTabF)
      F                                     COMMIT
- 
+
       ** Customer Link Table by CLHYID/CLGRPID/CLID
      FLEGRCLL2  UF A E           K DISK    INFSR(*PSSR)
      F                                     RENAME(T_GRCUSTL:LinkTabW)
      F                                     COMMIT
- 
+
       ** Customer Link Table by CLHYID/CLGRPID/CLID
      FT_GRCUSTL UF A E             DISK    INFSR(*PSSR)
      F                                     RENAME(T_GRCUSTL:LinkTabX)
      F                                     COMMIT
- 
+
       ** LE Customer Loans
      FCLOANM    IF   E           K DISK    INFSR(*PSSR)
- 
+
       ** Facility Details Retrieval Index
      FFCLTYL1   IF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(F1)
- 
+
       ** SD Customer Details File
      FSDCUSTL1  IF   E           K DISK    INFSR(*PSSR)
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -110,7 +112,7 @@
       ** ¦ D-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      D LDA           E DS           256    EXTNAME(LDA)
       ** Local data area for database error details
       ** *LOCK IN LDA immediately before and OUT LDA immediately
@@ -120,41 +122,41 @@
       **       Defines:                     142 170 DBKEY
       **                                    171 180 DBPGM
       **                                    181 1830DBASE
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** External DS for bank details
- 
+
       ** Short Data Structure for Access programs
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Array containing Copyright statement
      D CPY@            S             80    DIM(1) CTDATA PERRCD(1)
- 
+
      D PRtCd           S              7A
      D POptn           S              7A
- 
+
      D*WkFCus***       S              6  0                                                    CSD027
      D WkFCus          S              6                                                       CSD027
      D WkFTyp          S              3  0
@@ -168,15 +170,15 @@
      D WCNUM           S              6A
      D WFACT           S              3A
      D WFCNO           S              2A
- 
+
      D KyCNumA         S              6A
- 
+
      D WRun            S              1A
- 
+
      D KCHID           S              9S 0
      D KCGID           S             20I 0
      D WrkCHID         S             15
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -190,68 +192,68 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initialise the Facility Customer Group field
- 
+
      C                   EXSR      SRSetTab
- 
+
       ** End program
- 
+
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       * SRSetTab - Subroutine to Set Up the Tables                    *
       *****************************************************************
- 
+
      C     SRSetTab      BEGSR
- 
+
      C     *LOVAL        SETLL     CLOANM
      C                   READ      CLOANM                                 60
- 
+
      C                   DOW       *IN60 = *OFF
- 
+
      C     KlFclt        CHAIN     FCLTYL1                            61
- 
+
      C                   IF        *IN61 = *OFF AND F1MCSI = 'Y'
- 
+
       ** If the current facility is not the same as the previous facility
- 
+
      C                   IF        FCUS <> WkFCus OR FTYP <> WkFTyp OR
      C                             FSEQ <> WkFSeq
- 
+
       ** Update the End Id of the previous group, do this if the current
       ** group is not zero
- 
+
      C                   EVAL      WkCLID = CLID
      C*****KlLink        CHAIN     LEGRCLL1                           62                     BUG3264
      C     KlLink        CHAIN     LEGRCLL3                           62                     BUG3264
      C                   EVAL      CLENDID = WkCLID
      C**********         UPDATE    LinkTabF                                                  BUG3264
      C                   UPDATE    LinkTab1                                                  BUG3264
- 
+
       ** Generate the Customer Group record
- 
+
      C                   EVAL      CGHYID = CHID
      C                   EVAL      CGID = CGID + 1
- 
+
      C                   EVAL      KCHID = CHID
      C                   EVAL      KCGID = CGID
- 
+
       ** Format fields
- 
+
      C                   MOVE      FCUS          WkFCusA
      C                   MOVE      FTYP          WkFTypA
      C                   MOVE      FSEQ          WkFSeqA
- 
+
      C                   EVAL      CGNAME = 'Facility ' +WkFCusA + '-' +WkFTypA
      C                                      + '-' +WkFSeqA
      C                   WRITE     GroupTabF
- 
+
       ** Generate the Customer Link Table
- 
+
      C     *HIVAL        SETGT     LEGRCLL2
      C                   READP     LEGRCLL2
      C                   EVAL      CLHYID = CHID
@@ -262,37 +264,37 @@
      C                   EVAL      WkParent = CLGRPID
      C                   EVAL      CLCUSTCODE = *BLANKS
      C                   WRITE     LinkTabW
- 
+
       ** Update the facilities extension table for the Customer Group field
- 
+
      C                   MOVE      F1CNUM        WCNUM
      C                   MOVE      F1FACT        WFACT
      C                   MOVE      F1FCNO        WFCNO
- 
+
      C     KlExtF        CHAIN     LEFCLTLG                           62
- 
+
      C                   IF        *IN62 = *OFF
      C                   EVAL      FCXCGP = CGID
      C                   UPDATE    LEFCLTD0
      C                   ENDIF
- 
+
       ** Reset stored customer number
- 
+
      C**********         EVAL      WkCNUM = 0                                                 CSD027
      C                   EVAL      WkCNUM = *BLANKS                                           CSD027
- 
+
       ** ENDIF for if facility read is not the same as the previous one
- 
+
      C                   ENDIF
- 
+
       ** If the customer is not the same as the previous customer or
       ** first customer of the next facility
- 
+
      C                   IF        CNUM <> WkCNum
      C                   MOVEL     CNUM          KyCNumA
- 
+
       ** Get branch from the customer file
- 
+
      C     KyCNumA       CHAIN     SDCUSTL1                           62
      C                   EVAL      CLHYID = CHID
      C                   EVAL      CLID = CLID + 1
@@ -304,62 +306,62 @@
      C                   WRITE     LinkTabF
      C                   ENDIF
      C
- 
+
       ** Save previous facility and customer to work fields
- 
+
      C                   EVAL      WkFCus = FCUS
      C                   EVAL      WkFTyp = FTYP
      C                   EVAL      WkFSeq = FSEQ
      C                   EVAL      WkCNum = CNUM
- 
+
       ** ENDIF for if found in FCLTY1
- 
+
      C                   ENDIF
- 
+
       ** Read next loan
- 
+
      C                   READ      CLOANM                                 60
- 
+
      C                   ENDDO
- 
+
       ** Update end id of the last group
- 
+
      C                   EVAL      WkCLID = CLID
      C*****KlLink        CHAIN     LEGRCLL1                                                  BUG3264
      C     KlLink        CHAIN     LEGRCLL3                                                  BUG3264
      C                   EVAL      CLENDID = WkCLID
      C**********         UPDATE    LinkTabF                                                  BUG3264
      C                   UPDATE    LinkTab1                                                  BUG3264
- 
+
       ** After all the loans have been read, update the End Id of the Top
       ** most group
- 
+
      C                   EVAL      WkCLID = CLENDID
      C*****1****         SETLL     T_GRCUSTL                                                 BUG3264
      C**********         READ      T_GRCUSTL                              61                 BUG3264
      C     *LOVAL        SETLL     LEGRCLL3                                                  BUG3264
      C                   READ      LEGRCLL3                               61                 BUG3264
- 
+
      C                   IF        *IN61 = *OFF
      C                   EVAL      CLENDID = WkCLID
      C**********         UPDATE    LinkTabX                                                  BUG3264
      C                   UPDATE    LinkTab1                                                  BUG3264
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       * *INZSR - Subroutine for Initial First Cycle processing        *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C                   MOVEA     CPY@          BIS@             80
- 
+
       ** Set up Local Data Area (LDA)
- 
+
      C     *DTAARA       DEFINE                  LDA
      C     *LOCK         IN        LDA
      C                   MOVE      *BLANKS       DBFILE
@@ -368,75 +370,75 @@
      C                   MOVEL     'LE000014'    DBPGM
      C                   Z-ADD     0             DBASE
      C                   OUT       LDA
- 
+
       ** Access Bank Details
- 
+
      C                   CALLB     'AOBANKR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      '*FIRST '     POPTN
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Database error
- 
+
      C                   IF        PRTCD <> *BLANKS
      C                   EVAL      DBFILE = 'SDBANKPD'
      C                   EVAL      DBASE = 1
      C                   EVAL      DBKEY = POPTN
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Define key lists
- 
+
      C     KlFclt        KLIST
      C                   KFLD                    BRCA
      C                   KFLD                    FCUS
      C                   KFLD                    FTYP
      C                   KFLD                    FSEQ
- 
+
      C     KlExtF        KLIST
      C                   KFLD                    F1BRCA
      C                   KFLD                    WCNUM
      C                   KFLD                    WFACT
      C                   KFLD                    WFCNO
- 
+
      C     KlLink        KLIST
      C                   KFLD                    KCHID
      C                   KFLD                    KCGID
- 
+
      C     *LIKE         DEFINE    CLID          WkCLID
      C     *LIKE         DEFINE    CLPARENT      WkParent
- 
+
       ** Initialise work variables
- 
+
      C**********         EVAL      WkFCus = 0                                                 CSD027
      C                   EVAL      WkFCus = *BLANKS                                           CSD027
      C                   EVAL      WkFTyp = 0
      C                   EVAL      WkFSeq = 0
      C**********         EVAL      WkCNum = 0                                                 CSD027
      C                   EVAL      WkCNum = *BLANKS                                           CSD027
- 
+
       ** Set the Customer Hierarchy Table
- 
+
      C                   EVAL      CHSNAME = 'Customer Lending'
      C                   EVAL      CHNAME = 'Customer Lending'
      C                   WRITE     HierTabF
- 
+
      C     *HIVAL        SETGT     LEGRCHL0
      C                   READP     LEGRCHL0
      C                   MOVEL     CHID          WrkCHID
      C                   EVAL      CHSNAME = 'Customer Lending' + WrkCHID
      C                   EVAL      CHNAME = 'Customer Lending' + WrkCHID
      C                   UPDATE    HierTabF
- 
+
       ** Set the Top Level Group for the Customer Group Table
- 
+
      C                   EVAL      CGID = 1
      C                   EVAL      CGHYID = CHID
      C                   EVAL      CGNAME = 'Facility Customer Group'
      C                   WRITE     GroupTabF
- 
+
       ** Set the First Group Id for the Customer Link Table
- 
+
      C                   EVAL      CLHYID = CHID
      C                   EVAL      CLID = 1
      C                   EVAL      CLGRPID = CGID
@@ -444,33 +446,33 @@
      C                   EVAL      CLPARENT = 0
      C                   EVAL      CLCUSTCODE = *BLANKS
      C                   WRITE     LinkTabF
- 
+
      C                   EVAL      KCHID = CHID
      C                   EVAL      KCGID = CGID
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       * *PSSR - Program exception error routine                       *
       *****************************************************************
- 
+
      C     *PSSR         BEGSR
- 
+
      C                   IF        WRun = *blanks
      C                   MOVE      'Y'           WRun
      C                   DUMP
      C                   CALL      'DBERRCTL'
      C                   ENDIF
- 
+
      C                   MOVE      *ON           *INU7
      C                   MOVE      *ON           *INU8
      C                   MOVE      *ON           *INLR
      C                   RETURN
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
 ** CPY@
 (c) Finastra International Limited 2004

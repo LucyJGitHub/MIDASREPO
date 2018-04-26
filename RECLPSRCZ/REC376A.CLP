@@ -10,8 +10,9 @@
 /*                                                                   */
 /*       (c) Finastra International Limited 2001                     */
 /*                                                                   */
-/*       Last Amend No. CRE113             Date 08Feb18              */
-/*       Prev Amend No. MD046248           Date 27Oct17              */
+/*       Last Amend No. MD050679           Date 26Apr18              */
+/*       Prev Amend No. CRE113             Date 08Feb18              */
+/*                      MD046248           Date 27Oct17              */
 /*                      AR1069713          Date 14Dec12              */
 /*                      259754             Date 27Jul12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
@@ -26,6 +27,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD050679 - Component REC376A failed during COB run (CRE113) */
 /*       CRE113 - COB Optimisation of REC376A                        */
 /*       MD046248 - Finastra Rebranding                              */
 /*       AR1069713 - Reverse fix 259754                              */
@@ -113,7 +115,7 @@
               CHGJOB SWS(XXXXXX11)
               GOTO       CMDLBL(ENDCL)
              ENDDO
- 
+
 /* Check if RECAPM has any records before continuing (as per REC376) */                   /*CCB016*/
                                                                                           /*CCB016*/
              RTVMBRD    FILE(RECAPM) NBRCURRCD(&RECAPM)                                   /*CCB016*/
@@ -136,7 +138,13 @@
 
 /* Check if Customer Ranges has been defined, skip if no records                          /*CRE113*/
                                                                                           /*CRE113*/
-             RTVMBRD    FILE(SDCUSRTD) NBRCURRCD(&COUNT)                                  /*CRE113*/
+/**********  RTVMBRD    FILE(SDCUSRTD) NBRCURRCD(&COUNT)            */       /*CRE113*/ /*MD050679*/
+             CHKOBJ     OBJ(QTEMP/XDCUSRTD) OBJTYPE(*FILE)                              /*MD050679*/
+             MONMSG     MSGID(CPF9801) EXEC(GOTO COPYFILE)                              /*MD050679*/
+             DLTF       FILE(QTEMP/XDCUSRTD)                                            /*MD050679*/ 
+COPYFILE:    CPYF       FROMFILE(SDCUSRTD) TOFILE(QTEMP/XDCUSRTD) +
+                        CRTFILE(*YES) INCCHAR(CRRECI 1 *EQ 'D')                         /*MD050679*/  
+             RTVMBRD    FILE(XDCUSRTD) NBRCURRCD(&COUNT)                                /*MD050679*/
                                                                                           /*CRE113*/
              IF         COND(&COUNT > 0) THEN(DO)                                         /*CRE113*/
              CALL       PGM(RE001591) PARM(&QRYSLT)                                       /*CRE113*/

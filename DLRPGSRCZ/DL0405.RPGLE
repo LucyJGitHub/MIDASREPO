@@ -16,18 +16,24 @@
       *                                                               *
       *  (c) Finastra International Limited 2016                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. MD048346           Date 20Dec17               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL099             Date 06Oct17               *
       *                 MD046325           Date 26Jul17               *
-      *                 MD045382           Date 20Apr17               *      
+      *                 MD045382           Date 20Apr17               *
       *                 MD036589A          Date 22Feb17               *
       *                 MD036589 *CREATE   Date 14Feb16               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD048346 - FX netting ICD against FX nets will not prioritize*
+      *             customer branch of the FX nets, instead, it will  *
+      *             prioritize (1) system value branch code; if blank,*
+      *             (2) settlement branch of FX net; if blank, then   *
+      *             revert to (3) customer branch of FX net.          *
       *  MD046248 - Finastra Rebranding                               *
       *  MD046325 - GLC0802C failed due to invalid nostro code.       *
-      *             Check settlement first if nostro.                 *      
+      *             Check settlement first if nostro.                 *
       *  MD045382 - No contra posting on FX netting ICD for nostro    *
       *             settling on a different branch.  Always correctly *
       *             set branch code.                                  *
@@ -245,6 +251,30 @@
       ** Pointer for the indicator array
      D IndicatorP      S               *   INZ(%Addr(*IN))
 
+      *                                                                                     MD048346
+      ** Variable for System Values                                                         MD048346
+     D SVALK1          S             20                                                     MD048346
+     D SVAL1           S            200                                                     MD048346
+     D SVALK2          S             20                                                     MD048346
+     D SVAL2           S            200                                                     MD048346
+     D SVALK3          S             20                                                     MD048346
+     D SVAL3           S            200                                                     MD048346
+     D SVALK4          S             20                                                     MD048346
+     D SVAL4           S            200                                                     MD048346
+     D SVALK5          S             20                                                     MD048346
+     D SVAL5           S            200                                                     MD048346
+     D SVALK6          S             20                                                     MD048346
+     D SVAL6           S            200                                                     MD048346
+     D SVALK7          S             20                                                     MD048346
+     D SVAL7           S            200                                                     MD048346
+     D SVALK8          S             20                                                     MD048346
+     D SVAL8           S            200                                                     MD048346
+     D SVALK9          S             20                                                     MD048346
+     D SVAL9           S            200                                                     MD048346
+     D SVALK0          S             20                                                     MD048346
+     D SVAL10          S            200                                                     MD048346
+     D SVBRCA          S              3                                                     MD048346
+                                                                                            MD048346
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -910,6 +940,20 @@
       *                                                               *                    MD036589A
       *****************************************************************                    MD036589A
      C     SRNetICD      BEGSR                                                             MD036589A
+      *
+      ** Setup FX Netting Branch for SRChkAcc
+      *                                                                                     MD048346
+     C     SVBRCA        IFNE      *BLANKS                                                  MD048346
+     C                   EVAL      AMBRCA = SVBRCA                                          MD048346
+     C                   ELSE                                                               MD048346
+     C     ABRCA         IFNE      *BLANKS                                                  MD048346
+     C                   EVAL      AMBRCA = ABRCA                                           MD048346
+     C                   ELSE                                                               MD048346
+     C     BBBRCD        IFNE      *BLANKS                                                  MD048346
+     C                   EVAL      AMBRCA = BBBRCD                                          MD048346
+     C                   ENDIF                                                              MD048346
+     C                   ENDIF                                                              MD048346
+     C                   ENDIF                                                              MD048346
       *                                                                                    MD036589A
       ** Check first if we should project for netting ICD account.                         MD036589A
       *                                                                                    MD036589A
@@ -1224,7 +1268,38 @@
      C                   Z-ADD     BJRDNB        WControlDat
      C                   ENDIF
      C                   ENDIF
-
+      *                                                                                     MD048346
+      ** Access system value                                                                MD048346
+      *                                                                                     MD048346
+     C                   EVAL      SVALK1 = 'FXnetBranch'                                   MD048346
+      * Call Access object:                                                                 MD048346
+     C                   CALL      'AOSVALR0'                                               MD048346
+     C                   PARM      *BLANKS       PRtCd                                      MD048346
+     C                   PARM                    SVALK1                                     MD048346
+     C                   PARM                    SVAL1                                      MD048346
+     C                   PARM                    SVALK2                                     MD048346
+     C                   PARM                    SVAL2                                      MD048346
+     C                   PARM                    SVALK3                                     MD048346
+     C                   PARM                    SVAL3                                      MD048346
+     C                   PARM                    SVALK4                                     MD048346
+     C                   PARM                    SVAL4                                      MD048346
+     C                   PARM                    SVALK5                                     MD048346
+     C                   PARM                    SVAL5                                      MD048346
+     C                   PARM                    SVALK6                                     MD048346
+     C                   PARM                    SVAL6                                      MD048346
+     C                   PARM                    SVALK7                                     MD048346
+     C                   PARM                    SVAL7                                      MD048346
+     C                   PARM                    SVALK8                                     MD048346
+     C                   PARM                    SVAL8                                      MD048346
+     C                   PARM                    SVALK9                                     MD048346
+     C                   PARM                    SVAL9                                      MD048346
+     C                   PARM                    SVALK0                                     MD048346
+     C                   PARM                    SVAL10                                     MD048346
+                                                                                            MD048346
+     C                   IF        PrtCd = *BLANKS                                          MD048346
+     C                   MOVEL     SVAL1         SVBRCA                                     MD048346
+     C                   ENDIF                                                              MD048346
+      *                                                                                     MD048346
      C                   ENDSR
 
       *****************************************************************

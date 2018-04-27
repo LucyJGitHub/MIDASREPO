@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD048077           Date 07Nov17               *
-      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *  Last Amend No. MD048346           Date 20Dec17               *
+      *  Prev Amend No. MD048077           Date 07Nov17               *
+      *                 MD046248           Date 27Oct17               *
       *                 CDL099             Date 06Oct17               *
       *                 MD048035           Date 12Oct17               *
       *                 MD047513           Date 18Sep17               *
@@ -86,6 +87,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD048346 - FX netting ICD will not prioritize customer branch*
+      *             of the FX nets, instead, it will prioritize:      *
+      *             (1) system value branch code; if blank,           *
+      *             (2) settlement branch of FX net; if blank, then   *
+      *             revert to (3) customer branch of FX net.          *
       *  MD048077 - MD045437 caused locking issue due to file updates *
       *             after commit is issued. File updates moved above  *
       *             the commit.                                       *
@@ -712,6 +718,8 @@
      I              9                     C         ARRMAX                                    CSD015
       ** Max. no. of elements associated with the CE arrays.                                  CSD015
       *                                                                                       CSD015
+      ** Constant for System Value Column Name                                              MD048346
+     I              'FXnetBranch'         C         FXSVAL                                  MD048346
       /EJECT
       *=========================================================================
       * Main processing. Initialization done in *INZSR
@@ -3166,6 +3174,22 @@
       *                                                                                     MD021333
      C                     MOVELDLNO      @TNMR                                             MD021333
      C                     MOVELAMCCYD    @CCYD                                             MD021333
+      *                                                                                     MD048346
+      ** Set the branch for retrieving internal customer FX netting ICD                     MD048346
+      *                                                                                     MD048346
+     C           SVBRCA    IFNE *BLANKS                                                     MD048346
+     C                     MOVELSVBRCA    AMBRCA                                            MD048346
+     C                     ELSE                                                             MD048346
+     C           AMBSIN    IFEQ 'B'                                                         MD048346
+     C           PMROBR    ANDNE*BLANKS                                                     MD048346
+     C                     MOVELPMROBR    AMBRCA                                            MD048346
+     C                     ELSE                                                             MD048346
+     C           AMBSIN    IFEQ 'S'                                                         MD048346
+     C           PMPOBR    ANDNE*BLANKS                                                     MD048346
+     C                     MOVELPMPOBR    AMBRCA                                            MD048346
+     C                     ENDIF                                                            MD048346
+     C                     ENDIF                                                            MD048346
+     C                     ENDIF                                                            MD048346
       *                                                                                     MD044815
       ** Get branch internal customer.                                                      MD044815
       *                                                                                     MD044815
@@ -3269,6 +3293,27 @@
       ** FX netting ICD.                                                                    MD048035
       *                                                                                     MD048035
      C           EXTFLG    IFEQ 'N'                                                         MD048035
+      *                                                                                     MD048346
+      ** Set the branch for retrieving internal customer FX netting ICD                     MD048346
+      *                                                                                     MD048346
+     C           SVBRCA    IFNE *BLANKS                                                     MD048346
+     C                     MOVELSVBRCA    AMBRCA                                            MD048346
+     C                     ELSE                                                             MD048346
+     C           AMBSIN    IFEQ 'B'                                                         MD048346
+     C           PMROBR    ANDNE*BLANKS                                                     MD048346
+     C                     MOVELPMROBR    AMBRCA                                            MD048346
+     C                     ELSE                                                             MD048346
+     C           AMBSIN    IFEQ 'S'                                                         MD048346
+     C           PMPOBR    ANDNE*BLANKS                                                     MD048346
+     C                     MOVELPMPOBR    AMBRCA                                            MD048346
+     C                     ENDIF                                                            MD048346
+     C                     ENDIF                                                            MD048346
+     C                     ENDIF                                                            MD048346
+      *                                                                                     MD048346
+      ** FX NETTING ICD  - Get branch internal customer                                     MD048346
+      *                                                                                     MD048346
+     C                     EXSR RTVCNO                                                      MD048346
+      *                                                                                     MD048346
      C                     MOVELA8BICN    CUSN                                              MD048035
      C                     MOVELAMCCYD    CCYD                                              MD048035
      C                     MOVEL'01'      ASNC                                              MD048035
@@ -3505,6 +3550,24 @@
      C                     EXSR UPDMEM                                                     MD041420A
      C                     EXSR UPDPRN                                                     MD041420A
      C                     EXSR UPDOLP                                                     MD041420A
+     C                     ENDIF                                                            MD048346
+      *POST TO FX NETTING ICD REGARDLESS IF FX NETTING OR NOT.                              MD048346
+      *                                                                                     MD048346
+      ** Set the branch for retrieving internal customer FX netting ICD                     MD048346
+      *                                                                                     MD048346
+     C           SVBRCA    IFNE *BLANKS                                                     MD048346
+     C                     MOVELSVBRCA    AMBRCA                                            MD048346
+     C                     ELSE                                                             MD048346
+     C           AMBSIN    IFEQ 'B'                                                         MD048346
+     C           PMROBR    ANDNE*BLANKS                                                     MD048346
+     C                     MOVELPMROBR    AMBRCA                                            MD048346
+     C                     ELSE                                                             MD048346
+     C           AMBSIN    IFEQ 'S'                                                         MD048346
+     C           PMPOBR    ANDNE*BLANKS                                                     MD048346
+     C                     MOVELPMPOBR    AMBRCA                                            MD048346
+     C                     ENDIF                                                            MD048346
+     C                     ENDIF                                                            MD048346
+     C                     ENDIF                                                            MD048346
       *                                                                                    MD023887A
       ** Get Branch Internal Customer                                                      MD023887A
       *                                                                                    MD023887A
@@ -3560,7 +3623,7 @@
      C***********          EXSR UPDPRN                                            MD041420A MD044815
      C***********          EXSR UPDOLP                                            MD041420A MD044815
       *****************************************************************           MD023887A MD044815
-     C                     ENDIF                                                           MD023887A
+     C**********           ENDIF                                                  MD023887A MD048346
       *                                                                                     MD021333
      C                     ENDIF                                                            MD021333
       *                                                                                     MD021333
@@ -4016,6 +4079,29 @@
      C                     ENDIF                                                            MD047513
      C                     ENDSR                                                            MD047513
       *****************************************************************                     MD047513
+      /EJECT                                                                                MD048346
+      *****************************************************************                     MD048346
+      * Subroutine  :  RTVCNO                                         *                     MD048346
+      * Function    :  Retrieve Internal Customer from branch         *                     MD048346
+      *                                                               *                     MD048346
+      * Called by   :  RSCREV                                         *                     MD048346
+      * Calls       :  None                                           *                     MD048346
+      *****************************************************************                     MD048346
+     C           RTVCNO    BEGSR                                                            MD048346
+     C                     CALL 'AOBRCHR1'                                                  MD048346
+     C                     PARM *BLANKS   @RTCD                                             MD048346
+     C                     PARM '*KEY   ' @OPTN                                             MD048346
+     C                     PARM AMBRCA    @BRCA                                             MD048346
+     C           SDBRCH    PARM SDBRCH    SDSSDY                                            MD048346
+      *                                                                                     MD048346
+     C           @RTCD     IFNE *BLANK                                                      MD048346
+     C                     Z-ADD5         DBASE                                             MD048346
+     C                     MOVEL'SDBRCHPD'DBFILE                                            MD048346
+     C                     MOVELNBRCA     DBKEY                                             MD048346
+     C                     OUT  LDA                                                         MD048346
+     C                     EXSR *PSSR                                                       MD048346
+     C                     ENDIF                                                            MD048346
+     C                     ENDSR                                                            MD048346
       /EJECT
       *****************************************************************                       CSD015
      C           *INZSR    BEGSR
@@ -4321,6 +4407,35 @@
       *                                                                                       CSD015
      C                     ENDIF                                                              CSD015
       *                                                                                       CSD015
+      ** Access system value to determine if date should used as criteria                   MD048346
+      * Call Access object:                                                                 MD048346
+     C                     CALL 'AOSVALR0'                                                  MD048346
+     C                     PARM *BLANKS   PRTCD   7                                         MD048346
+     C                     PARM FXSVAL    SVALK1 20                                         MD048346
+     C                     PARM           SVAL1 200                                         MD048346
+     C                     PARM           SVALK2 20                                         MD048346
+     C                     PARM           SVAL2 200                                         MD048346
+     C                     PARM           SVALK3 20                                         MD048346
+     C                     PARM           SVAL3 200                                         MD048346
+     C                     PARM           SVALK4 20                                         MD048346
+     C                     PARM           SVAL4 200                                         MD048346
+     C                     PARM           SVALK5 20                                         MD048346
+     C                     PARM           SVAL5 200                                         MD048346
+     C                     PARM           SVALK6 20                                         MD048346
+     C                     PARM           SVAL6 200                                         MD048346
+     C                     PARM           SVALK7 20                                         MD048346
+     C                     PARM           SVAL7 200                                         MD048346
+     C                     PARM           SVALK8 20                                         MD048346
+     C                     PARM           SVAL8 200                                         MD048346
+     C                     PARM           SVALK9 20                                         MD048346
+     C                     PARM           SVAL9 200                                         MD048346
+     C                     PARM           SVALK0 20                                         MD048346
+     C                     PARM           SVAL10200                                         MD048346
+      *                                                                                     MD048346
+     C           PRTCD     IFEQ *BLANKS                                                     MD048346
+     C                     MOVELSVAL1     SVBRCA  3                                         MD048346
+     C                     ENDIF                                                            MD048346
+      *                                                                                     MD048346
      C/COPY WNCPYSRC,FXH00164
      C                     ENDSR
       *****************************************************************

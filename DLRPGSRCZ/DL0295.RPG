@@ -10,8 +10,9 @@
 0006 F*                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. MD048346           Date 20Dec17               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL099             Date 06Oct17               *
       *                 MD034609           Date 29Oct15               *
       *                 CGL165             Date 17Feb15               *
       *                 CDL096             Date 22Sep14               *
@@ -185,6 +186,10 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD048346 - (deals&fxnet) FX Netting ICD Posting branch to use*
+      *             (1) system value FXnetBranch; when blank,         *
+      *             (2) settlement branch of FX net; when blank,      *
+      *             (3) default to customer branch of FX net.         *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  MD034609 - Witholding tax posted in local currency instead   *
@@ -534,6 +539,7 @@
 0012 F***SDKEY***IP**E           K        DISK                            AUS007
      FSDKEYB  IP  E           K        DISK                               AUS007
      FFXNACTL0IS  E           K        DISK                               CDL002
+     FFXNETML3IF  E           K        DISK                                                 MD048346
       *  Net Actions file                                                 CDL002
 0013 F***ACKEY** IF  F      96 12AI     2 DISK                                                CGL029
      F***ACKEY   IF  F     156 12AI     2 DISK                                        CGL029  CDL038
@@ -1564,6 +1570,7 @@
      I              'DEALING ACCRUAL SUMM-C         ##DLAS                125828
      I              'ARY       '                                          125828
      I              'BasCcyTaxRoundDown'  C         C#BASE                                    CDL081
+     I              'FXnetBranch'         C         FXSVAL                                  MD048346
      I**                                                                  S01117
 0925 I**                                                                  S01117
      I********************************************************************S01100
@@ -2944,17 +2951,27 @@
      C                     MOVE '0'       *IN07                           CDL002
      C           DLNO      CHAINDEALS                40                   CDL002
      C           *IN40     IFEQ '0'                                       CDL002
+     C** Preparation for getting FX Net Reference Depending on B/S                          MD048346
+     C           SVBRCA    IFEQ *BLANKS                                                     MD048346
+     C           *LIKE     DEFN NETBR     FXNETR                                            MD048346
+     C                     ENDIF                                                            MD048346
       ** Check NET against last character of ACCOUNT                      CDL002
       ** KEY (Which gives PURCHASE or SALE indication)                    CDL002
      C           EVSUB     IFEQ 'B'                                       CDL002
      C           EVSUB     OREQ 'P'                                       CDL002
       ** PURCHASE KEYS                                                    CDL002
      C           NETBY     COMP 'Y'                      07               CDL002
+     C           SVBRCA    IFEQ *BLANKS                                                     MD048346
+     C                     MOVE NETBR     FXNETR                                            MD048346
+     C                     ENDIF                                                            MD048346
      C                     ELSE                                           CDL002
      C           EVSUB     IFEQ 'C'                                       CDL002
      C           EVSUB     OREQ 'S'                                       CDL002
       ** SALE KEYS                                                        CDL002
      C           NETSL     COMP 'Y'                      07               CDL002
+     C           SVBRCA    IFEQ *BLANKS                                                     MD048346
+     C                     MOVE NETSR     FXNETR                                            MD048346
+     C                     ENDIF                                                            MD048346
      C                     ELSE                                           CDL002
       ** If not PURCHASE or SALE then check for SWAP PROFIT/LOSS          CDL002
      C           EVSUB     IFEQ 'H'                                       CDL002
@@ -3981,6 +3998,31 @@
      C                     Z-ADD99999     FLSZ    50                      105140
      C                     EXCPTHEADER                                    105140
      C*                                                                   105140
+     C                     CALL 'AOSVALR0'                                                  MD048346
+     C                     PARM *BLANKS   PRTCD                                             MD048346
+     C                     PARM FXSVAL    SVALK1 20                                         MD048346
+     C                     PARM           SVAL1 200                                         MD048346
+     C                     PARM *BLANK    SVALK2 20                                         MD048346
+     C                     PARM           SVAL2 200                                         MD048346
+     C                     PARM *BLANK    SVALK3 20                                         MD048346
+     C                     PARM           SVAL3 200                                         MD048346
+     C                     PARM *BLANK    SVALK4 20                                         MD048346
+     C                     PARM           SVAL4 200                                         MD048346
+     C                     PARM *BLANK    SVALK5 20                                         MD048346
+     C                     PARM           SVAL5 200                                         MD048346
+     C                     PARM *BLANK    SVALK6 20                                         MD048346
+     C                     PARM           SVAL6 200                                         MD048346
+     C                     PARM *BLANK    SVALK7 20                                         MD048346
+     C                     PARM           SVAL7 200                                         MD048346
+     C                     PARM *BLANK    SVALK8 20                                         MD048346
+     C                     PARM           SVAL8 200                                         MD048346
+     C                     PARM *BLANK    SVALK9 20                                         MD048346
+     C                     PARM           SVAL9 200                                         MD048346
+     C                     PARM *BLANK    SVALK0 20                                         MD048346
+     C                     PARM           SVAL10200                                         MD048346
+      *                                                                                     MD048346
+     C                     MOVELSVAL1     SVBRCA  3                                         MD048346
+      *                                                                                     MD048346
      C                     ENDSR                                          105140
      C********************************************************************105140
      C/EJECT                                                              S01522
@@ -6695,6 +6737,40 @@
      C           OSBR      IFEQ '   '                                     CDL002
      C                     MOVE BRCA      OSBR                            CDL002
      C                     END                                            CDL002
+     C           SVBRCA    IFNE *BLANKS                                                     MD048346
+     C                     MOVELSVBRCA    OSBR                                              MD048346
+     C                     ELSE                                                             MD048346
+     C** Chain on FXNETML3 to get the Settlement Branch of FX netting                       MD048346
+     C           FXNETR    CHAINFXNETMD0             30                                     MD048346
+     C           *IN30     IFNE '1'                                                         MD048346
+     C           AMONOB    IFNE *BLANKS                                                     MD048346
+     C                     MOVELAMONOB    OSBR                                              MD048346
+     C                     ELSE                                                             MD048346
+     C** If there are no settlement details, use the customer branch                        MD048346
+     C                     MOVELAMCNUM    @KEY1  10                                         MD048346
+     C* Retrieve Customer Branch Code                                                       MD048346
+     C                     CALL 'AOCUSTR1'                                                  MD048346
+     C                     PARM '*MSG   ' @RTCD   7                                         MD048346
+     C                     PARM '*KEY   ' @OPTN   7                                         MD048346
+     C                     PARM           @KEY1  10                                         MD048346
+     C                     PARM *BLANKS   @KYST   7                                         MD048346
+     C           SDCUST    PARM SDCUST    DSLDY                                             MD048346
+     C* DB in Error                                                                         MD048346
+     C           @RTCD     IFNE *BLANK                                                      MD048346
+     C                     MOVE '1'       *IN30                                             MD048346
+     C                     MOVE '009'     DBASE            **********                       MD048346
+     C                     MOVEL@OPTN     DBOPTN  7        *  009   *                       MD048346
+     C                     MOVEL@KEY1     DBKEY            **********                       MD048346
+     C                     MOVEL'SDCUSTPD'DBFILE                                            MD048346
+     C                     GOTO P2END                                                       MD048346
+     C                     ENDIF                                                            MD048346
+     C*                                                                                     MD048346
+     C           BBBRCD    IFNE *BLANKS                                                     MD048346
+     C                     MOVELBBBRCD    OSBR                                              MD048346
+     C                     ENDIF                                                            MD048346
+     C                     ENDIF                                                            MD048346
+     C                     ENDIF                                                            MD048346
+     C                     ENDIF                                                            MD048346
      C                     MOVE OSBR      ACBRCD                          CDL002
      C           *LIKE     DEFN OSBR      NTOSBR                          CDL002
      C                     MOVE OSBR      NTOSBR                          CDL002
@@ -6845,6 +6921,7 @@
 0943 C                     MOVE A7ACSN    ACACS                           S01194
      C                     MOVE A7BRCD    BRCDA                                               222171
      C                     MOVE A7BRCD    OSBR                                                222171
+     C                     MOVE A7BRCD    NTOSBR                                            MD048346
      C                     MOVE A7BRCD    ACBRCD                                              222171
 0944 C*
 0952 C*

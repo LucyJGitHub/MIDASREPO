@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Finastra International Limited 2001                      *
       *                                                               *
-      *  Last Amend No. MD046248           Date 27Oct17               *
-      *  Prev Amend No. CDL099             Date 06Oct17               *
+      *  Last Amend No. MD048346           Date 20Dec17               *
+      *  Prev Amend No. MD046248           Date 27Oct17               *
+      *                 CDL099             Date 06Oct17               *
       *                 MD040629           Date 05Sep16               *
       *                 AR743357           Date 06Jul17               *
       *                 MD044815           Date 13Apr17               *
@@ -130,6 +131,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD048346 - FX netting ICD against FXDEALS will not prioritize*
+      *             customer branch of the FX nets, instead, it will  *
+      *             prioritize (1) system value branch code; if blank,*
+      *             (2) settlement branch of FX net; if blank, then   *
+      *             revert to (3) customer branch of FX net.          *
       *  MD046248 - Finastra Rebranding                               *
       *  CDL099 - Split Value Date (Recompile)                        *
       *  MD040629 - Deposit interest is not shown in the              *
@@ -829,6 +835,7 @@
      I              'CcyBasisForNosEvts  'C         SVALKK                                 MD022382A
      ISVAL1       DS                            200                                        MD022382A
      I                                        1   1 SVAL11                                 MD022382A
+     I              'FXnetBranch'         C         FXSVAL                                  MD048346
      I/EJECT
      C*
      C* KLIST FOR SDNOSTL4                                                090404
@@ -2010,7 +2017,8 @@
       *                                                                                    MD036589A
      C           NETNOS    IFNE *BLANKS                                                    MD036589A
      C                     MOVE A8BICN    CNUM                                             MD036589A
-     C                     MOVE AMBRCA    OSBR                                             MD036589A
+     C**********           MOVE AMBRCA    OSBR                                    MD036589A MD048346
+     C                     MOVE BRCD      OSBR                                              MD048346
      C                     MOVE '08'      SETP                                             MD036589A
      C                     MOVE NETNOS    OSAC1                                            MD036589A
      C                     MOVE *BLANKS   OSACQQ                                           MD036589A
@@ -2167,6 +2175,11 @@
       *                                                                                    MD036589A
       ** Check netting record to get the branch.                                           MD036589A
       *                                                                                    MD036589A
+     C           *LIKE     DEFN AMBRCA    BRCD                                              MD048346
+     C*Case 1: System Value for Branch Code is used                                         MD048346
+     C           SVBRCA    IFNE *BLANKS                                                     MD048346
+     C                     MOVELSVBRCA    BRCD                                              MD048346
+     C                     ELSE                                                             MD048346
      C           WNETR     CHAINFXNETML3             54                                    MD036589A
      C           *IN54     IFEQ '1'                                                        MD036589A
      C                     SETON                     U7U8LR                                MD036589A
@@ -2174,20 +2187,31 @@
      C                     MOVEL'17'      DBASE                                            MD036589A
      C                     MOVELWNETR     DBKEY                                            MD036589A
      C                     EXSR *PSSR                                                      MD036589A
+     C                     ELSE                                                             MD048346
+     C           AMONOB    IFNE *BLANKS                                                     MD048346
+     C*Case 2: FX net settlement branch is used.                                            MD048346
+     C                     MOVELAMONOB    BRCD                                              MD048346
+     C                     ELSE                                                             MD048346
+     C*Case 3: Customer Branch is used                                                      MD048346
+     C                     MOVELAMBRCA    BRCD                                              MD048346
+     C                     ENDIF                                                            MD048346
      C                     ENDIF                                                           MD036589A
+     C                     ENDIF                                                            MD048346
       *                                                                                    MD036589A
       ** Get customer details of branch.                                                   MD036589A
       *                                                                                    MD036589A
      C                     CALL 'AOBRCHR1'                                                 MD036589A
      C                     PARM *BLANK    @RTCD   7                                        MD036589A
      C                     PARM '*KEY'    @OPTN   7                                        MD036589A
-     C                     PARM AMBRCA    BRCHD   3                                        MD036589A
+     C**********           PARM AMBRCA    BRCHD   3                               MD036589A MD048346
+     C                     PARM BRCD      BRCHD   3                                         MD048346
      C           SDBRCH    PARM SDBRCH    DSSDY                                            MD036589A
      C           @RTCD     IFNE *BLANK                                                     MD036589A
      C                     SETON                     U7U8LR                                MD036589A
      C                     MOVEL'SDBRCHPD'DBFILE                                           MD036589A
      C                     MOVEL'18'      DBASE                                            MD036589A
-     C                     MOVELAMBRCA    DBKEY                                            MD036589A
+     C**********           MOVELAMBRCA    DBKEY                                   MD036589A MD048346
+     C                     MOVELBRCD      DBKEY                                             MD048346
      C                     EXSR *PSSR                                                      MD036589A
      C                     ELSE                                                            MD036589A
       ** For the last step, get customer details.                                          MD036589A
@@ -2378,6 +2402,47 @@
      C                     ENDSR
      C*****************************************************************
      C/EJECT
+      *****************************************************************                     MD048346
+      *                                                               *                     MD048346
+      * *INZSR - Program Initialisation routine                       *                     MD048346
+      *                                                               *                     MD048346
+      * Called by: Implicitly on program activation                   *                     MD048346
+      *                                                               *                     MD048346
+      * Calls: None                                                   *                     MD048346
+      *                                                               *                     MD048346
+      *****************************************************************                     MD048346
+     C           *INZSR    BEGSR                                                            MD048346
+      *                                                                                     MD048346
+      ** Retrieve System Values                                                             MD048346
+      *                                                                                     MD048346
+     C                     CALL 'AOSVALR0'                                                  MD048346
+     C                     PARM *BLANKS   PRTCD                                             MD048346
+     C                     PARM FXSVAL    SVALK1 20                                         MD048346
+     C                     PARM           SVAL1 200                                         MD048346
+     C                     PARM *BLANK    SVALK2 20                                         MD048346
+     C                     PARM           SVAL2 200                                         MD048346
+     C                     PARM *BLANK    SVALK3 20                                         MD048346
+     C                     PARM           SVAL3 200                                         MD048346
+     C                     PARM *BLANK    SVALK4 20                                         MD048346
+     C                     PARM           SVAL4 200                                         MD048346
+     C                     PARM *BLANK    SVALK5 20                                         MD048346
+     C                     PARM           SVAL5 200                                         MD048346
+     C                     PARM *BLANK    SVALK6 20                                         MD048346
+     C                     PARM           SVAL6 200                                         MD048346
+     C                     PARM *BLANK    SVALK7 20                                         MD048346
+     C                     PARM           SVAL7 200                                         MD048346
+     C                     PARM *BLANK    SVALK8 20                                         MD048346
+     C                     PARM           SVAL8 200                                         MD048346
+     C                     PARM *BLANK    SVALK9 20                                         MD048346
+     C                     PARM           SVAL9 200                                         MD048346
+     C                     PARM *BLANK    SVALK0 20                                         MD048346
+     C                     PARM           SVAL10200                                         MD048346
+      * System Value for User Defined Branch Code for FX netting ICD                        MD048346
+     C                     MOVELSVAL1     SVBRCA  3                                         MD048346
+      *                                                                                     MD048346
+     C                     ENDSR                                                            MD048346
+     C*****************************************************************                     MD048346
+     C/EJECT                                                                                MD048346
      O*
      O**   NOSTRO EVENTS EXTRACT FILE
      O*

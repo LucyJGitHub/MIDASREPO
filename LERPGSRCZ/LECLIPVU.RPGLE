@@ -2351,7 +2351,7 @@
      C                   ENDIF                                                                CLE034
                                                                                               CLE034
       *                                                                                       CLE168
-      **	Set Facility Customer, Facility Type, Facility Sequence                              CLE168
+      **	Set Facility Customer, Facility Type, Facility Sequence                           CLE168
       *                                                                                       CLE168
      C                   IF        CLE168 = 'Y'                                               CLE168
      C     *LOCK         IN        LEFCLY                                                     CLE168
